@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0EE36FE8-F878-42FA-8938-2575A3D35C26}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Sweet.Redis</RootNamespace>
+    <AssemblyName>Sweet.Redis</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IRedisConnection.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RedisSettings.cs" />
+    <Compile Include="RedisCommon.cs" />
+    <Compile Include="RedisConnection.cs" />
+    <Compile Include="RedisConnectionPool.cs" />
+    <Compile Include="RedisConnectionState.cs" />
+    <Compile Include="RedisConstants.cs" />
+    <Compile Include="IRedisDb.cs" />
+    <Compile Include="RedisDb.cs" />
+    <Compile Include="RedisCommand.cs" />
+    <Compile Include="RedisException.cs" />
+    <Compile Include="RedisCommands.cs" />
+    <Compile Include="IRedisStringsCommands.cs" />
+    <Compile Include="IRedisConnectionCommands.cs" />
+    <Compile Include="RedisConnectionCommands.cs" />
+    <Compile Include="RedisCommandSet.cs" />
+    <Compile Include="RedisStringsCommands.cs" />
+    <Compile Include="IRedisListsCommands.cs" />
+    <Compile Include="RedisListsCommands.cs" />
+    <Compile Include="IRedisKeysCommands.cs" />
+    <Compile Include="RedisKeysCommands.cs" />
+    <Compile Include="IRedisSetsCommands.cs" />
+    <Compile Include="RedisSetsCommands.cs" />
+    <Compile Include="IRedisHashesCommands.cs" />
+    <Compile Include="RedisHashesCommands.cs" />
+    <Compile Include="RedisByteBuffer.cs" />
+    <Compile Include="RedisResponse.cs" />
+    <Compile Include="RedisObjectType.cs" />
+    <Compile Include="RedisDisposable.cs" />
+    <Compile Include="IRedisResponse.cs" />
+    <Compile Include="RedisResponseReader.cs" />
+    <Compile Include="IRedisResponseReader.cs" />
+    <Compile Include="RedisObject.cs" />
+    <Compile Include="RedisReceivedData.cs" />
+    <Compile Include="IRedisServerCommands.cs" />
+    <Compile Include="RedisClientInfo.cs" />
+    <Compile Include="RedisClientInfoFlag.cs" />
+    <Compile Include="RedisServerCommands.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
