@@ -51,6 +51,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private int m_Db;
         private string m_Name;
         private Socket m_Socket;
         private EndPoint m_EndPoint;
@@ -65,13 +66,13 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisConnection(RedisConnectionPool pool,
-            Action<RedisConnection, Socket> releaseAction, Socket socket = null,
+            Action<RedisConnection, Socket> releaseAction, int db, Socket socket = null,
             bool connectImmediately = false)
-            : this(pool, new RedisSettings(), releaseAction, socket, connectImmediately)
+            : this(pool, new RedisSettings(), releaseAction, db, socket, connectImmediately)
         { }
 
         internal RedisConnection(RedisConnectionPool pool, RedisSettings settings,
-            Action<RedisConnection, Socket> releaseAction, Socket socket = null, 
+            Action<RedisConnection, Socket> releaseAction, int db, Socket socket = null,
             bool connectImmediately = false)
         {
             if (pool == null)
@@ -83,6 +84,7 @@ namespace Sweet.Redis
             if (releaseAction == null)
                 throw new ArgumentNullException("releaseAction");
 
+            m_Db = db;
             m_Name = pool.Name;
             m_Settings = settings;
             m_ReleaseAction = releaseAction;
@@ -150,6 +152,11 @@ namespace Sweet.Redis
         #endregion Destructors
 
         #region Properties
+
+        public int Db
+        {
+            get { return m_Db; }
+        }
 
         public long LastError
         {

@@ -20,7 +20,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("password");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Auth, password.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Auth, password.ToBytes()))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -32,7 +32,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("msg");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Echo, msg.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Echo, msg.ToBytes()))
             {
                 return cmd.ExpectBulkString(Db.Pool, true);
             }
@@ -47,12 +47,12 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             if (String.IsNullOrEmpty(msg))
-                using (var cmd = new RedisCommand(RedisCommands.Ping))
+                using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ping))
                 {
                     return cmd.ExpectSimpleString(Db.Pool, true);
                 }
 
-            using (var cmd = new RedisCommand(RedisCommands.Ping, msg.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ping, msg.ToBytes()))
             {
                 return cmd.ExpectBulkString(Db.Pool, true);
             }
@@ -61,7 +61,7 @@ namespace Sweet.Redis
         public bool Quit()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Quit))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Quit))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }

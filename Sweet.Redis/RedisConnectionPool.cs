@@ -13,9 +13,29 @@ namespace Sweet.Redis
 
         private class RedisConnectionPoolMember : RedisDisposable
         {
+            #region Field Members
+
             private Socket m_Socket;
 
+            #endregion Field Members
+
+            #region .Ctors
+
+            public RedisConnectionPoolMember(Socket socket, int db)
+            {
+                Db = db;
+                Socket = socket;
+                PooledTime = DateTime.UtcNow;
+            }
+
+            #endregion .Ctors
+
+            #region Properties
+
+            public int Db { get; private set; }
+
             public DateTime PooledTime { get; private set; }
+
             public Socket Socket
             {
                 get { return m_Socket; }
@@ -25,11 +45,9 @@ namespace Sweet.Redis
                 }
             }
 
-            public RedisConnectionPoolMember(Socket socket)
-            {
-                Socket = socket;
-                PooledTime = DateTime.UtcNow;
-            }
+            #endregion Properties
+
+            #region Methods
 
             public Socket ReleaseSocket()
             {
@@ -64,6 +82,8 @@ namespace Sweet.Redis
                     }, socket);
                 }
             }
+
+            #endregion Methods
         }
 
         #endregion RedisConnectionPoolMember
@@ -194,7 +214,7 @@ namespace Sweet.Redis
             }
         }
 
-        private Socket Enqueue()
+        private Socket Enqueue(int db)
         {
             lock (m_MemberStoreLock)
             {
@@ -202,19 +222,21 @@ namespace Sweet.Redis
                 if (store != null)
                 {
                     Socket socket = null;
-                    do
+                    var node = store.First;
+
+                    while (node != null)
                     {
-                        var node = store.First;
-                        if (node == null)
-                            return null;
+                        if (node.Value.Db == db)
+                        {
+                            socket = node.Value.ReleaseSocket();
 
-                        store.RemoveFirst();
+                            store.Remove(node);
+                            if (IsConnected(socket, 100))
+                                return socket;
+                        }
 
-                        socket = node.Value.ReleaseSocket();
-                        if (IsConnected(socket, 100))
-                            return socket;
+                        node = node.Next;
                     }
-                    while (socket == null);
                 }
             }
             return null;
@@ -225,7 +247,7 @@ namespace Sweet.Redis
             return new RedisDb(this, db);
         }
 
-        internal IRedisConnection Connect()
+        internal IRedisConnection Connect(int db)
         {
             ValidateNotDisposed();
 
@@ -245,13 +267,13 @@ namespace Sweet.Redis
                         throw new RedisException("Wait retry count exited the given maximum limit");
                 }
 
-                var socket = Enqueue();
+                var socket = Enqueue(db);
 
                 if ((socket != null) ||
                     (Interlocked.Read(ref m_InitCount) < m_Settings.MaxCount))
                 {
                     Interlocked.Exchange(ref m_WaitRetryCount, 0);
-                    return NewConnection(socket, true);
+                    return NewConnection(socket, db, true);
                 }
 
                 remainingTime = timeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
@@ -266,11 +288,11 @@ namespace Sweet.Redis
             return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
         }
 
-        private IRedisConnection NewConnection(Socket socket, bool connectImmediately = true)
+        private IRedisConnection NewConnection(Socket socket, int db, bool connectImmediately = true)
         {
             socket = IsConnected(socket) ? socket : null;
 
-            var conn = new RedisConnection(this, m_Settings, Release, socket, connectImmediately);
+            var conn = new RedisConnection(this, m_Settings, Release, db, socket, connectImmediately);
 
             Interlocked.Increment(ref m_InitCount);
             return conn;
@@ -302,7 +324,7 @@ namespace Sweet.Redis
                         {
                             lock (m_MemberStoreLock)
                             {
-                                store.AddLast(new RedisConnectionPoolMember(socket));
+                                store.AddLast(new RedisConnectionPoolMember(socket, conn.Db));
                             }
                         }
                     }

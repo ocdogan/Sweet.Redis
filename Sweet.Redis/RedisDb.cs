@@ -171,7 +171,7 @@ namespace Sweet.Redis
         private bool Select(int db, bool throwException)
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Select, db.ToBytes()))
+            using (var cmd = new RedisCommand(m_Db, RedisCommands.Select, db.ToBytes()))
             {
                 return cmd.ExpectSimpleString(m_Pool, "OK", throwException);
             }

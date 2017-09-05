@@ -10,10 +10,16 @@ namespace Sweet.Redis.ConsoleTest
     {
         static void Main(string[] args)
         {
+            var largeText = new string('x', 100000);
+
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
             {
-                var largeText = new string('x', 100000);
+                using (var db = pool.GetDb())
+                {
+                    db.Strings.Set("large_text", largeText);
+                }
+
                 do
                 {
                     Console.Clear();
@@ -85,8 +91,6 @@ namespace Sweet.Redis.ConsoleTest
                         var sw = new Stopwatch();
                         using (var db = pool.GetDb())
                         {
-                            db.Strings.Set("large_text", largeText);
-
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)

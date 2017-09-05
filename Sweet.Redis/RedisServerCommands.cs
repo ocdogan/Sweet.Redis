@@ -18,7 +18,7 @@ namespace Sweet.Redis
         public bool BGRewriteAOF()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.BGRewriteAOF))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.BGRewriteAOF))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -27,7 +27,7 @@ namespace Sweet.Redis
         public bool BGSave()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.BGSave))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.BGSave))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -36,7 +36,7 @@ namespace Sweet.Redis
         public string ClientGetName()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.GetName))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.GetName))
             {
                 return cmd.ExpectBulkString(Db.Pool, true);
             }
@@ -79,7 +79,7 @@ namespace Sweet.Redis
                     .Merge(RedisCommands.No);
             }
 
-            using (var cmd = new RedisCommand(RedisCommands.Client, parameters))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, parameters))
             {
                 return cmd.ExpectInteger(Db.Pool, true);
             }
@@ -88,7 +88,7 @@ namespace Sweet.Redis
         public RedisClientInfo[] ClientList()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.List))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.List))
             {
                 var response = cmd.ExpectBulkString(Db.Pool, true);
                 if (response != null)
@@ -113,7 +113,7 @@ namespace Sweet.Redis
         public IDictionary<string, string>[] ClientListDictionary()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.List))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.List))
             {
                 var response = cmd.ExpectBulkString(Db.Pool, true);
                 if (response != null)
@@ -138,7 +138,7 @@ namespace Sweet.Redis
         public bool ClientPause(int timeout)
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Pause, timeout.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Pause, timeout.ToBytes()))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -147,7 +147,7 @@ namespace Sweet.Redis
         public bool ClientReplyOff()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Off))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.Off))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -156,7 +156,7 @@ namespace Sweet.Redis
         public bool ClientReplyOn()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.On))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.On))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -165,7 +165,7 @@ namespace Sweet.Redis
         public bool ClientReplySkip()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -177,7 +177,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("connectionName");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.SetName, connectionName.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.SetName, connectionName.ToBytes()))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -189,7 +189,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("parameter");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.Get, parameter.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.Get, parameter.ToBytes()))
             {
                 var lines = cmd.ExpectMultiDataStrings(Db.Pool, true);
                 if (lines != null)
@@ -214,7 +214,7 @@ namespace Sweet.Redis
         public bool ConfigResetStat()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.ResetStat))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.ResetStat))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -223,7 +223,7 @@ namespace Sweet.Redis
         public bool ConfigRewrite()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.Rewrite))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.Rewrite))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -243,7 +243,7 @@ namespace Sweet.Redis
             if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.Set, parameter.ToBytes(), bytes))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.Set, parameter.ToBytes(), bytes))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -252,7 +252,7 @@ namespace Sweet.Redis
         public long DbSize()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.DbSize))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.DbSize))
             {
                 return cmd.ExpectInteger(Db.Pool, true);
             }
@@ -261,7 +261,7 @@ namespace Sweet.Redis
         public bool FlushAll()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.FlushAll))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushAll))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -270,7 +270,7 @@ namespace Sweet.Redis
         public bool FlushAllAsync()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.FlushAll, RedisCommands.Async))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushAll, RedisCommands.Async))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -279,7 +279,7 @@ namespace Sweet.Redis
         public bool FlushDb()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.FlushDb))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushDb))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -288,7 +288,7 @@ namespace Sweet.Redis
         public bool FlushDbAsync()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.FlushDb, RedisCommands.Async))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushDb, RedisCommands.Async))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -300,7 +300,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("section");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Info, section.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Info, section.ToBytes()))
             {
                 return cmd.ExpectMultiDataStrings(Db.Pool, true);
             }
@@ -309,7 +309,7 @@ namespace Sweet.Redis
         public DateTime LastSave()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.LastSave))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.LastSave))
             {
                 return cmd.ExpectInteger(Db.Pool, true).FromUnixTimeStamp();
             }
@@ -318,7 +318,7 @@ namespace Sweet.Redis
         public bool Save()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Save))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Save))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -327,7 +327,7 @@ namespace Sweet.Redis
         public void ShutDown()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.ShutDown))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ShutDown))
             {
                 cmd.ExpectSimpleString(Db.Pool, true);
             }
@@ -336,7 +336,7 @@ namespace Sweet.Redis
         public void ShutDownSave()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.ShutDown, RedisCommands.Async))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ShutDown, RedisCommands.Async))
             {
                 cmd.ExpectSimpleString(Db.Pool, true);
             }
@@ -351,7 +351,7 @@ namespace Sweet.Redis
                 throw new ArgumentException("Invalid port number");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.SlaveOf, host.ToBytes(), port.ToBytes()))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.SlaveOf, host.ToBytes(), port.ToBytes()))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -360,7 +360,7 @@ namespace Sweet.Redis
         public bool SlaveOfNoOne()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.SlaveOf, RedisCommands.NoOne))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.SlaveOf, RedisCommands.NoOne))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
@@ -369,7 +369,7 @@ namespace Sweet.Redis
         public DateTime Time()
         {
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.Time))
+            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Time))
             {
                 var parts = cmd.ExpectMultiDataStrings(Db.Pool, true);
                 if (parts != null && parts.Length > 0)

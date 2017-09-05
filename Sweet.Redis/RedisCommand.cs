@@ -9,6 +9,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
+        private int m_Db;
         private int m_RequestLength;
         private byte[] m_Command;
         private byte[][] m_Arguments;
@@ -17,7 +18,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisCommand(byte[] command, params byte[][] args)
+        public RedisCommand(int db, byte[] command, params byte[][] args)
         {
             if (command == null)
                 throw new ArgumentNullException("command");
@@ -41,9 +42,11 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public int Db { get { return m_Db; } }
+
         public byte[] Command { get { return m_Command; } }
 
-        private byte[][] Arguments { get { return m_Arguments; } }
+        public byte[][] Arguments { get { return m_Arguments; } }
 
         #endregion Properties
 
@@ -473,7 +476,7 @@ namespace Sweet.Redis
         public IRedisResponse Execute(RedisConnectionPool pool, bool throwException = true)
         {
             var data = PrepareData();
-            using (var conn = pool.Connect())
+            using (var conn = pool.Connect(m_Db))
             {
                 var response = conn.Send(data);
                 if (response == null && throwException)
