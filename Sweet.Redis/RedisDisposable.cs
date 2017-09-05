@@ -46,21 +46,21 @@ namespace Sweet.Redis
             get { return Interlocked.Read(ref m_Disposed) != 0; }
         }
 
-		#endregion Properties
+        #endregion Properties
 
-		#region Methods
+        #region Methods
 
-		protected virtual bool SetDisposed()
-		{
-			return Interlocked.Exchange(ref m_Disposed, 1L) != 0L;
-		}
-		
+        protected virtual bool SetDisposed()
+        {
+            return Interlocked.Exchange(ref m_Disposed, 1L) != 0L;
+        }
+
         protected virtual void ValidateNotDisposed()
-		{
-			if (Disposed)
+        {
+            if (Disposed)
                 throw new RedisException(GetType().Name + " is disposed");
-		}
-		
+        }
+
         #endregion Methods
-	}
+    }
 }

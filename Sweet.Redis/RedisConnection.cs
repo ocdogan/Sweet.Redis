@@ -9,30 +9,30 @@ namespace Sweet.Redis
 {
     internal class RedisConnection : RedisDisposable, IRedisConnection
     {
-		#region AsyncState
+        #region AsyncState
 
         private enum AsyncState : long
         {
             Idle,
             Failed,
-			Completed,
-			Connecting,
+            Completed,
+            Connecting,
             Sending,
-			TimedOut,
-			Receiving
+            TimedOut,
+            Receiving
         }
 
-		#endregion AsyncState
+        #endregion AsyncState
 
-		#region AsyncUserData
+        #region AsyncUserData
 
-		private class AsyncUserData
+        private class AsyncUserData
         {
-			public int Timeout;
-			public Socket Socket;
+            public int Timeout;
+            public Socket Socket;
             public long State;
-			public ManualResetEvent WaitHandle = new ManualResetEvent(false);
-		}
+            public ManualResetEvent WaitHandle = new ManualResetEvent(false);
+        }
 
         #endregion AsyncUserData
 
@@ -56,7 +56,7 @@ namespace Sweet.Redis
         private EndPoint m_EndPoint;
         private RedisSettings m_Settings;
 
-		private long m_LastError = (long)SocketError.Success;
+        private long m_LastError = (long)SocketError.Success;
         private long m_State = (long)RedisConnectionState.Idle;
         private Action<RedisConnection, Socket> m_ReleaseAction;
 
@@ -64,23 +64,23 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisConnection(RedisConnectionPool pool, 
+        internal RedisConnection(RedisConnectionPool pool,
             Action<RedisConnection, Socket> releaseAction, Socket socket = null)
             : this(pool, new RedisSettings(), releaseAction, socket)
         { }
 
-        internal RedisConnection(RedisConnectionPool pool, RedisSettings settings, 
+        internal RedisConnection(RedisConnectionPool pool, RedisSettings settings,
             Action<RedisConnection, Socket> releaseAction, Socket socket = null)
         {
             if (pool == null)
                 throw new ArgumentNullException("pool");
 
-			if (settings == null)
-				throw new ArgumentNullException("settings");
+            if (settings == null)
+                throw new ArgumentNullException("settings");
 
-			if (releaseAction == null)
-				throw new ArgumentNullException("releaseAction");
-			
+            if (releaseAction == null)
+                throw new ArgumentNullException("releaseAction");
+
             m_Name = pool.Name;
             m_Settings = settings;
             m_ReleaseAction = releaseAction;
@@ -156,43 +156,43 @@ namespace Sweet.Redis
             get { return m_Name; }
         }
 
-		public RedisSettings Settings
-		{
-			get { return m_Settings; }
-		}
+        public RedisSettings Settings
+        {
+            get { return m_Settings; }
+        }
 
-		public RedisConnectionState State
+        public RedisConnectionState State
         {
             get { return (RedisConnectionState)m_State; }
         }
 
-		#endregion Properties
+        #endregion Properties
 
-		#region Member Methods
+        #region Member Methods
 
-		protected override void ValidateNotDisposed()
-		{
-			if (Disposed)
-			{
-				if (!String.IsNullOrEmpty(Name))
-					throw new ObjectDisposedException(Name);
-				base.ValidateNotDisposed();
-			}
-		}
+        protected override void ValidateNotDisposed()
+        {
+            if (Disposed)
+            {
+                if (!String.IsNullOrEmpty(Name))
+                    throw new ObjectDisposedException(Name);
+                base.ValidateNotDisposed();
+            }
+        }
 
-		protected override bool SetDisposed()
-		{
-			SetState((long)RedisConnectionState.Disposed);
-			return base.SetDisposed();
-		}
+        protected override bool SetDisposed()
+        {
+            SetState((long)RedisConnectionState.Disposed);
+            return base.SetDisposed();
+        }
 
-		internal Socket Connect()
+        internal Socket Connect()
         {
             ValidateNotDisposed();
 
 
-			var socket = m_Socket;
-			var errorOccured = false;
+            var socket = m_Socket;
+            var errorOccured = false;
             try
             {
                 if ((socket == null) || !socket.Connected)
@@ -234,10 +234,10 @@ namespace Sweet.Redis
                         SetLastError((long)SocketError.TimedOut);
                         SetState((long)RedisConnectionState.Failed);
 
-						args.Dispose();
-						socket.Dispose();
+                        args.Dispose();
+                        socket.Dispose();
 
-						throw new SocketException((int)SocketError.TimedOut);
+                        throw new SocketException((int)SocketError.TimedOut);
                     }
 
                     // Has error or not connected
@@ -248,10 +248,10 @@ namespace Sweet.Redis
                         SetLastError((long)args.SocketError);
                         SetState((long)RedisConnectionState.Failed);
 
-						args.Dispose();
-						socket.Dispose();
+                        args.Dispose();
+                        socket.Dispose();
 
-						throw new SocketException((int)args.SocketError);
+                        throw new SocketException((int)args.SocketError);
                     }
                 }
             }
@@ -277,8 +277,8 @@ namespace Sweet.Redis
             return socket;
         }
 
-		private void Close(Socket socket)
-		{
+        private void Close(Socket socket)
+        {
             if (socket != null)
             {
                 Task.Factory.StartNew(obj =>
@@ -295,7 +295,7 @@ namespace Sweet.Redis
                     }
                 }, socket);
             }
-		}
+        }
 
         internal long SetState(long state)
         {
@@ -316,12 +316,12 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_State, (e.SocketError == SocketError.Success) ?
                 (int)RedisConnectionState.Connected : (int)RedisConnectionState.Failed);
 
-			var userToken = (AsyncUserData)e.UserToken;
-			if (e.SocketError != SocketError.Success)
-				Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
+            var userToken = (AsyncUserData)e.UserToken;
+            if (e.SocketError != SocketError.Success)
+                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
 
-			// Signals the end of connection.
-			userToken.WaitHandle.Set();
+            // Signals the end of connection.
+            userToken.WaitHandle.Set();
         }
 
         protected virtual void DoConnected(object sender, SocketAsyncEventArgs e)
@@ -346,23 +346,23 @@ namespace Sweet.Redis
 
             socket.Blocking = false;
 
-			var settings = m_Settings;
+            var settings = m_Settings;
             if (settings != null)
             {
-				if (settings.SendTimeout > 0)
-				{
-					socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 
+                if (settings.SendTimeout > 0)
+                {
+                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout,
                                            settings.SendTimeout == int.MaxValue ? Timeout.Infinite : settings.SendTimeout);
-				}
-				
+                }
+
                 if (settings.ReceiveTimeout > 0)
                 {
-					socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 
+                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout,
                                            settings.ReceiveTimeout == int.MaxValue ? Timeout.Infinite : settings.ReceiveTimeout);
-				}
-			}
-			socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-			socket.NoDelay = true;
+                }
+            }
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            socket.NoDelay = true;
         }
 
         protected void SetIOLoopbackFastPath(Socket socket)
@@ -379,7 +379,7 @@ namespace Sweet.Redis
             }
         }
 
-		public IRedisResponse Send(byte[] data)
+        public IRedisResponse Send(byte[] data)
         {
             var socket = Connect();
             if (socket == null)
@@ -440,39 +440,39 @@ namespace Sweet.Redis
         }
 
         private void OnSend(object sender, SocketAsyncEventArgs e)
-		{
+        {
             e.Completed -= OnSend;
 
-			// Set last error
-			SetLastError((long)e.SocketError);
+            // Set last error
+            SetLastError((long)e.SocketError);
 
-			var userToken = (AsyncUserData)e.UserToken;
-			if (e.SocketError != SocketError.Success)
-				Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
+            var userToken = (AsyncUserData)e.UserToken;
+            if (e.SocketError != SocketError.Success)
+                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
 
-			// Signals the end of send.
-			userToken.WaitHandle.Set();
-		}
+            // Signals the end of send.
+            userToken.WaitHandle.Set();
+        }
 
-		private SocketAsyncEventArgs NewSendArgs(byte[] data, Socket socket)
-		{
-			var userToken = new AsyncUserData
-			{
-				Socket = socket,
-				State = (long)AsyncState.Sending,
-				Timeout = m_Settings.SendTimeout
-			};
+        private SocketAsyncEventArgs NewSendArgs(byte[] data, Socket socket)
+        {
+            var userToken = new AsyncUserData
+            {
+                Socket = socket,
+                State = (long)AsyncState.Sending,
+                Timeout = m_Settings.SendTimeout
+            };
 
-			var args = new SocketAsyncEventArgs
-			{
-				UserToken = userToken,
-			};
+            var args = new SocketAsyncEventArgs
+            {
+                UserToken = userToken,
+            };
 
-			args.SetBuffer(data, 0, data != null ? data.Length : 0);
-			args.Completed += OnSend;
+            args.SetBuffer(data, 0, data != null ? data.Length : 0);
+            args.Completed += OnSend;
 
-			return args;
-		}
+            return args;
+        }
 
         internal RedisReceivedData Receive()
         {
@@ -488,9 +488,9 @@ namespace Sweet.Redis
             var args = NewReceiveArgs(socket);
 
             var userToken = args.UserToken as AsyncUserData;
-			userToken.Socket = socket;
+            userToken.Socket = socket;
 
-			var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
 
             // On receive timeout
             if (socket.ReceiveAsync(args) &&
@@ -509,19 +509,19 @@ namespace Sweet.Redis
             // Has error
             if (args.SocketError != SocketError.Success)
             {
-				Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
+                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
 
                 SetLastError((long)args.SocketError);
                 SetState((long)RedisConnectionState.Failed);
 
-				ReleaseReceiveEventArgs(args);
-				if (args.SocketError == SocketError.OperationAborted)
-				{
-					Interlocked.CompareExchange(ref m_Socket, null, socket);
-					Close(socket);
-				}
+                ReleaseReceiveEventArgs(args);
+                if (args.SocketError == SocketError.OperationAborted)
+                {
+                    Interlocked.CompareExchange(ref m_Socket, null, socket);
+                    Close(socket);
+                }
 
-				throw new SocketException((int)args.SocketError);
+                throw new SocketException((int)args.SocketError);
             }
 
             var receivedLength = Math.Max(0, args.BytesTransferred);
@@ -552,8 +552,8 @@ namespace Sweet.Redis
                 }
             }
 
-		    byte[] data = null;
-			var buffer = args.Buffer;
+            byte[] data = null;
+            var buffer = args.Buffer;
             if (args.Offset == 0 && receivedLength == buffer.Length)
             {
                 data = buffer;
@@ -584,58 +584,58 @@ namespace Sweet.Redis
 
                 s_ReceiveEventArgsQ.Enqueue(args);
             }
-		}
+        }
 
-		private SocketAsyncEventArgs NewReceiveArgs(Socket socket)
-		{
-			SocketAsyncEventArgs args;
-			s_ReceiveEventArgsQ.TryDequeue(out args);
+        private SocketAsyncEventArgs NewReceiveArgs(Socket socket)
+        {
+            SocketAsyncEventArgs args;
+            s_ReceiveEventArgsQ.TryDequeue(out args);
 
-			AsyncUserData userToken;
-			if (args != null)
-			{
-				userToken = (AsyncUserData)args.UserToken;
+            AsyncUserData userToken;
+            if (args != null)
+            {
+                userToken = (AsyncUserData)args.UserToken;
 
-				userToken.Socket = socket;
-				userToken.State = (long)AsyncState.Receiving;
-				userToken.Timeout = m_Settings.ReceiveTimeout;
-			}
-			else
-			{
-				userToken = new AsyncUserData
-				{
-					Socket = socket,
-					State = (long)AsyncState.Receiving,
-					Timeout = m_Settings.ReceiveTimeout
-				};
+                userToken.Socket = socket;
+                userToken.State = (long)AsyncState.Receiving;
+                userToken.Timeout = m_Settings.ReceiveTimeout;
+            }
+            else
+            {
+                userToken = new AsyncUserData
+                {
+                    Socket = socket,
+                    State = (long)AsyncState.Receiving,
+                    Timeout = m_Settings.ReceiveTimeout
+                };
 
-				args = new SocketAsyncEventArgs
-				{
-					UserToken = userToken,
-				};
+                args = new SocketAsyncEventArgs
+                {
+                    UserToken = userToken,
+                };
 
-				args.SetBuffer(new byte[RedisConstants.DefaultBufferSize], 0, RedisConstants.DefaultBufferSize);
-			}
+                args.SetBuffer(new byte[RedisConstants.DefaultBufferSize], 0, RedisConstants.DefaultBufferSize);
+            }
 
-			args.Completed += OnReceive;
-			return args;
-		}
+            args.Completed += OnReceive;
+            return args;
+        }
 
         private void OnReceive(object sender, SocketAsyncEventArgs e)
-		{
-			e.Completed -= OnReceive;
-			
+        {
+            e.Completed -= OnReceive;
+
             // Set last error
-			SetLastError((long)e.SocketError);
+            SetLastError((long)e.SocketError);
 
             var userToken = (AsyncUserData)e.UserToken;
             if (e.SocketError != SocketError.Success)
                 Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-            
-			// Signals the end of receive.
-            userToken.WaitHandle.Set();
-		}
 
-		#endregion Member Methods
-	}
+            // Signals the end of receive.
+            userToken.WaitHandle.Set();
+        }
+
+        #endregion Member Methods
+    }
 }

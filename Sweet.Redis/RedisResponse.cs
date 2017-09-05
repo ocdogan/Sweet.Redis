@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
-using System.Text;
 
 namespace Sweet.Redis
 {
@@ -15,23 +14,23 @@ namespace Sweet.Redis
         private long m_Length = int.MinValue;
         private IRedisResponse m_Parent;
         private IList<IRedisResponse> m_List;
-		private IList<IRedisResponse> m_ReadOnlyList;
-		private RedisObjectType m_Type = RedisObjectType.Undefined;
+        private IList<IRedisResponse> m_ReadOnlyList;
+        private RedisObjectType m_Type = RedisObjectType.Undefined;
 
-		#endregion Field Members
+        #endregion Field Members
 
-		#region .Ctors
+        #region .Ctors
 
         public RedisResponse(IRedisResponse parent = null)
         {
             m_Parent = parent;
         }
 
-		#endregion .Ctors
-		
+        #endregion .Ctors
+
         #region Destructors
 
-		protected override void OnDispose(bool disposing)
+        protected override void OnDispose(bool disposing)
         {
             Interlocked.Exchange(ref m_Parent, null);
             ClearInternal();
@@ -41,9 +40,9 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public int Count 
+        public int Count
         {
-            get 
+            get
             {
                 if (m_Type != RedisObjectType.Array)
                     return -1;
@@ -56,20 +55,22 @@ namespace Sweet.Redis
         public byte[] Data
         {
             get { return m_Data; }
-            internal set {
+            internal set
+            {
                 m_Data = value;
                 if (m_Type != RedisObjectType.Array)
                     Ready = true;
             }
         }
 
-		public IList<IRedisResponse> Items
-		{
+        public IList<IRedisResponse> Items
+        {
             get { return m_ReadOnlyList; }
-		}
-		
-        public int Length { 
-            get { return (int)Interlocked.Read(ref m_Length); } 
+        }
+
+        public int Length
+        {
+            get { return (int)Interlocked.Read(ref m_Length); }
             internal set
             {
                 value = Math.Max(-1, value);
@@ -89,11 +90,12 @@ namespace Sweet.Redis
             }
         }
 
-		public IRedisResponse Parent
+        public IRedisResponse Parent
         {
             get { return m_Parent; }
-            internal set {
-				var parent = Interlocked.Exchange(ref m_Parent, value);
+            internal set
+            {
+                var parent = Interlocked.Exchange(ref m_Parent, value);
                 if (parent != null && value != parent)
                 {
                     var response = parent as RedisResponse;
@@ -103,16 +105,16 @@ namespace Sweet.Redis
             }
         }
 
-		public bool Ready
-		{
-			get { return Interlocked.Read(ref m_Ready) != 0L; }
-			internal set
-			{
-				Interlocked.Exchange(ref m_Ready, value ? 1L : 0L);
-			}
-		}
+        public bool Ready
+        {
+            get { return Interlocked.Read(ref m_Ready) != 0L; }
+            internal set
+            {
+                Interlocked.Exchange(ref m_Ready, value ? 1L : 0L);
+            }
+        }
 
-		public RedisObjectType Type 
+        public RedisObjectType Type
         {
             get { return m_Type; }
             internal set
@@ -135,10 +137,10 @@ namespace Sweet.Redis
         public byte[] ReleaseData()
         {
             var data = Interlocked.Exchange(ref m_Data, null);
-			if (m_Type != RedisObjectType.Array)
-				Ready = Length > -1;
+            if (m_Type != RedisObjectType.Array)
+                Ready = Length > -1;
             return data;
-		}
+        }
 
         internal void Add(IRedisResponse item)
         {
@@ -146,81 +148,81 @@ namespace Sweet.Redis
 
             if (m_Type != RedisObjectType.Array)
                 throw new ArgumentException("Can not add item to " + m_Type.ToString("F") + " type", "item");
-            
+
             if (item == null)
                 throw new ArgumentNullException("item");
 
             if (item == this)
                 throw new ArgumentException("Circular reference", "item");
 
-			var response = item as RedisResponse;
+            var response = item as RedisResponse;
             if (response != null)
                 response.Parent = this;
-            
-			var list = GetArrayList();
-			list.Add(item);
+
+            var list = GetArrayList();
+            list.Add(item);
 
             Ready = list.Count >= Length;
-		}
+        }
 
-		internal void Remove(IRedisResponse item)
-		{
-			ValidateNotDisposed();
+        internal void Remove(IRedisResponse item)
+        {
+            ValidateNotDisposed();
 
-			if (m_Type != RedisObjectType.Array)
-				throw new ArgumentException("Can not add/remove item to/from " + m_Type.ToString("F") + " type", "item");
+            if (m_Type != RedisObjectType.Array)
+                throw new ArgumentException("Can not add/remove item to/from " + m_Type.ToString("F") + " type", "item");
 
-			if (item == null)
-				throw new ArgumentNullException("item");
+            if (item == null)
+                throw new ArgumentNullException("item");
 
-			if (item == this)
-				throw new ArgumentException("Circular reference", "item");
+            if (item == this)
+                throw new ArgumentException("Circular reference", "item");
 
             if (item.Parent != this)
-				throw new ArgumentException("Item does not belong to this response", "item");
+                throw new ArgumentException("Item does not belong to this response", "item");
 
             var response = item as RedisResponse;
-			if (response != null)
-				response.Parent = null;
+            if (response != null)
+                response.Parent = null;
 
-			var list = GetArrayList();
+            var list = GetArrayList();
             list.Remove(item);
 
-			Ready = list.Count >= Length;
-		}
+            Ready = list.Count >= Length;
+        }
 
-		protected void ClearInternal()
-		{
-			Interlocked.Exchange(ref m_Data, null);
+        protected void ClearInternal()
+        {
+            Interlocked.Exchange(ref m_Data, null);
             if (m_Type != RedisObjectType.Array)
                 Ready = Length > -1;
 
-			var arrayItems = Interlocked.Exchange(ref m_List, null);
-			if (arrayItems != null)
-			{
-				Interlocked.Exchange(ref m_ReadOnlyList, null);
-				foreach (var item in arrayItems)
-					item.Dispose();
-				arrayItems.Clear();
-			}
+            var arrayItems = Interlocked.Exchange(ref m_List, null);
+            if (arrayItems != null)
+            {
+                Interlocked.Exchange(ref m_ReadOnlyList, null);
+                foreach (var item in arrayItems)
+                    item.Dispose();
+                arrayItems.Clear();
+            }
 
-			if (m_Type == RedisObjectType.Array)
-				Ready = Length == -1;
-		}
-		
+            if (m_Type == RedisObjectType.Array)
+                Ready = Length == -1;
+        }
+
         public void Clear()
         {
             ValidateNotDisposed();
             ClearInternal();
         }
 
-		private void InitializeList(int value)
-		{
-			if (value < 1)
+        private void InitializeList(int value)
+        {
+            if (value < 1)
             {
                 var list = (value < 0) ? null : new List<IRedisResponse>();
-				var oldList = Interlocked.Exchange(ref m_List, list);
-				Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));
+                var oldList = Interlocked.Exchange(ref m_List, list);
+                Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));
 
                 if (oldList != null)
                 {
@@ -240,7 +242,7 @@ namespace Sweet.Redis
                 while ((count = list.Count) > value)
                 {
                     var response = list[count - 1];
-                    list.RemoveAt(count-1);
+                    list.RemoveAt(count - 1);
                     response.Dispose();
                 }
             }
@@ -253,12 +255,12 @@ namespace Sweet.Redis
 
         private IList<IRedisResponse> NewArrayList()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
             var list = (m_Type == RedisObjectType.Array) ? new List<IRedisResponse>() : null;
-			
+
             Interlocked.Exchange(ref m_List, list);
-			Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));
+            Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));
 
             return list;
         }

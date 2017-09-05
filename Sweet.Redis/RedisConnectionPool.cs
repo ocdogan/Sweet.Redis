@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -108,7 +106,7 @@ namespace Sweet.Redis
             get { return Interlocked.Read(ref m_InitCount); }
         }
 
-		public string Name
+        public string Name
         {
             get { return m_Name; }
         }
@@ -119,7 +117,7 @@ namespace Sweet.Redis
         }
 
         #endregion Properties
-        
+
         #region .Ctors
 
         public RedisConnectionPool(string name)
@@ -128,7 +126,10 @@ namespace Sweet.Redis
 
         public RedisConnectionPool(string name, RedisSettings settings)
         {
-            m_Settings = settings ?? throw new ArgumentNullException("settings");
+            if (settings == null)
+                throw new ArgumentNullException("settings");
+
+            m_Settings = settings;
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
@@ -143,29 +144,29 @@ namespace Sweet.Redis
         #region Destructors
 
         protected override void OnDispose(bool disposing)
-		{
-			RedisConnectionPool.Unregister(this);
-			CloseStore();
+        {
+            RedisConnectionPool.Unregister(this);
+            CloseStore();
 
-			if (!disposing)
-				m_MaxCountSync.Close();
-		}
+            if (!disposing)
+                m_MaxCountSync.Close();
+        }
 
-		#endregion Destructors
+        #endregion Destructors
 
-		#region Member Methods
+        #region Member Methods
 
-		protected override void ValidateNotDisposed()
-		{
-			if (Disposed)
-			{
-				if (!String.IsNullOrEmpty(Name))
-					throw new ObjectDisposedException(Name);
-				base.ValidateNotDisposed();
-			}
-		}
+        protected override void ValidateNotDisposed()
+        {
+            if (Disposed)
+            {
+                if (!String.IsNullOrEmpty(Name))
+                    throw new ObjectDisposedException(Name);
+                base.ValidateNotDisposed();
+            }
+        }
 
-		private void CloseStore()
+        private void CloseStore()
         {
             LinkedList<RedisConnectionPoolMember> store;
             lock (m_MemberStoreLock)
@@ -240,9 +241,9 @@ namespace Sweet.Redis
                 if (!signaled)
                 {
                     var retryCount = Interlocked.Increment(ref m_WaitRetryCount);
-					if (retryCount > m_Settings.WaitRetryCount)
-						throw new RedisException("Wait retry count exited the given maximum limit");
-				}
+                    if (retryCount > m_Settings.WaitRetryCount)
+                        throw new RedisException("Wait retry count exited the given maximum limit");
+                }
 
                 var socket = Enqueue();
 
@@ -261,40 +262,40 @@ namespace Sweet.Redis
         private bool IsConnected(Socket socket, int poll = -1)
         {
             if (socket == null || !socket.Connected)
-                return false;            
+                return false;
             return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
-    	}
+        }
 
         private IRedisConnection NewConnection(Socket socket, bool connect = true)
         {
             socket = IsConnected(socket) ? socket : null;
 
             var conn = new RedisConnection(this, m_Settings, Release, socket);
-			if (connect)
-			{
-				conn.Connect();
-			}
+            if (connect)
+            {
+                conn.Connect();
+            }
 
-			Interlocked.Increment(ref m_InitCount);
-			return conn;
-		}
+            Interlocked.Increment(ref m_InitCount);
+            return conn;
+        }
 
         private void DecCount()
         {
             var count = Interlocked.Decrement(ref m_InitCount);
-			if (count < 0)
-			{
-				Interlocked.Increment(ref m_InitCount);
-			}            
+            if (count < 0)
+            {
+                Interlocked.Increment(ref m_InitCount);
+            }
         }
 
-		private void Release(RedisConnection conn, Socket socket)
-		{
-			ValidateNotDisposed();
+        private void Release(RedisConnection conn, Socket socket)
+        {
+            ValidateNotDisposed();
 
-			if (conn != null)
-			{
-				m_MaxCountSync.Release();
+            if (conn != null)
+            {
+                m_MaxCountSync.Release();
 
                 if (conn.Disposed)
                 {
@@ -311,11 +312,11 @@ namespace Sweet.Redis
                     }
 
                     DecCount();
-				}
-			}
-		}
+                }
+            }
+        }
 
-		private void PurgeIdles()
+        private void PurgeIdles()
         {
             var wasPurging = Interlocked.CompareExchange(ref m_PurgingIdles, 1, 0);
             if (wasPurging != 0)
@@ -345,7 +346,7 @@ namespace Sweet.Redis
                                 }
                             }
                             catch (Exception)
-                            {}
+                            { }
                             node = node.Next;
                         }
                     }
@@ -368,7 +369,7 @@ namespace Sweet.Redis
                 s_Pools.Add(pool);
                 if (s_PurgeTimer == null)
                 {
-                    s_PurgeTimer = new Timer(RedisConnectionPool.PurgeIdles, null, 
+                    s_PurgeTimer = new Timer(RedisConnectionPool.PurgeIdles, null,
                         RedisConstants.IdleTimerPeriod, RedisConstants.IdleTimerPeriod);
                 }
             }

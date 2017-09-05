@@ -10,42 +10,42 @@ namespace Sweet.Redis
             : base(db)
         { }
 
-		#endregion .Ctors
+        #endregion .Ctors
 
-		#region Methods
+        #region Methods
 
-		public bool Auth(string password)
-		{
+        public bool Auth(string password)
+        {
             if (password == null)
-				throw new ArgumentNullException("password");
+                throw new ArgumentNullException("password");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Auth, password.ToBytes()))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
-		}
-		
-        public string Echo(string msg)
-		{
-			if (msg == null)
-				throw new ArgumentNullException("msg");
+        }
 
-			ValidateNotDisposed();
+        public string Echo(string msg)
+        {
+            if (msg == null)
+                throw new ArgumentNullException("msg");
+
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Echo, msg.ToBytes()))
             {
                 return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
-		public string Ping()
-		{
-			return Ping(null);
-		}
+        public string Ping()
+        {
+            return Ping(null);
+        }
 
-		public string Ping(string msg)
-		{
-			ValidateNotDisposed();
+        public string Ping(string msg)
+        {
+            ValidateNotDisposed();
             if (String.IsNullOrEmpty(msg))
                 using (var cmd = new RedisCommand(RedisCommands.Ping))
                 {
@@ -56,17 +56,17 @@ namespace Sweet.Redis
             {
                 return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
-		public bool Quit()
-		{
-			ValidateNotDisposed();
+        public bool Quit()
+        {
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Quit))
             {
                 return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
-		}
+        }
 
-		#endregion Methods
-	}
+        #endregion Methods
+    }
 }

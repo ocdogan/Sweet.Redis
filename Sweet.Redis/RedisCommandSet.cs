@@ -54,17 +54,17 @@ namespace Sweet.Redis
         }
 
         protected static void ValidateKeyAndValue(string key, byte[] value)
-		{
-			if (key == null)
-				throw new ArgumentNullException("key");
+        {
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			if (value.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("Redis values are limited to 1GB", "value");
-		}
+            if (value.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("Redis values are limited to 1GB", "value");
+        }
 
-		#endregion Methods
-	}
+        #endregion Methods
+    }
 }

@@ -17,395 +17,395 @@ namespace Sweet.Redis
 
         public byte[][] BLPop(string key, int timeout)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.BLPop, key.ToBytes(), timeout.ToBytes())) 
+            using (var cmd = new RedisCommand(RedisCommands.BLPop, key.ToBytes(), timeout.ToBytes()))
             {
-                return cmd.ExpectMultiDataBytes(Db.Pool, true); 
+                return cmd.ExpectMultiDataBytes(Db.Pool, true);
             }
-		}
+        }
 
         public byte[][] BRPop(string key, int timeout)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.BRPop, key.ToBytes(), timeout.ToBytes()))
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.BRPop, key.ToBytes(), timeout.ToBytes()))
             {
-                return cmd.ExpectMultiDataBytes(Db.Pool, true); 
+                return cmd.ExpectMultiDataBytes(Db.Pool, true);
             }
-		}
+        }
 
         public byte[] BRPopLPush(string source, string destination)
         {
-			if (source == null)
-				throw new ArgumentNullException("source");
+            if (source == null)
+                throw new ArgumentNullException("source");
 
-			if (destination == null)
-				throw new ArgumentNullException("destination");
+            if (destination == null)
+                throw new ArgumentNullException("destination");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.BRPopLPush, source.ToBytes(), destination.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.BRPopLPush, source.ToBytes(), destination.ToBytes()))
             {
-                return cmd.ExpectBulkStringBytes(Db.Pool, true); 
+                return cmd.ExpectBulkStringBytes(Db.Pool, true);
             }
-		}
+        }
 
         public string BRPopLPushString(string source, string destination)
         {
-			if (source == null)
-				throw new ArgumentNullException("source");
+            if (source == null)
+                throw new ArgumentNullException("source");
 
-			if (destination == null)
-				throw new ArgumentNullException("destination");
+            if (destination == null)
+                throw new ArgumentNullException("destination");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.BRPopLPush, source.ToBytes(), destination.ToBytes()))
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.BRPopLPush, source.ToBytes(), destination.ToBytes()))
             {
-                return cmd.ExpectBulkString(Db.Pool, true); 
+                return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
         public byte[] LIndex(string key, int index)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.LIndex, key.ToBytes(), index.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LIndex, key.ToBytes(), index.ToBytes()))
             {
-                return cmd.ExpectBulkStringBytes(Db.Pool, true); 
+                return cmd.ExpectBulkStringBytes(Db.Pool, true);
             }
-		}
+        }
 
         public string LIndexString(string key, int index)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.LIndex, key.ToBytes(), index.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LIndex, key.ToBytes(), index.ToBytes()))
             {
-                return cmd.ExpectBulkString(Db.Pool, true); 
+                return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
         public bool LInsert(string key, bool insertBefore, byte[] pivot, byte[] value)
         {
             ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
 
-			var prePost = insertBefore ? RedisCommands.Before : RedisCommands.After;
-            using (var cmd = new RedisCommand(RedisCommands.LInsert, key.ToBytes(), prePost, pivot, value)) 
+            var prePost = insertBefore ? RedisCommands.Before : RedisCommands.After;
+            using (var cmd = new RedisCommand(RedisCommands.LInsert, key.ToBytes(), prePost, pivot, value))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true); 
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
-		}
+        }
 
         public long LLen(string key)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.LLen, key.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LLen, key.ToBytes()))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public byte[] LPop(string key)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.LPop, key.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LPop, key.ToBytes()))
             {
-                return cmd.ExpectBulkStringBytes(Db.Pool, true); 
+                return cmd.ExpectBulkStringBytes(Db.Pool, true);
             }
-		}
+        }
 
         public string LPopString(string key)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.LPop, key.ToBytes()))             
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LPop, key.ToBytes()))
             {
-                return cmd.ExpectBulkString(Db.Pool, true); 
+                return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
         public long LPush(string key, byte[] value)
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
 
-            using (var cmd = new RedisCommand(RedisCommands.LPush, key.ToBytes(), value)) 
+            using (var cmd = new RedisCommand(RedisCommands.LPush, key.ToBytes(), value))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long LPush(string key, string value)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			var bytes = value.ToBytes();
-			if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("value is limited to 1GB", "value");
+            var bytes = value.ToBytes();
+            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("value is limited to 1GB", "value");
 
-			using (var cmd = new RedisCommand(RedisCommands.LPush, key.ToBytes(), bytes)) 
+            using (var cmd = new RedisCommand(RedisCommands.LPush, key.ToBytes(), bytes))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long LPushX(string key, byte[] value)
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
 
-			using (var cmd = new RedisCommand(RedisCommands.LPushX, key.ToBytes(), value)) 
+            using (var cmd = new RedisCommand(RedisCommands.LPushX, key.ToBytes(), value))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long LPushX(string key, string value)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			var bytes = value.ToBytes();
-			if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("value is limited to 1GB", "value");
+            var bytes = value.ToBytes();
+            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("value is limited to 1GB", "value");
 
-			using (var cmd = new RedisCommand(RedisCommands.LPushX, key.ToBytes(), bytes)) 
+            using (var cmd = new RedisCommand(RedisCommands.LPushX, key.ToBytes(), bytes))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public byte[][] LRange(string key, int start, int end)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.LRange, key.ToBytes(), start.ToBytes(), end.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LRange, key.ToBytes(), start.ToBytes(), end.ToBytes()))
             {
-                return cmd.ExpectMultiDataBytes(Db.Pool, true); 
+                return cmd.ExpectMultiDataBytes(Db.Pool, true);
             }
-		}
+        }
 
         public string[] LRangeString(string key, int start, int end)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.LRange, key.ToBytes(), start.ToBytes(), end.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LRange, key.ToBytes(), start.ToBytes(), end.ToBytes()))
             {
-                return cmd.ExpectMultiDataStrings(Db.Pool, true); 
+                return cmd.ExpectMultiDataStrings(Db.Pool, true);
             }
-		}
+        }
 
         public long LRem(string key, int count, byte[] value)
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
 
-            using (var cmd = new RedisCommand(RedisCommands.LRem, key.ToBytes(), count.ToBytes(), value)) 
+            using (var cmd = new RedisCommand(RedisCommands.LRem, key.ToBytes(), count.ToBytes(), value))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long LRem(string key, int count, string value)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			var bytes = value.ToBytes();
-			if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("value is limited to 1GB", "value");
+            var bytes = value.ToBytes();
+            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("value is limited to 1GB", "value");
 
-            using (var cmd = new RedisCommand(RedisCommands.LRem, key.ToBytes(), count.ToBytes(), bytes)) 
+            using (var cmd = new RedisCommand(RedisCommands.LRem, key.ToBytes(), count.ToBytes(), bytes))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public bool LSet(string key, int index, byte[] value)
         {
-			ValidateNotDisposed();
-			ValidateKeyAndValue(key, value);
+            ValidateNotDisposed();
+            ValidateKeyAndValue(key, value);
 
-            using (var cmd = new RedisCommand(RedisCommands.LSet, key.ToBytes(), index.ToBytes(), value)) 
+            using (var cmd = new RedisCommand(RedisCommands.LSet, key.ToBytes(), index.ToBytes(), value))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true); 
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
-		}
+        }
 
         public bool LSet(string key, int index, string value)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			var bytes = value.ToBytes();
-			if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("value is limited to 1GB", "value");
+            var bytes = value.ToBytes();
+            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("value is limited to 1GB", "value");
 
-			using (var cmd = new RedisCommand(RedisCommands.LSet, key.ToBytes(), index.ToBytes(), bytes))             
+            using (var cmd = new RedisCommand(RedisCommands.LSet, key.ToBytes(), index.ToBytes(), bytes))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true); 
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
-		}
+        }
 
         public bool LTrim(string key, int start, int end)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.LTrim, key.ToBytes(), start.ToBytes(), end.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.LTrim, key.ToBytes(), start.ToBytes(), end.ToBytes()))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true); 
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
             }
-		}
+        }
 
         public byte[] RPop(string key)
         {
-			var result = RPopString(key);
-			if (result != null)
-				return Encoding.UTF8.GetBytes(result);
-			return null;
-		}
+            var result = RPopString(key);
+            if (result != null)
+                return Encoding.UTF8.GetBytes(result);
+            return null;
+        }
 
         public byte[] RPopLPush(string source, string destination)
         {
             var result = RPopLPushString(source, destination);
-			if (result != null)
-				return Encoding.UTF8.GetBytes(result);
-			return null;
-		}
+            if (result != null)
+                return Encoding.UTF8.GetBytes(result);
+            return null;
+        }
 
         public string RPopLPushString(string source, string destination)
         {
-			if (source == null)
-				throw new ArgumentNullException("source");
+            if (source == null)
+                throw new ArgumentNullException("source");
 
-			if (destination == null)
-				throw new ArgumentNullException("destination");
+            if (destination == null)
+                throw new ArgumentNullException("destination");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(RedisCommands.RPopLPush, source.ToBytes(), destination.ToBytes())) 
+            using (var cmd = new RedisCommand(RedisCommands.RPopLPush, source.ToBytes(), destination.ToBytes()))
             {
-                return cmd.ExpectBulkString(Db.Pool, true); 
+                return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
         public string RPopString(string key)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.RPop, key.ToBytes())) 
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.RPop, key.ToBytes()))
             {
-                return cmd.ExpectBulkString(Db.Pool, true); 
+                return cmd.ExpectBulkString(Db.Pool, true);
             }
-		}
+        }
 
         public long RPush(string key, byte[][] values)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (values == null)
-				throw new ArgumentNullException("values");
+            if (values == null)
+                throw new ArgumentNullException("values");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-            using (var cmd = new RedisCommand(RedisCommands.RPush, key.ToBytes().Merge(values))) 
+            using (var cmd = new RedisCommand(RedisCommands.RPush, key.ToBytes().Merge(values)))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long RPush(string key, string[] values)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (values == null)
-				throw new ArgumentNullException("values");
+            if (values == null)
+                throw new ArgumentNullException("values");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			using (var cmd = new RedisCommand(RedisCommands.RPush, key.ToBytes().Merge(values))) 
+            using (var cmd = new RedisCommand(RedisCommands.RPush, key.ToBytes().Merge(values)))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long RPushX(string key, byte[] value)
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
 
-			using (var cmd = new RedisCommand(RedisCommands.RPushX, key.ToBytes(), value)) 
+            using (var cmd = new RedisCommand(RedisCommands.RPushX, key.ToBytes(), value))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         public long RPushX(string key, string value)
         {
-			if (key == null)
-				throw new ArgumentNullException("key");
+            if (key == null)
+                throw new ArgumentNullException("key");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			var bytes = value.ToBytes();
-			if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("value is limited to 1GB", "value");
+            var bytes = value.ToBytes();
+            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("value is limited to 1GB", "value");
 
-			using (var cmd = new RedisCommand(RedisCommands.RPushX, key.ToBytes(), bytes)) 
+            using (var cmd = new RedisCommand(RedisCommands.RPushX, key.ToBytes(), bytes))
             {
-                return cmd.ExpectInteger(Db.Pool, true); 
+                return cmd.ExpectInteger(Db.Pool, true);
             }
-		}
+        }
 
         #endregion Methods
     }

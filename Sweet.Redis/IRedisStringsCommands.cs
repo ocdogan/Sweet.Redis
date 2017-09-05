@@ -6,9 +6,9 @@ namespace Sweet.Redis
         long Append(string key, byte[] value);
 
         long BitCount(string key);
-		long BitCount(string key, int start, int end);
+        long BitCount(string key, int start, int end);
 
-		long Decr(string key);
+        long Decr(string key);
         long DecrBy(string key, int count);
         long DecrBy(string key, long count);
 

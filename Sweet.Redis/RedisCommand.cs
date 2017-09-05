@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -10,28 +9,28 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-		private int m_RequestLength;
-		private byte[] m_Command;
+        private int m_RequestLength;
+        private byte[] m_Command;
         private byte[][] m_Arguments;
 
         #endregion Field Members
 
         #region .Ctors
 
-		public RedisCommand(byte[] command, params byte[][] args)
-		{
-			if (command == null)
-				throw new ArgumentNullException("command");
+        public RedisCommand(byte[] command, params byte[][] args)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
 
-			m_Command = command;
-			m_Arguments = args;
+            m_Command = command;
+            m_Arguments = args;
 
-			m_RequestLength = CalculateRequestLengh(m_Command, m_Arguments);
-		}
-		
+            m_RequestLength = CalculateRequestLengh(m_Command, m_Arguments);
+        }
+
         #endregion .Ctors
 
-		#region Destructors
+        #region Destructors
 
         protected override void OnDispose(bool disposing)
         {
@@ -46,54 +45,54 @@ namespace Sweet.Redis
 
         private byte[][] Arguments { get { return m_Arguments; } }
 
-		#endregion Properties
+        #endregion Properties
 
-		#region Methods
+        #region Methods
 
-		private static int CalculateRequestLengh(byte[] command, byte[][] args)
-		{
-			var argsLen = args != null ? args.Length : 0;
+        private static int CalculateRequestLengh(byte[] command, byte[][] args)
+        {
+            var argsLen = args != null ? args.Length : 0;
 
-			var length = 1; // * sign
-			length += ((argsLen + 1) / 10) + 1; // total length
-			length += 2; // total length line end
-			length += 1; // $ sign
-			length += (command.Length / 10) + 1; // commang length line
-			length += 2; // command length line end
-			length += command.Length;
-			length += 2; // command line end
+            var length = 1; // * sign
+            length += ((argsLen + 1) / 10) + 1; // total length
+            length += 2; // total length line end
+            length += 1; // $ sign
+            length += (command.Length / 10) + 1; // commang length line
+            length += 2; // command length line end
+            length += command.Length;
+            length += 2; // command line end
 
-			if (argsLen > 0)
-			{
-				foreach (var arg in args)
-				{
-					if (arg == null)
-					{
-						length += 5; // $-1\r\n length
-					}
-					else if (arg.Length == 0)
-					{
-						length += 6; // $0\r\n\r\n length
-					}
-					else
-					{
-						length += 1; // $ sign
-						length += (arg.Length / 10) + 1; // arg length line
-						length += 2; // arg length line end
-						length += arg.Length;
-						length += 2; // arg line end
-					}
-				}
-			}
-			return length;
-		}
+            if (argsLen > 0)
+            {
+                foreach (var arg in args)
+                {
+                    if (arg == null)
+                    {
+                        length += 5; // $-1\r\n length
+                    }
+                    else if (arg.Length == 0)
+                    {
+                        length += 6; // $0\r\n\r\n length
+                    }
+                    else
+                    {
+                        length += 1; // $ sign
+                        length += (arg.Length / 10) + 1; // arg length line
+                        length += 2; // arg length line end
+                        length += arg.Length;
+                        length += 2; // arg line end
+                    }
+                }
+            }
+            return length;
+        }
 
-		private byte[] PrepareData()
-		{
-			var argsLen = m_Arguments != null ? m_Arguments.Length : 0;
-			var bufferLen = Math.Min(m_RequestLength + 16, RedisConstants.DefaultBufferSize);
+        private byte[] PrepareData()
+        {
+            var argsLen = m_Arguments != null ? m_Arguments.Length : 0;
+            var bufferLen = Math.Min(m_RequestLength + 16, RedisConstants.DefaultBufferSize);
 
-			using (var ms = new MemoryStream(m_RequestLength))
+            using (var ms = new MemoryStream(m_RequestLength))
             {
                 using (var bw = new BinaryWriter(new BufferedStream(ms, bufferLen), Encoding.UTF8))
                 {
@@ -115,16 +114,16 @@ namespace Sweet.Redis
 
                             if (arg == null)
                             {
-								bw.Write("$-1".ToBytes());
-								bw.Write(RedisConstants.LineEnd);
-							}
-							else if (arg.Length == 0)
-							{
-								bw.Write("$0".ToBytes());
-								bw.Write(RedisConstants.LineEnd);
+                                bw.Write("$-1".ToBytes());
                                 bw.Write(RedisConstants.LineEnd);
-							}
-							else
+                            }
+                            else if (arg.Length == 0)
+                            {
+                                bw.Write("$0".ToBytes());
+                                bw.Write(RedisConstants.LineEnd);
+                                bw.Write(RedisConstants.LineEnd);
+                            }
+                            else
                             {
                                 bw.Write('$');
                                 bw.Write(arg.Length.ToBytes());
@@ -133,14 +132,14 @@ namespace Sweet.Redis
                                 bw.Write(RedisConstants.LineEnd);
                             }
                         }
-                    } 
+                    }
                 }
                 return ms.ToArray();
             }
-		}
+        }
 
-		public bool ExpectSimpleString(RedisConnectionPool pool, string expectedResult, bool throwException = true)
-		{
+        public bool ExpectSimpleString(RedisConnectionPool pool, string expectedResult, bool throwException = true)
+        {
             var result = ExpectSimpleString(pool, throwException);
             if (!String.IsNullOrEmpty(result))
             {
@@ -149,38 +148,38 @@ namespace Sweet.Redis
 
                 if (result.StartsWith("-", StringComparison.Ordinal))
                     return false;
-                
+
                 return true;
             }
             return false;
-		}
+        }
 
-		public string ExpectSimpleString(RedisConnectionPool pool, bool throwException = true)
-		{
-			var bytes = ExpectSimpleStringBytes(pool, throwException);
-			if (bytes == null)
-				return null;
-			return Encoding.UTF8.GetString(bytes);
-		}
+        public string ExpectSimpleString(RedisConnectionPool pool, bool throwException = true)
+        {
+            var bytes = ExpectSimpleStringBytes(pool, throwException);
+            if (bytes == null)
+                return null;
+            return Encoding.UTF8.GetString(bytes);
+        }
 
-		public bool ExpectSimpleStringBytes(RedisConnectionPool pool, byte[] expectedResult, bool throwException = true)
-		{
-			var result = ExpectSimpleStringBytes(pool, throwException);
+        public bool ExpectSimpleStringBytes(RedisConnectionPool pool, byte[] expectedResult, bool throwException = true)
+        {
+            var result = ExpectSimpleStringBytes(pool, throwException);
             if (result != null && result.Length > 0)
-			{
+            {
                 if (expectedResult != null && expectedResult.Length > 0)
                     return result.Equals(expectedResult, (b1, b2) => char.ToUpper((char)b1) == char.ToUpper((char)b2));
 
-				if (result[0] == '-')
-					return false;
+                if (result[0] == '-')
+                    return false;
 
-				return true;
-			}
-			return false;
-		}
+                return true;
+            }
+            return false;
+        }
 
         public byte[] ExpectSimpleStringBytes(RedisConnectionPool pool, bool throwException = true)
-		{
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -198,18 +197,18 @@ namespace Sweet.Redis
                 }
                 return response.ReleaseData();
             }
-		}
+        }
 
         public string ExpectBulkString(RedisConnectionPool pool, bool throwException = true)
-		{
-			var bytes = ExpectBulkStringBytes(pool, throwException);
-			if (bytes == null)
-				return null;
-			return Encoding.UTF8.GetString(bytes);
-		}
+        {
+            var bytes = ExpectBulkStringBytes(pool, throwException);
+            if (bytes == null)
+                return null;
+            return Encoding.UTF8.GetString(bytes);
+        }
 
-		public byte[] ExpectBulkStringBytes(RedisConnectionPool pool, bool throwException = true)
-		{
+        public byte[] ExpectBulkStringBytes(RedisConnectionPool pool, bool throwException = true)
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -227,10 +226,10 @@ namespace Sweet.Redis
                 }
                 return response.ReleaseData();
             }
-		}
+        }
 
         public long ExpectInteger(RedisConnectionPool pool, bool throwException = true)
-		{
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -264,10 +263,10 @@ namespace Sweet.Redis
 
                 return long.MinValue;
             }
-		}
+        }
 
-		public double ExpectDouble(RedisConnectionPool pool, bool throwException = true)
-		{
+        public double ExpectDouble(RedisConnectionPool pool, bool throwException = true)
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -302,10 +301,10 @@ namespace Sweet.Redis
 
                 return double.MinValue;
             }
-		}        	
+        }
 
         public RedisObject ExpectArray(RedisConnectionPool pool, bool throwException = true)
-		{
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -316,10 +315,10 @@ namespace Sweet.Redis
                 }
                 return RedisObject.ToObject(response);
             }
-		}
+        }
 
-		public string[] ExpectMultiDataStrings(RedisConnectionPool pool, bool throwException = true)
-		{
+        public string[] ExpectMultiDataStrings(RedisConnectionPool pool, bool throwException = true)
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -393,10 +392,10 @@ namespace Sweet.Redis
                 }
                 return null;
             }
-		}
+        }
 
-		public byte[][] ExpectMultiDataBytes(RedisConnectionPool pool, bool throwException = true)
-		{
+        public byte[][] ExpectMultiDataBytes(RedisConnectionPool pool, bool throwException = true)
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
@@ -469,26 +468,26 @@ namespace Sweet.Redis
                 }
                 return null;
             }
-		}
+        }
 
         public IRedisResponse Execute(RedisConnectionPool pool, bool throwException = true)
         {
-			var data = PrepareData();
-			using (var conn = pool.Connect())
-			{
+            var data = PrepareData();
+            using (var conn = pool.Connect())
+            {
                 var response = conn.Send(data);
                 if (response == null && throwException)
                     throw new RedisException("Corrupted redis response data");
                 HandleError(response);
 
                 return response;
-			}
-		}
+            }
+        }
 
         private static void HandleError(IRedisResponse response)
-		{
-			if (response != null)
-			{
+        {
+            if (response != null)
+            {
                 if (response.Type == RedisObjectType.Error)
                 {
                     var data = response.Data;
@@ -499,9 +498,9 @@ namespace Sweet.Redis
                 if (items != null)
                     for (var i = items.Count - 1; i > -1; i--)
                         HandleError(items[i]);
-			}
-		}
+            }
+        }
 
-		#endregion Methods
-	}
+        #endregion Methods
+    }
 }

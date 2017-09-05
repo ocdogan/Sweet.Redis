@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -7,9 +6,9 @@ namespace Sweet.Redis
 {
     internal class RedisResponseReader : RedisDisposable, IRedisResponseReader
     {
-		#region Field Members
+        #region Field Members
 
-		private long m_Executing;
+        private long m_Executing;
         private RedisConnection m_Connection;
 
         #endregion Field Members
@@ -19,33 +18,33 @@ namespace Sweet.Redis
         public RedisResponseReader(RedisConnection connection)
         {
             if (connection == null)
-                throw new ArgumentNullException("connection");            
+                throw new ArgumentNullException("connection");
             m_Connection = connection;
         }
 
-		#endregion .Ctors
+        #endregion .Ctors
 
-		#region Destructors
+        #region Destructors
 
-		protected override void OnDispose(bool disposing)
-		{
+        protected override void OnDispose(bool disposing)
+        {
             Interlocked.Exchange(ref m_Connection, null);
-		}
+        }
 
-		#endregion Destructors
+        #endregion Destructors
 
-		#region Properties
+        #region Properties
 
         public bool Executing
         {
             get { return Interlocked.Read(ref m_Executing) == 0L; }
         }
 
-		#endregion Properties
-		
+        #endregion Properties
+
         #region Methods
 
-		public IRedisResponse Execute()
+        public IRedisResponse Execute()
         {
             ValidateNotDisposed();
 
@@ -63,26 +62,26 @@ namespace Sweet.Redis
                     Interlocked.Exchange(ref m_Executing, 0L);
                 }
             }
-			return null;
-		}
+            return null;
+        }
 
         private IRedisResponse ReadThrough(RedisResponse item, RedisByteBuffer buffer)
         {
             var readMore = false;
-			var type = item.Type;
-			
+            var type = item.Type;
+
             while (!item.Ready)
             {
                 var bufferLength = buffer.Length;
                 readMore = readMore || (bufferLength == 0) ||
                     ((item.Length < -1 || type == RedisObjectType.Undefined) && bufferLength == 0) ||
                     (type != RedisObjectType.Array && item.Length > buffer.Length - buffer.Position);
-                
+
                 if (readMore)
-                {                    
-					var connection = m_Connection;
-					if (connection == null || connection.Disposed)
-						throw new RedisException("Can not complete redis response parse");
+                {
+                    var connection = m_Connection;
+                    if (connection == null || connection.Disposed)
+                        throw new RedisException("Can not complete redis response parse");
 
                     var receivedData = connection.Receive();
                     if (receivedData.IsEmpty)
@@ -90,7 +89,7 @@ namespace Sweet.Redis
 
                     readMore = false;
                     buffer.Put(receivedData.Data);
-				}
+                }
 
                 if (item.Length < -1)
                 {
@@ -164,9 +163,9 @@ namespace Sweet.Redis
                             {
                                 item.Data = data;
                                 SetReady(item);
-								
+
                                 buffer.EatCRLF();
-								
+
                                 return item;
                             }
                         }
@@ -185,13 +184,13 @@ namespace Sweet.Redis
                         }
                 }
             }
-			return null;
-		}
+            return null;
+        }
 
         private static void SetReady(RedisResponse child)
         {
-			child.Ready = true;
-			
+            child.Ready = true;
+
             var parent = child.Parent as RedisResponse;
             if (parent != null)
             {
@@ -201,7 +200,7 @@ namespace Sweet.Redis
             }
         }
 
-		#endregion Methods
+        #endregion Methods
 
-	}
+    }
 }

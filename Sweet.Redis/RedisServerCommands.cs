@@ -17,30 +17,30 @@ namespace Sweet.Redis
 
         public bool BGRewriteAOF()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.BGRewriteAOF))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool BGSave()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.BGSave))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public string ClientGetName()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.GetName))
-			{
-				return cmd.ExpectBulkString(Db.Pool, true);
-			}
-		}
+            {
+                return cmd.ExpectBulkString(Db.Pool, true);
+            }
+        }
 
         public long ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true)
         {
@@ -60,17 +60,17 @@ namespace Sweet.Redis
 
             if (!String.IsNullOrEmpty(clientId))
             {
-				parameters = parameters
-					.Merge(RedisCommands.Id)
+                parameters = parameters
+                    .Merge(RedisCommands.Id)
                     .Merge(clientId.ToBytes());
-			}
+            }
 
-			if (!String.IsNullOrEmpty(type))
-			{
-				parameters = parameters
+            if (!String.IsNullOrEmpty(type))
+            {
+                parameters = parameters
                     .Merge(RedisCommands.Type)
-					.Merge(type.ToBytes());
-			}
+                    .Merge(type.ToBytes());
+            }
 
             if (!skipMe)
             {
@@ -87,13 +87,13 @@ namespace Sweet.Redis
 
         public RedisClientInfo[] ClientList()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.List))
-			{
+            {
                 var response = cmd.ExpectBulkString(Db.Pool, true);
                 if (response != null)
                 {
-					var lines = response.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    var lines = response.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     if (lines.Length > 0)
                     {
                         var list = new List<RedisClientInfo>(lines.Length);
@@ -105,92 +105,92 @@ namespace Sweet.Redis
                         }
                         return (list.Count > 0) ? list.ToArray() : null;
                     }
-				}
-			}
+                }
+            }
             return null;
-		}
+        }
 
         public IDictionary<string, string>[] ClientListDictionary()
         {
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.List))
-			{
-				var response = cmd.ExpectBulkString(Db.Pool, true);
-				if (response != null)
-				{
-					var lines = response.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-					if (lines.Length > 0)
-					{
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.List))
+            {
+                var response = cmd.ExpectBulkString(Db.Pool, true);
+                if (response != null)
+                {
+                    var lines = response.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (lines.Length > 0)
+                    {
                         var list = new List<IDictionary<string, string>>(lines.Length);
-						foreach (var line in lines)
-						{
-							var info = RedisClientInfo.ParseDictionary(line);
-							if (info != null)
-								list.Add(info);
-						}
-						return (list.Count > 0) ? list.ToArray() : null;
-					}
-				}
-			}
-			return null;
-		}
+                        foreach (var line in lines)
+                        {
+                            var info = RedisClientInfo.ParseDictionary(line);
+                            if (info != null)
+                                list.Add(info);
+                        }
+                        return (list.Count > 0) ? list.ToArray() : null;
+                    }
+                }
+            }
+            return null;
+        }
 
         public bool ClientPause(int timeout)
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Pause, timeout.ToBytes()))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool ClientReplyOff()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Off))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool ClientReplyOn()
         {
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.On))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.On))
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool ClientReplySkip()
         {
-			ValidateNotDisposed();
-			using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip))
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool ClientSetName(string connectionName)
         {
             if (connectionName == null)
                 throw new ArgumentNullException("connectionName");
-            
-			ValidateNotDisposed();
+
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Client, RedisCommands.SetName, connectionName.ToBytes()))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public IDictionary<string, string> ConfigGet(string parameter)
         {
-			if (parameter == null)
-				throw new ArgumentNullException("parameter");
+            if (parameter == null)
+                throw new ArgumentNullException("parameter");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.Get, parameter.ToBytes()))
-			{
+            {
                 var lines = cmd.ExpectMultiDataStrings(Db.Pool, true);
                 if (lines != null)
                 {
@@ -207,186 +207,186 @@ namespace Sweet.Redis
                         return result;
                     }
                 }
-			}
+            }
             return null;
-		}
+        }
 
         public bool ConfigResetStat()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.ResetStat))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool ConfigRewrite()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.Rewrite))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool ConfigSet(string parameter, string value)
         {
-			if (parameter == null)
-				throw new ArgumentNullException("parameter");
+            if (parameter == null)
+                throw new ArgumentNullException("parameter");
 
-			if (value == null)
-				throw new ArgumentNullException("value");
+            if (value == null)
+                throw new ArgumentNullException("value");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
 
-			var bytes = value.ToBytes();
-			if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-				throw new ArgumentException("value is limited to 1GB", "value");
+            var bytes = value.ToBytes();
+            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("value is limited to 1GB", "value");
 
             using (var cmd = new RedisCommand(RedisCommands.Config, RedisCommands.Set, parameter.ToBytes(), bytes))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public long DbSize()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.DbSize))
-			{
-				return cmd.ExpectInteger(Db.Pool, true);
-			}
-		}
+            {
+                return cmd.ExpectInteger(Db.Pool, true);
+            }
+        }
 
         public bool FlushAll()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.FlushAll))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool FlushAllAsync()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.FlushAll, RedisCommands.Async))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool FlushDb()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.FlushDb))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool FlushDbAsync()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.FlushDb, RedisCommands.Async))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public string[] Info(string section)
         {
-			if (section == null)
-				throw new ArgumentNullException("section");
+            if (section == null)
+                throw new ArgumentNullException("section");
 
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Info, section.ToBytes()))
-			{
+            {
                 return cmd.ExpectMultiDataStrings(Db.Pool, true);
-			}
-		}
+            }
+        }
 
         public DateTime LastSave()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.LastSave))
-			{
-				var unixTimeStamp = cmd.ExpectInteger(Db.Pool, true);
+            {
+                var unixTimeStamp = cmd.ExpectInteger(Db.Pool, true);
                 return (new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(unixTimeStamp).ToLocalTime();
             }
-		}
+        }
 
         public bool Save()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Save))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public void ShutDown()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.ShutDown))
-			{
-				cmd.ExpectSimpleString(Db.Pool, true);
-			}
-		}
+            {
+                cmd.ExpectSimpleString(Db.Pool, true);
+            }
+        }
 
         public void ShutDownSave()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.ShutDown, RedisCommands.Async))
-			{
-				cmd.ExpectSimpleString(Db.Pool, true);
-			}
-		}
+            {
+                cmd.ExpectSimpleString(Db.Pool, true);
+            }
+        }
 
         public bool SlaveOf(string host, int port)
         {
-			if (host == null)
-				throw new ArgumentNullException("host");
+            if (host == null)
+                throw new ArgumentNullException("host");
 
             if (port < 0 || port > ushort.MaxValue)
                 throw new ArgumentException("Invalid port number");
-            
-			ValidateNotDisposed();
+
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.SlaveOf, host.ToBytes(), port.ToBytes()))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public bool SlaveOfNoOne()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.SlaveOf, RedisCommands.NoOne))
-			{
-				return cmd.ExpectSimpleString(Db.Pool, "OK", true);
-			}
-		}
+            {
+                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+            }
+        }
 
         public DateTime Time()
         {
-			ValidateNotDisposed();
+            ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.Time))
-			{
-				var parts = cmd.ExpectMultiDataStrings(Db.Pool, true);
+            {
+                var parts = cmd.ExpectMultiDataStrings(Db.Pool, true);
                 if (parts != null && parts.Length > 0)
                 {
                     var dateStamp = parts[0].ToInt();
-					
+
                     var date = (new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(dateStamp).ToLocalTime();
                     if (parts.Length == 1)
                         return date;
-                    
-					var timeStamp = parts[1].ToInt();
-					return date.AddTicks(timeStamp * 10);
-				}
-			}
+
+                    var timeStamp = parts[1].ToInt();
+                    return date.AddTicks(timeStamp * 10);
+                }
+            }
             return DateTime.MinValue;
-		}
+        }
 
         #endregion Methods
     }

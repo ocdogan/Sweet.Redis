@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Sweet.Redis
+﻿namespace Sweet.Redis
 {
     public static class RedisConstants
     {
-		#region Static Members
+        #region Static Members
 
-		public static readonly byte[] EmptyBytes = new byte[0];
-		public static readonly byte[] LineEnd = new byte[] { (byte)'\r', (byte)'\n' };
+        public static readonly byte[] EmptyBytes = new byte[0];
+        public static readonly byte[] LineEnd = new byte[] { (byte)'\r', (byte)'\n' };
 
         #endregion Static Members
 
         #region Constants
 
-        public const int DefaultBufferSize = 4*1024;
+        public const int DefaultBufferSize = 4 * 1024;
 
         public const int MaxValueLength = 1024 * 1024 * 1024; // 1 GB
 
@@ -44,14 +39,14 @@ namespace Sweet.Redis
         public const int MinIdleTimeout = 10;
         public const int MaxIdleTimeout = 3600;
 
-		public const int DefaultSendTimeout = 15000;
-		public const int MinSendTimeout = 100;
-		public const int MaxSendTimeout = 60000;
+        public const int DefaultSendTimeout = 15000;
+        public const int MinSendTimeout = 100;
+        public const int MaxSendTimeout = 60000;
 
-		public const int DefaultReceiveTimeout = 15000;
-		public const int MinReceiveTimeout = 100;
-		public const int MaxReceiveTimeout = 60000;
+        public const int DefaultReceiveTimeout = 15000;
+        public const int MinReceiveTimeout = 100;
+        public const int MaxReceiveTimeout = 60000;
 
-		#endregion Constants
-	}
+        #endregion Constants
+    }
 }

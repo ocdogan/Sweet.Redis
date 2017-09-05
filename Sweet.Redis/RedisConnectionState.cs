@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Sweet.Redis
+﻿namespace Sweet.Redis
 {
     public enum RedisConnectionState : int
     {

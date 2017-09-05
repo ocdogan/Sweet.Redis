@@ -4,9 +4,9 @@
     {
         bool Auth(string password);
 
-		string Echo(string msg);
-		string Ping();
-		string Ping(string msg);
+        string Echo(string msg);
+        string Ping();
+        string Ping(string msg);
         bool Quit();
-	}
+    }
 }

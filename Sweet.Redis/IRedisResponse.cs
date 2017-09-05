@@ -7,13 +7,13 @@ namespace Sweet.Redis
     {
         int Count { get; }
         byte[] Data { get; }
-		IList<IRedisResponse> Items { get; }
-		int Length { get; }
+        IList<IRedisResponse> Items { get; }
+        int Length { get; }
         IRedisResponse Parent { get; }
-		bool Ready { get; }
-		RedisObjectType Type { get; }
+        bool Ready { get; }
+        RedisObjectType Type { get; }
 
         void Clear();
         byte[] ReleaseData();
-	}
+    }
 }

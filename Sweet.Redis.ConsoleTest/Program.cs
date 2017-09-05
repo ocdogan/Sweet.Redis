@@ -13,8 +13,8 @@ namespace Sweet.Redis.ConsoleTest
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
             {
-				var largeText = new string('x', 100000);
-				do
+                var largeText = new string('x', 100000);
+                do
                 {
                     Console.Clear();
                     try
@@ -27,7 +27,7 @@ namespace Sweet.Redis.ConsoleTest
                             WriteResult("Echo 1, ", db.Connection.Echo("1"));
                             WriteResult("Echo String.Empty, ", db.Connection.Echo(String.Empty));
                             WriteResult("LastSave, ", db.Server.LastSave());
-							WriteResult("Time, ", db.Server.Time());
+                            WriteResult("Time, ", db.Server.Time());
 
                             var cfg = db.Server.ConfigGet("*");
                             if (cfg == null || cfg.Count == 0)
@@ -39,16 +39,16 @@ namespace Sweet.Redis.ConsoleTest
                                 var i = 1;
                                 foreach (var kv in cfg)
                                 {
-                                    WriteResult("ConfigGet " + i++ + ") ", 
+                                    WriteResult("ConfigGet " + i++ + ") ",
                                                 kv.Key + " = " + kv.Value);
                                 }
                             }
 
                             var clients = db.Server.ClientListDictionary();
                             if (clients == null || clients.Length == 0)
-								WriteResult("ClientList, ", "(null)");
-							else
-							{
+                                WriteResult("ClientList, ", "(null)");
+                            else
+                            {
                                 var i = 0;
                                 foreach (var client in clients)
                                 {
@@ -61,8 +61,8 @@ namespace Sweet.Redis.ConsoleTest
                                                     kv.Key + " = " + kv.Value);
                                     }
                                 }
-							}
-						}
+                            }
+                        }
 
                         /* using (var db = pool.GetDb(1))
                         {
@@ -112,7 +112,7 @@ namespace Sweet.Redis.ConsoleTest
                     {
                         Console.WriteLine(e);
                     }
-					
+
                     Console.WriteLine();
                     Console.WriteLine("Press any key to continue, ESC to escape ...");
                 }
@@ -152,8 +152,8 @@ namespace Sweet.Redis.ConsoleTest
                     Console.WriteLine();
                 }
             }
-			Console.WriteLine("-----------------------------------------------");
-			Console.WriteLine();
-		}
+            Console.WriteLine("-----------------------------------------------");
+            Console.WriteLine();
+        }
     }
 }

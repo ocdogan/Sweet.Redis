@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 
@@ -46,9 +45,9 @@ namespace Sweet.Redis
 
         public RedisObjectType Type { get; private set; }
 
-		#endregion Properties
+        #endregion Properties
 
-		#region Methods
+        #region Methods
 
         public static RedisObject ToObject(IRedisResponse response)
         {
@@ -59,21 +58,21 @@ namespace Sweet.Redis
             if (type == RedisObjectType.Undefined)
                 throw new RedisException("Undefined redis response");
 
-			object data = null;
-			var bytes = response.Data;
+            object data = null;
+            var bytes = response.Data;
             if (bytes != null)
             {
                 switch (type)
                 {
                     case RedisObjectType.SimpleString:
                     case RedisObjectType.BulkString:
-					case RedisObjectType.Error:
-						data = Encoding.UTF8.GetString(bytes);
+                    case RedisObjectType.Error:
+                        data = Encoding.UTF8.GetString(bytes);
                         break;
                     case RedisObjectType.Integer:
                         if (bytes.Length == 0)
                             throw new RedisException("Invalid integer value");
-                        
+
                         long l;
                         if (!long.TryParse(Encoding.UTF8.GetString(bytes), out l))
                             throw new RedisException("Invalid integer value");
@@ -109,6 +108,6 @@ namespace Sweet.Redis
             return result;
         }
 
-		#endregion Methods
-	}
+        #endregion Methods
+    }
 }

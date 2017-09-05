@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace Sweet.Redis
 {
     public struct RedisReceivedData
@@ -7,20 +8,25 @@ namespace Sweet.Redis
 
         public static readonly RedisReceivedData Empty = new RedisReceivedData(new byte[0], 0, 0);
 
-		#endregion Static Members
-		
+        #endregion Static Members
+
         #region .Ctors
 
-		public RedisReceivedData(byte[] data, int offset = 0, int length = -1)
+        public RedisReceivedData(byte[] data, int offset = 0, int length = -1)
+            : this()
         {
+            offset = Math.Max(0, data == null ? 0 : Math.Min(offset, data.Length));
+
+            var maxLength = data.Length - offset;
+            length = Math.Max(0, data == null ? 0 : (length < 0 ? maxLength : Math.Min(length, maxLength)));
+
+            var isEmpty = data == null || data.Length == 0 ||
+                        length == 0 || offset == data.Length;
+
             Data = data;
-            Offset = Math.Max(0, data == null ? 0 : Math.Min(offset, data.Length));
-
-            var maxLength = data.Length - Offset;
-            Length = Math.Max(0, data == null ? 0 : (length < 0 ? maxLength : Math.Min(length, maxLength)));
-
-            IsEmpty = data == null || data.Length == 0 || 
-                        Length == 0 || Offset == data.Length;
+            Offset = offset;
+            Length = length;
+            IsEmpty = isEmpty;
         }
 
         #endregion .Ctors
@@ -34,7 +40,7 @@ namespace Sweet.Redis
         public int Offset { get; private set; }
 
         public int Length { get; private set; }
-	
+
         #endregion Properties
-	}
+    }
 }

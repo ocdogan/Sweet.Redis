@@ -5,7 +5,7 @@ using System.Text;
 namespace Sweet.Redis
 {
     public static class RedisCommon
-    {		
+    {
         public static bool IsLinux
         {
             get
@@ -17,10 +17,10 @@ namespace Sweet.Redis
 
         public static bool IsWindows
         {
-            get 
+            get
             {
                 var pid = Environment.OSVersion.Platform;
-                switch (pid) 
+                switch (pid)
                 {
                     case PlatformID.Win32NT:
                     case PlatformID.Win32S:
@@ -70,12 +70,12 @@ namespace Sweet.Redis
                 }
             }
             return -1;
-		}
+        }
 
         internal static byte[][] ToBytesArray(this string[] strings)
-		{
-			if (strings != null)
-			{
+        {
+            if (strings != null)
+            {
                 var length = strings.Length;
 
                 var result = new byte[length][];
@@ -88,17 +88,17 @@ namespace Sweet.Redis
                     }
                 }
                 return result;
-			}
-			return null;
-		}
+            }
+            return null;
+        }
 
-		internal static byte[] ToBytes(this object obj)
-		{
+        internal static byte[] ToBytes(this object obj)
+        {
             if (obj != null)
             {
-				if (obj is string)
-					return Encoding.UTF8.GetBytes((string)obj);
-				
+                if (obj is string)
+                    return Encoding.UTF8.GetBytes((string)obj);
+
                 if (obj is byte[])
                     return (byte[])obj;
 
@@ -114,27 +114,27 @@ namespace Sweet.Redis
                 if (obj is short)
                     return Encoding.UTF8.GetBytes(((short)obj).ToString(CultureInfo.InvariantCulture));
 
-				if (obj is int)
-					return Encoding.UTF8.GetBytes(((int)obj).ToString(CultureInfo.InvariantCulture));
+                if (obj is int)
+                    return Encoding.UTF8.GetBytes(((int)obj).ToString(CultureInfo.InvariantCulture));
 
-				if (obj is long)
-					return Encoding.UTF8.GetBytes(((long)obj).ToString(CultureInfo.InvariantCulture));
+                if (obj is long)
+                    return Encoding.UTF8.GetBytes(((long)obj).ToString(CultureInfo.InvariantCulture));
 
-				return Encoding.UTF8.GetBytes(obj.ToString());
+                return Encoding.UTF8.GetBytes(obj.ToString());
             }
-			return null;
-		}
+            return null;
+        }
 
         internal static bool Equals<T>(this T[] source, T[] destination, Func<T, T, bool> comparer)
-		{
-			if (comparer == null)
-				throw new ArgumentNullException("comparer");
+        {
+            if (comparer == null)
+                throw new ArgumentNullException("comparer");
 
-			if (source == null)
-				return destination == null;
+            if (source == null)
+                return destination == null;
 
-			if (destination == null)
-				return source == null;
+            if (destination == null)
+                return source == null;
 
             var sourceLen = source.Length;
             if (sourceLen == destination.Length)
@@ -150,82 +150,82 @@ namespace Sweet.Redis
                 return true;
             }
             return false;
-		}
+        }
 
         internal static T[] Split<T>(this T[] source, int index, int length)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
-            
+
             if (length < 0)
                 throw new ArgumentException("Length can not be less than zero", "length");
 
-			if (index < 0)
-				throw new ArgumentException("Index can not be less than zero", "index");
+            if (index < 0)
+                throw new ArgumentException("Index can not be less than zero", "index");
 
             if (index > source.Length - 1)
-				throw new ArgumentException("Index can not be greater than array length", "index");
-			
+                throw new ArgumentException("Index can not be greater than array length", "index");
+
             if (index + length > source.Length)
-				throw new ArgumentException("Length can not be exceed array length", "length");
+                throw new ArgumentException("Length can not be exceed array length", "length");
 
             var destination = new T[length];
             Array.Copy(source, index, destination, 0, length);
 
             return destination;
-		}
+        }
 
-		internal static T[] Split<T>(this T[] source, int index)
-		{
-			if (source == null)
-				throw new ArgumentNullException("source");
+        internal static T[] Split<T>(this T[] source, int index)
+        {
+            if (source == null)
+                throw new ArgumentNullException("source");
 
-			if (index < 0)
-				throw new ArgumentException("Index can not be less than zero", "index");
+            if (index < 0)
+                throw new ArgumentException("Index can not be less than zero", "index");
 
-			if (index > source.Length - 1)
-				throw new ArgumentException("Index can not be greater than array length", "index");
+            if (index > source.Length - 1)
+                throw new ArgumentException("Index can not be greater than array length", "index");
 
             var length = source.Length - index;
 
             var destination = new T[length];
-			Array.Copy(source, index, destination, 0, length);
+            Array.Copy(source, index, destination, 0, length);
 
-			return destination;
-		}
+            return destination;
+        }
 
         internal static byte[][] JoinToByteArray(this string[] keys)
-		{
-			if (keys == null)
-				throw new ArgumentNullException("keys");
-
-			var keysLength = keys.Length;
-			if (keysLength == 0)
-				throw new ArgumentNullException("keys");
-
-			var result = new byte[keysLength][];
-			for (var i = 0; i < keysLength; i++)
-			{
-				result[i] = keys[i].ToBytes();
-			}
-			return result;
-		}
-
-		internal static byte[][] Merge(this byte[][] keys, byte[][] values)
         {
             if (keys == null)
                 throw new ArgumentNullException("keys");
 
-			if (values == null)
-				throw new ArgumentNullException("values");
-			
             var keysLength = keys.Length;
-			if (keysLength == 0)
-				throw new ArgumentNullException("keys");
+            if (keysLength == 0)
+                throw new ArgumentNullException("keys");
 
-			var valuesLength = values.Length;
-			if (valuesLength == 0)
-				throw new ArgumentNullException("values");
+            var result = new byte[keysLength][];
+            for (var i = 0; i < keysLength; i++)
+            {
+                result[i] = keys[i].ToBytes();
+            }
+            return result;
+        }
+
+        internal static byte[][] Merge(this byte[][] keys, byte[][] values)
+        {
+            if (keys == null)
+                throw new ArgumentNullException("keys");
+
+            if (values == null)
+                throw new ArgumentNullException("values");
+
+            var keysLength = keys.Length;
+            if (keysLength == 0)
+                throw new ArgumentNullException("keys");
+
+            var valuesLength = values.Length;
+            if (valuesLength == 0)
+                throw new ArgumentNullException("values");
 
             if (keysLength != valuesLength)
                 throw new ArgumentException("keys length is not equal to values length", "keys");
@@ -239,128 +239,128 @@ namespace Sweet.Redis
                 result[i + 1] = values[i];
             }
             return result;
-		}
+        }
 
         internal static byte[][] Merge(this byte[] keys, byte[][] values)
-		{
+        {
             if (keys == null && keys.Length == 0)
-				throw new ArgumentNullException("keys");
+                throw new ArgumentNullException("keys");
 
-			if (values == null)
-				throw new ArgumentNullException("values");
+            if (values == null)
+                throw new ArgumentNullException("values");
 
-			var valuesLength = values.Length;
-			if (valuesLength == 0)
-				throw new ArgumentNullException("values");
+            var valuesLength = values.Length;
+            if (valuesLength == 0)
+                throw new ArgumentNullException("values");
 
             var resultLen = valuesLength + 1;
 
-			var result = new byte[resultLen][];
+            var result = new byte[resultLen][];
             result[0] = keys;
 
-			for (var i = 1; i < resultLen; i += 2)
-				result[i] = values[i];
+            for (var i = 1; i < resultLen; i += 2)
+                result[i] = values[i];
 
             return result;
-		}
+        }
 
-		internal static byte[][] Merge(this byte[][] keys, byte[] key)
-		{
-			if (keys == null)
-				throw new ArgumentNullException("keys");
+        internal static byte[][] Merge(this byte[][] keys, byte[] key)
+        {
+            if (keys == null)
+                throw new ArgumentNullException("keys");
 
             var resultLen = keys.Length + 1;
 
-			var result = new byte[resultLen][];
-			for (var i = 1; i < resultLen; i += 2)
-				result[i] = keys[i];
+            var result = new byte[resultLen][];
+            for (var i = 1; i < resultLen; i += 2)
+                result[i] = keys[i];
 
             result[resultLen - 1] = key;
 
             return result;
-		}
+        }
 
         internal static byte[][] Merge(this byte[] keys, string[] values)
-		{
-			if (keys == null && keys.Length == 0)
-				throw new ArgumentNullException("keys");
+        {
+            if (keys == null && keys.Length == 0)
+                throw new ArgumentNullException("keys");
 
-			if (values == null)
-				throw new ArgumentNullException("values");
+            if (values == null)
+                throw new ArgumentNullException("values");
 
-			var valuesLength = values.Length;
-			if (valuesLength == 0)
-				throw new ArgumentNullException("values");
+            var valuesLength = values.Length;
+            if (valuesLength == 0)
+                throw new ArgumentNullException("values");
 
-			var resultLen = valuesLength + 1;
+            var resultLen = valuesLength + 1;
 
-			var result = new byte[resultLen][];
-			result[0] = keys;
+            var result = new byte[resultLen][];
+            result[0] = keys;
 
-			for (var i = 1; i < resultLen; i += 2)
-			{
+            for (var i = 1; i < resultLen; i += 2)
+            {
                 result[i] = values[i].ToBytes();
-			}
-			return result;
-		}
+            }
+            return result;
+        }
 
-		internal static byte[][] Merge(this byte[] val1, byte[] val2)
-		{
+        internal static byte[][] Merge(this byte[] val1, byte[] val2)
+        {
             return new byte[2][] { val1, val2 };
-		}
+        }
 
-		internal static byte[][] Merge(this string[] keys, string[] values)
-		{
-			if (keys == null)
-				throw new ArgumentNullException("keys");
+        internal static byte[][] Merge(this string[] keys, string[] values)
+        {
+            if (keys == null)
+                throw new ArgumentNullException("keys");
 
-			if (values == null)
-				throw new ArgumentNullException("values");
+            if (values == null)
+                throw new ArgumentNullException("values");
 
-			var keysLength = keys.Length;
-			if (keysLength == 0)
-				throw new ArgumentNullException("keys");
+            var keysLength = keys.Length;
+            if (keysLength == 0)
+                throw new ArgumentNullException("keys");
 
-			var valuesLength = values.Length;
-			if (valuesLength == 0)
-				throw new ArgumentNullException("values");
+            var valuesLength = values.Length;
+            if (valuesLength == 0)
+                throw new ArgumentNullException("values");
 
-			if (keysLength != valuesLength)
-				throw new ArgumentException("keys length is not equal to values length", "keys");
+            if (keysLength != valuesLength)
+                throw new ArgumentException("keys length is not equal to values length", "keys");
 
-			var resultLen = 2 * keysLength;
+            var resultLen = 2 * keysLength;
 
-			var result = new byte[resultLen][];
-			for (var i = 0; i < resultLen; i += 2)
-			{
+            var result = new byte[resultLen][];
+            for (var i = 0; i < resultLen; i += 2)
+            {
                 result[i] = keys[i].ToBytes();
                 result[i + 1] = values[i].ToBytes();
-			}
-			return result;
-		}
+            }
+            return result;
+        }
 
         internal static int ToInt(this string s, int defaultValue = int.MinValue)
-		{
-			if (!String.IsNullOrEmpty(s))
-			{
-				int result;
-				if (int.TryParse(s, out result))
-					return result;
-			}
-			return defaultValue;
-		}
-
-		internal static long ToLong(this string s, long defaultValue = long.MinValue)
-		{
-			if (!String.IsNullOrEmpty(s))
-			{
-				long result;
-				if (long.TryParse(s, out result))
-					return result;
-			}
+        {
+            if (!String.IsNullOrEmpty(s))
+            {
+                int result;
+                if (int.TryParse(s, out result))
+                    return result;
+            }
             return defaultValue;
-		}
+        }
+
+        internal static long ToLong(this string s, long defaultValue = long.MinValue)
+        {
+            if (!String.IsNullOrEmpty(s))
+            {
+                long result;
+                if (long.TryParse(s, out result))
+                    return result;
+            }
+            return defaultValue;
+        }
 
 
-	}
+    }
 }

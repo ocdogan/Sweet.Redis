@@ -5,10 +5,10 @@ namespace Sweet.Redis
 {
     public interface IRedisServerCommands
     {
-		bool BGRewriteAOF();
-		bool BGSave();
+        bool BGRewriteAOF();
+        bool BGSave();
 
-		string ClientGetName();
+        string ClientGetName();
         long ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true);
         RedisClientInfo[] ClientList();
         IDictionary<string, string>[] ClientListDictionary();
@@ -23,20 +23,20 @@ namespace Sweet.Redis
         bool ConfigRewrite();
         bool ConfigSet(string parameter, string value);
 
-		long DbSize();
-		
+        long DbSize();
+
         bool FlushAll();
         bool FlushAllAsync();
-		bool FlushDb();
+        bool FlushDb();
         bool FlushDbAsync();
 
-		string[] Info(string section);
+        string[] Info(string section);
         DateTime LastSave();
-		bool Save();
-		void ShutDown();
+        bool Save();
+        void ShutDown();
         void ShutDownSave();
-		bool SlaveOf(string host, int port);
+        bool SlaveOf(string host, int port);
         bool SlaveOfNoOne();
-		DateTime Time();
-	}
+        DateTime Time();
+    }
 }

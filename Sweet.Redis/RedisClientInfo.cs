@@ -7,9 +7,9 @@ namespace Sweet.Redis
 {
     public class RedisClientInfo
     {
-		#region Static Members
+        #region Static Members
 
-		private static readonly Dictionary<char, RedisClientInfoFlag> FlagDefs =
+        private static readonly Dictionary<char, RedisClientInfoFlag> FlagDefs =
             new Dictionary<char, RedisClientInfoFlag>()
             {
                 { 'N', RedisClientInfoFlag.None }, // no specific flag set
@@ -26,71 +26,71 @@ namespace Sweet.Redis
                 { 'r', RedisClientInfoFlag.ReadOnlyClusterNode }, // the client is in readonly mode against a cluster node
                 { 'A', RedisClientInfoFlag.ClosingASAP }  // connection to be closed ASAP
 			};
-        
+
         #endregion Static Members
 
         #region .Ctors
 
-        private RedisClientInfo(long id, string address, string socketFileDescriptor, long ageSeconds, 
-            long idleSeconds, RedisClientInfoFlag flags, int db, int subsCount, int psubsCount, int multiCount, 
+        private RedisClientInfo(long id, string address, string socketFileDescriptor, long ageSeconds,
+            long idleSeconds, RedisClientInfoFlag flags, int db, int subsCount, int psubsCount, int multiCount,
             int queryBufLen, int queryBufFreeLen, int outputBufLen, int outputListLen, int outputBufMemUsage,
             string fileDescriptorEvents, string lastCommand)
         {
-			Id = id;
-			Address = address;
-			SocketFileDescriptor = socketFileDescriptor;
-			AgeSeconds = ageSeconds;
-			IdleSeconds = idleSeconds;
-			Flags = flags;
-			Db = db;
-			SubsCount = subsCount;
-			PSubsCount = psubsCount;
-			MultiCount = multiCount;
-			QueryBufLen = queryBufLen;
-			QueryBufFreeLen = queryBufFreeLen;
-			OutputBufLen = outputBufLen;
-			OutputListLen = outputListLen;
-			OutputBufMemUsage = outputBufMemUsage;
-			FileDescriptorEvents = fileDescriptorEvents;
-			LastCommand = lastCommand;
-		}
+            Id = id;
+            Address = address;
+            SocketFileDescriptor = socketFileDescriptor;
+            AgeSeconds = ageSeconds;
+            IdleSeconds = idleSeconds;
+            Flags = flags;
+            Db = db;
+            SubsCount = subsCount;
+            PSubsCount = psubsCount;
+            MultiCount = multiCount;
+            QueryBufLen = queryBufLen;
+            QueryBufFreeLen = queryBufFreeLen;
+            OutputBufLen = outputBufLen;
+            OutputListLen = outputListLen;
+            OutputBufMemUsage = outputBufMemUsage;
+            FileDescriptorEvents = fileDescriptorEvents;
+            LastCommand = lastCommand;
+        }
 
-		#endregion .Ctors
+        #endregion .Ctors
 
-		#region Properties
+        #region Properties
 
-		public long Id { get; private set; }
+        public long Id { get; private set; }
 
-		public string Address { get; private set; }
-		
+        public string Address { get; private set; }
+
         public string SocketFileDescriptor { get; private set; }
-		
+
         public long AgeSeconds { get; private set; }
-		
+
         public long IdleSeconds { get; private set; }
-		
+
         public RedisClientInfoFlag Flags { get; private set; }
-		
+
         public int Db { get; private set; }
-		
+
         public int SubsCount { get; private set; }
-		
+
         public int PSubsCount { get; private set; }
-		
+
         public int MultiCount { get; private set; }
-		
+
         public int QueryBufLen { get; private set; }
-		
+
         public int QueryBufFreeLen { get; private set; }
-		
+
         public int OutputBufLen { get; private set; }
-		
+
         public int OutputListLen { get; private set; }
-		
+
         public int OutputBufMemUsage { get; private set; }
-		
+
         public string FileDescriptorEvents { get; private set; }
-		
+
         public string LastCommand { get; private set; }
 
         #endregion Properties
@@ -124,7 +124,7 @@ namespace Sweet.Redis
                 var result = new Dictionary<string, string>();
                 foreach (var item in items)
                     result[item.Key] = item.Value;
-                
+
                 return result;
             }
             return null;
@@ -197,7 +197,7 @@ namespace Sweet.Redis
                 var lastCommand = (string)ht["cmd"];
 
                 return new RedisClientInfo(id, address, socketFileDescriptor, ageSeconds,
-                     idleSeconds, flags, db, subsCount, psubsCount, multiCount, queryBufLen, 
+                     idleSeconds, flags, db, subsCount, psubsCount, multiCount, queryBufLen,
                      queryBufFreeLen, outputBufLen, outputListLen, outputBufMemUsage,
                      fileDescriptorEvents, lastCommand);
             }
@@ -217,6 +217,6 @@ namespace Sweet.Redis
             return result;
         }
 
-		#endregion Methods
-	}
+        #endregion Methods
+    }
 }

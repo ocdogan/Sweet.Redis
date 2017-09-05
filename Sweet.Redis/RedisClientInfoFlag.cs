@@ -5,7 +5,7 @@ namespace Sweet.Redis
     [Flags]
     public enum RedisClientInfoFlag : long
     {
-		/*
+        /*
         N: no specific flag set
         O: the client is a slave in MONITOR mode
         S: the client is a normal slave server
@@ -20,18 +20,18 @@ namespace Sweet.Redis
         r: the client is in readonly mode against a cluster node
         A: connection to be closed ASAP
         */
-		None = 0, // N
-		MonitoringSlave = 1 << 0, // O
+        None = 0, // N
+        MonitoringSlave = 1 << 0, // O
         Slave = 1 << 1, // S
         Master = 1 << 2, // M
-		MutiExecContext = 1 << 3, // x
-		WaitingBlockingOp = 1 << 4, // b
-		WaitingIO = 1 << 5, // i
-		WatchedKeysModified = 1 << 6, // d
-		ClosingAfterReply = 1 << 7, // c
-		Unblocked = 1 << 8, // u
-		UnixSocket = 1 << 9, // U
-		ReadOnlyClusterNode = 1 << 10, // r
-		ClosingASAP = 1 << 11, // A
-	}
+        MutiExecContext = 1 << 3, // x
+        WaitingBlockingOp = 1 << 4, // b
+        WaitingIO = 1 << 5, // i
+        WatchedKeysModified = 1 << 6, // d
+        ClosingAfterReply = 1 << 7, // c
+        Unblocked = 1 << 8, // u
+        UnixSocket = 1 << 9, // U
+        ReadOnlyClusterNode = 1 << 10, // r
+        ClosingASAP = 1 << 11, // A
+    }
 }
