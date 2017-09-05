@@ -19,7 +19,7 @@ namespace Sweet.Redis.ConsoleTest
                     Console.Clear();
                     try
                     {
-                        using (var db = pool.GetDb())
+                        /* using (var db = pool.GetDb())
                         {
                             WriteResult("Ping, ", db.Connection.Ping());
                             WriteResult("Ping 1, ", db.Connection.Ping("1"));
@@ -62,7 +62,7 @@ namespace Sweet.Redis.ConsoleTest
                                     }
                                 }
                             }
-                        }
+                        } */
 
                         /* using (var db = pool.GetDb(1))
                         {
@@ -82,14 +82,20 @@ namespace Sweet.Redis.ConsoleTest
 							// ConsoleWriteMultiline("MGet key1 key2 key3 key4, ", db.Strings.MGet("key1", "key2", "key3", "key4"));
 						} */
 
-                        /* 
                         var sw = new Stopwatch();
-                        sw.Restart();
+                        using (var db = pool.GetDb())
+                        {
+                            db.Strings.Set("large_text", largeText);
 
-						using (var db = pool.GetDb(1))
-						{
+                            sw.Restart();
+
                             for (var i = 0; i < 1000; i++)
-                            {
+                                db.Strings.Get(largeText);
+
+                            /* for (var i = 0; i < 1000; i++)
+                                db.Connection.Ping(); */
+
+                            /* {
                                 Console.WriteLine((i + 1).ToString() + ") ");
 								try
                                 {
@@ -101,12 +107,11 @@ namespace Sweet.Redis.ConsoleTest
                                     Console.WriteLine(e);
                                 }
 								Console.WriteLine();
-							}
-						}
-						
+							} */
+                        }
+
                         sw.Stop();
-                        Console.WriteLine("GetString key3, " + sw.ElapsedMilliseconds + " msec");
-                        */
+                        Console.WriteLine("Elleapsed time: " + sw.ElapsedMilliseconds + " msec");
                     }
                     catch (Exception e)
                     {
