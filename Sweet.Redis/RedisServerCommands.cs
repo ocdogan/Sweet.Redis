@@ -311,8 +311,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(RedisCommands.LastSave))
             {
-                var unixTimeStamp = cmd.ExpectInteger(Db.Pool, true);
-                return (new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(unixTimeStamp).ToLocalTime();
+                return cmd.ExpectInteger(Db.Pool, true).FromUnixTimeStamp();
             }
         }
 
@@ -375,14 +374,9 @@ namespace Sweet.Redis
                 var parts = cmd.ExpectMultiDataStrings(Db.Pool, true);
                 if (parts != null && parts.Length > 0)
                 {
-                    var dateStamp = parts[0].ToInt();
-
-                    var date = (new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(dateStamp).ToLocalTime();
-                    if (parts.Length == 1)
-                        return date;
-
-                    var timeStamp = parts[1].ToInt();
-                    return date.AddTicks(timeStamp * 10);
+                    if (parts.Length > 1)
+                        return parts[0].ToInt().FromUnixTimeStamp(parts[1].ToInt());
+                    return parts[0].ToInt().FromUnixTimeStamp();
                 }
             }
             return DateTime.MinValue;

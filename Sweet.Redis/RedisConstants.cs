@@ -11,6 +11,8 @@
 
         #region Constants
 
+        public static readonly int CRLFLength = "\r\n".Length;
+
         public const int DefaultBufferSize = 4 * 1024;
 
         public const int MaxValueLength = 1024 * 1024 * 1024; // 1 GB

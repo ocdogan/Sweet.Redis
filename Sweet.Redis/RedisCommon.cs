@@ -6,6 +6,15 @@ namespace Sweet.Redis
 {
     public static class RedisCommon
     {
+        #region Static Members
+
+        private static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
+        private static readonly DateTime UnixBaseTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+
+        #endregion Static Members
+
+        #region Properties
+
         public static bool IsLinux
         {
             get
@@ -32,6 +41,10 @@ namespace Sweet.Redis
                 }
             }
         }
+
+        #endregion Properties
+
+        #region Methods
 
         internal static RedisObjectType ResponseType(this byte b)
         {
@@ -92,35 +105,83 @@ namespace Sweet.Redis
             return null;
         }
 
+        internal static double ToUnixTimeStamp(this DateTime date)
+        {
+            if (date.Kind != DateTimeKind.Utc)
+                date = date.ToUniversalTime();
+            return (date - UnixBaseTimeStamp).TotalSeconds;
+        }
+
+        internal static DateTime FromUnixTimeStamp(this int seconds)
+        {
+            return FromUnixTimeStamp((long)seconds);
+        }
+
+        internal static DateTime FromUnixTimeStamp(this long seconds)
+        {
+            return UnixBaseTimeStamp.AddSeconds(seconds).ToLocalTime();
+        }
+
+        internal static DateTime FromUnixTimeStamp(this double seconds)
+        {
+            return UnixBaseTimeStamp.AddSeconds(seconds).ToLocalTime();
+        }
+
+        internal static DateTime FromUnixTimeStamp(this int seconds, int microSeconds)
+        {
+            return FromUnixTimeStamp((long)seconds, microSeconds);
+        }
+
+        internal static DateTime FromUnixTimeStamp(this long seconds, int microSeconds)
+        {
+            var date = UnixBaseTimeStamp.AddSeconds(seconds).ToLocalTime();
+            return date.AddTicks(microSeconds * 10);
+        }
+
+        internal static DateTime FromUnixTimeStamp(this double seconds, int microSeconds)
+        {
+            var date = UnixBaseTimeStamp.AddSeconds(seconds).ToLocalTime();
+            return date.AddTicks(microSeconds * 10);
+        }
+
         internal static byte[] ToBytes(this object obj)
         {
             if (obj != null)
             {
-                if (obj is string)
-                    return Encoding.UTF8.GetBytes((string)obj);
-
-                if (obj is byte[])
-                    return (byte[])obj;
-
-                if (obj is decimal)
-                    return Encoding.UTF8.GetBytes(((decimal)obj).ToString(CultureInfo.InvariantCulture));
-
-                if (obj is float)
-                    return Encoding.UTF8.GetBytes(((float)obj).ToString(CultureInfo.InvariantCulture));
-
-                if (obj is double)
-                    return Encoding.UTF8.GetBytes(((double)obj).ToString(CultureInfo.InvariantCulture));
-
-                if (obj is short)
-                    return Encoding.UTF8.GetBytes(((short)obj).ToString(CultureInfo.InvariantCulture));
-
-                if (obj is int)
-                    return Encoding.UTF8.GetBytes(((int)obj).ToString(CultureInfo.InvariantCulture));
-
-                if (obj is long)
-                    return Encoding.UTF8.GetBytes(((long)obj).ToString(CultureInfo.InvariantCulture));
-
-                return Encoding.UTF8.GetBytes(obj.ToString());
+                var tc = Type.GetTypeCode(obj.GetType());
+                switch (tc)
+                {
+                    case TypeCode.String:
+                        return Encoding.UTF8.GetBytes((string)obj);
+                    case TypeCode.Int32:
+                        return Encoding.UTF8.GetBytes(((int)obj).ToString(InvariantCulture));
+                    case TypeCode.Int64:
+                        return Encoding.UTF8.GetBytes(((long)obj).ToString(InvariantCulture));
+                    case TypeCode.Object:
+                        return Encoding.UTF8.GetBytes(obj.ToString());
+                    case TypeCode.Decimal:
+                        return Encoding.UTF8.GetBytes(((decimal)obj).ToString(InvariantCulture));
+                    case TypeCode.Double:
+                        return Encoding.UTF8.GetBytes(((double)obj).ToString(InvariantCulture));
+                    case TypeCode.Boolean:
+                        return Encoding.UTF8.GetBytes((bool)obj ? Boolean.TrueString : Boolean.FalseString);
+                    case TypeCode.Single:
+                        return Encoding.UTF8.GetBytes(((float)obj).ToString(InvariantCulture));
+                    case TypeCode.Int16:
+                        return Encoding.UTF8.GetBytes(((short)obj).ToString(InvariantCulture));
+                    case TypeCode.UInt32:
+                        return Encoding.UTF8.GetBytes(((uint)obj).ToString(InvariantCulture));
+                    case TypeCode.UInt64:
+                        return Encoding.UTF8.GetBytes(((ulong)obj).ToString(InvariantCulture));
+                    case TypeCode.UInt16:
+                        return Encoding.UTF8.GetBytes(((ushort)obj).ToString(InvariantCulture));
+                    case TypeCode.DateTime:
+                        return Encoding.UTF8.GetBytes(((DateTime)obj).Ticks.ToString(InvariantCulture));
+                    case TypeCode.Char:
+                        return Encoding.UTF8.GetBytes(new char[] { (char)obj });
+                    case TypeCode.Byte:
+                        return new byte[] { (byte)obj };
+                }
             }
             return null;
         }
@@ -361,6 +422,6 @@ namespace Sweet.Redis
             return defaultValue;
         }
 
-
+        #endregion Methods
     }
 }

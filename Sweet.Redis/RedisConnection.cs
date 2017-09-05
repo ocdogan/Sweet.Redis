@@ -65,12 +65,14 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisConnection(RedisConnectionPool pool,
-            Action<RedisConnection, Socket> releaseAction, Socket socket = null)
-            : this(pool, new RedisSettings(), releaseAction, socket)
+            Action<RedisConnection, Socket> releaseAction, Socket socket = null,
+            bool connectImmediately = false)
+            : this(pool, new RedisSettings(), releaseAction, socket, connectImmediately)
         { }
 
         internal RedisConnection(RedisConnectionPool pool, RedisSettings settings,
-            Action<RedisConnection, Socket> releaseAction, Socket socket = null)
+            Action<RedisConnection, Socket> releaseAction, Socket socket = null, 
+            bool connectImmediately = false)
         {
             if (pool == null)
                 throw new ArgumentNullException("pool");
@@ -91,6 +93,9 @@ namespace Sweet.Redis
                 m_EndPoint = socket.RemoteEndPoint;
                 m_State = (int)RedisConnectionState.Connected;
             }
+
+            if (connectImmediately)
+                ConnectInternal();
         }
 
         #endregion .Ctors
@@ -186,11 +191,19 @@ namespace Sweet.Redis
             return base.SetDisposed();
         }
 
+        public bool Available()
+        {
+            var socket = ConnectInternal();
+            return socket != null && socket.Connected && (socket.Available > 0);
+        }
+
         internal Socket Connect()
         {
-            ValidateNotDisposed();
+            return ConnectInternal();
+        }
 
-
+        internal Socket ConnectInternal()
+        {
             var socket = m_Socket;
             var errorOccured = false;
             try
@@ -568,7 +581,7 @@ namespace Sweet.Redis
 
             ReleaseReceiveEventArgs(args);
 
-            return new RedisReceivedData(data);
+            return new RedisReceivedData(data: data, available: socket.Available);
         }
 
         private void ReleaseReceiveEventArgs(SocketAsyncEventArgs args)

@@ -6,13 +6,23 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        public static readonly RedisReceivedData Empty = new RedisReceivedData(new byte[0], 0, 0);
+        public static readonly RedisReceivedData Empty = new RedisReceivedData(0);
 
         #endregion Static Members
 
         #region .Ctors
 
-        public RedisReceivedData(byte[] data, int offset = 0, int length = -1)
+        public RedisReceivedData(byte dummy = 0)
+            : this()
+        {
+            Available = 0;
+            Data = null;
+            Offset = 0;
+            Length = 0;
+            IsEmpty = true;
+        }
+
+        public RedisReceivedData(byte[] data, int offset = 0, int length = -1, int available = 0)
             : this()
         {
             offset = Math.Max(0, data == null ? 0 : Math.Min(offset, data.Length));
@@ -20,9 +30,11 @@ namespace Sweet.Redis
             var maxLength = data.Length - offset;
             length = Math.Max(0, data == null ? 0 : (length < 0 ? maxLength : Math.Min(length, maxLength)));
 
+            available = Math.Max(0, available);
             var isEmpty = data == null || data.Length == 0 ||
                         length == 0 || offset == data.Length;
 
+            Available = available;
             Data = data;
             Offset = offset;
             Length = length;
@@ -32,6 +44,8 @@ namespace Sweet.Redis
         #endregion .Ctors
 
         #region Properties
+
+        public int Available { get; private set; }
 
         public byte[] Data { get; private set; }
 

@@ -251,7 +251,7 @@ namespace Sweet.Redis
                     (Interlocked.Read(ref m_InitCount) < m_Settings.MaxCount))
                 {
                     Interlocked.Exchange(ref m_WaitRetryCount, 0);
-                    return NewConnection(socket);
+                    return NewConnection(socket, true);
                 }
 
                 remainingTime = timeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
@@ -266,15 +266,11 @@ namespace Sweet.Redis
             return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
         }
 
-        private IRedisConnection NewConnection(Socket socket, bool connect = true)
+        private IRedisConnection NewConnection(Socket socket, bool connectImmediately = true)
         {
             socket = IsConnected(socket) ? socket : null;
 
-            var conn = new RedisConnection(this, m_Settings, Release, socket);
-            if (connect)
-            {
-                conn.Connect();
-            }
+            var conn = new RedisConnection(this, m_Settings, Release, socket, connectImmediately);
 
             Interlocked.Increment(ref m_InitCount);
             return conn;

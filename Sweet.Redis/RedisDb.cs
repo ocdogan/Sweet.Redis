@@ -171,7 +171,10 @@ namespace Sweet.Redis
         private bool Select(int db, bool throwException)
         {
             ValidateNotDisposed();
-            return (new RedisCommand(RedisCommands.Select, db.ToBytes())).ExpectSimpleString(m_Pool, "OK", throwException);
+            using (var cmd = new RedisCommand(RedisCommands.Select, db.ToBytes()))
+            {
+                return cmd.ExpectSimpleString(m_Pool, "OK", throwException);
+            }
         }
 
         #endregion Methods

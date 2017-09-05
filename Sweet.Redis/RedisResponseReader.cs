@@ -65,30 +65,47 @@ namespace Sweet.Redis
             return null;
         }
 
+        private void Receive(RedisByteBuffer buffer, RedisConnection connection = null)
+        {
+            connection = connection ?? m_Connection;
+            if (connection == null || connection.Disposed)
+                throw new RedisException("Can not complete redis response parse, can not establish connection");
+
+            RedisReceivedData receivedData;
+            do
+            {
+                receivedData = connection.Receive();
+                if (receivedData.IsEmpty)
+                    continue;
+
+                buffer.Put(receivedData.Data);
+            }
+            while (receivedData.Available > receivedData.Length);
+        }
+
         private IRedisResponse ReadThrough(RedisResponse item, RedisByteBuffer buffer)
         {
-            var readMore = false;
+            var connection = m_Connection;
+            if (connection == null || connection.Disposed)
+                throw new RedisException("Can not complete redis response parse, can not establish connection");
+
             var type = item.Type;
+            var receiveMore = true;
 
-            while (!item.Ready)
+            while (receiveMore || !item.Ready)
             {
-                var bufferLength = buffer.Length;
-                readMore = readMore || (bufferLength == 0) ||
-                    ((item.Length < -1 || type == RedisObjectType.Undefined) && bufferLength == 0) ||
-                    (type != RedisObjectType.Array && item.Length > buffer.Length - buffer.Position);
-
-                if (readMore)
+                if (!receiveMore)
                 {
-                    var connection = m_Connection;
-                    if (connection == null || connection.Disposed)
-                        throw new RedisException("Can not complete redis response parse");
+                    var bufferLength = buffer.Length;
+                    receiveMore = (bufferLength == 0) ||
+                        ((item.Length < -1 || type == RedisObjectType.Undefined) && bufferLength == 0) ||
+                        (type != RedisObjectType.Array && (item.Length > buffer.Length - buffer.Position + RedisConstants.CRLFLength));
+                }
 
-                    var receivedData = connection.Receive();
-                    if (receivedData.IsEmpty)
-                        continue;
-
-                    readMore = false;
-                    buffer.Put(receivedData.Data);
+                if (receiveMore)
+                {
+                    receiveMore = false;
+                    Receive(buffer, connection);
                 }
 
                 if (item.Length < -1)
@@ -97,7 +114,7 @@ namespace Sweet.Redis
                     {
                         var b = buffer.ReadByte();
                         if (b < 0)
-                            throw new RedisException("Undefined redis response type");
+                            throw new RedisException("Unexpected byte for redis response type");
 
                         type = ((byte)b).ResponseType();
                         if (type == RedisObjectType.Undefined)
@@ -107,11 +124,10 @@ namespace Sweet.Redis
                     }
 
                     var header = buffer.ReadLine();
-                    if (header == null)
-                    {
-                        readMore = true;
+
+                    receiveMore = (header == null);
+                    if (receiveMore)
                         continue;
-                    }
 
                     switch (item.Type)
                     {
@@ -128,46 +144,88 @@ namespace Sweet.Redis
                             {
                                 var lenStr = Encoding.UTF8.GetString(header);
                                 if (String.IsNullOrEmpty(lenStr))
-                                    throw new RedisException("Corrupted redis response");
+                                    throw new RedisException("Corrupted redis response, empty length string");
 
-                                int msgLen;
-                                if (!int.TryParse(lenStr, out msgLen))
-                                    throw new RedisException("Corrupted redis response");
+                                int msgLength;
+                                if (!int.TryParse(lenStr, out msgLength))
+                                    throw new RedisException("Corrupted redis response, not an integer value");
 
-                                msgLen = Math.Max(-1, msgLen);
-                                item.Length = msgLen;
+                                msgLength = Math.Max(-1, msgLength);
+                                item.Length = msgLength;
 
-                                if (msgLen < 1)
+                                if (msgLength == -1)
                                 {
-                                    item.Data = (msgLen == 0) ? new byte[0] : null;
+                                    item.Data = null;
                                     SetReady(item);
-
-                                    buffer.EatCRLF();
 
                                     return item;
                                 }
+
+                                if (msgLength == 0)
+                                {
+                                    if (item.Type == RedisObjectType.BulkString)
+                                    {
+                                        item.Data = new byte[0];
+                                        SetReady(item);
+
+                                        receiveMore = !buffer.EatCRLF();
+                                        if (receiveMore)
+                                            continue;
+
+                                        return item;
+                                    }
+
+                                    SetReady(item);
+                                    return item;
+                                }
+
+                                receiveMore = ((item.Type == RedisObjectType.BulkString) &&
+                                               (buffer.Length < buffer.Position + msgLength + RedisConstants.CRLFLength));
                             }
                             break;
                     }
-                    continue;
+
+                    if (receiveMore)
+                        continue;
                 }
 
                 switch (item.Type)
                 {
                     case RedisObjectType.BulkString:
                         {
-                            var data = buffer.Read(item.Length);
-                            if (data == null)
-                                readMore = true;
-                            else
+                            if (item.Length > 0)
                             {
+                                receiveMore = (buffer.Length < buffer.Position + item.Length + RedisConstants.CRLFLength);
+                                if (receiveMore)
+                                    continue;
+
+                                var data = buffer.Read(item.Length);
+
+                                receiveMore = (data == null);
+                                if (receiveMore)
+                                    continue;
+
                                 item.Data = data;
                                 SetReady(item);
 
-                                buffer.EatCRLF();
+                                receiveMore = !buffer.EatCRLF();
+                                if (receiveMore)
+                                    continue;
 
                                 return item;
                             }
+
+                            if (item.Length == 0)
+                            {
+                                receiveMore = !buffer.EatCRLF();
+                                if (receiveMore)
+                                    continue;
+
+                                return item;
+                            }
+
+                            if (item.Length == -1)
+                                return item;
                         }
                         break;
                     case RedisObjectType.Array:
@@ -176,10 +234,11 @@ namespace Sweet.Redis
                             {
                                 var child = ReadThrough(new RedisResponse(), buffer);
                                 if (child == null)
-                                    throw new RedisException("Unexpected response data");
+                                    throw new RedisException("Unexpected response data, not valid data for array item");
 
                                 item.Add(child);
                             }
+
                             return item;
                         }
                 }
