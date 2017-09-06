@@ -69,8 +69,8 @@ namespace Sweet.Redis
                 {
                     Task.Factory.StartNew(obj =>
                     {
-                        var sock = obj as Socket;
-                        if (sock != null)
+                        var sock = (Socket)obj;
+                        if (sock != null && sock.IsBound)
                         {
                             try
                             {

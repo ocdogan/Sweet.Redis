@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public int Count
+        public int ChildCount
         {
             get
             {
@@ -60,6 +60,30 @@ namespace Sweet.Redis
                 m_Data = value;
                 if (m_Type != RedisObjectType.Array)
                     Ready = true;
+            }
+        }
+
+        public bool HasChild
+        {
+            get
+            {
+                if (m_Type != RedisObjectType.Array)
+                    return false;
+
+                var list = m_List;
+                return (list != null) && list.Count > 0;
+            }
+        }
+
+        public bool HasData
+        {
+            get
+            {
+                if (m_Type == RedisObjectType.Array)
+                    return false;
+
+                var data = m_Data;
+                return (data != null) && data.Length > 0;
             }
         }
 

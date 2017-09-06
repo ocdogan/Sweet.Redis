@@ -8,7 +8,6 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        private static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
         private static readonly DateTime UnixBaseTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         #endregion Static Members
@@ -154,29 +153,29 @@ namespace Sweet.Redis
                     case TypeCode.String:
                         return Encoding.UTF8.GetBytes((string)obj);
                     case TypeCode.Int32:
-                        return Encoding.UTF8.GetBytes(((int)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((int)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Int64:
-                        return Encoding.UTF8.GetBytes(((long)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((long)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Object:
                         return Encoding.UTF8.GetBytes(obj.ToString());
                     case TypeCode.Decimal:
-                        return Encoding.UTF8.GetBytes(((decimal)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((decimal)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Double:
-                        return Encoding.UTF8.GetBytes(((double)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((double)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Boolean:
                         return Encoding.UTF8.GetBytes((bool)obj ? Boolean.TrueString : Boolean.FalseString);
                     case TypeCode.Single:
-                        return Encoding.UTF8.GetBytes(((float)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((float)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Int16:
-                        return Encoding.UTF8.GetBytes(((short)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((short)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.UInt32:
-                        return Encoding.UTF8.GetBytes(((uint)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((uint)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.UInt64:
-                        return Encoding.UTF8.GetBytes(((ulong)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((ulong)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.UInt16:
-                        return Encoding.UTF8.GetBytes(((ushort)obj).ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((ushort)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.DateTime:
-                        return Encoding.UTF8.GetBytes(((DateTime)obj).Ticks.ToString(InvariantCulture));
+                        return Encoding.UTF8.GetBytes(((DateTime)obj).Ticks.ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Char:
                         return Encoding.UTF8.GetBytes(new char[] { (char)obj });
                     case TypeCode.Byte:

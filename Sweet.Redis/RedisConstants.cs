@@ -1,19 +1,27 @@
-﻿namespace Sweet.Redis
+﻿using System.Globalization;
+
+namespace Sweet.Redis
 {
     public static class RedisConstants
     {
         #region Static Members
 
         public static readonly byte[] EmptyBytes = new byte[0];
-        public static readonly byte[] LineEnd = new byte[] { (byte)'\r', (byte)'\n' };
+        public static readonly byte[] LineEnd = "\r\n".ToBytes();
+
+        public static readonly byte[] NullBulkString = "$-1".ToBytes();
+        public static readonly byte[] EmptyBulkString = "$0".ToBytes();
+
+        public static readonly int CRLFLength = "\r\n".Length;
+
+        public static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
 
         #endregion Static Members
 
         #region Constants
 
-        public static readonly int CRLFLength = "\r\n".Length;
-
-        public const int DefaultBufferSize = 4 * 1024;
+        public const int ReadBufferSize = 2 * 1024;
+        public const int WriteBufferSize = 2 * 1024;
 
         public const int MaxValueLength = 1024 * 1024 * 1024; // 1 GB
 

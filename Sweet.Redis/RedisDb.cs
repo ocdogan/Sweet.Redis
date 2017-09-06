@@ -30,6 +30,11 @@ namespace Sweet.Redis
             m_Pool = pool;
 
             m_Db = db;
+
+            var pwd = pool.Settings.Password;
+            if (!String.IsNullOrEmpty(pwd))
+                Auth(pwd);
+
             if (db != 0)
             {
                 try
@@ -177,6 +182,17 @@ namespace Sweet.Redis
             }
         }
 
+        private bool Auth(string password)
+        {
+            if (password == null)
+                throw new ArgumentNullException("password");
+
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(m_Db, RedisCommands.Auth, password.ToBytes()))
+            {
+                return cmd.ExpectSimpleString(m_Pool, "OK", true);
+            }
+        }
         #endregion Methods
     }
 }

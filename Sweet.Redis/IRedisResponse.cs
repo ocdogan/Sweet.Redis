@@ -5,8 +5,10 @@ namespace Sweet.Redis
 {
     public interface IRedisResponse : IDisposable
     {
-        int Count { get; }
+        int ChildCount { get; }
         byte[] Data { get; }
+        bool HasChild { get; }
+        bool HasData { get; }
         IList<IRedisResponse> Items { get; }
         int Length { get; }
         IRedisResponse Parent { get; }

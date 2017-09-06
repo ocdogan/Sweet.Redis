@@ -56,14 +56,14 @@ namespace Sweet.Redis
         {
             var argsLen = args != null ? args.Length : 0;
 
-            var length = 1; // * sign
+            var length = 1; // '*' sign
             length += ((argsLen + 1) / 10) + 1; // total length
-            length += 2; // total length line end
-            length += 1; // $ sign
+            length += RedisConstants.CRLFLength; // total length line end
+            length += 1; // '$' sign
             length += (command.Length / 10) + 1; // commang length line
-            length += 2; // command length line end
+            length += RedisConstants.CRLFLength; // command length line end
             length += command.Length;
-            length += 2; // command line end
+            length += RedisConstants.CRLFLength; // command line end
 
             if (argsLen > 0)
             {
@@ -79,11 +79,11 @@ namespace Sweet.Redis
                     }
                     else
                     {
-                        length += 1; // $ sign
+                        length += 1; // '$' sign
                         length += (arg.Length / 10) + 1; // arg length line
-                        length += 2; // arg length line end
+                        length += RedisConstants.CRLFLength; // arg length line end
                         length += arg.Length;
-                        length += 2; // arg line end
+                        length += RedisConstants.CRLFLength; // arg line end
                     }
                 }
             }
@@ -93,51 +93,45 @@ namespace Sweet.Redis
         private byte[] PrepareData()
         {
             var argsLen = m_Arguments != null ? m_Arguments.Length : 0;
-            var bufferLen = Math.Min(m_RequestLength + 16, RedisConstants.DefaultBufferSize);
 
-            using (var ms = new MemoryStream(m_RequestLength))
+            using (var buffer = new RedisDataBuffer(m_RequestLength))
             {
-                using (var bw = new BinaryWriter(new BufferedStream(ms, bufferLen), Encoding.UTF8))
+                buffer.Write((byte)'*');
+                buffer.Write(argsLen + 1);
+                buffer.Write(RedisConstants.LineEnd);
+                buffer.Write((byte)'$');
+                buffer.Write(m_Command.Length);
+                buffer.Write(RedisConstants.LineEnd);
+                buffer.Write(m_Command);
+                buffer.Write(RedisConstants.LineEnd);
+
+                if (argsLen > 0)
                 {
-                    bw.Write('*');
-                    bw.Write((argsLen + 1).ToBytes());
-                    bw.Write(RedisConstants.LineEnd);
-                    bw.Write('$');
-                    bw.Write(m_Command.Length.ToBytes());
-                    bw.Write(RedisConstants.LineEnd);
-                    bw.Write(m_Command);
-                    bw.Write(RedisConstants.LineEnd);
-
-                    if (argsLen > 0)
+                    byte[] arg;
+                    for (var i = 0; i < argsLen; i++)
                     {
-                        byte[] arg;
-                        for (var i = 0; i < argsLen; i++)
-                        {
-                            arg = m_Arguments[i];
+                        arg = m_Arguments[i];
 
-                            if (arg == null)
-                            {
-                                bw.Write("$-1".ToBytes());
-                                bw.Write(RedisConstants.LineEnd);
-                            }
-                            else if (arg.Length == 0)
-                            {
-                                bw.Write("$0".ToBytes());
-                                bw.Write(RedisConstants.LineEnd);
-                                bw.Write(RedisConstants.LineEnd);
-                            }
-                            else
-                            {
-                                bw.Write('$');
-                                bw.Write(arg.Length.ToBytes());
-                                bw.Write(RedisConstants.LineEnd);
-                                bw.Write(arg);
-                                bw.Write(RedisConstants.LineEnd);
-                            }
+                        if (arg == null)
+                        {
+                            buffer.Write(RedisConstants.NullBulkString);
                         }
+                        else if (arg.Length == 0)
+                        {
+                            buffer.Write(RedisConstants.EmptyBulkString);
+                            buffer.Write(RedisConstants.LineEnd);
+                        }
+                        else
+                        {
+                            buffer.Write((byte)'$');
+                            buffer.Write(arg.Length);
+                            buffer.Write(RedisConstants.LineEnd);
+                            buffer.Write(arg);
+                        }
+                        buffer.Write(RedisConstants.LineEnd);
                     }
                 }
-                return ms.ToArray();
+                return buffer.ReleaseBuffer();
             }
         }
 

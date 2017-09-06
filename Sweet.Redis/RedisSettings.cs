@@ -7,7 +7,7 @@ namespace Sweet.Redis
         # region .Ctors
 
         public RedisSettings(string host = "127.0.0.1", int port = RedisConstants.DefaultPort,
-            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            string password = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
             int waitRetryCount = RedisConstants.DefaultWaitRetryCount, int idleTimeout = RedisConstants.DefaultIdleTimeout,
@@ -15,6 +15,7 @@ namespace Sweet.Redis
         {
             Host = host;
             Port = port;
+            Password = password; 
             ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
             IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
             MaxCount = Math.Max(1, Math.Min(maxCount, RedisConstants.MaxConnectionCount));
@@ -34,6 +35,7 @@ namespace Sweet.Redis
         public string Host { get; private set; }
         public int IdleTimeout { get; private set; }
         public int MaxCount { get; private set; }
+        public string Password { get; private set; }
         public int Port { get; private set; }
         public int ReadBufferSize { get; private set; }
         public int ReceiveTimeout { get; private set; }

@@ -25,7 +25,7 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Clear();
+            ClearInternal();
         }
 
         #endregion Destructors
@@ -103,7 +103,7 @@ namespace Sweet.Redis
                 return;
 
             if (length == -1)
-                Clear();
+                ClearInternal();
             else
             {
                 var currLength = Interlocked.Read(ref m_Length);
@@ -112,7 +112,7 @@ namespace Sweet.Redis
                     length = Math.Min(currLength, length);
 
                     if (length == currLength)
-                        Clear();
+                        ClearInternal();
                     else
                     {
                         var chunks = m_Chunks;
@@ -281,12 +281,7 @@ namespace Sweet.Redis
             if (currLength + dataLength > int.MaxValue)
                 throw new RedisException("Buffer size exceeded maximum possible size");
 
-            var chunks = m_Chunks;
-            if (chunks == null)
-            {
-                chunks = new List<byte[]>();
-                Interlocked.Exchange(ref m_Chunks, chunks);
-            }
+            var chunks = GetChunks();
 
             if (dataLength < PutChunkLimit && chunks.Count > 0)
             {
@@ -296,6 +291,17 @@ namespace Sweet.Redis
 
             chunks.Add(data);
             Interlocked.Add(ref m_Length, dataLength);
+        }
+
+        protected List<byte[]> GetChunks()
+        {
+            var chunks = m_Chunks;
+            if (chunks == null)
+            {
+                chunks = new List<byte[]>();
+                Interlocked.Exchange(ref m_Chunks, chunks);
+            }
+            return chunks;
         }
 
         public void Write(byte[] data, int index = 0, int length = -1)
@@ -318,12 +324,7 @@ namespace Sweet.Redis
 
             length = Math.Min(length, dataLength - index);
 
-            var chunks = m_Chunks;
-            if (chunks == null)
-            {
-                chunks = new List<byte[]>();
-                Interlocked.Exchange(ref m_Chunks, chunks);
-            }
+            var chunks = GetChunks();
 
             while (length > 0)
             {
@@ -630,6 +631,12 @@ namespace Sweet.Redis
         }
 
         public void Clear()
+        {
+            ValidateNotDisposed();
+            ClearInternal();
+        }
+
+        private void ClearInternal()
         {
             Interlocked.Exchange(ref m_Length, 0);
             Interlocked.Exchange(ref m_Position, 0);

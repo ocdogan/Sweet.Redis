@@ -112,41 +112,10 @@ namespace Sweet.Redis
             if (socket == null)
                 return;
 
-            if (disposing)
-            {
-                if (m_ReleaseAction != null)
-                {
-                    m_ReleaseAction(this, socket);
-                }
-            }
-            else if (!socket.Connected)
-            {
-                socket.Dispose();
-            }
-            else
-            {
-                var userToken = new AsyncUserData
-                {
-                    Socket = socket
-                };
-
-                var args = new SocketAsyncEventArgs
-                {
-                    RemoteEndPoint = m_EndPoint,
-                    UserToken = userToken,
-                };
-
-                args.Completed += (sender, e) =>
-                {
-                    var token = (AsyncUserData)e.UserToken;
-                    if (token.Socket != null)
-                    {
-                        token.Socket.Dispose();
-                    }
-                };
-
-                socket.DisconnectAsync(args);
-            }
+            if (!disposing)
+                DisposeSocket(socket);
+            else if (m_ReleaseAction != null)
+                m_ReleaseAction(this, socket);
         }
 
         #endregion Destructors
@@ -181,6 +150,50 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Member Methods
+
+        private static void DisposeSocket(Socket socket)
+        {
+            if (socket != null && socket.IsBound)
+            {
+                if (!socket.Connected)
+                {
+                    try
+                    {
+                        socket.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+                else
+                {
+                    var userToken = new AsyncUserData
+                    {
+                        Socket = socket
+                    };
+
+                    var args = new SocketAsyncEventArgs
+                    {
+                        UserToken = userToken,
+                    };
+
+                    args.Completed += (sender, e) =>
+                    {
+                        try
+                        {
+                            var token = (AsyncUserData)e.UserToken;
+
+                            var sock = token.Socket;
+                            if (sock != null)
+                                sock.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    };
+
+                    socket.DisconnectAsync(args);
+                }
+            }
+        }
 
         protected override void ValidateNotDisposed()
         {
@@ -220,7 +233,7 @@ namespace Sweet.Redis
                     if (socket != null)
                     {
                         Interlocked.Exchange(ref m_Socket, null);
-                        socket.Dispose();
+                        DisposeSocket(socket);
                     }
 
                     SetState((long)RedisConnectionState.Connecting);
@@ -255,7 +268,7 @@ namespace Sweet.Redis
                         SetState((long)RedisConnectionState.Failed);
 
                         args.Dispose();
-                        socket.Dispose();
+                        DisposeSocket(socket);
 
                         throw new SocketException((int)SocketError.TimedOut);
                     }
@@ -269,7 +282,7 @@ namespace Sweet.Redis
                         SetState((long)RedisConnectionState.Failed);
 
                         args.Dispose();
-                        socket.Dispose();
+                        DisposeSocket(socket);
 
                         throw new SocketException((int)args.SocketError);
                     }
@@ -285,36 +298,16 @@ namespace Sweet.Redis
                 if (errorOccured)
                 {
                     Interlocked.CompareExchange(ref m_Socket, null, socket);
-                    Close(socket);
+                    DisposeSocket(socket);
                 }
                 else
                 {
                     var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
                     if (prevSocket != socket)
-                        Close(prevSocket);
+                        DisposeSocket(prevSocket);
                 }
             }
             return socket;
-        }
-
-        private void Close(Socket socket)
-        {
-            if (socket != null)
-            {
-                Task.Factory.StartNew(obj =>
-                {
-                    var sock = obj as Socket;
-                    if (sock != null)
-                    {
-                        try
-                        {
-                            socket.Dispose();
-                        }
-                        catch (Exception)
-                        { }
-                    }
-                }, socket);
-            }
         }
 
         internal long SetState(long state)
@@ -439,7 +432,7 @@ namespace Sweet.Redis
                 if (args.SocketError == SocketError.OperationAborted)
                 {
                     Interlocked.CompareExchange(ref m_Socket, null, socket);
-                    Close(socket);
+                    DisposeSocket(socket);
                 }
 
                 throw new SocketException((int)args.SocketError);
@@ -447,10 +440,7 @@ namespace Sweet.Redis
 
             ReleaseSendEventArgs(args);
 
-            using (var reader = new RedisResponseReader(this))
-            {
-                return reader.Execute();
-            }
+            return (new RedisResponseReader()).Execute(this);
         }
 
         private void ReleaseSendEventArgs(SocketAsyncEventArgs args)
@@ -538,7 +528,7 @@ namespace Sweet.Redis
                 if (args.SocketError == SocketError.OperationAborted)
                 {
                     Interlocked.CompareExchange(ref m_Socket, null, socket);
-                    Close(socket);
+                    DisposeSocket(socket);
                 }
 
                 throw new SocketException((int)args.SocketError);
@@ -577,7 +567,7 @@ namespace Sweet.Redis
             if (args.Offset == 0 && receivedLength == buffer.Length)
             {
                 data = buffer;
-                args.SetBuffer(new byte[RedisConstants.DefaultBufferSize], 0, RedisConstants.DefaultBufferSize);
+                args.SetBuffer(new byte[RedisConstants.ReadBufferSize], 0, RedisConstants.ReadBufferSize);
             }
             else
             {
@@ -634,7 +624,7 @@ namespace Sweet.Redis
                     UserToken = userToken,
                 };
 
-                args.SetBuffer(new byte[RedisConstants.DefaultBufferSize], 0, RedisConstants.DefaultBufferSize);
+                args.SetBuffer(new byte[RedisConstants.ReadBufferSize], 0, RedisConstants.ReadBufferSize);
             }
 
             args.Completed += OnReceive;
