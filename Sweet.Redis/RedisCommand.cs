@@ -10,7 +10,6 @@ namespace Sweet.Redis
         #region Field Members
 
         private int m_Db;
-        private int m_RequestLength;
         private byte[] m_Command;
         private byte[][] m_Arguments;
 
@@ -23,10 +22,9 @@ namespace Sweet.Redis
             if (command == null)
                 throw new ArgumentNullException("command");
 
+            m_Db = db;
             m_Command = command;
             m_Arguments = args;
-
-            m_RequestLength = CalculateRequestLengh(m_Command, m_Arguments);
         }
 
         #endregion .Ctors
@@ -52,49 +50,11 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private static int CalculateRequestLengh(byte[] command, byte[][] args)
-        {
-            var argsLen = args != null ? args.Length : 0;
-
-            var length = 1; // '*' sign
-            length += ((argsLen + 1) / 10) + 1; // total length
-            length += RedisConstants.CRLFLength; // total length line end
-            length += 1; // '$' sign
-            length += (command.Length / 10) + 1; // commang length line
-            length += RedisConstants.CRLFLength; // command length line end
-            length += command.Length;
-            length += RedisConstants.CRLFLength; // command line end
-
-            if (argsLen > 0)
-            {
-                foreach (var arg in args)
-                {
-                    if (arg == null)
-                    {
-                        length += 5; // $-1\r\n length
-                    }
-                    else if (arg.Length == 0)
-                    {
-                        length += 6; // $0\r\n\r\n length
-                    }
-                    else
-                    {
-                        length += 1; // '$' sign
-                        length += (arg.Length / 10) + 1; // arg length line
-                        length += RedisConstants.CRLFLength; // arg length line end
-                        length += arg.Length;
-                        length += RedisConstants.CRLFLength; // arg line end
-                    }
-                }
-            }
-            return length;
-        }
-
         private byte[] PrepareData()
         {
             var argsLen = m_Arguments != null ? m_Arguments.Length : 0;
 
-            using (var buffer = new RedisDataBuffer(m_RequestLength))
+            using (var buffer = new RedisDataBuffer(RedisConstants.ReadBufferSize))
             {
                 buffer.Write((byte)'*');
                 buffer.Write(argsLen + 1);

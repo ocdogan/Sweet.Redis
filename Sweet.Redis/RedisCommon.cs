@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Globalization;
+using System.Net.Sockets;
 using System.Text;
 
 namespace Sweet.Redis
@@ -45,6 +45,36 @@ namespace Sweet.Redis
 
         #region Methods
 
+        internal static bool IsConnected(this Socket socket, int poll = -1)
+        {
+            if (socket == null || !socket.Connected)
+                return false;
+            return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+        }
+
+        internal static void DisposeSocket(this Socket socket)
+        {
+            if (socket != null && socket.IsBound)
+            {
+                if (!socket.Connected)
+                {
+                    try
+                    {
+                        socket.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+                else
+                {
+                    socket.DisconnectAsync(false).ContinueWith(_ =>
+                    {
+                        if (socket != null)
+                            socket.Dispose();
+                    });
+                }
+            }
+        }
         internal static RedisObjectType ResponseType(this byte b)
         {
             switch (b)

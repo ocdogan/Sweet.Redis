@@ -11,7 +11,6 @@ namespace Sweet.Redis
         RedisSettings Settings { get; }
         RedisConnectionState State { get; }
 
-        bool Available();
         IRedisResponse Send(byte[] data);
     }
 }

@@ -9,45 +9,11 @@ namespace Sweet.Redis
 {
     internal class RedisConnection : RedisDisposable, IRedisConnection
     {
-        #region AsyncState
-
-        private enum AsyncState : long
-        {
-            Idle,
-            Failed,
-            Completed,
-            Connecting,
-            Sending,
-            TimedOut,
-            Receiving
-        }
-
-        #endregion AsyncState
-
-        #region AsyncUserData
-
-        private class AsyncUserData
-        {
-            public int Timeout;
-            public Socket Socket;
-            public long State;
-            public ManualResetEvent WaitHandle = new ManualResetEvent(false);
-        }
-
-        #endregion AsyncUserData
-
         #region Constants
 
         private const int SIO_LOOPBACK_FAST_PATH = -1744830448;
 
         #endregion Constants
-
-        #region Static Members
-
-        private static readonly ConcurrentQueue<SocketAsyncEventArgs> s_ReceiveEventArgsQ =
-            new ConcurrentQueue<SocketAsyncEventArgs>();
-
-        #endregion Static Members
 
         #region Field Members
 
@@ -113,7 +79,7 @@ namespace Sweet.Redis
                 return;
 
             if (!disposing)
-                DisposeSocket(socket);
+                socket.DisposeSocket();
             else if (m_ReleaseAction != null)
                 m_ReleaseAction(this, socket);
         }
@@ -151,49 +117,6 @@ namespace Sweet.Redis
 
         #region Member Methods
 
-        private static void DisposeSocket(Socket socket)
-        {
-            if (socket != null && socket.IsBound)
-            {
-                if (!socket.Connected)
-                {
-                    try
-                    {
-                        socket.Dispose();
-                    }
-                    catch (Exception)
-                    { }
-                }
-                else
-                {
-                    var userToken = new AsyncUserData
-                    {
-                        Socket = socket
-                    };
-
-                    var args = new SocketAsyncEventArgs
-                    {
-                        UserToken = userToken,
-                    };
-
-                    args.Completed += (sender, e) =>
-                    {
-                        try
-                        {
-                            var token = (AsyncUserData)e.UserToken;
-
-                            var sock = token.Socket;
-                            if (sock != null)
-                                sock.Dispose();
-                        }
-                        catch (Exception)
-                        { }
-                    };
-
-                    socket.DisconnectAsync(args);
-                }
-            }
-        }
 
         protected override void ValidateNotDisposed()
         {
@@ -211,21 +134,15 @@ namespace Sweet.Redis
             return base.SetDisposed();
         }
 
-        public bool Available()
-        {
-            var socket = ConnectInternal();
-            return socket != null && socket.Connected && (socket.Available > 0);
-        }
-
         internal Socket Connect()
         {
+            ValidateNotDisposed();
             return ConnectInternal();
         }
 
-        internal Socket ConnectInternal()
+        private Socket ConnectInternal()
         {
             var socket = m_Socket;
-            var errorOccured = false;
             try
             {
                 if ((socket == null) || !socket.Connected)
@@ -233,79 +150,39 @@ namespace Sweet.Redis
                     if (socket != null)
                     {
                         Interlocked.Exchange(ref m_Socket, null);
-                        DisposeSocket(socket);
+                        socket.DisposeSocket();
+
+                        return null;
                     }
 
                     SetState((long)RedisConnectionState.Connecting);
 
-                    var endPoint = GetEndPoint();
-                    Interlocked.Exchange(ref m_EndPoint, endPoint);
+                    var task = RedisAsyncEx.GetHostAddressesAsync(m_Settings.Host);
 
                     socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     ConfigureInternal(socket);
 
-                    var userToken = new AsyncUserData
-                    {
-                        Socket = socket,
-                        State = (long)AsyncState.Connecting,
-                        Timeout = m_Settings.ConnectionTimeout
-                    };
+                    var ipAddress = task.Result;
+                    if (ipAddress == null)
+                        throw new RedisException("Can not resolce host address");
 
-                    var args = new SocketAsyncEventArgs
-                    {
-                        RemoteEndPoint = endPoint,
-                        UserToken = userToken,
-                    };
-                    args.Completed += OnConnect;
+                    socket.ConnectAsync(ipAddress, m_Settings.Port).Wait();
 
-                    // On connection timeout
-                    if (socket.ConnectAsync(args) &&
-                        !userToken.WaitHandle.WaitOne(userToken.Timeout) && !socket.Connected)
-                    {
-                        Interlocked.Exchange(ref userToken.State, (long)AsyncState.TimedOut);
+                    SetState((long)RedisConnectionState.Connected);
 
-                        SetLastError((long)SocketError.TimedOut);
-                        SetState((long)RedisConnectionState.Failed);
-
-                        args.Dispose();
-                        DisposeSocket(socket);
-
-                        throw new SocketException((int)SocketError.TimedOut);
-                    }
-
-                    // Has error or not connected
-                    if ((args.SocketError != SocketError.Success) || !socket.Connected)
-                    {
-                        Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-
-                        SetLastError((long)args.SocketError);
-                        SetState((long)RedisConnectionState.Failed);
-
-                        args.Dispose();
-                        DisposeSocket(socket);
-
-                        throw new SocketException((int)args.SocketError);
-                    }
+                    var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
+                    if (prevSocket != socket)
+                        prevSocket.DisposeSocket();
                 }
             }
             catch (Exception)
             {
-                errorOccured = true;
+                SetState((long)RedisConnectionState.Failed);
+
+                Interlocked.CompareExchange(ref m_Socket, null, socket);
+                socket.DisposeSocket();
+
                 throw;
-            }
-            finally
-            {
-                if (errorOccured)
-                {
-                    Interlocked.CompareExchange(ref m_Socket, null, socket);
-                    DisposeSocket(socket);
-                }
-                else
-                {
-                    var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
-                    if (prevSocket != socket)
-                        DisposeSocket(prevSocket);
-                }
             }
             return socket;
         }
@@ -320,44 +197,14 @@ namespace Sweet.Redis
             return Interlocked.Exchange(ref m_LastError, error);
         }
 
-        private void OnConnect(object sender, SocketAsyncEventArgs e)
-        {
-            // Set last error
-            SetLastError((long)e.SocketError);
-
-            // Set current state
-            Interlocked.Exchange(ref m_State, (e.SocketError == SocketError.Success) ?
-                (int)RedisConnectionState.Connected : (int)RedisConnectionState.Failed);
-
-            var userToken = (AsyncUserData)e.UserToken;
-            if (e.SocketError != SocketError.Success)
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-
-            // Signals the end of connection.
-            userToken.WaitHandle.Set();
-        }
-
-        protected virtual void DoConnected(object sender, SocketAsyncEventArgs e)
-        { }
-
         protected void ConfigureInternal(Socket socket)
         {
             DoConfigure(socket);
         }
 
-        private EndPoint GetEndPoint()
-        {
-            var host = Dns.GetHostEntry(m_Settings.Host);
-
-            var addressList = host.AddressList;
-            return new IPEndPoint(addressList[addressList.Length - 1], m_Settings.Port);
-        }
-
         protected virtual void DoConfigure(Socket socket)
         {
             SetIOLoopbackFastPath(socket);
-
-            socket.Blocking = false;
 
             var settings = m_Settings;
             if (settings != null)
@@ -374,6 +221,7 @@ namespace Sweet.Redis
                                            settings.ReceiveTimeout == int.MaxValue ? Timeout.Infinite : settings.ReceiveTimeout);
                 }
             }
+
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
             socket.NoDelay = true;
         }
@@ -394,6 +242,8 @@ namespace Sweet.Redis
 
         public IRedisResponse Send(byte[] data)
         {
+            ValidateNotDisposed();
+
             var socket = Connect();
             if (socket == null)
             {
@@ -403,247 +253,15 @@ namespace Sweet.Redis
                 throw new SocketException((int)SocketError.NotConnected);
             }
 
-            var args = NewSendArgs(data, socket);
-            var userToken = (AsyncUserData)args.UserToken;
-
-            // On send timeout
-            if (socket.SendAsync(args) &&
-                !userToken.WaitHandle.WaitOne(userToken.Timeout))
-            {
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.TimedOut);
-
-                SetLastError((long)SocketError.TimedOut);
-                SetState((long)RedisConnectionState.Failed);
-
-                ReleaseSendEventArgs(args);
-
-                throw new SocketException((int)SocketError.TimedOut);
-            }
-
-            // Has error
-            if (args.SocketError != SocketError.Success)
-            {
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-
-                SetLastError((long)args.SocketError);
-                SetState((long)RedisConnectionState.Failed);
-
-                ReleaseSendEventArgs(args);
-                if (args.SocketError == SocketError.OperationAborted)
+            var task = socket.SendAsync(data, 0, data.Length)
+                .ContinueWith<IRedisResponse>((ret) =>
                 {
-                    Interlocked.CompareExchange(ref m_Socket, null, socket);
-                    DisposeSocket(socket);
-                }
-
-                throw new SocketException((int)args.SocketError);
-            }
-
-            ReleaseSendEventArgs(args);
-
-            return (new RedisResponseReader()).Execute(this);
-        }
-
-        private void ReleaseSendEventArgs(SocketAsyncEventArgs args)
-        {
-            args.Completed -= OnSend;
-            args.Dispose();
-        }
-
-        private void OnSend(object sender, SocketAsyncEventArgs e)
-        {
-            e.Completed -= OnSend;
-
-            // Set last error
-            SetLastError((long)e.SocketError);
-
-            var userToken = (AsyncUserData)e.UserToken;
-            if (e.SocketError != SocketError.Success)
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-
-            // Signals the end of send.
-            userToken.WaitHandle.Set();
-        }
-
-        private SocketAsyncEventArgs NewSendArgs(byte[] data, Socket socket)
-        {
-            var userToken = new AsyncUserData
-            {
-                Socket = socket,
-                State = (long)AsyncState.Sending,
-                Timeout = m_Settings.SendTimeout
-            };
-
-            var args = new SocketAsyncEventArgs
-            {
-                UserToken = userToken,
-            };
-
-            args.SetBuffer(data, 0, data != null ? data.Length : 0);
-            args.Completed += OnSend;
-
-            return args;
-        }
-
-        internal RedisReceivedData Receive()
-        {
-            var socket = Connect();
-            if (socket == null)
-            {
-                SetLastError((long)SocketError.NotConnected);
-                SetState((long)RedisConnectionState.Failed);
-
-                throw new SocketException((int)SocketError.NotConnected);
-            }
-
-            var args = NewReceiveArgs(socket);
-
-            var userToken = args.UserToken as AsyncUserData;
-            userToken.Socket = socket;
-
-            var now = DateTime.UtcNow;
-
-            // On receive timeout
-            if (socket.ReceiveAsync(args) &&
-                !userToken.WaitHandle.WaitOne(userToken.Timeout))
-            {
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.TimedOut);
-
-                SetLastError((long)SocketError.TimedOut);
-                SetState((long)RedisConnectionState.Failed);
-
-                ReleaseReceiveEventArgs(args);
-
-                throw new SocketException((int)SocketError.TimedOut);
-            }
-
-            // Has error
-            if (args.SocketError != SocketError.Success)
-            {
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-
-                SetLastError((long)args.SocketError);
-                SetState((long)RedisConnectionState.Failed);
-
-                ReleaseReceiveEventArgs(args);
-                if (args.SocketError == SocketError.OperationAborted)
-                {
-                    Interlocked.CompareExchange(ref m_Socket, null, socket);
-                    DisposeSocket(socket);
-                }
-
-                throw new SocketException((int)args.SocketError);
-            }
-
-            var receivedLength = Math.Max(0, args.BytesTransferred);
-            if (receivedLength == 0)
-                return RedisReceivedData.Empty;
-
-            var state = (AsyncState)userToken.State;
-            if (state != AsyncState.Receiving)
-                return RedisReceivedData.Empty;
-
-            if (userToken.Timeout > -1)
-            {
-                var ellapsed = (DateTime.UtcNow - now).TotalMilliseconds;
-
-                userToken.Timeout -= ellapsed >= userToken.Timeout ?
-                    userToken.Timeout : (int)ellapsed;
-
-                if (userToken.Timeout <= 0)
-                {
-                    userToken.Timeout = 0;
-
-                    SetLastError((long)SocketError.TimedOut);
-                    SetState((long)RedisConnectionState.Failed);
-
-                    ReleaseReceiveEventArgs(args);
-
-                    throw new SocketException((int)SocketError.TimedOut);
-                }
-            }
-
-            byte[] data = null;
-            var buffer = args.Buffer;
-            if (args.Offset == 0 && receivedLength == buffer.Length)
-            {
-                data = buffer;
-                args.SetBuffer(new byte[RedisConstants.ReadBufferSize], 0, RedisConstants.ReadBufferSize);
-            }
-            else
-            {
-                data = new byte[receivedLength];
-                if (receivedLength > 0)
-                    Buffer.BlockCopy(buffer, args.Offset, data, 0, receivedLength);
-            }
-
-            ReleaseReceiveEventArgs(args);
-
-            return new RedisReceivedData(data: data, available: socket.Available);
-        }
-
-        private void ReleaseReceiveEventArgs(SocketAsyncEventArgs args)
-        {
-            if (args != null)
-            {
-                args.Completed -= OnReceive;
-
-                var userToken = (AsyncUserData)args.UserToken;
-                userToken.Socket = null;
-
-                userToken.WaitHandle.Reset();
-
-                s_ReceiveEventArgsQ.Enqueue(args);
-            }
-        }
-
-        private SocketAsyncEventArgs NewReceiveArgs(Socket socket)
-        {
-            SocketAsyncEventArgs args;
-            s_ReceiveEventArgsQ.TryDequeue(out args);
-
-            AsyncUserData userToken;
-            if (args != null)
-            {
-                userToken = (AsyncUserData)args.UserToken;
-
-                userToken.Socket = socket;
-                userToken.State = (long)AsyncState.Receiving;
-                userToken.Timeout = m_Settings.ReceiveTimeout;
-            }
-            else
-            {
-                userToken = new AsyncUserData
-                {
-                    Socket = socket,
-                    State = (long)AsyncState.Receiving,
-                    Timeout = m_Settings.ReceiveTimeout
-                };
-
-                args = new SocketAsyncEventArgs
-                {
-                    UserToken = userToken,
-                };
-
-                args.SetBuffer(new byte[RedisConstants.ReadBufferSize], 0, RedisConstants.ReadBufferSize);
-            }
-
-            args.Completed += OnReceive;
-            return args;
-        }
-
-        private void OnReceive(object sender, SocketAsyncEventArgs e)
-        {
-            e.Completed -= OnReceive;
-
-            // Set last error
-            SetLastError((long)e.SocketError);
-
-            var userToken = (AsyncUserData)e.UserToken;
-            if (e.SocketError != SocketError.Success)
-                Interlocked.Exchange(ref userToken.State, (long)AsyncState.Failed);
-
-            // Signals the end of receive.
-            userToken.WaitHandle.Set();
+                    if (ret.IsCompleted && ret.Result > 0)
+                        using (var reader = new RedisResponseReader())
+                            return reader.Execute(socket);
+                    return null;
+                });
+            return task.Result;
         }
 
         #endregion Member Methods

@@ -231,7 +231,7 @@ namespace Sweet.Redis
                             socket = node.Value.ReleaseSocket();
 
                             store.Remove(node);
-                            if (IsConnected(socket, 100))
+                            if (socket.IsConnected())
                                 return socket;
                         }
 
@@ -281,18 +281,10 @@ namespace Sweet.Redis
             throw new RedisException("Connection timeout occured while trying to connect");
         }
 
-        private bool IsConnected(Socket socket, int poll = -1)
-        {
-            if (socket == null || !socket.Connected)
-                return false;
-            return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
-        }
-
         private IRedisConnection NewConnection(Socket socket, int db, bool connectImmediately = true)
         {
-            socket = IsConnected(socket) ? socket : null;
-
-            var conn = new RedisConnection(this, m_Settings, Release, db, socket, connectImmediately);
+            var conn = new RedisConnection(this, m_Settings, Release, db,
+                                           socket.IsConnected() ? socket : null, connectImmediately);
 
             Interlocked.Increment(ref m_InitCount);
             return conn;
@@ -317,7 +309,9 @@ namespace Sweet.Redis
 
                 if (conn.Disposed)
                 {
-                    if (IsConnected(socket))
+                    if (!socket.IsConnected())
+                        socket.DisposeSocket();
+                    else
                     {
                         var store = m_MemberStore;
                         if (store != null)
@@ -356,7 +350,7 @@ namespace Sweet.Redis
                             try
                             {
                                 var m = node.Value;
-                                if ((m == null) || !IsConnected(m.Socket) ||
+                                if ((m == null) || !m.Socket.IsConnected(100) ||
                                     ((timeout > 0) && (now - m.PooledTime).TotalSeconds >= timeout))
                                 {
                                     store.Remove(node);
@@ -387,8 +381,16 @@ namespace Sweet.Redis
                 s_Pools.Add(pool);
                 if (s_PurgeTimer == null)
                 {
-                    s_PurgeTimer = new Timer(RedisConnectionPool.PurgeIdles, null,
-                        RedisConstants.IdleTimerPeriod, RedisConstants.IdleTimerPeriod);
+                    s_PurgeTimer = new Timer((state) =>
+                    {
+                        var pools = GetPoolList();
+                        if (pools != null)
+                        {
+                            pools.AsParallel().ForAll(p => p.PurgeIdles());
+                        }
+                    }, null,
+                        RedisConstants.ConnectionPurgePeriod,
+                                             RedisConstants.ConnectionPurgePeriod);
                 }
             }
         }
@@ -406,15 +408,6 @@ namespace Sweet.Redis
                         timer.Dispose();
                     }
                 }
-            }
-        }
-
-        private static void PurgeIdles(object state)
-        {
-            var pools = GetPoolList();
-            if (pools != null)
-            {
-                pools.AsParallel().ForAll(p => p.PurgeIdles());
             }
         }
 

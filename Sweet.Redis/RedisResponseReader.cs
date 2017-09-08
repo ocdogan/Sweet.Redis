@@ -1,40 +1,71 @@
 ﻿using System;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisResponseReader
+    internal class RedisResponseReader : RedisDisposable
     {
+        #region Field Members
+
+        private byte[] m_Buffer;
+
+        #endregion Field Members
+
         #region Methods
 
-        public IRedisResponse Execute(RedisConnection connection)
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+            Interlocked.Exchange(ref m_Buffer, null);
+        }
+
+        public IRedisResponse Execute(Socket socket)
         {
             using (var buffer = new RedisByteBuffer())
-                return ReadThrough(new RedisResponse(), connection, buffer);
+                return ReadThrough(new RedisResponse(), socket, buffer);
         }
 
-        private static void Receive(RedisConnection connection, RedisByteBuffer buffer)
+        private void Receive(Socket socket, RedisByteBuffer buffer)
         {
-            if (connection == null || connection.Disposed)
-                throw new RedisException("Can not establish connection to complete redis response read");
+            if (socket == null || !socket.IsConnected())
+                throw new RedisException("Can not establish socket to complete redis response read");
 
-            RedisReceivedData receivedData;
+            var currBuffer = m_Buffer;
+            if (currBuffer == null)
+            {
+                currBuffer = new byte[RedisConstants.ReadBufferSize];
+                Interlocked.Exchange(ref m_Buffer, currBuffer);
+            }
+
             do
             {
-                receivedData = connection.Receive();
-                if (receivedData.IsEmpty)
-                    continue;
+                var receivedLength = socket.ReceiveAsync(currBuffer, 0, currBuffer.Length).Result;
+                if (receivedLength == 0)
+                    break;
 
-                buffer.Put(receivedData.Data);
+                byte[] data = null;
+                if (receivedLength == buffer.Length)
+                {
+                    data = currBuffer;
+                    Interlocked.Exchange(ref m_Buffer, null);
+                }
+                else
+                {
+                    data = new byte[receivedLength];
+                    Buffer.BlockCopy(currBuffer, 0, data, 0, receivedLength);
+                }
+
+                buffer.Put(data);
             }
-            while (receivedData.Available > receivedData.Length);
+            while (socket.Available > 0);
         }
 
-        private static IRedisResponse ReadThrough(RedisResponse item, RedisConnection connection, RedisByteBuffer buffer)
+        private IRedisResponse ReadThrough(RedisResponse item, Socket socket, RedisByteBuffer buffer)
         {
-            if (connection == null || connection.Disposed)
-                throw new RedisException("Can not establish connection to complete redis response read");
+            if (socket == null || !socket.IsConnected())
+                throw new RedisException("Can not establish socket to complete redis response read");
 
             var type = item.Type;
             var receiveMore = true;
@@ -47,7 +78,7 @@ namespace Sweet.Redis
                 if (receiveMore)
                 {
                     receiveMore = false;
-                    Receive(connection, buffer);
+                    Receive(socket, buffer);
                 }
 
                 if (item.Length < -1)
@@ -60,7 +91,7 @@ namespace Sweet.Redis
                         continue;
                 }
 
-                if (ReadBody(item, connection, buffer, out receiveMore))
+                if (ReadBody(item, socket, buffer, out receiveMore))
                     return item;
             }
             return null;
@@ -74,7 +105,7 @@ namespace Sweet.Redis
                 (type != RedisObjectType.Array && (item.Length > bufferLength - buffer.Position + RedisConstants.CRLFLength));
         }
 
-        private static bool ReadHeader(RedisResponse item, RedisByteBuffer buffer, out bool receiveMore)
+        private bool ReadHeader(RedisResponse item, RedisByteBuffer buffer, out bool receiveMore)
         {
             receiveMore = false;
 
@@ -140,11 +171,11 @@ namespace Sweet.Redis
             return false;
         }
 
-        private static bool ReadBody(RedisResponse item, RedisConnection connection, RedisByteBuffer buffer, out bool receiveMore)
+        private bool ReadBody(RedisResponse item, Socket socket, RedisByteBuffer buffer, out bool receiveMore)
         {
             receiveMore = false;
-            if (connection == null || connection.Disposed)
-                throw new RedisException("Can not establish connection to complete redis response read");
+            if (socket == null || !socket.IsConnected())
+                throw new RedisException("Can not establish socket to complete redis response read");
 
             switch (item.Type)
             {
@@ -184,7 +215,7 @@ namespace Sweet.Redis
                     {
                         for (var i = 0; i < item.Length; i++)
                         {
-                            var child = ReadThrough(new RedisResponse(), connection, buffer);
+                            var child = ReadThrough(new RedisResponse(), socket, buffer);
                             if (child == null)
                                 throw new RedisException("Unexpected response data, not valid data for array item");
 

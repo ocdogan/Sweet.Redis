@@ -20,12 +20,12 @@ namespace Sweet.Redis
 
         #region Constants
 
-        public const int ReadBufferSize = 2 * 1024;
+        public const int ReadBufferSize = 16 * 1024;
         public const int WriteBufferSize = 2 * 1024;
 
         public const int MaxValueLength = 1024 * 1024 * 1024; // 1 GB
 
-        public const int IdleTimerPeriod = 10000; // milliseconds
+        public const int ConnectionPurgePeriod = 1000; // milliseconds
 
         public const int MaxDbNo = 16;
         public const int DefaultPort = 6379;
