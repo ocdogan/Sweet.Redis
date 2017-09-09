@@ -7,18 +7,11 @@ namespace Sweet.Redis
 {
     internal class RedisResponseReader : RedisDisposable
     {
-        #region Field Members
-
-        private byte[] m_Buffer;
-
-        #endregion Field Members
-
         #region Methods
 
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
-            Interlocked.Exchange(ref m_Buffer, null);
         }
 
         public IRedisResponse Execute(Socket socket)
@@ -72,34 +65,56 @@ namespace Sweet.Redis
             if (socket == null || !socket.IsConnected())
                 throw new RedisException("Can not establish socket to complete redis response read");
 
-            var currBuffer = m_Buffer;
-            if (currBuffer == null)
-            {
-                currBuffer = new byte[RedisConstants.ReadBufferSize];
-                Interlocked.Exchange(ref m_Buffer, currBuffer);
-            }
+            var offset = 0;
+            var length = 0;
+            var data = (byte[])null;
 
+            var remainingLength = socket.Available;
             do
             {
-                var receivedLength = socket.ReceiveAsync(currBuffer, 0, currBuffer.Length).Result;
-                if (receivedLength == 0)
+                if (length == 0)
+                {
+                    offset = 0;
+                    length = (remainingLength == 0) ?
+                        RedisConstants.ReadBufferSize :
+                                      remainingLength;
+
+                    data = new byte[length];
+                }
+
+                var receivedLength = socket.ReceiveAsync(data, offset, length).Result;
+
+                if (receivedLength > 0)
+                    offset += receivedLength;
+
+                if (receivedLength < length)
+                {
+                    if (offset > 0)
+                    {
+                        if (offset == data.Length)
+                            buffer.Put(data);
+                        else
+                        {
+                            var tmp = new byte[offset];
+                            Buffer.BlockCopy(data, 0, tmp, 0, offset);
+
+                            buffer.Put(tmp);
+                        }
+                    }
+
                     break;
-
-                byte[] data = null;
-                if (receivedLength == buffer.Length)
-                {
-                    data = currBuffer;
-                    Interlocked.Exchange(ref m_Buffer, null);
-                }
-                else
-                {
-                    data = new byte[receivedLength];
-                    Buffer.BlockCopy(currBuffer, 0, data, 0, receivedLength);
                 }
 
-                buffer.Put(data);
+                length -= receivedLength;
+                if (length == 0)
+                {
+                    buffer.Put(data);
+
+                    data = null;
+                    offset = 0;
+                }
             }
-            while (socket.Available > 0);
+            while ((remainingLength = socket.Available) > 0);
         }
 
         private bool ReadHeader(RedisResponse item, RedisByteBuffer buffer, out bool receiveMore)

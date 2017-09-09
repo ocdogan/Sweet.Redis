@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweet.Redis
@@ -10,6 +9,8 @@ namespace Sweet.Redis
     internal static class RedisAsyncEx
     {
         #region Methods
+
+        #region Dns
 
         public static Task<IPAddress> GetHostAddressesAsync(string host)
         {
@@ -30,6 +31,10 @@ namespace Sweet.Redis
                 }, tcs);
             return tcs.Task;
         }
+
+        #endregion Dns
+
+        #region Socket
 
         public static Task ConnectAsync(this Socket socket, IPEndPoint endPoint)
         {
@@ -147,11 +152,11 @@ namespace Sweet.Redis
             return tcs.Task;
         }
 
-        public static Task<int> SendAsync(this Socket socket, byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None)
+        public static Task<int> SendAsync(this Socket socket, byte[] data, int offset, int count, SocketFlags socketFlags = SocketFlags.None)
         {
             var tcs = new TaskCompletionSource<int>(socket);
 
-            socket.BeginSend(buffer, offset, size, socketFlags, ar =>
+            socket.BeginSend(data, offset, count, socketFlags, ar =>
             {
                 var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
                 try
@@ -166,11 +171,11 @@ namespace Sweet.Redis
             return tcs.Task;
         }
 
-        public static Task<int> ReceiveAsync(this Socket socket, byte[] buffer, int offset, int size, SocketFlags socketFlags = SocketFlags.None)
+        public static Task<int> ReceiveAsync(this Socket socket, byte[] data, int offset, int count, SocketFlags socketFlags = SocketFlags.None)
         {
             var tcs = new TaskCompletionSource<int>(socket);
 
-            socket.BeginReceive(buffer, offset, size, socketFlags, ar =>
+            socket.BeginReceive(data, offset, count, socketFlags, ar =>
             {
                 var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
                 try
@@ -184,6 +189,51 @@ namespace Sweet.Redis
             }, tcs);
             return tcs.Task;
         }
+
+        #endregion Socket
+
+        #region Stream
+
+        public static Task<bool> WriteAsync(this Stream stream, byte[] data, int offset, int count)
+        {
+            var tcs = new TaskCompletionSource<bool>(stream);
+
+            stream.BeginWrite(data, offset, count, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<bool>)ar.AsyncState;
+                try
+                {
+                    ((Stream)innerTcs.Task.AsyncState).EndWrite(ar);
+                    innerTcs.TrySetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<int> ReadAsync(this Stream stream, byte[] data, int offset, int count)
+        {
+            var tcs = new TaskCompletionSource<int>(stream);
+
+            stream.BeginRead(data, offset, count, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                try
+                {
+                    innerTcs.TrySetResult(((Stream)innerTcs.Task.AsyncState).EndRead(ar));
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        #endregion Stream
 
         #endregion Methods
     }

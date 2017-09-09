@@ -9,9 +9,9 @@ namespace Sweet.Redis
         #region Field Members
 
         private byte[] m_Data;
+        private long m_Length;
         private long m_Capacity;
         private long m_Position;
-        private long m_Completed;
 
         #endregion Field Members
 
@@ -20,7 +20,6 @@ namespace Sweet.Redis
         public RedisFixedBuffer(int capacity)
         {
             m_Capacity = Math.Max(0, capacity);
-            m_Data = new byte[capacity];
         }
 
         #endregion .Ctors
@@ -41,19 +40,28 @@ namespace Sweet.Redis
             get { return (int)Interlocked.Read(ref m_Capacity); }
         }
 
+        public bool Completed
+        {
+            get
+            {
+                return Interlocked.Read(ref m_Position) >=
+                              Interlocked.Read(ref m_Length);
+            }
+        }
+
         public byte[] Data
         {
             get { return m_Data; }
         }
 
+        public int Length
+        {
+            get { return (int)Interlocked.Read(ref m_Length); }
+        }
+
         public int Position
         {
             get { return (int)Interlocked.Read(ref m_Position); }
-        }
-
-        public bool Completed
-        {
-            get { return Interlocked.Read(ref m_Completed) != 0L; }
         }
 
         #endregion Properties
@@ -62,8 +70,8 @@ namespace Sweet.Redis
 
         private void ValidateNotCompleted()
         {
-            if (Interlocked.Read(ref m_Completed) != 0L)
-                throw new RedisException("Buffer limit exceeded");
+            if (Completed)
+                throw new RedisException("Buffer capacity exceeded");
         }
 
         public void Write(char val)
@@ -149,11 +157,25 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             ValidateNotCompleted();
 
-            m_Data[Position] = val;
+            GetBuffer()[Position] = val;
 
-            var pos = Interlocked.Add(ref m_Position, 1L);
-            if (pos >= Capacity)
-                Interlocked.Exchange(ref m_Completed, 1L);
+            Interlocked.Add(ref m_Position, 1L);
+        }
+
+        private byte[] GetBuffer()
+        {
+            var buffer = m_Data;
+            if (buffer == null)
+            {
+                var capacity = Capacity;
+                buffer = new byte[capacity];
+
+                Interlocked.Exchange(ref m_Data, buffer);
+
+                Interlocked.Exchange(ref m_Position, 0L);
+                Interlocked.Exchange(ref m_Length, capacity);
+            }
+            return buffer;
         }
 
         public void Write(byte[] data, int index, int length)
@@ -176,14 +198,14 @@ namespace Sweet.Redis
                         throw new ArgumentException("Length can not exceed data size", "length");
 
                     var currPosition = Position;
-                    if (length > Capacity - currPosition)
+                    if (length > Length - currPosition)
                         throw new ArgumentException("Length can not exceed buffer capacitye", "length");
 
-                    Buffer.BlockCopy(data, index, m_Data, currPosition, length);
+                    var buffer = GetBuffer();
 
-                    var pos = Interlocked.Add(ref m_Position, length);
-                    if (pos >= Capacity)
-                        Interlocked.Exchange(ref m_Completed, 1L);
+                    Buffer.BlockCopy(data, index, buffer, currPosition, length);
+
+                    Interlocked.Add(ref m_Position, length);
                 }
             }
         }
@@ -196,20 +218,33 @@ namespace Sweet.Redis
 
         private void ClearInternal()
         {
-            Interlocked.Exchange(ref m_Capacity, 0L);
+            Interlocked.Exchange(ref m_Length, 0L);
             Interlocked.Exchange(ref m_Position, 0L);
 
             Interlocked.Exchange(ref m_Data, null);
         }
 
-        public byte[] ReleaseBuffer()
+        public int ReleaseBuffer(out byte[] data, bool reinit = false)
         {
             ValidateNotDisposed();
 
-            Interlocked.Exchange(ref m_Capacity, 0L);
-            Interlocked.Exchange(ref m_Position, 0L);
+            data = m_Data;
+            var pos = (int)Interlocked.Exchange(ref m_Position, 0L);
 
-            return Interlocked.Exchange(ref m_Data, null);
+            if (reinit)
+            {
+                var capacity = Capacity;
+
+                Interlocked.Exchange(ref m_Length, capacity);
+                Interlocked.Exchange(ref m_Data, new byte[capacity]);
+            }
+            else
+            {
+                Interlocked.Exchange(ref m_Length, 0L);
+                Interlocked.Exchange(ref m_Data, null);
+            }
+
+            return pos;
         }
 
         #endregion Methods
