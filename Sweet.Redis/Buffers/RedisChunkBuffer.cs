@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisDataBuffer : RedisDisposable
+    internal class RedisChunkBuffer : RedisDisposable
     {
         #region Constants
 
@@ -28,9 +28,9 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisDataBuffer(int bufferSize = 0)
+        public RedisChunkBuffer(int bufferSize = 0)
         {
-            m_ChunkSize = (bufferSize <= 0) ? DefaultBufferSize : 
+            m_ChunkSize = (bufferSize <= 0) ? DefaultBufferSize :
                 Math.Min(MaxBufferSize, Math.Max(MinBufferSize, bufferSize));
         }
 
@@ -234,8 +234,8 @@ namespace Sweet.Redis
 
         private void ClearInternal()
         {
-            Interlocked.Exchange(ref m_Length, 0);
-            Interlocked.Exchange(ref m_Position, 0);
+            Interlocked.Exchange(ref m_Length, 0L);
+            Interlocked.Exchange(ref m_Position, 0L);
 
             var chunks = Interlocked.Exchange(ref m_Chunks, null);
             if (chunks != null)

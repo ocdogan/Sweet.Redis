@@ -27,46 +27,8 @@ namespace Sweet.Redis
                 return ReadThrough(new RedisResponse(), socket, buffer);
         }
 
-        private void Receive(Socket socket, RedisByteBuffer buffer)
-        {
-            if (socket == null || !socket.IsConnected())
-                throw new RedisException("Can not establish socket to complete redis response read");
-
-            var currBuffer = m_Buffer;
-            if (currBuffer == null)
-            {
-                currBuffer = new byte[RedisConstants.ReadBufferSize];
-                Interlocked.Exchange(ref m_Buffer, currBuffer);
-            }
-
-            do
-            {
-                var receivedLength = socket.ReceiveAsync(currBuffer, 0, currBuffer.Length).Result;
-                if (receivedLength == 0)
-                    break;
-
-                byte[] data = null;
-                if (receivedLength == buffer.Length)
-                {
-                    data = currBuffer;
-                    Interlocked.Exchange(ref m_Buffer, null);
-                }
-                else
-                {
-                    data = new byte[receivedLength];
-                    Buffer.BlockCopy(currBuffer, 0, data, 0, receivedLength);
-                }
-
-                buffer.Put(data);
-            }
-            while (socket.Available > 0);
-        }
-
         private IRedisResponse ReadThrough(RedisResponse item, Socket socket, RedisByteBuffer buffer)
         {
-            if (socket == null || !socket.IsConnected())
-                throw new RedisException("Can not establish socket to complete redis response read");
-
             var type = item.Type;
             var receiveMore = true;
 
@@ -103,6 +65,41 @@ namespace Sweet.Redis
             return (bufferLength == 0) ||
                 ((item.Length < -1 || type == RedisObjectType.Undefined) && bufferLength == 0) ||
                 (type != RedisObjectType.Array && (item.Length > bufferLength - buffer.Position + RedisConstants.CRLFLength));
+        }
+
+        private void Receive(Socket socket, RedisByteBuffer buffer)
+        {
+            if (socket == null || !socket.IsConnected())
+                throw new RedisException("Can not establish socket to complete redis response read");
+
+            var currBuffer = m_Buffer;
+            if (currBuffer == null)
+            {
+                currBuffer = new byte[RedisConstants.ReadBufferSize];
+                Interlocked.Exchange(ref m_Buffer, currBuffer);
+            }
+
+            do
+            {
+                var receivedLength = socket.ReceiveAsync(currBuffer, 0, currBuffer.Length).Result;
+                if (receivedLength == 0)
+                    break;
+
+                byte[] data = null;
+                if (receivedLength == buffer.Length)
+                {
+                    data = currBuffer;
+                    Interlocked.Exchange(ref m_Buffer, null);
+                }
+                else
+                {
+                    data = new byte[receivedLength];
+                    Buffer.BlockCopy(currBuffer, 0, data, 0, receivedLength);
+                }
+
+                buffer.Put(data);
+            }
+            while (socket.Available > 0);
         }
 
         private bool ReadHeader(RedisResponse item, RedisByteBuffer buffer, out bool receiveMore)

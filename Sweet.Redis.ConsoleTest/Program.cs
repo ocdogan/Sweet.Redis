@@ -18,6 +18,7 @@ namespace Sweet.Redis.ConsoleTest
                 using (var db = pool.GetDb())
                 {
                     db.Strings.Set("large_text", largeText);
+                    db.Strings.Get("large_text");
                 }
 
                 do
@@ -94,6 +95,7 @@ namespace Sweet.Redis.ConsoleTest
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)
+                                // db.Connection.Ping();
                                 db.Strings.Get("large_text");
 
                             /* for (var i = 0; i < 1000; i++)

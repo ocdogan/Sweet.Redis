@@ -54,7 +54,7 @@ namespace Sweet.Redis
         {
             var argsLen = m_Arguments != null ? m_Arguments.Length : 0;
 
-            using (var buffer = new RedisDataBuffer(RedisConstants.ReadBufferSize))
+            using (var buffer = new RedisChunkBuffer(RedisConstants.ReadBufferSize))
             {
                 buffer.Write((byte)'*');
                 buffer.Write(argsLen + 1);
