@@ -14,13 +14,13 @@ namespace Sweet.Redis
             base.OnDispose(disposing);
         }
 
-        public IRedisResponse Execute(Socket socket)
+        public IRedisResponse Execute(RedisSocket socket)
         {
             using (var buffer = new RedisByteBuffer())
                 return ReadThrough(new RedisResponse(), socket, buffer);
         }
 
-        private IRedisResponse ReadThrough(RedisResponse item, Socket socket, RedisByteBuffer buffer)
+        private IRedisResponse ReadThrough(RedisResponse item, RedisSocket socket, RedisByteBuffer buffer)
         {
             var type = item.Type;
             var receiveMore = true;
@@ -60,7 +60,7 @@ namespace Sweet.Redis
                 (type != RedisObjectType.Array && (item.Length > bufferLength - buffer.Position + RedisConstants.CRLFLength));
         }
 
-        private void Receive(Socket socket, RedisByteBuffer buffer)
+        private void Receive(RedisSocket socket, RedisByteBuffer buffer)
         {
             if (socket == null || !socket.IsConnected())
                 throw new RedisException("Can not establish socket to complete redis response read");
@@ -183,7 +183,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        private bool ReadBody(RedisResponse item, Socket socket, RedisByteBuffer buffer, out bool receiveMore)
+        private bool ReadBody(RedisResponse item, RedisSocket socket, RedisByteBuffer buffer, out bool receiveMore)
         {
             receiveMore = false;
             if (socket == null || !socket.IsConnected())

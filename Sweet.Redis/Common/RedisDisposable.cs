@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisDisposable : IDisposable
+    public class RedisDisposable : IRedisDisposable
     {
         #region Field Members
 
@@ -55,7 +55,7 @@ namespace Sweet.Redis
             return Interlocked.Exchange(ref m_Disposed, 1L) != 0L;
         }
 
-        protected virtual void ValidateNotDisposed()
+        public virtual void ValidateNotDisposed()
         {
             if (Disposed)
                 throw new RedisException(GetType().Name + " is disposed");

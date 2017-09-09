@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisChunkBuffer : RedisDisposable
+    internal class RedisChunkBuffer : RedisDisposable, IRedisWriter
     {
         #region Constants
 

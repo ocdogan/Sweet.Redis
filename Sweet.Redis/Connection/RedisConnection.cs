@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -19,26 +17,26 @@ namespace Sweet.Redis
 
         private int m_Db;
         private string m_Name;
-        private Socket m_Socket;
+        private RedisSocket m_Socket;
         private EndPoint m_EndPoint;
         private RedisSettings m_Settings;
 
         private long m_LastError = (long)SocketError.Success;
         private long m_State = (long)RedisConnectionState.Idle;
-        private Action<RedisConnection, Socket> m_ReleaseAction;
+        private Action<RedisConnection, RedisSocket> m_ReleaseAction;
 
         #endregion Field Members
 
         #region .Ctors
 
         internal RedisConnection(RedisConnectionPool pool,
-            Action<RedisConnection, Socket> releaseAction, int db, Socket socket = null,
+            Action<RedisConnection, RedisSocket> releaseAction, int db, RedisSocket socket = null,
             bool connectImmediately = false)
             : this(pool, new RedisSettings(), releaseAction, db, socket, connectImmediately)
         { }
 
         internal RedisConnection(RedisConnectionPool pool, RedisSettings settings,
-            Action<RedisConnection, Socket> releaseAction, int db, Socket socket = null,
+            Action<RedisConnection, RedisSocket> releaseAction, int db, RedisSocket socket = null,
             bool connectImmediately = false)
         {
             if (pool == null)
@@ -118,7 +116,7 @@ namespace Sweet.Redis
         #region Member Methods
 
 
-        protected override void ValidateNotDisposed()
+        public override void ValidateNotDisposed()
         {
             if (Disposed)
             {
@@ -134,13 +132,13 @@ namespace Sweet.Redis
             return base.SetDisposed();
         }
 
-        internal Socket Connect()
+        internal RedisSocket Connect()
         {
             ValidateNotDisposed();
             return ConnectInternal();
         }
 
-        private Socket ConnectInternal()
+        private RedisSocket ConnectInternal()
         {
             var socket = m_Socket;
             try
@@ -159,7 +157,7 @@ namespace Sweet.Redis
 
                     var task = RedisAsyncEx.GetHostAddressesAsync(m_Settings.Host);
 
-                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    socket = new RedisSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     ConfigureInternal(socket);
 
                     var ipAddress = task.Result;
@@ -197,12 +195,12 @@ namespace Sweet.Redis
             return Interlocked.Exchange(ref m_LastError, error);
         }
 
-        protected void ConfigureInternal(Socket socket)
+        protected void ConfigureInternal(RedisSocket socket)
         {
             DoConfigure(socket);
         }
 
-        protected virtual void DoConfigure(Socket socket)
+        protected virtual void DoConfigure(RedisSocket socket)
         {
             SetIOLoopbackFastPath(socket);
 
@@ -226,7 +224,7 @@ namespace Sweet.Redis
             socket.NoDelay = true;
         }
 
-        protected void SetIOLoopbackFastPath(Socket socket)
+        protected void SetIOLoopbackFastPath(RedisSocket socket)
         {
             if (RedisCommon.IsWindows)
             {
@@ -262,6 +260,27 @@ namespace Sweet.Redis
                     return null;
                 });
             return task.Result;
+        }
+
+        public IRedisResponse Send(IRedisCommand cmd)
+        {
+            if (cmd == null)
+                throw new ArgumentNullException("cmd");
+
+            ValidateNotDisposed();
+
+            var socket = Connect();
+            if (socket == null)
+            {
+                SetLastError((long)SocketError.NotConnected);
+                SetState((long)RedisConnectionState.Failed);
+
+                throw new SocketException((int)SocketError.NotConnected);
+            }
+
+            cmd.WriteTo(socket);
+            using (var reader = new RedisResponseReader())
+                return reader.Execute(socket);
         }
 
         #endregion Member Methods

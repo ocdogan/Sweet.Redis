@@ -44,22 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IRedisConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RedisSettings.cs" />
-    <Compile Include="RedisConnection.cs" />
-    <Compile Include="RedisConnectionPool.cs" />
-    <Compile Include="RedisConnectionState.cs" />
-    <Compile Include="IRedisDb.cs" />
-    <Compile Include="RedisDb.cs" />
-    <Compile Include="RedisCommand.cs" />
-    <Compile Include="RedisCommands.cs" />
-    <Compile Include="RedisResponse.cs" />
-    <Compile Include="RedisObjectType.cs" />
-    <Compile Include="IRedisResponse.cs" />
-    <Compile Include="RedisResponseReader.cs" />
-    <Compile Include="RedisObject.cs" />
-    <Compile Include="RedisServerCommands.cs" />
     <Compile Include="Buffers\RedisChunkBuffer.cs" />
     <Compile Include="Buffers\RedisByteBuffer.cs" />
     <Compile Include="Commands\IRedisConnectionCommands.cs" />
@@ -84,11 +69,32 @@
     <Compile Include="Common\RedisAsyncEx.cs" />
     <Compile Include="Common\RedisException.cs" />
     <Compile Include="Buffers\RedisFixedBuffer.cs" />
+    <Compile Include="Common\IRedisDisposable.cs" />
+    <Compile Include="Common\IRedisResponse.cs" />
+    <Compile Include="Common\RedisObject.cs" />
+    <Compile Include="Common\RedisObjectType.cs" />
+    <Compile Include="Common\RedisResponse.cs" />
+    <Compile Include="Connection\IRedisConnection.cs" />
+    <Compile Include="Connection\IRedisDb.cs" />
+    <Compile Include="Connection\RedisCommand.cs" />
+    <Compile Include="Connection\RedisCommands.cs" />
+    <Compile Include="Connection\RedisConnection.cs" />
+    <Compile Include="Connection\RedisConnectionPool.cs" />
+    <Compile Include="Connection\RedisConnectionState.cs" />
+    <Compile Include="Connection\RedisDb.cs" />
+    <Compile Include="Connection\RedisResponseReader.cs" />
+    <Compile Include="Connection\RedisServerCommands.cs" />
+    <Compile Include="Connection\RedisSettings.cs" />
+    <Compile Include="Connection\RedisSocket.cs" />
+    <Compile Include="Connection\IRedisCommand.cs" />
+    <Compile Include="Common\RedisStreamWriter.cs" />
+    <Compile Include="Common\IRedisWriter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />
     <Folder Include="Commands\" />
     <Folder Include="Common\" />
+    <Folder Include="Connection\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

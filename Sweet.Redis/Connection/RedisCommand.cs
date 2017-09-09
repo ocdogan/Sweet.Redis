@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    internal class RedisCommand : RedisDisposable
+    internal class RedisCommand : RedisDisposable, IRedisCommand
     {
         #region Field Members
 
@@ -52,45 +52,9 @@ namespace Sweet.Redis
 
         private byte[] PrepareData()
         {
-            var argsLen = m_Arguments != null ? m_Arguments.Length : 0;
-
             using (var buffer = new RedisChunkBuffer(RedisConstants.ReadBufferSize))
             {
-                buffer.Write((byte)'*');
-                buffer.Write(argsLen + 1);
-                buffer.Write(RedisConstants.LineEnd);
-                buffer.Write((byte)'$');
-                buffer.Write(m_Command.Length);
-                buffer.Write(RedisConstants.LineEnd);
-                buffer.Write(m_Command);
-                buffer.Write(RedisConstants.LineEnd);
-
-                if (argsLen > 0)
-                {
-                    byte[] arg;
-                    for (var i = 0; i < argsLen; i++)
-                    {
-                        arg = m_Arguments[i];
-
-                        if (arg == null)
-                        {
-                            buffer.Write(RedisConstants.NullBulkString);
-                        }
-                        else if (arg.Length == 0)
-                        {
-                            buffer.Write(RedisConstants.EmptyBulkString);
-                            buffer.Write(RedisConstants.LineEnd);
-                        }
-                        else
-                        {
-                            buffer.Write((byte)'$');
-                            buffer.Write(arg.Length);
-                            buffer.Write(RedisConstants.LineEnd);
-                            buffer.Write(arg);
-                        }
-                        buffer.Write(RedisConstants.LineEnd);
-                    }
-                }
+                WriteTo(buffer);
                 return buffer.ReleaseBuffer();
             }
         }
@@ -432,7 +396,7 @@ namespace Sweet.Redis
             var data = PrepareData();
             using (var conn = pool.Connect(m_Db))
             {
-                var response = conn.Send(data);
+                var response = conn.Send(this);
                 if (response == null && throwException)
                     throw new RedisException("Corrupted redis response data");
                 HandleError(response);
@@ -456,6 +420,70 @@ namespace Sweet.Redis
                     for (var i = items.Count - 1; i > -1; i--)
                         HandleError(items[i]);
             }
+        }
+
+        private void WriteTo(IRedisWriter writer)
+        {
+            var argsLength = m_Arguments != null ? m_Arguments.Length : 0;
+
+            writer.Write((byte)'*');
+            writer.Write(argsLength + 1);
+            writer.Write(RedisConstants.LineEnd);
+            writer.Write((byte)'$');
+            writer.Write(m_Command.Length);
+            writer.Write(RedisConstants.LineEnd);
+            writer.Write(m_Command);
+            writer.Write(RedisConstants.LineEnd);
+
+            if (argsLength > 0)
+            {
+                byte[] arg;
+                for (var i = 0; i < argsLength; i++)
+                {
+                    arg = m_Arguments[i];
+
+                    if (arg == null)
+                    {
+                        writer.Write(RedisConstants.NullBulkString);
+                    }
+                    else if (arg.Length == 0)
+                    {
+                        writer.Write(RedisConstants.EmptyBulkString);
+                        writer.Write(RedisConstants.LineEnd);
+                    }
+                    else
+                    {
+                        writer.Write((byte)'$');
+                        writer.Write(arg.Length);
+                        writer.Write(RedisConstants.LineEnd);
+                        writer.Write(arg);
+                    }
+                    writer.Write(RedisConstants.LineEnd);
+                }
+            }
+        }
+
+        public void WriteTo(Stream stream)
+        {
+            if (stream == null)
+                throw new ArgumentNullException("stream");
+
+            if (!stream.CanWrite)
+                throw new ArgumentException("Can not write to closed stream", "stream");
+
+            using (var writer = new RedisStreamWriter(stream))
+            {
+                WriteTo(writer);
+                stream.Flush();
+            }
+        }
+
+        public void WriteTo(RedisSocket socket)
+        {
+            if (socket == null)
+                throw new ArgumentNullException("socket");
+
+            WriteTo(socket.GetWriteStream());
         }
 
         #endregion Methods

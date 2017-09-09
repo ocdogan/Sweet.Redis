@@ -167,7 +167,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected override void ValidateNotDisposed()
+        public override void ValidateNotDisposed()
         {
             if (Disposed)
                 throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N"));

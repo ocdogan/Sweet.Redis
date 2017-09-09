@@ -15,13 +15,13 @@ namespace Sweet.Redis
         {
             #region Field Members
 
-            private Socket m_Socket;
+            private RedisSocket m_Socket;
 
             #endregion Field Members
 
             #region .Ctors
 
-            public RedisConnectionPoolMember(Socket socket, int db)
+            public RedisConnectionPoolMember(RedisSocket socket, int db)
             {
                 Db = db;
                 Socket = socket;
@@ -36,7 +36,7 @@ namespace Sweet.Redis
 
             public DateTime PooledTime { get; private set; }
 
-            public Socket Socket
+            public RedisSocket Socket
             {
                 get { return m_Socket; }
                 set
@@ -49,13 +49,13 @@ namespace Sweet.Redis
 
             #region Methods
 
-            public Socket ReleaseSocket()
+            public RedisSocket ReleaseSocket()
             {
                 ValidateNotDisposed();
                 return ReleaseSocketInternal();
             }
 
-            private Socket ReleaseSocketInternal()
+            private RedisSocket ReleaseSocketInternal()
             {
                 var socket = Interlocked.Exchange(ref m_Socket, null);
                 GC.SuppressFinalize(this);
@@ -69,7 +69,7 @@ namespace Sweet.Redis
                 {
                     Task.Factory.StartNew(obj =>
                     {
-                        var sock = (Socket)obj;
+                        var sock = (RedisSocket)obj;
                         if (sock != null && sock.IsBound)
                         {
                             try
@@ -176,7 +176,7 @@ namespace Sweet.Redis
 
         #region Member Methods
 
-        protected override void ValidateNotDisposed()
+        public override void ValidateNotDisposed()
         {
             if (Disposed)
             {
@@ -214,14 +214,14 @@ namespace Sweet.Redis
             }
         }
 
-        private Socket Enqueue(int db)
+        private RedisSocket Enqueue(int db)
         {
             lock (m_MemberStoreLock)
             {
                 var store = m_MemberStore;
                 if (store != null)
                 {
-                    Socket socket = null;
+                    RedisSocket socket = null;
                     var node = store.First;
 
                     while (node != null)
@@ -281,7 +281,7 @@ namespace Sweet.Redis
             throw new RedisException("Connection timeout occured while trying to connect");
         }
 
-        private IRedisConnection NewConnection(Socket socket, int db, bool connectImmediately = true)
+        private IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
             var conn = new RedisConnection(this, m_Settings, Release, db,
                                            socket.IsConnected() ? socket : null, connectImmediately);
@@ -299,7 +299,7 @@ namespace Sweet.Redis
             }
         }
 
-        private void Release(RedisConnection conn, Socket socket)
+        private void Release(RedisConnection conn, RedisSocket socket)
         {
             ValidateNotDisposed();
 
