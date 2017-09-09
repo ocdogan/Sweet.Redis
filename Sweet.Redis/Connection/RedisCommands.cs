@@ -44,10 +44,10 @@
         public static readonly byte[] StrLen = "STRLEN".ToBytes();
 
         // Set additional commands
-        public static readonly byte[] Ex = "EX".ToBytes();
-        public static readonly byte[] Px = "PX".ToBytes();
-        public static readonly byte[] Nx = "NX".ToBytes();
-        public static readonly byte[] Xx = "XX".ToBytes();
+        public static readonly byte[] EX = "EX".ToBytes();
+        public static readonly byte[] PX = "PX".ToBytes();
+        public static readonly byte[] NX = "NX".ToBytes();
+        public static readonly byte[] XX = "XX".ToBytes();
 
         // List commands
         public static readonly byte[] BLPop = "BLPOP".ToBytes();
@@ -197,5 +197,44 @@
 
         // SlaveOf command options
         public static readonly byte[] NoOne = "NO ONE".ToBytes();
+
+        // Sorted Set commands
+        public static readonly byte[] ZAdd = "ZADD".ToBytes();
+        public static readonly byte[] ZCard = "ZCARD".ToBytes();
+        public static readonly byte[] ZCount = "ZCOUNT".ToBytes();
+        public static readonly byte[] ZIncrBy = "ZINCRBY".ToBytes();
+        public static readonly byte[] ZInterStore = "ZINTERSTORE".ToBytes();
+        public static readonly byte[] ZLexCount = "ZLEXCOUNT".ToBytes();
+        public static readonly byte[] ZRange = "ZRANGE".ToBytes();
+        public static readonly byte[] ZRangeByLex = "ZRANGEBYLEX".ToBytes();
+        public static readonly byte[] ZRangeByScore = "ZRANGEBYSCORE".ToBytes();
+        public static readonly byte[] ZRank = "ZRANK".ToBytes();
+        public static readonly byte[] ZRem = "ZREM".ToBytes();
+        public static readonly byte[] ZRemRangeByLex = "ZREMRANGEBYLEX".ToBytes();
+        public static readonly byte[] ZRemRangeByRank = "ZREMRANGEBYRANK".ToBytes();
+        public static readonly byte[] ZRemRangeByScore = "ZREMRANGEBYSCORE".ToBytes();
+        public static readonly byte[] ZRevRange = "ZREVRANGE".ToBytes();
+        public static readonly byte[] ZRevRangeByScore = "ZREVRANGEBYSCORE".ToBytes();
+        public static readonly byte[] ZRevRank = "ZREVRANK".ToBytes();
+        public static readonly byte[] ZScan = "ZSCAN".ToBytes();
+        public static readonly byte[] ZScore = "ZSCORE".ToBytes();
+        public static readonly byte[] ZUnionStore = "ZUNIONSTORE".ToBytes();
+
+        // Sorted Set Add command options
+        public static readonly byte[] CH = "CH".ToBytes();
+
+        // Sorted Set command options
+        public static readonly byte[] Weights = "WEIGHTS".ToBytes();
+        public static readonly byte[] WithScores = "WITHSCORES".ToBytes();
+        public static readonly byte[] Count = "COUNT".ToBytes();
+        public static readonly byte[] Aggregate = "AGGREGATE".ToBytes();
+
+        // Sorted Set command Aggregate options
+        public static readonly byte[] Sum = "SUM".ToBytes();
+        public static readonly byte[] Min = "MIN".ToBytes();
+        public static readonly byte[] Max = "MAX".ToBytes();
+
+        // Sorted Set Scan command options
+        public static readonly byte[] Match = "MATCH".ToBytes();
     }
 }

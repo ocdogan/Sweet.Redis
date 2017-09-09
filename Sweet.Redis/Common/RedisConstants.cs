@@ -16,6 +16,8 @@ namespace Sweet.Redis
 
         public static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
 
+        public static readonly byte[] Nil = "nil".ToBytes();
+
         #endregion Static Members
 
         #region Constants

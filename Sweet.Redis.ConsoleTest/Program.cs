@@ -95,8 +95,8 @@ namespace Sweet.Redis.ConsoleTest
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)
-                                // db.Connection.Ping();
-                                db.Strings.Get("large_text");
+                                db.Connection.Ping();
+                            // db.Strings.Get("large_text");
 
                             /* for (var i = 0; i < 1000; i++)
                                 db.Connection.Ping(); */

@@ -114,26 +114,6 @@ namespace Sweet.Redis
             return -1;
         }
 
-        internal static byte[][] ToBytesArray(this string[] strings)
-        {
-            if (strings != null)
-            {
-                var length = strings.Length;
-
-                var result = new byte[length][];
-                if (length > 0)
-                {
-                    for (var i = 0; i < length; i++)
-                    {
-                        var str = strings[i];
-                        result[i] = str != null ? str.ToBytes() : null;
-                    }
-                }
-                return result;
-            }
-            return null;
-        }
-
         internal static double ToUnixTimeStamp(this DateTime date)
         {
             if (date.Kind != DateTimeKind.Utc)
@@ -215,6 +195,33 @@ namespace Sweet.Redis
             return null;
         }
 
+        internal static byte[][] ToBytesArray(this string[] strings)
+        {
+            if (strings != null)
+            {
+                var length = strings.Length;
+
+                var result = new byte[length][];
+                if (length > 0)
+                {
+                    for (var i = 0; i < length; i++)
+                    {
+                        var str = strings[i];
+                        result[i] = str != null ? str.ToBytes() : null;
+                    }
+                }
+                return result;
+            }
+            return null;
+        }
+
+        internal static byte[][] ToBytesArray(this byte[] bytes)
+        {
+            if (bytes != null)
+                return new byte[1][] { bytes };
+            return null;
+        }
+
         internal static bool Equals<T>(this T[] source, T[] destination, Func<T, T, bool> comparer)
         {
             if (comparer == null)
@@ -284,7 +291,7 @@ namespace Sweet.Redis
             return destination;
         }
 
-        internal static byte[][] JoinToByteArray(this string[] keys)
+        internal static byte[][] ConvertToByteArray(this string[] keys)
         {
             if (keys == null)
                 throw new ArgumentNullException("keys");
@@ -303,22 +310,17 @@ namespace Sweet.Redis
 
         internal static byte[][] Merge(this byte[][] keys, byte[][] values)
         {
-            if (keys == null)
-                throw new ArgumentNullException("keys");
-
-            if (values == null)
-                throw new ArgumentNullException("values");
-
-            var keysLength = keys.Length;
-            if (keysLength == 0)
-                throw new ArgumentNullException("keys");
-
-            var valuesLength = values.Length;
-            if (valuesLength == 0)
-                throw new ArgumentNullException("values");
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
 
             if (keysLength != valuesLength)
                 throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
 
             var resultLen = 2 * keysLength;
 
@@ -331,102 +333,261 @@ namespace Sweet.Redis
             return result;
         }
 
-        internal static byte[][] Merge(this byte[] keys, byte[][] values)
+        internal static byte[][] Merge(this byte[][] keys, string[] values)
         {
-            if (keys == null && keys.Length == 0)
-                throw new ArgumentNullException("keys");
-
-            if (values == null)
-                throw new ArgumentNullException("values");
-
-            var valuesLength = values.Length;
-            if (valuesLength == 0)
-                throw new ArgumentNullException("values");
-
-            var resultLen = valuesLength + 1;
-
-            var result = new byte[resultLen][];
-            result[0] = keys;
-
-            for (var i = 1; i < resultLen; i += 2)
-                result[i] = values[i];
-
-            return result;
-        }
-
-        internal static byte[][] Merge(this byte[][] keys, byte[] key)
-        {
-            if (keys == null)
-                throw new ArgumentNullException("keys");
-
-            var resultLen = keys.Length + 1;
-
-            var result = new byte[resultLen][];
-            for (var i = 1; i < resultLen; i += 2)
-                result[i] = keys[i];
-
-            result[resultLen - 1] = key;
-
-            return result;
-        }
-
-        internal static byte[][] Merge(this byte[] keys, string[] values)
-        {
-            if (keys == null && keys.Length == 0)
-                throw new ArgumentNullException("keys");
-
-            if (values == null)
-                throw new ArgumentNullException("values");
-
-            var valuesLength = values.Length;
-            if (valuesLength == 0)
-                throw new ArgumentNullException("values");
-
-            var resultLen = valuesLength + 1;
-
-            var result = new byte[resultLen][];
-            result[0] = keys;
-
-            for (var i = 1; i < resultLen; i += 2)
-            {
-                result[i] = values[i].ToBytes();
-            }
-            return result;
-        }
-
-        internal static byte[][] Merge(this byte[] val1, byte[] val2)
-        {
-            return new byte[2][] { val1, val2 };
-        }
-
-        internal static byte[][] Merge(this string[] keys, string[] values)
-        {
-            if (keys == null)
-                throw new ArgumentNullException("keys");
-
-            if (values == null)
-                throw new ArgumentNullException("values");
-
-            var keysLength = keys.Length;
-            if (keysLength == 0)
-                throw new ArgumentNullException("keys");
-
-            var valuesLength = values.Length;
-            if (valuesLength == 0)
-                throw new ArgumentNullException("values");
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
 
             if (keysLength != valuesLength)
                 throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
 
             var resultLen = 2 * keysLength;
 
             var result = new byte[resultLen][];
             for (var i = 0; i < resultLen; i += 2)
             {
-                result[i] = keys[i].ToBytes();
-                result[i + 1] = values[i].ToBytes();
+                result[i] = keys[i];
+
+                var s = values[i];
+                if (s != null)
+                    result[i + 1] = Encoding.UTF8.GetBytes(s);
             }
             return result;
+        }
+
+        internal static byte[][] Merge(this string[] keys, byte[][] values)
+        {
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (keysLength != valuesLength)
+                throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
+
+            var resultLen = 2 * keysLength;
+
+            var result = new byte[resultLen][];
+            for (var i = 0; i < resultLen; i += 2)
+            {
+                var s = keys[i];
+                if (s != null)
+                    result[i] = Encoding.UTF8.GetBytes(s);
+
+                result[i + 1] = values[i];
+            }
+            return result;
+        }
+
+        internal static byte[][] Merge(this string[] keys, string[] values)
+        {
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (keysLength != valuesLength)
+                throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
+
+            var resultLen = 2 * keysLength;
+
+            var result = new byte[resultLen][];
+            for (var i = 0; i < resultLen; i += 2)
+            {
+                var s = keys[i];
+                if (s != null)
+                    result[i] = Encoding.UTF8.GetBytes(s);
+
+                s = values[i];
+                if (s != null)
+                    result[i + 1] = Encoding.UTF8.GetBytes(s);
+            }
+            return result;
+        }
+
+        internal static byte[][] Join(this byte[][] values1, byte[][] values2)
+        {
+            var values1Length = (values1 != null) ? values1.Length : -1;
+            var values2Length = (values2 != null) ? values2.Length : -1;
+
+            if (values1Length < 0 && values2Length < 0)
+                return null;
+
+            if (values1Length == 0 && values2Length == 0)
+                return new byte[0][];
+
+            values1Length = Math.Max(0, values1Length);
+            values2Length = Math.Max(0, values2Length);
+
+            var resultLen = values1Length + values2Length;
+            var result = new byte[resultLen][];
+
+            var i = 0;
+            for (; i < values1Length; i++)
+                result[i] = values1[i];
+
+            for (; i < resultLen; i += 2)
+                result[i] = values2[i - values1Length];
+            return result;
+        }
+
+        internal static byte[][] Join(this byte[] value, byte[][] values)
+        {
+            var valueLength = (value != null) ? value.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (valueLength < 0 && valuesLength < 0)
+                return new byte[1][] { value };
+
+            if (valueLength == 0 && valuesLength == 0)
+                return new byte[1][] { value };
+
+            valueLength = Math.Max(0, valueLength);
+            valuesLength = Math.Max(0, valuesLength);
+
+            var resultLength = 1 + valuesLength;
+            var result = new byte[resultLength][];
+
+            result[0] = value;
+
+            for (var i = 1; i < resultLength; i++)
+                result[i] = values[i];
+            return result;
+        }
+
+        internal static byte[][] Join(this byte[][] values, byte[] value)
+        {
+            var valueLength = (value != null) ? value.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (valueLength < 0 && valuesLength < 0)
+                return new byte[1][] { value };
+
+            if (valueLength == 0 && valuesLength == 0)
+                return new byte[1][] { value };
+
+            valueLength = Math.Max(0, valueLength);
+            valuesLength = Math.Max(0, valuesLength);
+
+            var resultLength = 1 + valuesLength;
+            var result = new byte[resultLength][];
+
+            result[resultLength - 1] = value;
+
+            for (var i = 0; i < valuesLength; i++)
+                result[i] = values[i];
+            return result;
+        }
+
+        internal static byte[][] Join(this byte[] value, string[] values)
+        {
+            var valueLength = (value != null) ? value.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (valueLength < 0 && valuesLength < 0)
+                return new byte[1][] { value };
+
+            if (valueLength == 0 && valuesLength == 0)
+                return new byte[1][] { value };
+
+            valueLength = Math.Max(0, valueLength);
+            valuesLength = Math.Max(0, valuesLength);
+
+            var resultLength = 1 + valuesLength;
+            var result = new byte[resultLength][];
+
+            result[0] = value;
+
+            for (var i = 1; i < resultLength; i++)
+            {
+                var s = values[i];
+                if (s != null)
+                    result[i] = Encoding.UTF8.GetBytes(s);
+            }
+            return result;
+        }
+
+        internal static byte[][] Join(this byte[][] values1, string[] values2)
+        {
+            var values1Length = (values1 != null) ? values1.Length : -1;
+            var values2Length = (values2 != null) ? values2.Length : -1;
+
+            if (values1Length < 0 && values2Length < 0)
+                return null;
+
+            if (values1Length == 0 && values2Length == 0)
+                return new byte[0][];
+
+            values1Length = Math.Max(0, values1Length);
+            values2Length = Math.Max(0, values2Length);
+
+            var resultLength = values1Length + values2Length;
+            var result = new byte[resultLength][];
+
+            if (values1Length > 0)
+                Array.Copy(result, values1, values1Length);
+
+            for (var i = values1Length; i < resultLength; i++)
+            {
+                var s = values2[i - values1Length];
+                if (s != null)
+                    result[i] = Encoding.UTF8.GetBytes(s);
+            }
+            return result;
+        }
+
+        internal static byte[][] Join(this byte[] value1, byte[] value2)
+        {
+            return new byte[2][] { value1, value2 };
+        }
+
+        internal static byte[][] Join(this string[] values1, string[] values2)
+        {
+            var values1Length = (values1 != null) ? values1.Length : -1;
+            var values2Length = (values2 != null) ? values2.Length : -1;
+
+            if (values1Length < 0 && values2Length < 0)
+                return null;
+
+            if (values1Length == 0 && values2Length == 0)
+                return new byte[0][];
+
+            values1Length = Math.Max(0, values1Length);
+            values2Length = Math.Max(0, values2Length);
+
+            var resultLength = values1Length + values2Length;
+            var result = new byte[resultLength][];
+
+            var i = 0;
+            for (; i < values1Length; i++)
+            {
+                var s = values1[i];
+                if (s != null)
+                    result[i] = Encoding.UTF8.GetBytes(s);
+            }
+
+            for (; i < resultLength; i++)
+            {
+                var s = values2[i - values1Length];
+                if (s != null)
+                    result[i] = Encoding.UTF8.GetBytes(s);
+            }
+            return result;
+
         }
 
         internal static int ToInt(this string s, int defaultValue = int.MinValue)

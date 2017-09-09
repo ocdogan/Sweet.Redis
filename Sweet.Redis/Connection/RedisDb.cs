@@ -18,18 +18,20 @@ namespace Sweet.Redis
         private IRedisListsCommands m_Lists;
         private IRedisServerCommands m_Server;
         private IRedisSetsCommands m_Sets;
+        private IRedisSortedSetsCommands m_SortedSets;
         private IRedisStringsCommands m_Strings;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisDb(RedisConnectionPool pool, int db)
+        public RedisDb(RedisConnectionPool pool, int db, bool throwOnError = true)
         {
             m_Id = Guid.NewGuid();
             m_Pool = pool;
 
             m_Db = db;
+            ThrowOnError = throwOnError;
 
             var pwd = pool.Settings.Password;
             if (!String.IsNullOrEmpty(pwd))
@@ -152,6 +154,17 @@ namespace Sweet.Redis
             }
         }
 
+        public IRedisSortedSetsCommands SortedSets
+        {
+            get
+            {
+                ValidateNotDisposed();
+                if (m_SortedSets == null)
+                    m_SortedSets = new RedisSortedSetsCommands(this);
+                return m_SortedSets;
+            }
+        }
+
         public IRedisStringsCommands Strings
         {
             get
@@ -162,6 +175,8 @@ namespace Sweet.Redis
                 return m_Strings;
             }
         }
+
+        public bool ThrowOnError { get; private set; }
 
         #endregion Properties
 

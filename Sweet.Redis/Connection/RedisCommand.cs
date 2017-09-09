@@ -151,20 +151,28 @@ namespace Sweet.Redis
 
         public long ExpectInteger(RedisConnectionPool pool, bool throwException = true)
         {
+            var result = ExpectNullableInteger(pool, throwException);
+            if (result == null)
+                return long.MinValue;
+            return result.Value;
+        }
+
+        public long? ExpectNullableInteger(RedisConnectionPool pool, bool throwException = true)
+        {
             using (var response = Execute(pool, throwException))
             {
                 if (response == null)
                 {
                     if (throwException)
                         throw new RedisException("No data returned");
-                    return long.MinValue;
+                    return null;
                 }
 
                 if (response.Type != RedisObjectType.Integer)
                 {
                     if (throwException)
                         throw new RedisException("Invalid data returned");
-                    return long.MinValue;
+                    return null;
                 }
 
                 var data = response.Data;
@@ -172,8 +180,11 @@ namespace Sweet.Redis
                 {
                     if (throwException)
                         throw new RedisException("No data returned");
-                    return long.MinValue;
+                    return null;
                 }
+
+                if (data == RedisConstants.Nil)
+                    return null;
 
                 long result;
                 if (long.TryParse(Encoding.UTF8.GetString(data), out result))
@@ -182,7 +193,7 @@ namespace Sweet.Redis
                 if (throwException)
                     throw new RedisException("Not an integer result");
 
-                return long.MinValue;
+                return null;
             }
         }
 

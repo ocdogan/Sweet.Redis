@@ -53,16 +53,16 @@ namespace Sweet.Redis
                 throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N"));
         }
 
-        protected static void ValidateKeyAndValue(string key, byte[] value)
+        protected static void ValidateKeyAndValue(string key, byte[] value, string keyName = null, string valueName = null)
         {
             if (key == null)
-                throw new ArgumentNullException("key");
+                throw new ArgumentNullException(String.IsNullOrEmpty(keyName) ? "key" : keyName);
 
             if (value == null)
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(String.IsNullOrEmpty(valueName) ? "value" : valueName);
 
             if (value.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("Redis values are limited to 1GB", "value");
+                throw new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName);
         }
 
         #endregion Methods

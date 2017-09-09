@@ -7,6 +7,7 @@ namespace Sweet.Redis
         bool Disposed { get; }
         Guid Id { get; }
         int Db { get; }
+        bool ThrowOnError { get; }
 
         RedisConnectionPool Pool { get; }
 
@@ -16,6 +17,7 @@ namespace Sweet.Redis
         IRedisListsCommands Lists { get; }
         IRedisServerCommands Server { get; }
         IRedisSetsCommands Sets { get; }
+        IRedisSortedSetsCommands SortedSets { get; }
         IRedisStringsCommands Strings { get; }
     }
 }

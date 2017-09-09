@@ -89,6 +89,11 @@
     <Compile Include="Connection\IRedisCommand.cs" />
     <Compile Include="Common\RedisStreamWriter.cs" />
     <Compile Include="Common\IRedisWriter.cs" />
+    <Compile Include="Commands\RedisUpdateOption.cs" />
+    <Compile Include="Commands\IRedisSortedSetsCommands.cs" />
+    <Compile Include="Common\RedisKeyValue.cs" />
+    <Compile Include="Commands\RedisAggregate.cs" />
+    <Compile Include="Commands\RedisSortedSetsCommands.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />

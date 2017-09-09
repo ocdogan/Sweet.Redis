@@ -46,37 +46,37 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var parameters = new byte[0].Merge(RedisCommands.Kill);
+            var parameters = new byte[0].Join(RedisCommands.Kill);
 
             if (!String.IsNullOrEmpty(ip))
             {
                 parameters = parameters
-                    .Merge(RedisCommands.Addr)
-                    .Merge(ip.ToBytes());
+                    .Join(RedisCommands.Addr)
+                    .Join(ip.ToBytes());
 
                 if (port > -1)
-                    parameters = parameters.Merge(port.ToBytes());
+                    parameters = parameters.Join(port.ToBytes());
             }
 
             if (!String.IsNullOrEmpty(clientId))
             {
                 parameters = parameters
-                    .Merge(RedisCommands.Id)
-                    .Merge(clientId.ToBytes());
+                    .Join(RedisCommands.Id)
+                    .Join(clientId.ToBytes());
             }
 
             if (!String.IsNullOrEmpty(type))
             {
                 parameters = parameters
-                    .Merge(RedisCommands.Type)
-                    .Merge(type.ToBytes());
+                    .Join(RedisCommands.Type)
+                    .Join(type.ToBytes());
             }
 
             if (!skipMe)
             {
                 parameters = parameters
-                    .Merge(RedisCommands.SkipMe)
-                    .Merge(RedisCommands.No);
+                    .Join(RedisCommands.SkipMe)
+                    .Join(RedisCommands.No);
             }
 
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, parameters))

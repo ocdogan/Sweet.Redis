@@ -24,16 +24,16 @@ namespace Sweet.Redis
             if (keys != null && keys.Length > 0)
             {
                 var parameters = key.ToBytes()
-                                    .Merge(keys.ToBytesArray());
+                                    .Join(keys.ToBytesArray());
 
                 using (var cmd = new RedisCommand(Db.Db, RedisCommands.Del, parameters))
                 {
-                    return cmd.ExpectInteger(Db.Pool, true);
+                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
                 }
             }
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Del, keys.ToBytesArray()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -45,7 +45,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Dump, key.ToBytes()))
             {
-                return cmd.ExpectBulkStringBytes(Db.Pool, true);
+                return cmd.ExpectBulkStringBytes(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -93,7 +93,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Keys, pattern.ToBytes()))
             {
-                return cmd.ExpectMultiDataStrings(Db.Pool, true);
+                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -108,25 +108,25 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             var parameters = host.ToBytes()
-                                 .Merge(port.ToBytes())
-                                 .Merge((key != null) ? key.ToBytes() : RedisCommands.EmptyString)
-                                 .Merge(destinationDb.ToBytes())
-                                 .Merge(timeoutMs.ToBytes());
+                                 .Join(port.ToBytes())
+                                 .Join((key != null) ? key.ToBytes() : RedisCommands.EmptyString)
+                                 .Join(destinationDb.ToBytes())
+                                 .Join(timeoutMs.ToBytes());
 
             if (copy)
-                parameters = parameters.Merge(RedisCommands.Copy);
+                parameters = parameters.Join(RedisCommands.Copy);
 
             if (replace)
-                parameters = parameters.Merge(RedisCommands.Replace);
+                parameters = parameters.Join(RedisCommands.Replace);
 
             if (key == null)
                 parameters = parameters
-                                 .Merge(RedisCommands.Keys)
-                                 .Merge(keys.ToBytesArray());
+                                 .Join(RedisCommands.Keys)
+                                 .Join(keys.ToBytesArray());
 
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Migrate, parameters))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
             }
         }
 
@@ -150,7 +150,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.RefCount, key.ToBytes()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -162,7 +162,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.Encoding, key.ToBytes()))
             {
-                return cmd.ExpectBulkStringBytes(Db.Pool, true);
+                return cmd.ExpectBulkStringBytes(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -174,7 +174,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.Encoding, key.ToBytes()))
             {
-                return cmd.ExpectBulkString(Db.Pool, true);
+                return cmd.ExpectBulkString(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -186,7 +186,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.IdleTime, key.ToBytes()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -234,7 +234,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.PTtl, key.ToBytes()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -243,7 +243,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.RandomKey))
             {
-                return cmd.ExpectBulkString(Db.Pool, true);
+                return cmd.ExpectBulkString(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -258,7 +258,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Rename, key.ToBytes(), newKey.ToBytes()))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
             }
         }
 
@@ -284,7 +284,7 @@ namespace Sweet.Redis
 
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Rename, key.ToBytes(), ttl.ToBytes(), value))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
             }
         }
 
@@ -309,30 +309,30 @@ namespace Sweet.Redis
             var parameters = new byte[1][] { key.ToBytes() };
 
             if (descending)
-                parameters = parameters.Merge(RedisCommands.Descending);
+                parameters = parameters.Join(RedisCommands.Descending);
 
             if (alpha)
-                parameters = parameters.Merge(RedisCommands.Alpha);
+                parameters = parameters.Join(RedisCommands.Alpha);
 
             if (start > -1 && end > -1)
                 parameters = parameters
-                    .Merge(RedisCommands.Limit)
-                    .Merge(start.ToBytes())
-                    .Merge(end.ToBytes());
+                    .Join(RedisCommands.Limit)
+                    .Join(start.ToBytes())
+                    .Join(end.ToBytes());
 
             if (!String.IsNullOrEmpty(by))
                 parameters = parameters
-                    .Merge(RedisCommands.By)
-                    .Merge(by.ToBytes());
+                    .Join(RedisCommands.By)
+                    .Join(by.ToBytes());
 
             if (!String.IsNullOrEmpty(get))
                 parameters = parameters
-                    .Merge(RedisCommands.Get)
-                    .Merge(get.ToBytes());
+                    .Join(RedisCommands.Get)
+                    .Join(get.ToBytes());
 
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Sort, parameters))
             {
-                return cmd.ExpectMultiDataBytes(Db.Pool, true);
+                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -346,16 +346,16 @@ namespace Sweet.Redis
             if (keys != null && keys.Length > 0)
             {
                 var parameters = key.ToBytes()
-                                    .Merge(keys.ToBytesArray());
+                                    .Join(keys.ToBytesArray());
 
                 using (var cmd = new RedisCommand(Db.Db, RedisCommands.Touch, parameters))
                 {
-                    return cmd.ExpectInteger(Db.Pool, true);
+                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
                 }
             }
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Touch, keys.ToBytesArray()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -367,7 +367,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ttl, key.ToBytes()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -379,7 +379,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Type, key.ToBytes()))
             {
-                return cmd.ExpectSimpleString(Db.Pool, true);
+                return cmd.ExpectSimpleString(Db.Pool, Db.ThrowOnError);
             }
         }
 
@@ -388,7 +388,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ttl, numberOfSlaves.ToBytes(), timeout.ToBytes()))
             {
-                return cmd.ExpectInteger(Db.Pool, true);
+                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
             }
         }
 
