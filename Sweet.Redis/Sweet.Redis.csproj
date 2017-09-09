@@ -77,7 +77,6 @@
     <Compile Include="Connection\IRedisConnection.cs" />
     <Compile Include="Connection\IRedisDb.cs" />
     <Compile Include="Connection\RedisCommand.cs" />
-    <Compile Include="Connection\RedisCommands.cs" />
     <Compile Include="Connection\RedisConnection.cs" />
     <Compile Include="Connection\RedisConnectionPool.cs" />
     <Compile Include="Connection\RedisConnectionState.cs" />
@@ -94,6 +93,9 @@
     <Compile Include="Common\RedisKeyValue.cs" />
     <Compile Include="Commands\RedisAggregate.cs" />
     <Compile Include="Commands\RedisSortedSetsCommands.cs" />
+    <Compile Include="Commands\IRedisHyperLogLogCommands.cs" />
+    <Compile Include="Common\RedisCommands.cs" />
+    <Compile Include="Commands\RedisHyperLogLogCommands.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />

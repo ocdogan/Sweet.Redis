@@ -236,5 +236,10 @@
 
         // Sorted Set Scan command options
         public static readonly byte[] Match = "MATCH".ToBytes();
+
+        // HyperLogLog commands
+        public static readonly byte[] PfAdd = "PFADD".ToBytes();
+        public static readonly byte[] PfCount = "PFCOUNT".ToBytes();
+        public static readonly byte[] PfMerge = "PFMERGE".ToBytes();
     }
 }

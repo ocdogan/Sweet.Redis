@@ -13,6 +13,7 @@ namespace Sweet.Redis
 
         IRedisConnectionCommands Connection { get; }
         IRedisHashesCommands Hashes { get; }
+        IRedisHyperLogLogCommands HyperLogLogCommands { get; }
         IRedisKeysCommands Keys { get; }
         IRedisListsCommands Lists { get; }
         IRedisServerCommands Server { get; }

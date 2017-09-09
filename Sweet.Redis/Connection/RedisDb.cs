@@ -14,6 +14,7 @@ namespace Sweet.Redis
 
         private IRedisConnectionCommands m_Connection;
         private IRedisHashesCommands m_Hashes;
+        private IRedisHyperLogLogCommands m_HyperLogLogCommands;
         private IRedisKeysCommands m_Keys;
         private IRedisListsCommands m_Lists;
         private IRedisServerCommands m_Server;
@@ -98,6 +99,17 @@ namespace Sweet.Redis
                 if (m_Hashes == null)
                     m_Hashes = new RedisHashesCommands(this);
                 return m_Hashes;
+            }
+        }
+
+        public IRedisHyperLogLogCommands HyperLogLogCommands
+        {
+            get
+            {
+                ValidateNotDisposed();
+                if (m_HyperLogLogCommands == null)
+                    m_HyperLogLogCommands = new RedisHyperLogLogCommands(this);
+                return m_HyperLogLogCommands;
             }
         }
 
