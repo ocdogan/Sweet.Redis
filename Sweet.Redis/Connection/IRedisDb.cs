@@ -16,6 +16,7 @@ namespace Sweet.Redis
         IRedisHyperLogLogCommands HyperLogLogCommands { get; }
         IRedisKeysCommands Keys { get; }
         IRedisListsCommands Lists { get; }
+        IRedisScriptingCommands Scripting { get; }
         IRedisServerCommands Server { get; }
         IRedisSetsCommands Sets { get; }
         IRedisSortedSetsCommands SortedSets { get; }

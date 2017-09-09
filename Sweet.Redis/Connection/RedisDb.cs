@@ -17,6 +17,7 @@ namespace Sweet.Redis
         private IRedisHyperLogLogCommands m_HyperLogLogCommands;
         private IRedisKeysCommands m_Keys;
         private IRedisListsCommands m_Lists;
+        private IRedisScriptingCommands m_Scripting;
         private IRedisServerCommands m_Server;
         private IRedisSetsCommands m_Sets;
         private IRedisSortedSetsCommands m_SortedSets;
@@ -141,6 +142,17 @@ namespace Sweet.Redis
             {
                 ValidateNotDisposed();
                 return m_Pool;
+            }
+        }
+
+        public IRedisScriptingCommands Scripting
+        {
+            get
+            {
+                ValidateNotDisposed();
+                if (m_Scripting == null)
+                    m_Scripting = new RedisScriptingCommands(this);
+                return m_Scripting;
             }
         }
 

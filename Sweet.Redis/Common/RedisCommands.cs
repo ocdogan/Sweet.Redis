@@ -241,5 +241,16 @@
         public static readonly byte[] PfAdd = "PFADD".ToBytes();
         public static readonly byte[] PfCount = "PFCOUNT".ToBytes();
         public static readonly byte[] PfMerge = "PFMERGE".ToBytes();
+
+        // Scripting commands
+        public static readonly byte[] Eval = "EVAL".ToBytes();
+        public static readonly byte[] EvalSha = "EVALSHA".ToBytes();
+
+        public static readonly byte[] Script = "SCRIPT".ToBytes();
+
+        // Scripting Script command options
+        public static readonly byte[] Flush = "FLUSH".ToBytes();
+        public static readonly byte[] Load = "LOAD".ToBytes();
+        public static readonly byte[] Debug = "DEBUG".ToBytes();
     }
 }
