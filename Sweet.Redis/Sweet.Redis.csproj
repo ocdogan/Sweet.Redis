@@ -98,6 +98,7 @@
     <Compile Include="Commands\RedisHyperLogLogCommands.cs" />
     <Compile Include="Commands\IRedisScriptingCommands.cs" />
     <Compile Include="Commands\RedisScriptingCommands.cs" />
+    <Compile Include="Commands\IRedisPubSubCommands.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />
