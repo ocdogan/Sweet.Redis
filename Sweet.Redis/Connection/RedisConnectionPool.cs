@@ -87,23 +87,7 @@ namespace Sweet.Redis
 
             protected override void OnDispose(bool disposing)
             {
-                var socket = ReleaseSocketInternal();
-                if (socket != null)
-                {
-                    Task.Factory.StartNew(obj =>
-                    {
-                        var sock = (RedisSocket)obj;
-                        if (sock != null && sock.IsBound)
-                        {
-                            try
-                            {
-                                socket.Dispose();
-                            }
-                            catch (Exception)
-                            { }
-                        }
-                    }, socket);
-                }
+                ReleaseSocketInternal().DisposeSocket();
             }
 
             #endregion Methods
@@ -131,6 +115,7 @@ namespace Sweet.Redis
         private readonly Semaphore m_MaxCountSync;
         private readonly RedisSettings m_Settings;
         private readonly object m_MemberStoreLock = new object();
+        private readonly object m_PubSubChannelLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
 
         #endregion Field Readonly Members
@@ -139,27 +124,9 @@ namespace Sweet.Redis
         private string m_Name;
         private int m_PurgingIdles;
         private long m_WaitRetryCount;
+        private RedisPubSubChannel m_PubSubChannel;
 
         #endregion Field Members
-
-        #region Properties
-
-        public long Count
-        {
-            get { return Interlocked.Read(ref m_InitCount); }
-        }
-
-        public string Name
-        {
-            get { return m_Name; }
-        }
-
-        public RedisSettings Settings
-        {
-            get { return m_Settings; }
-        }
-
-        #endregion Properties
 
         #region .Ctors
 
@@ -193,9 +160,55 @@ namespace Sweet.Redis
 
             if (!disposing)
                 m_MaxCountSync.Close();
+
+            var channel = Interlocked.Exchange(ref m_PubSubChannel, null);
+            if (channel != null)
+                channel.Dispose();
         }
 
         #endregion Destructors
+
+        #region Properties
+
+        public long Count
+        {
+            get { return Interlocked.Read(ref m_InitCount); }
+        }
+
+        public string Name
+        {
+            get { return m_Name; }
+        }
+
+        public RedisPubSubChannel PubSubChannel
+        {
+            get
+            {
+                ValidateNotDisposed();
+
+                var channel = m_PubSubChannel;
+                if (channel == null)
+                {
+                    lock (m_PubSubChannelLock)
+                    {
+                        channel = m_PubSubChannel;
+                        if (channel == null)
+                        {
+                            channel = new RedisPubSubChannel(this);
+                            Interlocked.Exchange(ref m_PubSubChannel, channel);
+                        }
+                    }
+                }
+                return channel;
+            }
+        }
+
+        public RedisSettings Settings
+        {
+            get { return m_Settings; }
+        }
+
+        #endregion Properties
 
         #region Member Methods
 
@@ -256,6 +269,8 @@ namespace Sweet.Redis
                             store.Remove(node);
                             if (socket.IsConnected())
                                 return socket;
+
+                            socket.DisposeSocket();
                         }
 
                         node = node.Next;
@@ -306,7 +321,7 @@ namespace Sweet.Redis
 
         private IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
-            var conn = new RedisConnection(this, m_Settings, Release, db,
+            var conn = new RedisConnection(this.Name, m_Settings, Release, db,
                                            socket.IsConnected() ? socket : null, connectImmediately);
 
             Interlocked.Increment(ref m_InitCount);
@@ -392,30 +407,6 @@ namespace Sweet.Redis
                 Interlocked.Exchange(ref m_PurgingIdles, 0);
             }
         }
-
-        #region PubSub Methods
-
-        public long PSubscribe(Func<RedisPubSubMessage> callback, string pattern, params string[] patterns)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long PUnscribe(params string[] patterns)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long Subscribe(Func<RedisPubSubMessage> callback, string channel, params string[] channels)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long Unsubscribe(string channel, params string[] channels)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion PubSub Methods
 
         #endregion Member Methods
 

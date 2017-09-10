@@ -28,6 +28,7 @@ namespace Sweet.Redis
 {
     public interface IRedisConnection : IDisposable
     {
+        bool Connected { get; }
         int Db { get; }
         bool Disposed { get; }
         long LastError { get; }

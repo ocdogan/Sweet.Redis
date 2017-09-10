@@ -76,7 +76,6 @@
     <Compile Include="Common\RedisResponse.cs" />
     <Compile Include="Connection\IRedisConnection.cs" />
     <Compile Include="Connection\IRedisDb.cs" />
-    <Compile Include="Connection\RedisCommand.cs" />
     <Compile Include="Connection\RedisConnection.cs" />
     <Compile Include="Connection\RedisConnectionPool.cs" />
     <Compile Include="Connection\RedisConnectionState.cs" />
@@ -101,6 +100,8 @@
     <Compile Include="Commands\IRedisPubSubCommands.cs" />
     <Compile Include="Commands\RedisPubSubMessage.cs" />
     <Compile Include="Commands\RedisPubSubCommands.cs" />
+    <Compile Include="Connection\RedisPubSubChannel.cs" />
+    <Compile Include="Common\RedisCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />

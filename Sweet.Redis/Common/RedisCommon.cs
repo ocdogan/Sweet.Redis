@@ -93,8 +93,13 @@ namespace Sweet.Redis
                 {
                     socket.DisconnectAsync(false).ContinueWith(_ =>
                     {
-                        if (socket != null)
-                            socket.Dispose();
+                        try
+                        {
+                            if (socket != null)
+                                socket.Dispose();
+                        }
+                        catch (Exception)
+                        { }
                     });
                 }
             }

@@ -53,19 +53,15 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisConnection(RedisConnectionPool pool,
-            Action<RedisConnection, RedisSocket> releaseAction, int db, RedisSocket socket = null,
-            bool connectImmediately = false)
-            : this(pool, new RedisSettings(), releaseAction, db, socket, connectImmediately)
+        internal RedisConnection(string name, Action<RedisConnection, RedisSocket> releaseAction,
+            int db, RedisSocket socket = null, bool connectImmediately = false)
+            : this(name, new RedisSettings(), releaseAction, db, socket, connectImmediately)
         { }
 
-        internal RedisConnection(RedisConnectionPool pool, RedisSettings settings,
+        internal RedisConnection(string name, RedisSettings settings,
             Action<RedisConnection, RedisSocket> releaseAction, int db, RedisSocket socket = null,
             bool connectImmediately = false)
         {
-            if (pool == null)
-                throw new ArgumentNullException("pool");
-
             if (settings == null)
                 throw new ArgumentNullException("settings");
 
@@ -73,9 +69,9 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("releaseAction");
 
             m_Db = db;
-            m_Name = pool.Name;
             m_Settings = settings;
             m_ReleaseAction = releaseAction;
+            m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N") : name;
 
             if ((socket != null) && socket.Connected)
             {
@@ -109,6 +105,16 @@ namespace Sweet.Redis
         #endregion Destructors
 
         #region Properties
+
+        public bool Connected
+        {
+            get
+            {
+                if (!Disposed)
+                    return m_Socket.IsConnected();
+                return false;
+            }
+        }
 
         public int Db
         {
