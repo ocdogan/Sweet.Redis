@@ -345,10 +345,10 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("keys");
 
             var result = new byte[keysLength][];
+
             for (var i = 0; i < keysLength; i++)
-            {
                 result[i] = keys[i].ToBytes();
-            }
+
             return result;
         }
 
@@ -366,13 +366,12 @@ namespace Sweet.Redis
             if (keysLength == 0)
                 return new byte[0][];
 
-            var resultLen = 2 * keysLength;
+            var result = new byte[2 * keysLength][];
 
-            var result = new byte[resultLen][];
-            for (var i = 0; i < resultLen; i += 2)
+            for (int i = 0, index = 0; i < keysLength; i++)
             {
-                result[i] = keys[i];
-                result[i + 1] = values[i];
+                result[index++] = keys[i];
+                result[index++] = values[i];
             }
             return result;
         }
@@ -391,16 +390,14 @@ namespace Sweet.Redis
             if (keysLength == 0)
                 return new byte[0][];
 
-            var resultLen = 2 * keysLength;
+            var result = new byte[2 * keysLength][];
 
-            var result = new byte[resultLen][];
-            for (var i = 0; i < resultLen; i += 2)
+            for (int i = 0, index = 0; i < keysLength; i++)
             {
-                result[i] = keys[i];
+                result[index++] = keys[i];
 
                 var s = values[i];
-                if (s != null)
-                    result[i + 1] = Encoding.UTF8.GetBytes(s);
+                result[index++] = (s != null) ? Encoding.UTF8.GetBytes(s) : null;
             }
             return result;
         }
@@ -419,16 +416,14 @@ namespace Sweet.Redis
             if (keysLength == 0)
                 return new byte[0][];
 
-            var resultLen = 2 * keysLength;
+            var result = new byte[2 * keysLength][];
 
-            var result = new byte[resultLen][];
-            for (var i = 0; i < resultLen; i += 2)
+            for (int i = 0, index = 0; i < keysLength; i++)
             {
                 var s = keys[i];
-                if (s != null)
-                    result[i] = Encoding.UTF8.GetBytes(s);
 
-                result[i + 1] = values[i];
+                result[index++] = (s != null) ? Encoding.UTF8.GetBytes(s) : null;
+                result[index++] = values[i];
             }
             return result;
         }
@@ -447,18 +442,15 @@ namespace Sweet.Redis
             if (keysLength == 0)
                 return new byte[0][];
 
-            var resultLen = 2 * keysLength;
+            var result = new byte[2 * keysLength][];
 
-            var result = new byte[resultLen][];
-            for (var i = 0; i < resultLen; i += 2)
+            for (int i = 0, index = 0; i < keysLength; i++)
             {
                 var s = keys[i];
-                if (s != null)
-                    result[i] = Encoding.UTF8.GetBytes(s);
+                result[index++] = (s != null) ? Encoding.UTF8.GetBytes(s) : null;
 
                 s = values[i];
-                if (s != null)
-                    result[i + 1] = Encoding.UTF8.GetBytes(s);
+                result[index++] = (s != null) ? Encoding.UTF8.GetBytes(s) : null;
             }
             return result;
         }
@@ -509,7 +501,7 @@ namespace Sweet.Redis
             result[0] = value;
 
             for (var i = 1; i < resultLength; i++)
-                result[i] = values[i];
+                result[i] = values[i - 1];
             return result;
         }
 
@@ -558,7 +550,7 @@ namespace Sweet.Redis
 
             for (var i = 1; i < resultLength; i++)
             {
-                var s = values[i];
+                var s = values[i - 1];
                 if (s != null)
                     result[i] = Encoding.UTF8.GetBytes(s);
             }

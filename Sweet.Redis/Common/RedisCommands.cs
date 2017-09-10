@@ -276,5 +276,18 @@ namespace Sweet.Redis
         public static readonly byte[] Flush = "FLUSH".ToBytes();
         public static readonly byte[] Load = "LOAD".ToBytes();
         public static readonly byte[] Debug = "DEBUG".ToBytes();
+
+        // PubSub commands
+        public static readonly byte[] PSubscribe = "PSUBSCRIBE".ToBytes();
+        public static readonly byte[] Publish = "PUBLISH".ToBytes();
+        public static readonly byte[] PubSub = "PUBSUB".ToBytes();
+        public static readonly byte[] PUnsubscribe = "PUNSUBSCRIBE".ToBytes();
+        public static readonly byte[] Subscribe = "SUBSCRIBE".ToBytes();
+        public static readonly byte[] Unsubscribe = "UNSUBSCRIBE".ToBytes();
+
+        // PubSub command options
+        public static readonly byte[] Channels = "CHANNELS".ToBytes();
+        public static readonly byte[] NumSub = "NUMSUB".ToBytes();
+        public static readonly byte[] NumPat = "NUMPAT".ToBytes();
     }
 }

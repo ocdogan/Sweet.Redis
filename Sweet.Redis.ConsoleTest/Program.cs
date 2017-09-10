@@ -14,7 +14,80 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingNoArgsEvalTest();
             // ScriptingShaNoArgsEvalTest();
             // ScriptingWithArgsEvalTest();
-            ScriptingShaWithArgsEvalTest();
+            // ScriptingShaWithArgsEvalTest();
+            PubSubTests();
+        }
+
+        static void PubSubTests()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        Console.Clear();
+                        try
+                        {
+                            Console.WriteLine("Channels:");
+
+                            var result = db.PubSubs.PubSubChannels();
+                            if (result == null || result.Length == 0)
+                                Console.WriteLine("(nil)");
+                            else
+                            {
+                                for (var i = 0; i < result.Length; i++)
+                                {
+                                    var channel = result[i];
+                                    Console.WriteLine((i + 1) + ") " + (String.IsNullOrEmpty(channel) ? "(nil)" : channel));
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        try
+                        {
+                            Console.WriteLine("Numer of Subscribers:");
+
+                            var result = db.PubSubs.PubSubNumerOfSubscribers("xyz");
+                            if (result == null || result.Length == 0)
+                                Console.WriteLine("(nil)");
+                            else
+                            {
+                                for (var i = 0; i < result.Length; i++)
+                                {
+                                    var channel = result[i];
+                                    Console.WriteLine((i + 1) + ") " + channel.Key + ": " + channel.Value);
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        try
+                        {
+                            Console.Write("Numer of Pattern Subscribers: ");
+                            Console.WriteLine(db.PubSubs.PubSubNumerOfSubscriptionsToPatterns());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
         }
 
         static void ScriptingNoArgsEvalTest()

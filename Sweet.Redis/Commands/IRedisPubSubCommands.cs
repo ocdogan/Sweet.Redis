@@ -22,6 +22,8 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+
 namespace Sweet.Redis
 {
     /* 
@@ -51,5 +53,10 @@ namespace Sweet.Redis
 	*/
     public interface IRedisPubSubCommands
     {
+        long Publish(string channel, string message);
+        long Publish(string channel, byte[] message);
+        string[] PubSubChannels(string pattern = null);
+        RedisKeyValue<string, long>[] PubSubNumerOfSubscribers(params string[] channels);
+        long PubSubNumerOfSubscriptionsToPatterns();
     }
 }

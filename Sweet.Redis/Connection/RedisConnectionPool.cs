@@ -393,6 +393,30 @@ namespace Sweet.Redis
             }
         }
 
+        #region PubSub Methods
+
+        public long PSubscribe(Func<RedisPubSubMessage> callback, string pattern, params string[] patterns)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long PUnscribe(params string[] patterns)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long Subscribe(Func<RedisPubSubMessage> callback, string channel, params string[] channels)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long Unsubscribe(string channel, params string[] channels)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion PubSub Methods
+
         #endregion Member Methods
 
         #region Static Methods

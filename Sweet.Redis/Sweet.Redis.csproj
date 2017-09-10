@@ -99,6 +99,8 @@
     <Compile Include="Commands\IRedisScriptingCommands.cs" />
     <Compile Include="Commands\RedisScriptingCommands.cs" />
     <Compile Include="Commands\IRedisPubSubCommands.cs" />
+    <Compile Include="Commands\RedisPubSubMessage.cs" />
+    <Compile Include="Commands\RedisPubSubCommands.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />
