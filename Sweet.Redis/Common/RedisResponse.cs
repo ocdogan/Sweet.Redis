@@ -11,11 +11,12 @@ namespace Sweet.Redis
 
         private byte[] m_Data;
         private long m_Ready;
+        private int m_TypeByte = -1;
+        private RedisObjectType? m_Type;
         private long m_Length = int.MinValue;
         private IRedisResponse m_Parent;
         private IList<IRedisResponse> m_List;
         private IList<IRedisResponse> m_ReadOnlyList;
-        private RedisObjectType m_Type = RedisObjectType.Undefined;
 
         #endregion Field Members
 
@@ -140,16 +141,31 @@ namespace Sweet.Redis
 
         public RedisObjectType Type
         {
-            get { return m_Type; }
+            get { return m_Type.HasValue ? m_Type.Value : RedisObjectType.Undefined; }
             internal set
             {
-                if (m_Type == RedisObjectType.Undefined)
+                if (!m_Type.HasValue)
                 {
                     m_Type = value;
+                    m_TypeByte = value.ResponseTypeByte();
+
                     if (value == RedisObjectType.Array)
                     {
                         NewArrayList();
                     }
+                }
+            }
+        }
+
+        public int TypeByte
+        {
+            get { return m_TypeByte; }
+            internal set
+            {
+                if (m_TypeByte < 0 && value > -1 && value < 256)
+                {
+                    m_TypeByte = value;
+                    Type = ((byte)value).ResponseType();
                 }
             }
         }
@@ -171,7 +187,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (m_Type != RedisObjectType.Array)
-                throw new ArgumentException("Can not add item to " + m_Type.ToString("F") + " type", "item");
+                throw new ArgumentException("Can not add item to " + Type.ToString("F") + " type", "item");
 
             if (item == null)
                 throw new ArgumentNullException("item");
@@ -194,7 +210,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (m_Type != RedisObjectType.Array)
-                throw new ArgumentException("Can not add/remove item to/from " + m_Type.ToString("F") + " type", "item");
+                throw new ArgumentException("Can not add/remove item to/from " + Type.ToString("F") + " type", "item");
 
             if (item == null)
                 throw new ArgumentNullException("item");

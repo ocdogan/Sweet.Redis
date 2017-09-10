@@ -17,18 +17,16 @@ namespace Sweet.Redis
         public IRedisResponse Execute(RedisSocket socket)
         {
             using (var buffer = new RedisByteBuffer())
-                return ReadThrough(new RedisResponse(), socket, buffer);
+                return ReadThrough(new RedisResponse(), socket, buffer, true);
         }
 
-        private IRedisResponse ReadThrough(RedisResponse item, RedisSocket socket, RedisByteBuffer buffer)
+        private IRedisResponse ReadThrough(RedisResponse item, RedisSocket socket,
+                                           RedisByteBuffer buffer, bool receiveMore = false)
         {
-            var type = item.Type;
-            var receiveMore = true;
-
             while (receiveMore || !item.Ready)
             {
                 if (!receiveMore)
-                    receiveMore = NeedToReceiveMore(item, buffer, type);
+                    receiveMore = NeedToReceiveMore(item, buffer);
 
                 if (receiveMore)
                 {
@@ -38,7 +36,7 @@ namespace Sweet.Redis
 
                 if (item.Length < -1)
                 {
-                    type = ReadObjectType(item, buffer);
+                    ReadObjectType(item, buffer);
                     if (ReadHeader(item, buffer, out receiveMore))
                         return item;
 
@@ -52,12 +50,11 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static bool NeedToReceiveMore(RedisResponse item, RedisByteBuffer buffer, RedisObjectType type)
+        private static bool NeedToReceiveMore(RedisResponse item, RedisByteBuffer buffer)
         {
-            var bufferLength = buffer.Length;
-            return (bufferLength == 0) ||
-                ((item.Length < -1 || type == RedisObjectType.Undefined) && bufferLength == 0) ||
-                (type != RedisObjectType.Array && (item.Length > bufferLength - buffer.Position + RedisConstants.CRLFLength));
+            return (buffer.Length == 0) ||
+                (item.Type != RedisObjectType.Array &&
+                 (item.Length > buffer.Length - buffer.Position + RedisConstants.CRLFLength));
         }
 
         private void Receive(RedisSocket socket, RedisByteBuffer buffer)
@@ -239,22 +236,18 @@ namespace Sweet.Redis
             return false;
         }
 
-        private static RedisObjectType ReadObjectType(RedisResponse item, RedisByteBuffer buffer)
+        private static void ReadObjectType(RedisResponse item, RedisByteBuffer buffer)
         {
-            var type = item.Type;
-            if (type == RedisObjectType.Undefined)
+            if (item.TypeByte < 0)
             {
                 var b = buffer.ReadByte();
                 if (b < 0)
                     throw new RedisException("Unexpected byte for redis response type");
 
-                type = ((byte)b).ResponseType();
-                if (type == RedisObjectType.Undefined)
+                item.TypeByte = b;
+                if (item.Type == RedisObjectType.Undefined)
                     throw new RedisException("Undefined redis response type");
-
-                item.Type = type;
             }
-            return type;
         }
 
         private static void SetReady(RedisResponse child)

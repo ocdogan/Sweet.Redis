@@ -10,6 +10,141 @@ namespace Sweet.Redis.ConsoleTest
     {
         static void Main(string[] args)
         {
+            // PerformanceTest();
+            // ScriptingNoArgsEvalTest();
+            // ScriptingShaNoArgsEvalTest();
+            // ScriptingWithArgsEvalTest();
+            ScriptingShaWithArgsEvalTest();
+        }
+
+        static void ScriptingNoArgsEvalTest()
+        {
+            var script = "return {1,2,3.3333,'foo',nil,'bar'}";
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        Console.Clear();
+                        try
+                        {
+                            var result = db.Scripting.Eval(script);
+                            Console.WriteLine((result == null) ? "(nil)" : result.ToString());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void ScriptingWithArgsEvalTest()
+        {
+            var script = "return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}";
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        Console.Clear();
+                        try
+                        {
+                            var result = db.Scripting.EvalString(script,
+                                                                 new RedisKeyValue<string, string>("key1", "first"),
+                                                                 new RedisKeyValue<string, string>("key2", "second"));
+                            Console.WriteLine((result == null) ? "(nil)" : result.ToString());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void ScriptingShaNoArgsEvalTest()
+        {
+            var script = "return {1,2,3.3333,'foo',nil,'bar'}";
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    var sha1 = db.Scripting.ScriptLoad(script);
+                    do
+                    {
+                        Console.Clear();
+                        try
+                        {
+                            var result = db.Scripting.EvalSHA(sha1);
+                            Console.WriteLine((result == null) ? "(nil)" : result.ToString());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void ScriptingShaWithArgsEvalTest()
+        {
+            var script = "return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}";
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    var sha1 = db.Scripting.ScriptLoad(script);
+                    do
+                    {
+                        Console.Clear();
+                        try
+                        {
+                            var result = db.Scripting.EvalSHAString(sha1,
+                                                                 new RedisKeyValue<string, string>("key1", "first"),
+                                                                 new RedisKeyValue<string, string>("key2", "second"));
+                            Console.WriteLine((result == null) ? "(nil)" : result.ToString());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void PerformanceTest()
+        {
             var largeText = new string('x', 100000);
 
             using (var pool = new RedisConnectionPool("My redis pool",
@@ -95,8 +230,8 @@ namespace Sweet.Redis.ConsoleTest
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)
-                                db.Connection.Ping();
-                            // db.Strings.Get("large_text");
+                                // db.Connection.Ping();
+                                db.Strings.Get("large_text");
 
                             /* for (var i = 0; i < 1000; i++)
                                 db.Connection.Ping(); */

@@ -14,6 +14,7 @@ namespace Sweet.Redis
         IRedisResponse Parent { get; }
         bool Ready { get; }
         RedisObjectType Type { get; }
+        int TypeByte { get; }
 
         void Clear();
         byte[] ReleaseData();

@@ -75,6 +75,7 @@ namespace Sweet.Redis
                 }
             }
         }
+
         internal static RedisObjectType ResponseType(this byte b)
         {
             switch (b)
@@ -91,6 +92,25 @@ namespace Sweet.Redis
                     return RedisObjectType.Array;
                 default:
                     return RedisObjectType.Undefined;
+            }
+        }
+
+        internal static byte ResponseTypeByte(this RedisObjectType b)
+        {
+            switch (b)
+            {
+                case RedisObjectType.SimpleString:
+                    return (byte)'+';
+                case RedisObjectType.Error:
+                    return (byte)'-';
+                case RedisObjectType.BulkString:
+                    return (byte)'$';
+                case RedisObjectType.Integer:
+                    return (byte)':';
+                case RedisObjectType.Array:
+                    return (byte)'*';
+                default:
+                    return (byte)'?';
             }
         }
 

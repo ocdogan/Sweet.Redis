@@ -18,6 +18,8 @@ namespace Sweet.Redis
 
         public static readonly byte[] Nil = "nil".ToBytes();
 
+        public static readonly byte[] Zero = "0".ToBytes();
+
         #endregion Static Members
 
         #region Constants
