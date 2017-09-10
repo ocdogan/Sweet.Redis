@@ -30,16 +30,9 @@ namespace Sweet.Redis
             {
                 var parameters = key.ToBytes().Join(element.ToBytes()).Join(elements);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.PfAdd, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError) == 1L;
-                }
+                return ExpectOne(RedisCommands.PfAdd, parameters);
             }
-
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.PfAdd, key.ToBytes(), element.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError) == 1L;
-            }
+            return ExpectOne(RedisCommands.PfAdd, key.ToBytes(), element.ToBytes());
         }
 
         public long PfCount(string key, params string[] keys)
@@ -54,16 +47,9 @@ namespace Sweet.Redis
             {
                 var parameters = key.ToBytes().Join(keys);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.PfAdd, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.PfAdd, parameters);
             }
-
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.PfAdd, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.PfAdd, key.ToBytes());
         }
 
         public bool PfMerge(string destKey, string sourceKey, params string[] sourceKeys)
@@ -81,16 +67,9 @@ namespace Sweet.Redis
             {
                 var parameters = destKey.ToBytes().Join(sourceKey.ToBytes()).Join(sourceKeys);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.Quit, parameters))
-                {
-                    return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-                }
+                return ExpectOK(RedisCommands.Quit, parameters);
             }
-
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Quit, destKey.ToBytes(), sourceKey.ToBytes()))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-            }
+            return ExpectOK(RedisCommands.Quit, destKey.ToBytes(), sourceKey.ToBytes());
         }
 
         #endregion Methods

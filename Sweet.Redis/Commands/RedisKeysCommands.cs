@@ -21,20 +21,14 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            if (keys != null && keys.Length > 0)
+            if (keys.Length > 0)
             {
                 var parameters = key.ToBytes()
                                     .Join(keys.ToBytesArray());
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.Del, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.Del, parameters);
             }
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Del, keys.ToBytesArray()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.Del, keys.ToBytesArray());
         }
 
         public byte[] Dump(string key)
@@ -42,11 +36,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Dump, key.ToBytes()))
-            {
-                return cmd.ExpectBulkStringBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectBulkStringBytes(RedisCommands.Dump, key.ToBytes());
         }
 
         public bool Exists(string key)
@@ -54,11 +44,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Exists, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.Exists, key.ToBytes());
         }
 
         public bool Expire(string key, int seconds)
@@ -66,11 +52,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Expire, key.ToBytes(), seconds.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.Expire, key.ToBytes(), seconds.ToBytes());
         }
 
         public bool ExpireAt(string key, int timestamp)
@@ -78,11 +60,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ExpireAt, key.ToBytes(), timestamp.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.ExpireAt, key.ToBytes(), timestamp.ToBytes());
         }
 
         public string[] Keys(string pattern)
@@ -90,11 +68,7 @@ namespace Sweet.Redis
             if (pattern == null)
                 throw new ArgumentNullException("pattern");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Keys, pattern.ToBytes()))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataStrings(RedisCommands.Keys, pattern.ToBytes());
         }
 
         public bool Migrate(string host, int port, string key, int destinationDb, long timeoutMs, bool copy = false, bool replace = false, params string[] keys)
@@ -124,10 +98,7 @@ namespace Sweet.Redis
                                  .Join(RedisCommands.Keys)
                                  .Join(keys.ToBytesArray());
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Migrate, parameters))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-            }
+            return ExpectOK(RedisCommands.Migrate, parameters);
         }
 
         public bool Move(string key, int db)
@@ -135,11 +106,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Move, key.ToBytes(), db.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.Move, key.ToBytes(), db.ToBytes());
         }
 
         public long ObjectRefCount(string key)
@@ -147,11 +114,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.RefCount, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.Object, RedisCommands.RefCount, key.ToBytes());
         }
 
         public byte[] ObjectEncoding(string key)
@@ -159,11 +122,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.Encoding, key.ToBytes()))
-            {
-                return cmd.ExpectBulkStringBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectBulkStringBytes(RedisCommands.Object, RedisCommands.Encoding, key.ToBytes());
         }
 
         public string ObjectEncodingString(string key)
@@ -171,11 +130,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.Encoding, key.ToBytes()))
-            {
-                return cmd.ExpectBulkString(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectBulkString(RedisCommands.Object, RedisCommands.Encoding, key.ToBytes());
         }
 
         public long ObjectIdleTime(string key)
@@ -183,11 +138,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Object, RedisCommands.IdleTime, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.Object, RedisCommands.IdleTime, key.ToBytes());
         }
 
         public bool Persist(string key)
@@ -195,11 +146,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Persist, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.Persist, key.ToBytes());
         }
 
         public bool PExpire(string key, long milliseconds)
@@ -207,11 +154,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.PExpire, key.ToBytes(), milliseconds.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.PExpire, key.ToBytes(), milliseconds.ToBytes());
         }
 
         public bool PExpireAt(string key, long millisecondsTimestamp)
@@ -219,11 +162,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.PExpireAt, key.ToBytes(), millisecondsTimestamp.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.PExpireAt, key.ToBytes(), millisecondsTimestamp.ToBytes());
         }
 
         public long PTtl(string key)
@@ -231,20 +170,12 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.PTtl, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.PTtl, key.ToBytes());
         }
 
         public string RandomKey()
         {
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.RandomKey))
-            {
-                return cmd.ExpectBulkString(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectBulkString(RedisCommands.RandomKey);
         }
 
         public bool Rename(string key, string newKey)
@@ -255,11 +186,7 @@ namespace Sweet.Redis
             if (newKey == null)
                 throw new ArgumentNullException("newKey");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Rename, key.ToBytes(), newKey.ToBytes()))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-            }
+            return ExpectOK(RedisCommands.Rename, key.ToBytes(), newKey.ToBytes());
         }
 
         public bool RenameNx(string key, string newKey)
@@ -270,11 +197,7 @@ namespace Sweet.Redis
             if (newKey == null)
                 throw new ArgumentNullException("newKey");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.RenameNx, key.ToBytes(), newKey.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, true) > 0;
-            }
+            return ExpectGreaterThanZero(RedisCommands.RenameNx, key.ToBytes(), newKey.ToBytes());
         }
 
         public bool Restore(string key, long ttl, byte[] value)
@@ -282,10 +205,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Rename, key.ToBytes(), ttl.ToBytes(), value))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-            }
+            return ExpectOK(RedisCommands.Rename, key.ToBytes(), ttl.ToBytes(), value);
         }
 
         public byte[][] Scan(int count = 10, string match = null)
@@ -330,10 +250,7 @@ namespace Sweet.Redis
                     .Join(RedisCommands.Get)
                     .Join(get.ToBytes());
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Sort, parameters))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataBytes(RedisCommands.Sort, parameters);
         }
 
         public long Touch(string key, params string[] keys)
@@ -343,20 +260,14 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            if (keys != null && keys.Length > 0)
+            if (keys.Length > 0)
             {
                 var parameters = key.ToBytes()
                                     .Join(keys.ToBytesArray());
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.Touch, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.Touch, parameters);
             }
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Touch, keys.ToBytesArray()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.Touch, keys.ToBytesArray());
         }
 
         public long Ttl(string key)
@@ -364,11 +275,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ttl, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.Ttl, key.ToBytes());
         }
 
         public string Type(string key)
@@ -376,20 +283,12 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Type, key.ToBytes()))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectSimpleString(RedisCommands.Type, key.ToBytes());
         }
 
         public long Wait(int numberOfSlaves, int timeout)
         {
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ttl, numberOfSlaves.ToBytes(), timeout.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.Ttl, numberOfSlaves.ToBytes(), timeout.ToBytes());
         }
 
         #endregion Methods

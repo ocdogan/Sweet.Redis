@@ -67,16 +67,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, parameters))
-                {
-                    return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectDouble(RedisCommands.ZAdd, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public double ZAdd(string key, int score, byte[] member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -126,16 +120,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, parameters))
-                {
-                    return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectDouble(RedisCommands.ZAdd, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public double ZAdd(string key, long score, string member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -190,16 +178,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, parameters))
-                {
-                    return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectDouble(RedisCommands.ZAdd, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public double ZAdd(string key, long score, byte[] member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -249,16 +231,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, parameters))
-                {
-                    return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectDouble(RedisCommands.ZAdd, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public double ZAdd(string key, double score, string member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -313,16 +289,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, parameters))
-                {
-                    return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectDouble(RedisCommands.ZAdd, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public double ZAdd(string key, double score, byte[] member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -372,16 +342,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, parameters))
-                {
-                    return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectDouble(RedisCommands.ZAdd, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public long ZCard(string key)
@@ -389,11 +353,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZCard, key.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZCard, key.ToBytes());
         }
 
         public long ZCount(string key, int min, int max)
@@ -411,11 +371,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZCount, key.ToBytes(), min.ToBytes(), max.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZCount, key.ToBytes(), min.ToBytes(), max.ToBytes());
         }
 
         public double ZIncrBy(string key, double increment, string member)
@@ -431,11 +387,7 @@ namespace Sweet.Redis
             if (member == null)
                 throw new ArgumentNullException("member");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZIncrBy, key.ToBytes(), increment.ToBytes(), member))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZIncrBy, key.ToBytes(), increment.ToBytes(), member);
         }
 
         public double ZIncrBy(string key, int increment, string member)
@@ -507,16 +459,10 @@ namespace Sweet.Redis
                         break;
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZInterStore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZInterStore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes());
         }
 
         public long ZInterStore(string destination, int numkeys, string key, long weight,
@@ -568,16 +514,10 @@ namespace Sweet.Redis
                         break;
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZInterStore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZInterStore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes());
         }
 
         public long ZInterStore(string destination, int numkeys, string key, double weight,
@@ -629,16 +569,10 @@ namespace Sweet.Redis
                         break;
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZInterStore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZInterStore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes());
         }
 
         public long ZLexCount(string key, int min, int max)
@@ -656,11 +590,7 @@ namespace Sweet.Redis
             if (key == null)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZLexCount, key.ToBytes(), min.ToBytes(), max.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZLexCount, key.ToBytes(), min.ToBytes(), max.ToBytes());
         }
 
         public byte[][] ZRange(string key, double start, double stop)
@@ -691,18 +621,10 @@ namespace Sweet.Redis
             if (start == null)
                 throw new ArgumentNullException("start");
 
-            ValidateNotDisposed();
             if (stop == null)
-            {
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRange, key.ToBytes(), start))
-                {
-                    return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                }
-            }
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRange, key.ToBytes(), start, stop))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+                return ExpectMultiDataBytes(RedisCommands.ZRange, key.ToBytes(), start);
+
+            return ExpectMultiDataBytes(RedisCommands.ZRange, key.ToBytes(), start, stop);
         }
 
         public byte[][] ZRangeByLex(string key, double start, double stop, int? offset = null, int? count = null)
@@ -746,10 +668,7 @@ namespace Sweet.Redis
                                        .Join(count.Value.ToBytes());
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRangeByLex, parameters))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataBytes(RedisCommands.ZRangeByLex, parameters);
         }
 
         public string[] ZRangeByLexString(string key, double start, double stop, int? offset = null, int? count = null)
@@ -793,10 +712,7 @@ namespace Sweet.Redis
                                        .Join(count.Value.ToBytes());
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRangeByLex, parameters))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataStrings(RedisCommands.ZRangeByLex, parameters);
         }
 
         public byte[][] ZRangeByScore(string key, double start, double stop, int? offset = null, int? count = null)
@@ -840,10 +756,7 @@ namespace Sweet.Redis
                                        .Join(count.Value.ToBytes());
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRangeByScore, parameters))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataBytes(RedisCommands.ZRangeByScore, parameters);
         }
 
         public string[] ZRangeByScoreString(string key, double start, double stop, int? offset = null, int? count = null)
@@ -887,10 +800,7 @@ namespace Sweet.Redis
                                        .Join(count.Value.ToBytes());
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRangeByScore, parameters))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataStrings(RedisCommands.ZRangeByScore, parameters);
         }
 
         public RedisKeyValue<byte[], double>[] ZRangeByScoreWithScores(string key, double start, double stop, int? offset = null, int? count = null)
@@ -936,33 +846,30 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRangeByScore, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRangeByScore, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<byte[], double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = bytes[index];
 
-                        var result = new RedisKeyValue<byte[], double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = bytes[index];
-
-                            if (index < bLength - 1)
-                            {
-                                var b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<byte[], double>(k, d);
+                            var b = bytes[index + 1];
+                            if (b != null && b.Length > 0)
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<byte[], double>(k, d);
                     }
                 }
             }
@@ -1012,37 +919,34 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRangeByScore, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRangeByScore, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<string, double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = String.Empty;
 
-                        var result = new RedisKeyValue<string, double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        var b = bytes[index];
+                        if (b != null && b.Length > 0)
+                            k = Encoding.UTF8.GetString(b);
+
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = String.Empty;
-
-                            var b = bytes[index];
+                            b = bytes[index + 1];
                             if (b != null && b.Length > 0)
-                                k = Encoding.UTF8.GetString(b);
-
-                            if (index < bLength - 1)
-                            {
-                                b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<string, double>(k, d);
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<string, double>(k, d);
                     }
                 }
             }
@@ -1077,18 +981,9 @@ namespace Sweet.Redis
             if (start == null)
                 throw new ArgumentNullException("start");
 
-            ValidateNotDisposed();
             if (stop == null)
-            {
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRange, key.ToBytes(), start))
-                {
-                    return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-                }
-            }
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRange, key.ToBytes(), start, stop))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+                return ExpectMultiDataStrings(RedisCommands.ZRange, key.ToBytes(), start);
+            return ExpectMultiDataStrings(RedisCommands.ZRange, key.ToBytes(), start, stop);
         }
 
         public RedisKeyValue<byte[], double>[] ZRangeWithScores(string key, double start, double stop)
@@ -1127,33 +1022,30 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRange, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRange, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<byte[], double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = bytes[index];
 
-                        var result = new RedisKeyValue<byte[], double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = bytes[index];
-
-                            if (index < bLength - 1)
-                            {
-                                var b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<byte[], double>(k, d);
+                            var b = bytes[index + 1];
+                            if (b != null && b.Length > 0)
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<byte[], double>(k, d);
                     }
                 }
             }
@@ -1196,37 +1088,34 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRange, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRange, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<string, double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = String.Empty;
 
-                        var result = new RedisKeyValue<string, double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        var b = bytes[index];
+                        if (b != null && b.Length > 0)
+                            k = Encoding.UTF8.GetString(b);
+
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = String.Empty;
-
-                            var b = bytes[index];
+                            b = bytes[index + 1];
                             if (b != null && b.Length > 0)
-                                k = Encoding.UTF8.GetString(b);
-
-                            if (index < bLength - 1)
-                            {
-                                b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<string, double>(k, d);
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<string, double>(k, d);
                     }
                 }
             }
@@ -1246,10 +1135,7 @@ namespace Sweet.Redis
             if (member == null)
                 throw new ArgumentNullException("member");
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRank, key.ToBytes(), member))
-            {
-                return cmd.ExpectNullableInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectNullableInteger(RedisCommands.ZRank, key.ToBytes(), member);
         }
 
         public long ZRem(string key, string member, params string[] members)
@@ -1260,21 +1146,17 @@ namespace Sweet.Redis
             if (member == null)
                 throw new ArgumentNullException("member");
 
+            ValidateNotDisposed();
+
             var length = members.Length;
             if (length > 0)
             {
                 var parameters = key.ToBytes().Join(member.ToBytes()).Join(members);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRem, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZRem, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRem, key.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZRem, key.ToBytes(), member.ToBytes());
         }
 
         public long ZRem(string key, byte[] member, params byte[][] members)
@@ -1285,21 +1167,17 @@ namespace Sweet.Redis
             if (member == null)
                 throw new ArgumentNullException("member");
 
+            ValidateNotDisposed();
+
             var length = members.Length;
             if (length > 0)
             {
                 var parameters = key.ToBytes().Join(member).Join(members);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRem, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZRem, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRem, key.ToBytes(), member))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZRem, key.ToBytes(), member);
         }
 
         public long ZRemRangeByLex(string key, double min, double max)
@@ -1330,21 +1208,17 @@ namespace Sweet.Redis
             if (min == null)
                 throw new ArgumentNullException("min");
 
+            ValidateNotDisposed();
+
             var length = max != null ? max.Length : 0;
             if (length > 0)
             {
                 var parameters = key.ToBytes().Join(min).Join(max);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRemRangeByLex, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZRemRangeByLex, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRemRangeByLex, key.ToBytes(), min))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZRemRangeByLex, key.ToBytes(), min);
         }
 
         public long ZRemRangeByRank(string key, double start, double stop)
@@ -1375,21 +1249,17 @@ namespace Sweet.Redis
             if (start == null)
                 throw new ArgumentNullException("start");
 
+            ValidateNotDisposed();
+
             var length = stop != null ? stop.Length : 0;
             if (length > 0)
             {
                 var parameters = key.ToBytes().Join(start).Join(stop);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRemRangeByRank, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZRemRangeByRank, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRemRangeByRank, key.ToBytes(), start))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZRemRangeByRank, key.ToBytes(), start);
         }
 
         public long ZRemRangeByScore(string key, double min, double max)
@@ -1420,21 +1290,17 @@ namespace Sweet.Redis
             if (min == null)
                 throw new ArgumentNullException("min");
 
+            ValidateNotDisposed();
+
             var length = max != null ? max.Length : 0;
             if (length > 0)
             {
                 var parameters = key.ToBytes().Join(min).Join(max);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRemRangeByScore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZRemRangeByScore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRemRangeByScore, key.ToBytes(), min))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZRemRangeByScore, key.ToBytes(), min);
         }
 
         public byte[][] ZRevRange(string key, double start, double stop)
@@ -1465,21 +1331,17 @@ namespace Sweet.Redis
             if (start == null)
                 throw new ArgumentNullException("start");
 
+            ValidateNotDisposed();
+
             var length = stop != null ? stop.Length : 0;
             if (length > 0)
             {
                 var parameters = key.ToBytes().Join(start).Join(stop);
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRange, parameters))
-                {
-                    return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectMultiDataBytes(RedisCommands.ZRevRange, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRange, key.ToBytes(), start))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataBytes(RedisCommands.ZRevRange, key.ToBytes(), start);
         }
 
         public byte[][] ZRevRangeByScore(string key, double start, double stop, int? offset = null, int? count = null)
@@ -1523,10 +1385,7 @@ namespace Sweet.Redis
                                        .Join(count.Value.ToBytes());
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRangeByScore, parameters))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataBytes(RedisCommands.ZRevRangeByScore, parameters);
         }
 
         public string[] ZRevRangeByScoreString(string key, double start, double stop, int? offset = null, int? count = null)
@@ -1570,10 +1429,7 @@ namespace Sweet.Redis
                                        .Join(count.Value.ToBytes());
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRangeByScore, parameters))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataStrings(RedisCommands.ZRevRangeByScore, parameters);
         }
 
         public RedisKeyValue<byte[], double>[] ZRevRangeByScoreWithScores(string key, double start, double stop, int? offset = null, int? count = null)
@@ -1619,33 +1475,30 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRangeByScore, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRangeByScore, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<byte[], double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = bytes[index];
 
-                        var result = new RedisKeyValue<byte[], double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = bytes[index];
-
-                            if (index < bLength - 1)
-                            {
-                                var b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<byte[], double>(k, d);
+                            var b = bytes[index + 1];
+                            if (b != null && b.Length > 0)
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<byte[], double>(k, d);
                     }
                 }
             }
@@ -1695,37 +1548,34 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRangeByScore, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRangeByScore, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<string, double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = String.Empty;
 
-                        var result = new RedisKeyValue<string, double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        var b = bytes[index];
+                        if (b != null && b.Length > 0)
+                            k = Encoding.UTF8.GetString(b);
+
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = String.Empty;
-
-                            var b = bytes[index];
+                            b = bytes[index + 1];
                             if (b != null && b.Length > 0)
-                                k = Encoding.UTF8.GetString(b);
-
-                            if (index < bLength - 1)
-                            {
-                                b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<string, double>(k, d);
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<string, double>(k, d);
                     }
                 }
             }
@@ -1766,10 +1616,7 @@ namespace Sweet.Redis
             if (stop != null)
                 parameters = parameters.Join(stop);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRange, parameters))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataStrings(RedisCommands.ZRevRange, parameters);
         }
 
         public RedisKeyValue<byte[], double>[] ZRevRangeWithScores(string key, double start, double stop)
@@ -1808,33 +1655,30 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRange, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRange, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<byte[], double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = bytes[index];
 
-                        var result = new RedisKeyValue<byte[], double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = bytes[index];
-
-                            if (index < bLength - 1)
-                            {
-                                var b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<byte[], double>(k, d);
+                            var b = bytes[index + 1];
+                            if (b != null && b.Length > 0)
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<byte[], double>(k, d);
                     }
                 }
             }
@@ -1877,37 +1721,34 @@ namespace Sweet.Redis
 
             parameters = parameters.Join(RedisCommands.WithScores);
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRange, parameters))
+            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRange, parameters);
+            if (bytes != null)
             {
-                var bytes = cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                if (bytes != null)
+                var bLength = bytes.Length;
+                if (bLength > 0)
                 {
-                    var bLength = bytes.Length;
-                    if (bLength > 0)
+                    var c = bLength / 2;
+                    if (bLength % 2 != 0)
+                        c++;
+
+                    var result = new RedisKeyValue<string, double>[c];
+                    for (int i = 0, index = 0; i < c; i++, index += 2)
                     {
-                        var c = bLength / 2;
-                        if (bLength % 2 != 0)
-                            c++;
+                        var d = 0d;
+                        var k = String.Empty;
 
-                        var result = new RedisKeyValue<string, double>[c];
-                        for (int i = 0, index = 0; i < c; i++, index += 2)
+                        var b = bytes[index];
+                        if (b != null && b.Length > 0)
+                            k = Encoding.UTF8.GetString(b);
+
+                        if (index < bLength - 1)
                         {
-                            var d = 0d;
-                            var k = String.Empty;
-
-                            var b = bytes[index];
+                            b = bytes[index + 1];
                             if (b != null && b.Length > 0)
-                                k = Encoding.UTF8.GetString(b);
-
-                            if (index < bLength - 1)
-                            {
-                                b = bytes[index + 1];
-                                if (b != null && b.Length > 0)
-                                    double.TryParse(Encoding.UTF8.GetString(b), out d);
-                            }
-
-                            result[i] = new RedisKeyValue<string, double>(k, d);
+                                double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
+
+                        result[i] = new RedisKeyValue<string, double>(k, d);
                     }
                 }
             }
@@ -1927,12 +1768,7 @@ namespace Sweet.Redis
             if (member == null)
                 throw new ArgumentNullException("member");
 
-            ValidateNotDisposed();
-
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZRevRank, key.ToBytes(), member))
-            {
-                return cmd.ExpectNullableInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectNullableInteger(RedisCommands.ZRevRank, key.ToBytes(), member);
         }
 
         public byte[][] ZScan(string key, int cursor, string matchPattern = null, long? count = null)
@@ -1952,16 +1788,10 @@ namespace Sweet.Redis
                 if (count != null)
                     parameters = parameters.Join(RedisCommands.Count).Join(count.ToBytes());
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZScan, parameters))
-                {
-                    return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectMultiDataBytes(RedisCommands.ZScan, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZScan, key.ToBytes(), cursor.ToBytes()))
-            {
-                return cmd.ExpectMultiDataBytes(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataBytes(RedisCommands.ZScan, key.ToBytes(), cursor.ToBytes());
         }
 
         public RedisKeyValue<byte[], byte[]>[] ZScanKeyValue(string key, int cursor, string matchPattern = null, long? count = null)
@@ -2045,16 +1875,10 @@ namespace Sweet.Redis
                 if (count != null)
                     parameters = parameters.Join(RedisCommands.Count).Join(count.ToBytes());
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZScan, parameters))
-                {
-                    return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectMultiDataStrings(RedisCommands.ZScan, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZScan, key.ToBytes(), cursor.ToBytes()))
-            {
-                return cmd.ExpectMultiDataStrings(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectMultiDataStrings(RedisCommands.ZScan, key.ToBytes(), cursor.ToBytes());
         }
 
         public double ZScore(string key, string member)
@@ -2067,10 +1891,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZScore, key.ToBytes(), member.ToBytes()))
-            {
-                return cmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectDouble(RedisCommands.ZScore, key.ToBytes(), member.ToBytes());
         }
 
         public long ZUnionStore(string destination, int numkeys, string key, int weight,
@@ -2122,16 +1943,10 @@ namespace Sweet.Redis
                         break;
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZUnionStore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZUnionStore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes());
         }
 
         public long ZUnionStore(string destination, int numkeys, string key, long weight,
@@ -2183,16 +1998,10 @@ namespace Sweet.Redis
                         break;
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZUnionStore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZUnionStore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes());
         }
 
         public long ZUnionStore(string destination, int numkeys, string key, double weight,
@@ -2244,16 +2053,10 @@ namespace Sweet.Redis
                         break;
                 }
 
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZUnionStore, parameters))
-                {
-                    return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-                }
+                return ExpectInteger(RedisCommands.ZUnionStore, parameters);
             }
 
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes()))
-            {
-                return cmd.ExpectInteger(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectInteger(RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key.ToBytes(), weight.ToBytes());
         }
 
         #endregion Methods

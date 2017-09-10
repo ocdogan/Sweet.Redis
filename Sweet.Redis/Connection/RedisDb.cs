@@ -232,6 +232,7 @@ namespace Sweet.Redis
                 return cmd.ExpectSimpleString(m_Pool, "OK", true);
             }
         }
+
         #endregion Methods
     }
 }

@@ -19,11 +19,7 @@ namespace Sweet.Redis
             if (password == null)
                 throw new ArgumentNullException("password");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Auth, password.ToBytes()))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-            }
+            return ExpectOK(RedisCommands.Auth, password.ToBytes());
         }
 
         public string Echo(string msg)
@@ -31,11 +27,7 @@ namespace Sweet.Redis
             if (msg == null)
                 throw new ArgumentNullException("msg");
 
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Echo, msg.ToBytes()))
-            {
-                return cmd.ExpectBulkString(Db.Pool, Db.ThrowOnError);
-            }
+            return ExpectBulkString(RedisCommands.Echo, msg.ToBytes());
         }
 
         public string Ping()
@@ -45,26 +37,14 @@ namespace Sweet.Redis
 
         public string Ping(string msg)
         {
-            ValidateNotDisposed();
             if (String.IsNullOrEmpty(msg))
-                using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ping))
-                {
-                    return cmd.ExpectSimpleString(Db.Pool, Db.ThrowOnError);
-                }
-
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Ping, msg.ToBytes()))
-            {
-                return cmd.ExpectBulkString(Db.Pool, Db.ThrowOnError);
-            }
+                return ExpectSimpleString(RedisCommands.Ping);
+            return ExpectBulkString(RedisCommands.Ping, msg.ToBytes());
         }
 
         public bool Quit()
         {
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(Db.Db, RedisCommands.Quit))
-            {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", Db.ThrowOnError);
-            }
+            return ExpectOK(RedisCommands.Quit);
         }
 
         #endregion Methods
