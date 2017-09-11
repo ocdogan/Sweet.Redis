@@ -15,10 +15,30 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingShaNoArgsEvalTest();
             // ScriptingWithArgsEvalTest();
             // ScriptingShaWithArgsEvalTest();
-            PubSubTests();
+            // PubSubTest1();
+            PubSubTest2();
         }
 
-        static void PubSubTests()
+        #region PubSub Tests
+
+        static void PubSubTest2()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.PubSubChannel.Subscribe((m) =>
+                {
+                    return;
+                }, "abc", "xyz");
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue, ESC to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        static void PubSubTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
@@ -89,6 +109,10 @@ namespace Sweet.Redis.ConsoleTest
                 }
             }
         }
+
+        #endregion PubSub Tests
+
+        #region Scripting Tests
 
         static void ScriptingNoArgsEvalTest()
         {
@@ -216,6 +240,8 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
+        #endregion Scripting Tests
+
         static void PerformanceTest()
         {
             var largeText = new string('x', 100000);
@@ -294,8 +320,8 @@ namespace Sweet.Redis.ConsoleTest
                             ConsoleWriteMultiline("MGet key1, ", db.Strings.MGet("key1"));
                             ConsoleWriteMultiline("MGet key1 key2, ", db.Strings.MGet("key1", "key2"));
                             ConsoleWriteMultiline("MGet key1 key2 key3, ", db.Strings.MGet("key1", "key2", "key3"));
-							// ConsoleWriteMultiline("MGet key1 key2 key3 key4, ", db.Strings.MGet("key1", "key2", "key3", "key4"));
-						} */
+                            // ConsoleWriteMultiline("MGet key1 key2 key3 key4, ", db.Strings.MGet("key1", "key2", "key3", "key4"));
+                        } */
 
                         var sw = new Stopwatch();
                         using (var db = pool.GetDb())
@@ -303,15 +329,15 @@ namespace Sweet.Redis.ConsoleTest
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)
-                                // db.Connection.Ping();
-                                db.Strings.Get("large_text");
+                                db.Connection.Ping();
+                            // db.Strings.Get("large_text");
 
                             /* for (var i = 0; i < 1000; i++)
                                 db.Connection.Ping(); */
 
                             /* {
                                 Console.WriteLine((i + 1).ToString() + ") ");
-								try
+                                try
                                 {
                                     Console.WriteLine((i + 1).ToString() + ") " + db.Connection.Ping());
                                     // Console.WriteLine(db.Strings.GetString("key4"));
@@ -320,8 +346,8 @@ namespace Sweet.Redis.ConsoleTest
                                 {
                                     Console.WriteLine(e);
                                 }
-								Console.WriteLine();
-							} */
+                                Console.WriteLine();
+                            } */
                         }
 
                         sw.Stop();

@@ -33,6 +33,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
+        private long m_HasData;
         private byte[] m_Data;
         private long m_Ready;
         private int m_TypeByte = -1;
@@ -46,9 +47,11 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisResponse(IRedisResponse parent = null)
+        public RedisResponse(IRedisResponse parent = null, RedisObjectType type = RedisObjectType.Undefined)
         {
             m_Parent = parent;
+            if (type != RedisObjectType.Undefined)
+                Type = type;
         }
 
         #endregion .Ctors
@@ -69,7 +72,7 @@ namespace Sweet.Redis
         {
             get
             {
-                if (m_Type != RedisObjectType.Array)
+                if (!m_Type.HasValue || m_Type != RedisObjectType.Array)
                     return -1;
 
                 var list = m_List;
@@ -83,7 +86,9 @@ namespace Sweet.Redis
             internal set
             {
                 m_Data = value;
-                if (m_Type != RedisObjectType.Array)
+                Interlocked.Exchange(ref m_HasData, 1L);
+
+                if (m_Type.HasValue && m_Type != RedisObjectType.Array)
                     Ready = true;
             }
         }
@@ -104,11 +109,18 @@ namespace Sweet.Redis
         {
             get
             {
-                if (m_Type == RedisObjectType.Array)
+                if (Interlocked.Read(ref m_HasData) == 1L)
+                    return true;
+
+                if (!m_Type.HasValue || m_Type == RedisObjectType.Array)
                     return false;
 
                 var data = m_Data;
-                return (data != null) && data.Length > 0;
+                var result = (data != null) && data.Length > 0;
+                if (result)
+                    Interlocked.Exchange(ref m_HasData, 1L);
+
+                return result;
             }
         }
 
@@ -174,9 +186,10 @@ namespace Sweet.Redis
                     m_TypeByte = value.ResponseTypeByte();
 
                     if (value == RedisObjectType.Array)
-                    {
                         NewArrayList();
-                    }
+
+                    if (Interlocked.Read(ref m_HasData) == 1L)
+                        Ready = true;
                 }
             }
         }

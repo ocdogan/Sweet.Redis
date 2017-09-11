@@ -39,7 +39,6 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private int m_Db;
         private string m_Name;
         private RedisSocket m_Socket;
         private EndPoint m_EndPoint;
@@ -54,12 +53,12 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisConnection(string name, Action<RedisConnection, RedisSocket> releaseAction,
-            int db, RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, new RedisSettings(), releaseAction, db, socket, connectImmediately)
+            RedisSocket socket = null, bool connectImmediately = false)
+            : this(name, new RedisSettings(), releaseAction, socket, connectImmediately)
         { }
 
         internal RedisConnection(string name, RedisSettings settings,
-            Action<RedisConnection, RedisSocket> releaseAction, int db, RedisSocket socket = null,
+            Action<RedisConnection, RedisSocket> releaseAction, RedisSocket socket = null,
             bool connectImmediately = false)
         {
             if (settings == null)
@@ -68,7 +67,6 @@ namespace Sweet.Redis
             if (releaseAction == null)
                 throw new ArgumentNullException("releaseAction");
 
-            m_Db = db;
             m_Settings = settings;
             m_ReleaseAction = releaseAction;
             m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N") : name;
@@ -114,11 +112,6 @@ namespace Sweet.Redis
                     return m_Socket.IsConnected();
                 return false;
             }
-        }
-
-        public int Db
-        {
-            get { return m_Db; }
         }
 
         public long LastError
@@ -168,7 +161,7 @@ namespace Sweet.Redis
             return ConnectInternal();
         }
 
-        private RedisSocket ConnectInternal()
+        protected RedisSocket ConnectInternal()
         {
             var socket = m_Socket;
             try
@@ -268,7 +261,7 @@ namespace Sweet.Redis
             }
         }
 
-        public IRedisResponse Send(byte[] data)
+        public void Send(byte[] data)
         {
             ValidateNotDisposed();
 
@@ -281,18 +274,10 @@ namespace Sweet.Redis
                 throw new SocketException((int)SocketError.NotConnected);
             }
 
-            var task = socket.SendAsync(data, 0, data.Length)
-                .ContinueWith<IRedisResponse>((ret) =>
-                {
-                    if (ret.IsCompleted && ret.Result > 0)
-                        using (var reader = new RedisResponseReader())
-                            return reader.Execute(socket);
-                    return null;
-                });
-            return task.Result;
+            socket.SendAsync(data, 0, data.Length).Wait();
         }
 
-        public IRedisResponse Send(IRedisCommand cmd)
+        public void Send(IRedisCommand cmd)
         {
             if (cmd == null)
                 throw new ArgumentNullException("cmd");
@@ -309,8 +294,6 @@ namespace Sweet.Redis
             }
 
             cmd.WriteTo(socket);
-            using (var reader = new RedisResponseReader())
-                return reader.Execute(socket);
         }
 
         #endregion Member Methods

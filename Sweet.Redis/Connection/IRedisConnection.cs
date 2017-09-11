@@ -29,14 +29,13 @@ namespace Sweet.Redis
     public interface IRedisConnection : IDisposable
     {
         bool Connected { get; }
-        int Db { get; }
         bool Disposed { get; }
         long LastError { get; }
         string Name { get; }
         RedisSettings Settings { get; }
         RedisConnectionState State { get; }
 
-        IRedisResponse Send(byte[] data);
-        IRedisResponse Send(IRedisCommand cmd);
+        void Send(byte[] data);
+        void Send(IRedisCommand cmd);
     }
 }

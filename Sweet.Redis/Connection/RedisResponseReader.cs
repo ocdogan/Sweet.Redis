@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Sweet.Redis
@@ -39,12 +40,41 @@ namespace Sweet.Redis
         public IRedisResponse Execute(RedisSocket socket)
         {
             using (var buffer = new RedisByteBuffer())
-                return ReadThrough(new RedisResponse(), socket, buffer, true);
+            {
+                var item = ReadThrough(socket, buffer, true);
+
+                var available = 0;
+                if (buffer.Position < buffer.Length || (available = socket.Available) > 0)
+                {
+                    var siblings = new List<IRedisResponse>();
+                    do
+                    {
+                        var sibling = ReadThrough(socket, buffer, available > 0);
+                        if (sibling != null)
+                            siblings.Add(sibling);
+                    }
+                    while (buffer.Position < buffer.Length || (available = socket.Available) > 0);
+
+                    var siblingCount = siblings.Count;
+                    if (siblingCount > 0)
+                    {
+                        var parent = new RedisResponse(type: RedisObjectType.Array);
+                        parent.Length = siblingCount + 1;
+
+                        parent.Add(item);
+                        for (var i = 0; i < siblingCount; i++)
+                            parent.Add(siblings[i]);
+
+                        return parent;
+                    }
+                }
+                return item;
+            }
         }
 
-        private IRedisResponse ReadThrough(RedisResponse item, RedisSocket socket,
-                                           RedisByteBuffer buffer, bool receiveMore = false)
+        private IRedisResponse ReadThrough(RedisSocket socket, RedisByteBuffer buffer, bool receiveMore = false)
         {
+            var item = new RedisResponse();
             while (receiveMore || !item.Ready)
             {
                 if (!receiveMore)
@@ -246,7 +276,7 @@ namespace Sweet.Redis
                     {
                         for (var i = 0; i < item.Length; i++)
                         {
-                            var child = ReadThrough(new RedisResponse(), socket, buffer);
+                            var child = ReadThrough(socket, buffer);
                             if (child == null)
                                 throw new RedisException("Unexpected response data, not valid data for array item");
 

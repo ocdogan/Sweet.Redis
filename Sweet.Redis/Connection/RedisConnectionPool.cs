@@ -285,7 +285,7 @@ namespace Sweet.Redis
             return new RedisDb(this, db);
         }
 
-        internal IRedisConnection Connect(int db)
+        internal IRedisDbConnection Connect(int db)
         {
             ValidateNotDisposed();
 
@@ -319,9 +319,9 @@ namespace Sweet.Redis
             throw new RedisException("Connection timeout occured while trying to connect");
         }
 
-        private IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
+        private IRedisDbConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
-            var conn = new RedisConnection(this.Name, m_Settings, Release, db,
+            var conn = new RedisDbConnection(this.Name, m_Settings, Release, db,
                                            socket.IsConnected() ? socket : null, connectImmediately);
 
             Interlocked.Increment(ref m_InitCount);
@@ -354,9 +354,13 @@ namespace Sweet.Redis
                         var store = m_MemberStore;
                         if (store != null)
                         {
+                            var db = 0;
+                            if (conn is IRedisDbConnection)
+                                db = ((IRedisDbConnection)conn).Db;
+
                             lock (m_MemberStoreLock)
                             {
-                                store.AddLast(new RedisConnectionPoolMember(socket, conn.Db));
+                                store.AddLast(new RedisConnectionPoolMember(socket, db));
                             }
                         }
                     }

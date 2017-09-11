@@ -23,24 +23,14 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
-    public interface IRedisResponse : IDisposable
+    public interface IRedisDbConnection : IRedisConnection
     {
-        int ChildCount { get; }
-        byte[] Data { get; }
-        bool HasChild { get; }
-        bool HasData { get; }
-        IList<IRedisResponse> Items { get; }
-        int Length { get; }
-        IRedisResponse Parent { get; }
-        bool Ready { get; }
-        RedisObjectType Type { get; }
-        int TypeByte { get; }
+        int Db { get; }
 
-        void Clear();
-        byte[] ReleaseData();
+        IRedisResponse SendReceive(byte[] data);
+        IRedisResponse SendReceive(IRedisCommand cmd);
     }
 }

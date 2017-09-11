@@ -4,12 +4,13 @@
     {
         #region .Ctors
 
-        public RedisPubSubMessage(bool isPSub, string channel, byte[] data)
+        public RedisPubSubMessage(RedisPubSubType type, string typeStr, string channel, byte[] data)
             : this()
         {
             Channel = channel;
             Data = data;
-            IsPSub = isPSub;
+            Type = type;
+            TypeStr = typeStr;
         }
 
         #endregion .Ctors
@@ -20,7 +21,9 @@
 
         public byte[] Data { get; private set; }
 
-        public bool IsPSub { get; private set; }
+        public RedisPubSubType Type { get; private set; }
+
+        public string TypeStr { get; private set; }
 
         #endregion Properties
     }

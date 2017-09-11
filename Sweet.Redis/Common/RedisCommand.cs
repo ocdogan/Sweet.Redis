@@ -99,7 +99,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        public bool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
+        public bool ExpectSimpleString(IRedisDbConnection connection, string expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleString(connection, throwException);
             if (!String.IsNullOrEmpty(result))
@@ -123,7 +123,7 @@ namespace Sweet.Redis
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public string ExpectSimpleString(IRedisConnection connection, bool throwException = true)
+        public string ExpectSimpleString(IRedisDbConnection connection, bool throwException = true)
         {
             var bytes = ExpectSimpleStringBytes(connection, throwException);
             if (bytes == null)
@@ -147,7 +147,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        public bool ExpectSimpleStringBytes(IRedisConnection connection, byte[] expectedResult, bool throwException = true)
+        public bool ExpectSimpleStringBytes(IRedisDbConnection connection, byte[] expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleStringBytes(connection, throwException);
             if (result != null && result.Length > 0)
@@ -184,7 +184,7 @@ namespace Sweet.Redis
             }
         }
 
-        public byte[] ExpectSimpleStringBytes(IRedisConnection connection, bool throwException = true)
+        public byte[] ExpectSimpleStringBytes(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -213,7 +213,7 @@ namespace Sweet.Redis
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public string ExpectBulkString(IRedisConnection connection, bool throwException = true)
+        public string ExpectBulkString(IRedisDbConnection connection, bool throwException = true)
         {
             var bytes = ExpectBulkStringBytes(connection, throwException);
             if (bytes == null)
@@ -242,7 +242,7 @@ namespace Sweet.Redis
             }
         }
 
-        public byte[] ExpectBulkStringBytes(IRedisConnection connection, bool throwException = true)
+        public byte[] ExpectBulkStringBytes(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -271,7 +271,7 @@ namespace Sweet.Redis
             return result.Value;
         }
 
-        public long ExpectInteger(IRedisConnection connection, bool throwException = true)
+        public long ExpectInteger(IRedisDbConnection connection, bool throwException = true)
         {
             var result = ExpectNullableInteger(connection, throwException);
             if (result == null)
@@ -287,7 +287,7 @@ namespace Sweet.Redis
             }
         }
 
-        public long? ExpectNullableInteger(IRedisConnection connection, bool throwException = true)
+        public long? ExpectNullableInteger(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -340,7 +340,7 @@ namespace Sweet.Redis
             }
         }
 
-        public double ExpectDouble(IRedisConnection connection, bool throwException = true)
+        public double ExpectDouble(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -397,7 +397,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisObject ExpectArray(IRedisConnection connection, bool throwException = true)
+        public RedisObject ExpectArray(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -419,7 +419,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string[] ExpectMultiDataStrings(IRedisConnection connection, bool throwException = true)
+        public string[] ExpectMultiDataStrings(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -509,7 +509,7 @@ namespace Sweet.Redis
             }
         }
 
-        public byte[][] ExpectMultiDataBytes(IRedisConnection connection, bool throwException = true)
+        public byte[][] ExpectMultiDataBytes(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -611,7 +611,7 @@ namespace Sweet.Redis
             }
         }
 
-        public IRedisResponse Execute(IRedisConnection connection, bool throwException = true)
+        public IRedisResponse Execute(IRedisDbConnection connection, bool throwException = true)
         {
             if (connection == null)
                 throw new ArgumentNullException("connection");
@@ -621,10 +621,10 @@ namespace Sweet.Redis
             return ExecuteInternal(connection, throwException);
         }
 
-        private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true)
+        private IRedisResponse ExecuteInternal(IRedisDbConnection connection, bool throwException = true)
         {
             var data = PrepareData();
-            var response = connection.Send(this);
+            var response = connection.SendReceive(this);
             if (response == null && throwException)
                 throw new RedisException("Corrupted redis response data");
             HandleError(response);
