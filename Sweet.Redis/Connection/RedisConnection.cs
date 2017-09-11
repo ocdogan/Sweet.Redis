@@ -39,13 +39,14 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private string m_Name;
-        private RedisSocket m_Socket;
-        private EndPoint m_EndPoint;
-        private RedisSettings m_Settings;
+        protected RedisSocket m_Socket;
+        protected EndPoint m_EndPoint;
+        protected RedisSettings m_Settings;
 
-        private long m_LastError; // (long)SocketError.Success == 0;
-        private long m_State; // (long)RedisConnectionState.Idle == 0;
+        private long m_LastError = (long)SocketError.Success;
+        private long m_State = (long)RedisConnectionState.Idle;
+
+        private string m_Name;
         private Action<RedisConnection, RedisSocket> m_ReleaseAction;
 
         #endregion Field Members
@@ -138,7 +139,6 @@ namespace Sweet.Redis
 
         #region Member Methods
 
-
         public override void ValidateNotDisposed()
         {
             if (Disposed)
@@ -208,12 +208,12 @@ namespace Sweet.Redis
             return socket;
         }
 
-        internal long SetState(long state)
+        protected long SetState(long state)
         {
             return Interlocked.Exchange(ref m_State, state);
         }
 
-        internal long SetLastError(long error)
+        protected long SetLastError(long error)
         {
             return Interlocked.Exchange(ref m_LastError, error);
         }
