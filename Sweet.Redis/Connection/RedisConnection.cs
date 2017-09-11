@@ -44,8 +44,8 @@ namespace Sweet.Redis
         private EndPoint m_EndPoint;
         private RedisSettings m_Settings;
 
-        private long m_LastError = (long)SocketError.Success;
-        private long m_State = (long)RedisConnectionState.Idle;
+        private long m_LastError; // (long)SocketError.Success == 0;
+        private long m_State; // (long)RedisConnectionState.Idle == 0;
         private Action<RedisConnection, RedisSocket> m_ReleaseAction;
 
         #endregion Field Members

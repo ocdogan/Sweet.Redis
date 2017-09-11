@@ -26,17 +26,35 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisConnection : IDisposable
+    internal class RedisPubSubConnection : RedisConnection, IRedisPubSubConnection
     {
-        bool Connected { get; }
-        bool Disposed { get; }
-        long LastError { get; }
-        string Name { get; }
-        RedisSettings Settings { get; }
-        RedisConnectionState State { get; }
+        #region .Ctors
 
-        void Send(byte[] data);
-        void Send(IRedisCommand cmd);
+        internal RedisPubSubConnection(string name, Action<RedisConnection,
+            RedisSocket> releaseAction, bool connectImmediately = false)
+            : this(name, new RedisSettings(), releaseAction, connectImmediately)
+        { }
+
+        internal RedisPubSubConnection(string name, RedisSettings settings,
+            Action<RedisConnection, RedisSocket> releaseAction,
+            bool connectImmediately = true)
+            : base(name, settings, releaseAction, null, connectImmediately)
+        { }
+
+        #endregion .Ctors
+
+        #region Methods
+
+        public void BeginReceive()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EndReceive()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion Methods
     }
 }
-

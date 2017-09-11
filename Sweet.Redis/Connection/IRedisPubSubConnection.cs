@@ -26,17 +26,9 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisConnection : IDisposable
+    public interface IRedisPubSubConnection : IRedisConnection
     {
-        bool Connected { get; }
-        bool Disposed { get; }
-        long LastError { get; }
-        string Name { get; }
-        RedisSettings Settings { get; }
-        RedisConnectionState State { get; }
-
-        void Send(byte[] data);
-        void Send(IRedisCommand cmd);
+        void BeginReceive();
+        void EndReceive();
     }
 }
-

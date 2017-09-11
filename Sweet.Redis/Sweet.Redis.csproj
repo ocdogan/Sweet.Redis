@@ -105,6 +105,8 @@
     <Compile Include="Connection\RedisPubSubType.cs" />
     <Compile Include="Connection\RedisConnection.cs" />
     <Compile Include="Connection\IRedisConnection.cs" />
+    <Compile Include="Connection\IRedisPubSubConnection.cs" />
+    <Compile Include="Connection\RedisPubSubConnection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Buffers\" />
