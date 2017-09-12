@@ -40,9 +40,9 @@ namespace Sweet.Redis
         void Write(float val);
         void Write(DateTime val);
         void Write(TimeSpan val);
+        void Write(byte val);
         void Write(string val);
         void Write(byte[] data);
-        void Write(byte val);
         void Write(byte[] data, int index, int length);
     }
 }

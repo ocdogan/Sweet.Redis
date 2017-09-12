@@ -155,9 +155,9 @@ namespace Sweet.Redis
         bool PSetEx(string key, long milliseconds, byte[] value);
 
         bool Set(string key, byte[] value);
-        bool Set(string key, byte[] value, int expirySeconds, long expiryMilliseconds = 0L);
+        bool Set(string key, byte[] value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
         bool Set(string key, string value);
-        bool Set(string key, string value, int expirySeconds, long expiryMilliseconds = 0L);
+        bool Set(string key, string value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
         long SetBit(string key, int offset, int value);
         bool SetEx(string key, int seconds, byte[] value);
         bool SetEx(string key, int seconds, string value);

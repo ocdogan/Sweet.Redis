@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
@@ -76,7 +77,43 @@ namespace Sweet.Redis
             return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
         }
 
+        internal static bool IsConnected(this RedisSocket socket, int poll = -1)
+        {
+            if (socket == null || !socket.Connected)
+                return false;
+            return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+        }
+
         internal static void DisposeSocket(this Socket socket)
+        {
+            if (socket != null && socket.IsBound)
+            {
+                if (!socket.Connected)
+                {
+                    try
+                    {
+                        socket.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+                else
+                {
+                    socket.DisconnectAsync(false).ContinueWith(_ =>
+                    {
+                        try
+                        {
+                            if (socket != null)
+                                socket.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    });
+                }
+            }
+        }
+
+        internal static void DisposeSocket(this RedisSocket socket)
         {
             if (socket != null && socket.IsBound)
             {
@@ -254,6 +291,26 @@ namespace Sweet.Redis
                 if (length > 0)
                 {
                     for (var i = 0; i < length; i++)
+                    {
+                        var str = strings[i];
+                        result[i] = str != null ? str.ToBytes() : null;
+                    }
+                }
+                return result;
+            }
+            return null;
+        }
+
+        internal static byte[][] ToBytesArray(this IList<string> strings)
+        {
+            if (strings != null)
+            {
+                var count = strings.Count;
+
+                var result = new byte[count][];
+                if (count > 0)
+                {
+                    for (var i = 0; i < count; i++)
                     {
                         var str = strings[i];
                         result[i] = str != null ? str.ToBytes() : null;

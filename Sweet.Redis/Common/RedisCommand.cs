@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -689,7 +690,7 @@ namespace Sweet.Redis
                 }
             }
         }
-
+       
         public void WriteTo(Stream stream)
         {
             if (stream == null)
@@ -698,7 +699,7 @@ namespace Sweet.Redis
             if (!stream.CanWrite)
                 throw new ArgumentException("Can not write to closed stream", "stream");
 
-            using (var writer = new RedisStreamWriter(stream))
+            using (var writer = new RedisStreamWriter(stream, true))
             {
                 WriteTo(writer);
                 stream.Flush();
@@ -711,6 +712,38 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("socket");
 
             WriteTo(socket.GetWriteStream());
+        }
+
+        public Task WriteToAsync(Stream stream)
+        {
+            if (stream == null)
+                throw new ArgumentNullException("stream");
+
+            if (!stream.CanWrite)
+                throw new ArgumentException("Can not write to closed stream", "stream");
+
+            Action action = () =>
+            {
+                using (var writer = new RedisStreamWriter(stream, true))
+                {
+                    WriteTo(writer);
+                    stream.Flush();
+                }
+            };
+            return action.InvokeAsync();
+        }
+
+        public Task WriteToAsync(RedisSocket socket)
+        {
+            if (socket == null)
+                throw new ArgumentNullException("socket");
+
+            Action<Stream> action = (stream) =>
+            {
+                if (stream != null)
+                    WriteTo(stream);
+            };
+            return action.InvokeAsync(socket.GetWriteStream());
         }
 
         #endregion Methods

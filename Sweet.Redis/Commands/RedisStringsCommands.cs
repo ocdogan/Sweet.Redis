@@ -234,7 +234,7 @@ namespace Sweet.Redis
             if (expirySeconds > 0)
                 return ExpectOK(RedisCommands.Set, key.ToBytes(), value, RedisCommands.EX, expirySeconds.ToBytes());
 
-            if (expiryMilliseconds > 0L)
+            if (expiryMilliseconds > RedisConstants.Zero)
                 return ExpectOK(RedisCommands.Set, key.ToBytes(), value, RedisCommands.PX, expiryMilliseconds.ToBytes());
 
             return ExpectOK(RedisCommands.Set, key.ToBytes(), value);

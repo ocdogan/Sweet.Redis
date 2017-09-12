@@ -42,11 +42,20 @@ namespace Sweet.Redis
 
         public static readonly byte[] Nil = "nil".ToBytes();
 
-        public static readonly byte[] Zero = "0".ToBytes();
+        public static readonly byte[] ZeroBytes = "0".ToBytes();
+
+        public static readonly string OK = "OK";
 
         #endregion Static Members
 
         #region Constants
+
+        public const long Zero = 0L;
+        public const long One = 1L;
+        public const long MinusOne = -1L;
+
+        public const long True = 1L;
+        public const long False = 0L;
 
         public const int ReadBufferSize = 16 * 1024;
         public const int WriteBufferSize = 2 * 1024;

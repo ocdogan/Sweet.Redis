@@ -21,7 +21,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region PubSub Tests
 
-        static void PubSubTest2()
+        static void PubSubTest3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
@@ -30,6 +30,28 @@ namespace Sweet.Redis.ConsoleTest
                 {
                     return;
                 }, "abc", "xyz");
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue, ESC to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        static void PubSubTest2()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.PubSubChannel.Subscribe((m) =>
+                {
+                    return;
+                }, "abc");
+
+                /* pool.PubSubChannel.Subscribe((m) =>
+                {
+                    return;
+                }, "xyz"); */
 
                 Console.WriteLine();
                 Console.WriteLine("Press any key to continue, ESC to escape ...");

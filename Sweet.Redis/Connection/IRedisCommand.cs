@@ -23,6 +23,7 @@
 #endregion License
 
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -30,5 +31,8 @@ namespace Sweet.Redis
     {
         void WriteTo(Stream stream);
         void WriteTo(RedisSocket socket);
+
+        Task WriteToAsync(Stream stream);
+        Task WriteToAsync(RedisSocket socket);
     }
 }

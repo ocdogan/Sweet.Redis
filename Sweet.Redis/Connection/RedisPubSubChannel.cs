@@ -96,6 +96,34 @@ namespace Sweet.Redis
                 return false;
             }
 
+            public bool HasCallbacks(string channel)
+            {
+                if (!String.IsNullOrEmpty(channel))
+                {
+                    ActionBag callbacks;
+                    lock (m_SyncObj)
+                    {
+                        if (m_Subscriptions.TryGetValue(channel, out callbacks))
+                            return (callbacks != null && callbacks.Count > 0);
+                    }
+                }
+                return false;
+            }
+
+            public bool IsEmpty()
+            {
+                lock (m_SyncObj)
+                {
+                    foreach (var kvp in m_Subscriptions)
+                    {
+                        var callbacks = kvp.Value;
+                        if (callbacks != null && callbacks.Count > 0)
+                            return false;
+                    }
+                }
+                return true;
+            }
+
             public bool Register(string channel, Action<RedisPubSubMessage> callback)
             {
                 if (String.IsNullOrEmpty(channel))
@@ -135,39 +163,73 @@ namespace Sweet.Redis
                 return result;
             }
 
-            public bool Unregister(string channel, Action<RedisPubSubMessage> callback)
+            public bool Unregister(string channel)
             {
-                if (String.IsNullOrEmpty(channel))
-                    return false;
-
-                var result = false;
-
-                ActionBag callbacks;
-                lock (m_SyncObj)
+                if (!String.IsNullOrEmpty(channel))
                 {
-                    if (!m_Subscriptions.TryGetValue(channel, out callbacks))
-                    {
-                        callbacks = new ActionBag();
-                        callbacks.Add(callback);
-                        result = true;
-                    }
-                }
-
-                if (!result)
-                {
-                    var minfo = callback.Method;
-
                     lock (m_SyncObj)
                     {
-                        var index = callbacks.FindIndex(c => c.Method == minfo);
-                        if (index > -1)
+                        ActionBag callbacks;
+                        if (m_Subscriptions.TryGetValue(channel, out callbacks))
                         {
-                            callbacks.RemoveAt(index);
-                            result = true;
+                            m_Subscriptions.Remove(channel);
+                            if (callbacks != null && callbacks.Count > 0)
+                                callbacks.Clear();
                         }
                     }
                 }
+                return false;
+            }
 
+            public bool Unregister(string channel, Action<RedisPubSubMessage> callback)
+            {
+                if (callback != null && !String.IsNullOrEmpty(channel))
+                {
+                    lock (m_SyncObj)
+                    {
+                        ActionBag callbacks;
+                        if (m_Subscriptions.TryGetValue(channel, out callbacks) &&
+                            callbacks != null && callbacks.Count > 0)
+                        {
+                            var minfo = callback.Method;
+
+                            var index = callbacks.FindIndex(c => c.Method == minfo);
+                            if (index > -1)
+                            {
+                                callbacks.RemoveAt(index);
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            public bool Unregister(Action<RedisPubSubMessage> callback)
+            {
+                if (callback == null)
+                    return false;
+
+                var result = false;
+                var minfo = callback.Method;
+
+                lock (m_SyncObj)
+                {
+                    foreach (var kvp in m_Subscriptions)
+                    {
+                        var callbacks = kvp.Value;
+                        var count = callbacks.Count;
+                        
+                        for (var i = count - 1; i > -1; i--)
+                        {
+                            if (callbacks[i].Method == minfo)
+                            {
+                                callbacks.RemoveAt(i);
+                                result = true;
+                            }
+                        }
+                    }
+                }
                 return result;
             }
 
@@ -280,7 +342,7 @@ namespace Sweet.Redis
 
         private bool SetDisposed()
         {
-            return Interlocked.Exchange(ref m_Disposed, 1L) != 0L;
+            return Interlocked.Exchange(ref m_Disposed, RedisConstants.True) != RedisConstants.False;
         }
 
         private void ValidateNotDisposed()
@@ -318,12 +380,17 @@ namespace Sweet.Redis
 
                     try
                     {
-                        connection = new RedisConnection(m_Pool.Name, m_Pool.Settings, (c, s) =>
-                        {
-                            var conn2 = Interlocked.CompareExchange(ref m_Connection, null, c);
-                            if (conn2 != null)
-                                conn2.Dispose();
-                        }, null, true);
+                        connection = new RedisConnection(m_Pool.Name, m_Pool.Settings, 
+                            (disposedConnection, releasedSocket) =>
+                            {
+                                var innerConnection = Interlocked.CompareExchange(ref m_Connection, null, disposedConnection);
+                                if (innerConnection != null)
+                                    innerConnection.Dispose();
+                            }, null, true);
+
+                        var prevConnection = Interlocked.Exchange(ref m_Connection, connection);
+                        if (prevConnection != null && prevConnection != m_Connection)
+                            prevConnection.Dispose();
 
                         break;
                     }
@@ -350,58 +417,48 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            var newPatterns = new List<string>();
+            var newItems = new List<byte[]>();
 
             if (!m_PSubscriptions.Exists(pattern))
             {
-                newPatterns.Add(pattern);
+                newItems.Add(pattern.ToBytes());
                 m_PendingPSubscriptions.Register(pattern, callback);
             }
 
             foreach (var ptrn in patterns)
+            {
                 if (!m_PSubscriptions.Exists(ptrn, callback))
                 {
-                    newPatterns.Add(ptrn);
+                    newItems.Add(ptrn.ToBytes());
                     m_PendingPSubscriptions.Register(ptrn, callback);
                 }
+            }
 
-            if (newPatterns.Count > 0)
+            if (newItems.Count > 0)
+                SendAsync(RedisCommands.PSubscribe, newItems.ToArray());
+        }
+
+        private void SendAsync(byte[] cmd, params byte[][] parameters)
+        {
+            Action action = () =>
             {
                 var connection = Connect();
-                if (connection != null)
+                if (connection != null && connection.Connected)
                 {
-                    Send(connection, RedisCommands.PSubscribe,
-                         newPatterns.ToArray().ToBytesArray());
+                    var pubSubCmd = new RedisCommand(0, cmd, parameters);
+                    connection.SendAsync(pubSubCmd)
+                        .ContinueWith(t => pubSubCmd.Dispose());
                 }
-            }
-        }
-
-        private long[] ToSubscriptionResult(RedisObject response)
-        {
-            if (response != null && response.Type == RedisObjectType.Array)
-            {
-                var items = response.Items;
-                if (items != null && items.Count == 4)
-                {
-                    var last = items[3];
-                    /* if (last != null && last.Type == RedisObjectType.Integer)
-                        return (long)last.Data; */
-                }
-            }
-            return new long[0];
-        }
-
-        private static void Send(IRedisConnection connection, byte[] cmd, params byte[][] parameters)
-        {
-            using (var rcmd = new RedisCommand(0, cmd, parameters))
-            {
-                connection.Send(cmd);
-            }
+            };
+            action.InvokeAsync();
         }
 
         public void PUnscribe(params string[] patterns)
         {
-            throw new NotImplementedException();
+            if (patterns.Length == 0)
+                SendAsync(RedisCommands.PUnsubscribe);
+            else
+                SendAsync(RedisCommands.PUnsubscribe, patterns.ToBytesArray());
         }
 
         public void Subscribe(Action<RedisPubSubMessage> callback, string channel, params string[] channels)
@@ -414,40 +471,43 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            var newChannels = new List<string>();
+            var newItems = new List<byte[]>();
 
             if (!m_Subscriptions.Exists(channel))
             {
-                newChannels.Add(channel);
+                newItems.Add(channel.ToBytes());
                 m_PendingSubscriptions.Register(channel, callback);
             }
 
             foreach (var ptrn in channels)
+            {
                 if (!m_Subscriptions.Exists(ptrn, callback))
                 {
-                    newChannels.Add(ptrn);
+                    newItems.Add(ptrn.ToBytes());
                     m_PendingSubscriptions.Register(ptrn, callback);
                 }
-
-            if (newChannels.Count > 0)
-            {
-                var connection = Connect();
-                if (connection != null)
-                {
-                    Send(connection, RedisCommands.Subscribe,
-                         newChannels.ToArray().ToBytesArray());
-                }
             }
+
+            if (newItems.Count > 0)
+                SendAsync(RedisCommands.Subscribe, newItems.ToArray());
         }
 
-
-        public void Unsubscribe(string channel, params string[] channels)
+        public void Unsubscribe(params string[] channels)
         {
-
+            if (channels.Length == 0)
+                SendAsync(RedisCommands.Unsubscribe);
+            else
+                SendAsync(RedisCommands.Unsubscribe, channels.ToBytesArray());
         }
 
-        public void UnregisterFromPSubscribe(Action<RedisPubSubMessage> callback)
+        public void UnregisterPSubscribe(Action<RedisPubSubMessage> callback)
         {
+            m_PSubscriptions.Unregister(callback);
+        }
+
+        public void UnregisterPSubscribe(string channel, Action<RedisPubSubMessage> callback)
+        {
+            m_PSubscriptions.Unregister(channel, callback);
         }
 
         #endregion Methods

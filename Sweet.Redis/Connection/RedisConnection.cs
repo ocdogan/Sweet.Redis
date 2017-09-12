@@ -26,6 +26,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -161,6 +162,18 @@ namespace Sweet.Redis
             return ConnectInternal();
         }
 
+        internal Task<RedisSocket> ConnectAsync()
+        {
+            Func<RedisSocket> f = () =>
+            {
+                return ConnectInternal();
+            };
+            return f.InvokeAsync();
+        }
+
+        protected virtual void OnConnect(RedisSocket socket)
+        { }
+
         protected RedisSocket ConnectInternal()
         {
             var socket = m_Socket;
@@ -187,13 +200,20 @@ namespace Sweet.Redis
                     if (ipAddress == null)
                         throw new RedisException("Can not resolce host address");
 
-                    socket.ConnectAsync(ipAddress, m_Settings.Port).Wait();
+                    socket.ConnectAsync(ipAddress, m_Settings.Port)
+                        .ContinueWith(ca => {
+                            if (ca.IsCompleted)
+                            {
+                                SetState((long)RedisConnectionState.Connected);
 
-                    SetState((long)RedisConnectionState.Connected);
+                                var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
+                                if (prevSocket != socket)
+                                    prevSocket.DisposeSocket();
+                            }
+                        }).Wait();
 
-                    var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
-                    if (prevSocket != socket)
-                        prevSocket.DisposeSocket();
+                    if (socket.IsConnected())
+                        OnConnect(socket);
                 }
             }
             catch (Exception)
@@ -294,6 +314,39 @@ namespace Sweet.Redis
             }
 
             cmd.WriteTo(socket);
+        }
+
+        public Task SendAsync(byte[] data)
+        {
+            ValidateNotDisposed();
+
+            var socket = Connect();
+            if (socket == null)
+            {
+                SetLastError((long)SocketError.NotConnected);
+                SetState((long)RedisConnectionState.Failed);
+
+                throw new SocketException((int)SocketError.NotConnected);
+            }
+            return socket.SendAsync(data, 0, data.Length);
+        }
+
+        public Task SendAsync(IRedisCommand cmd)
+        {
+            if (cmd == null)
+                throw new ArgumentNullException("cmd");
+
+            ValidateNotDisposed();
+
+            var socket = Connect();
+            if (socket == null)
+            {
+                SetLastError((long)SocketError.NotConnected);
+                SetState((long)RedisConnectionState.Failed);
+
+                throw new SocketException((int)SocketError.NotConnected);
+            }
+            return cmd.WriteToAsync(socket);
         }
 
         #endregion Member Methods

@@ -44,7 +44,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.BGRewriteAOF))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -53,7 +53,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.BGSave))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -164,7 +164,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Pause, timeout.ToBytes()))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -173,7 +173,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.Off))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -182,7 +182,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.On))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -191,7 +191,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -203,7 +203,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.SetName, connectionName.ToBytes()))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -240,7 +240,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.ResetStat))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -249,7 +249,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.Rewrite))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -269,7 +269,7 @@ namespace Sweet.Redis
 
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.Set, parameter.ToBytes(), bytes))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -287,7 +287,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushAll))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -296,7 +296,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushAll, RedisCommands.Async))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -305,7 +305,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushDb))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -314,7 +314,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushDb, RedisCommands.Async))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -344,7 +344,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Save))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -377,7 +377,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.SlaveOf, host.ToBytes(), port.ToBytes()))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 
@@ -386,7 +386,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.SlaveOf, RedisCommands.NoOne))
             {
-                return cmd.ExpectSimpleString(Db.Pool, "OK", true);
+                return cmd.ExpectSimpleString(Db.Pool, RedisConstants.OK, true);
             }
         }
 

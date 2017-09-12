@@ -35,18 +35,20 @@ namespace Sweet.Redis
 
         private Stream m_Stream;
         private bool m_OwnsStream;
+        private bool m_UseAsyncIfNeeded;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisStreamWriter(Stream stream, bool ownsStream = false)
+        public RedisStreamWriter(Stream stream, bool useAsyncIfNeeded = true, bool ownsStream = false)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream");
 
             m_Stream = stream;
             m_OwnsStream = ownsStream;
+            m_UseAsyncIfNeeded = useAsyncIfNeeded;
         }
 
         #endregion .Ctors
@@ -61,6 +63,15 @@ namespace Sweet.Redis
         }
 
         #endregion Destructors
+
+        #region Properties
+
+        public bool UseAsyncIfNeeded
+        {
+            get { return m_UseAsyncIfNeeded; }
+        }
+
+        #endregion Properties
 
         #region Methods
 
@@ -124,6 +135,12 @@ namespace Sweet.Redis
             Write(Encoding.UTF8.GetBytes(val.Ticks.ToString(RedisConstants.InvariantCulture)));
         }
 
+        public void Write(byte val)
+        {
+            ValidateNotDisposed();
+            m_Stream.Write(new byte[] { val }, 0, 1);
+        }
+
         public void Write(string val)
         {
             if (!String.IsNullOrEmpty(val))
@@ -140,12 +157,6 @@ namespace Sweet.Redis
                 else if (dataLength > 0)
                     Write(data, 0, data.Length);
             }
-        }
-
-        public void Write(byte val)
-        {
-            ValidateNotDisposed();
-            m_Stream.Write(new byte[] { val }, 0, 1);
         }
 
         public void Write(byte[] data, int index, int length)
@@ -166,10 +177,10 @@ namespace Sweet.Redis
                     if (index + length > dataLength)
                         throw new ArgumentException("Length can not exceed data size", "length");
 
-                    if (dataLength < 512)
-                        m_Stream.Write(data, index, length);
-                    else
+                    if (m_UseAsyncIfNeeded && (dataLength > 512))
                         m_Stream.WriteAsync(data, index, length).Wait();
+                    else
+                        m_Stream.Write(data, index, length);
                 }
             }
         }

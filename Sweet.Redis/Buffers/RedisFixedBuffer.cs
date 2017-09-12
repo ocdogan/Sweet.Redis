@@ -30,6 +30,12 @@ namespace Sweet.Redis
 {
     public class RedisFixedBuffer : RedisDisposable
     {
+        #region Constants
+
+        private const long Beginning = RedisConstants.Zero;
+
+        #endregion Constants
+
         #region Field Members
 
         private byte[] m_Data;
@@ -183,7 +189,7 @@ namespace Sweet.Redis
 
             GetBuffer()[Position] = val;
 
-            Interlocked.Add(ref m_Position, 1L);
+            Interlocked.Add(ref m_Position, RedisConstants.One);
         }
 
         private byte[] GetBuffer()
@@ -196,7 +202,7 @@ namespace Sweet.Redis
 
                 Interlocked.Exchange(ref m_Data, buffer);
 
-                Interlocked.Exchange(ref m_Position, 0L);
+                Interlocked.Exchange(ref m_Position, Beginning);
                 Interlocked.Exchange(ref m_Length, capacity);
             }
             return buffer;
@@ -242,8 +248,8 @@ namespace Sweet.Redis
 
         private void ClearInternal()
         {
-            Interlocked.Exchange(ref m_Length, 0L);
-            Interlocked.Exchange(ref m_Position, 0L);
+            Interlocked.Exchange(ref m_Length, Beginning);
+            Interlocked.Exchange(ref m_Position, Beginning);
 
             Interlocked.Exchange(ref m_Data, null);
         }
@@ -253,7 +259,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             data = m_Data;
-            var pos = (int)Interlocked.Exchange(ref m_Position, 0L);
+            var pos = (int)Interlocked.Exchange(ref m_Position, Beginning);
 
             if (reinit)
             {
@@ -264,7 +270,7 @@ namespace Sweet.Redis
             }
             else
             {
-                Interlocked.Exchange(ref m_Length, 0L);
+                Interlocked.Exchange(ref m_Length, Beginning);
                 Interlocked.Exchange(ref m_Data, null);
             }
 

@@ -119,8 +119,8 @@ namespace Sweet.Redis
                             var nameItem = items[i++];
                             var countItem = items[i++];
 
-                            var count = 0L;
                             var name = String.Empty;
+                            var count = RedisConstants.Zero;
 
                             if (nameItem != null &&
                                 (nameItem.Type == RedisObjectType.BulkString ||

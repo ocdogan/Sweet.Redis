@@ -129,7 +129,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
             {
-                return rcmd.ExpectInteger(Db.Pool, Db.ThrowOnError) > 0L;
+                return rcmd.ExpectInteger(Db.Pool, Db.ThrowOnError) > RedisConstants.Zero;
             }
         }
 
@@ -179,7 +179,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
             {
-                return rcmd.ExpectInteger(Db.Pool, Db.ThrowOnError) == 1L;
+                return rcmd.ExpectInteger(Db.Pool, Db.ThrowOnError) == RedisConstants.One;
             }
         }
 

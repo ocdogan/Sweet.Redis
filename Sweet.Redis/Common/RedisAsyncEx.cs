@@ -216,6 +216,164 @@ namespace Sweet.Redis
 
         #endregion Socket
 
+        #region RedisSocket
+
+        public static Task ConnectAsync(this RedisSocket socket, IPEndPoint endPoint)
+        {
+            var tcs = new TaskCompletionSource<object>(socket);
+
+            socket.BeginConnect(endPoint, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task ConnectAsync(this RedisSocket socket, EndPoint remoteEP)
+        {
+            var tcs = new TaskCompletionSource<bool>(socket);
+            socket.BeginConnect(remoteEP, iar =>
+            {
+                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                try
+                {
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    innerTcs.TrySetResult(true);
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task ConnectAsync(this RedisSocket socket, IPAddress address, int port)
+        {
+            var tcs = new TaskCompletionSource<bool>(socket);
+            socket.BeginConnect(address, port, iar =>
+            {
+                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                try
+                {
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    innerTcs.TrySetResult(true);
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task ConnectAsync(this RedisSocket socket, IPAddress[] addresses, int port)
+        {
+            var tcs = new TaskCompletionSource<bool>(socket);
+            socket.BeginConnect(addresses, port, iar =>
+            {
+                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                try
+                {
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    innerTcs.TrySetResult(true);
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task ConnectAsync(this RedisSocket socket, string host, int port)
+        {
+            var tcs = new TaskCompletionSource<bool>(socket);
+            socket.BeginConnect(host, port, iar =>
+            {
+                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                try
+                {
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    innerTcs.TrySetResult(true);
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task DisconnectAsync(this RedisSocket socket, bool reuseSocket = false)
+        {
+            var tcs = new TaskCompletionSource<object>(socket);
+
+            socket.BeginDisconnect(reuseSocket, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndDisconnect(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<int> SendAsync(this RedisSocket socket, byte[] data, int offset, int count, SocketFlags socketFlags = SocketFlags.None)
+        {
+            var tcs = new TaskCompletionSource<int>(socket);
+
+            socket.BeginSend(data, offset, count, socketFlags, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                try
+                {
+                    innerTcs.TrySetResult(((RedisSocket)innerTcs.Task.AsyncState).EndSend(ar));
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<int> ReceiveAsync(this RedisSocket socket, byte[] data, int offset, int count, SocketFlags socketFlags = SocketFlags.None)
+        {
+            var tcs = new TaskCompletionSource<int>(socket);
+
+            socket.BeginReceive(data, offset, count, socketFlags, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                try
+                {
+                    innerTcs.TrySetResult(((RedisSocket)innerTcs.Task.AsyncState).EndReceive(ar));
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        #endregion RedisSocket
+
         #region Stream
 
         public static Task<bool> WriteAsync(this Stream stream, byte[] data, int offset, int count)
@@ -258,6 +416,330 @@ namespace Sweet.Redis
         }
 
         #endregion Stream
+
+        #region Generic
+
+        public static Task InvokeAsync(this Action action)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T>(this Action<T> action, T arg1)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T1, T2>(this Action<T1, T2> action, T1 arg1, T2 arg2)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, arg2, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T1, T2, T3>(this Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, arg2, arg3, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T1, T2, T3, T4, T5, T6>(this Action<T1, T2, T3, T4, T5, T6> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task InvokeAsync<T1, T2, T3, T4, T5, T6, T7>(this Action<T1, T2, T3, T4, T5, T6, T7> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
+        {
+            var tcs = new TaskCompletionSource<object>(null);
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                try
+                {
+                    action.EndInvoke(ar);
+                    innerTcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<T> InvokeAsync<T>(this Func<T> action)
+        {
+            var tcs = new TaskCompletionSource<T>(default(T));
+
+            action.BeginInvoke(ar =>
+            {
+                var innerTcs = (TaskCompletionSource<T>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T, K>(this Func<T, K> action, T arg1)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T1, T2, K>(this Func<T1, T2, K> action, T1 arg1, T2 arg2)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, arg2, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T1, T2, T3, K>(this Func<T1, T2, T3, K> action, T1 arg1, T2 arg2, T3 arg3)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, arg2, arg3, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T1, T2, T3, T4, K>(this Func<T1, T2, T3, T4, K> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T1, T2, T3, T4, T5, K>(this Func<T1, T2, T3, T4, T5, K> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T1, T2, T3, T4, T5, T6, K>(this Func<T1, T2, T3, T4, T5, T6, K> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<K> InvokeAsync<T1, T2, T3, T4, T5, T6, T7, K>(this Func<T1, T2, T3, T4, T5, T6, T7, K> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7)
+        {
+            var tcs = new TaskCompletionSource<K>(default(K));
+
+            action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar =>
+            {
+                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                try
+                {
+                    var result = action.EndInvoke(ar);
+                    innerTcs.TrySetResult(result);
+                }
+                catch (Exception ex)
+                {
+                    innerTcs.TrySetException(ex);
+                }
+            }, tcs);
+            return tcs.Task;
+        }
+
+        #endregion Generic
 
         #endregion Methods
     }

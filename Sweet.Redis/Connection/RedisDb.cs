@@ -253,7 +253,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(m_Db, RedisCommands.Select, db.ToBytes()))
             {
-                return cmd.ExpectSimpleString(m_Pool, "OK", throwException);
+                return cmd.ExpectSimpleString(m_Pool, RedisConstants.OK, throwException);
             }
         }
 
@@ -265,7 +265,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(m_Db, RedisCommands.Auth, password.ToBytes()))
             {
-                return cmd.ExpectSimpleString(m_Pool, "OK", true);
+                return cmd.ExpectSimpleString(m_Pool, RedisConstants.OK, true);
             }
         }
 

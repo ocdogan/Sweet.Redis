@@ -321,7 +321,7 @@ namespace Sweet.Redis
 
         private IRedisDbConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
-            var conn = new RedisDbConnection(this.Name, m_Settings, Release, db,
+            var conn = new RedisDbConnection(this.Name, m_Settings, this.Release, db,
                                            socket.IsConnected() ? socket : null, connectImmediately);
 
             Interlocked.Increment(ref m_InitCount);

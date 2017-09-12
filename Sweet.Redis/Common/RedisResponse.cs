@@ -86,7 +86,7 @@ namespace Sweet.Redis
             internal set
             {
                 m_Data = value;
-                Interlocked.Exchange(ref m_HasData, 1L);
+                Interlocked.Exchange(ref m_HasData, RedisConstants.True);
 
                 if (m_Type.HasValue && m_Type != RedisObjectType.Array)
                     Ready = true;
@@ -109,7 +109,7 @@ namespace Sweet.Redis
         {
             get
             {
-                if (Interlocked.Read(ref m_HasData) == 1L)
+                if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
                     return true;
 
                 if (!m_Type.HasValue || m_Type == RedisObjectType.Array)
@@ -118,7 +118,7 @@ namespace Sweet.Redis
                 var data = m_Data;
                 var result = (data != null) && data.Length > 0;
                 if (result)
-                    Interlocked.Exchange(ref m_HasData, 1L);
+                    Interlocked.Exchange(ref m_HasData, RedisConstants.True);
 
                 return result;
             }
@@ -168,10 +168,10 @@ namespace Sweet.Redis
 
         public bool Ready
         {
-            get { return Interlocked.Read(ref m_Ready) != 0L; }
+            get { return Interlocked.Read(ref m_Ready) != RedisConstants.False; }
             internal set
             {
-                Interlocked.Exchange(ref m_Ready, value ? 1L : 0L);
+                Interlocked.Exchange(ref m_Ready, value ? RedisConstants.True : RedisConstants.False);
             }
         }
 
@@ -188,7 +188,7 @@ namespace Sweet.Redis
                     if (value == RedisObjectType.Array)
                         NewArrayList();
 
-                    if (Interlocked.Read(ref m_HasData) == 1L)
+                    if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
                         Ready = true;
                 }
             }

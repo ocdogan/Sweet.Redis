@@ -42,7 +42,7 @@ namespace Sweet.Redis
         {
             var argsLength = args.Length;
             if (argsLength == 0)
-                return ExpectArray(cmd, source.ToBytes(), RedisConstants.Zero);
+                return ExpectArray(cmd, source.ToBytes(), RedisConstants.ZeroBytes);
 
             var parameters = new byte[2 * (1 + argsLength)][];
 
@@ -62,7 +62,7 @@ namespace Sweet.Redis
         {
             var argsLength = args.Length;
             if (argsLength == 0)
-                return ExpectArray(cmd, source.ToBytes(), RedisConstants.Zero);
+                return ExpectArray(cmd, source.ToBytes(), RedisConstants.ZeroBytes);
 
             var parameters = new byte[2 * (1 + argsLength)][];
 
@@ -111,7 +111,7 @@ namespace Sweet.Redis
                 return Eval(RedisCommands.EvalSha, sha1, args);
 
             var response = ScriptExists(sha1);
-            var exists = (response != null && response.Length > 0) ? response[0] == 1L : false;
+            var exists = (response != null && response.Length > 0) ? response[0] == RedisConstants.One : false;
 
             if (!exists)
                 sha1 = ScriptLoad(script);
@@ -154,7 +154,7 @@ namespace Sweet.Redis
                 return Eval(RedisCommands.EvalSha, sha1, args);
 
             var response = ScriptExists(sha1);
-            var exists = (response != null && response.Length > 0) ? response[0] == 1L : false;
+            var exists = (response != null && response.Length > 0) ? response[0] == RedisConstants.One : false;
 
             if (!exists)
                 sha1 = ScriptLoad(script);

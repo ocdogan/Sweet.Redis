@@ -76,7 +76,7 @@ namespace Sweet.Redis
 
         protected virtual bool SetDisposed()
         {
-            return Interlocked.Exchange(ref m_Disposed, 1L) != 0L;
+            return Interlocked.Exchange(ref m_Disposed, RedisConstants.True) != RedisConstants.False;
         }
 
         public virtual void ValidateNotDisposed()

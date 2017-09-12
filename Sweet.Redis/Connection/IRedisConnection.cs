@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -37,6 +38,9 @@ namespace Sweet.Redis
 
         void Send(byte[] data);
         void Send(IRedisCommand cmd);
+
+        Task SendAsync(byte[] data);
+        Task SendAsync(IRedisCommand cmd);
     }
 }
 

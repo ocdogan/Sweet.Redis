@@ -32,6 +32,8 @@ namespace Sweet.Redis
     {
         #region Constants
 
+        private const long Beginning = RedisConstants.Zero;
+
         private const int PutChunkLimit = 1024;
         private const int MaxChunkLength = 80 * 1024;
 
@@ -152,7 +154,7 @@ namespace Sweet.Redis
                                     chunks.RemoveAt(0);
 
                                     Interlocked.Add(ref m_Length, -chunkLength);
-                                    Interlocked.Exchange(ref m_Position, Math.Max(Interlocked.Read(ref m_Position) - chunkLength, 0L));
+                                    Interlocked.Exchange(ref m_Position, Math.Max(Interlocked.Read(ref m_Position) - chunkLength, Beginning));
                                     length -= chunkLength;
                                 }
                                 else
@@ -165,7 +167,7 @@ namespace Sweet.Redis
                                     chunks[0] = newChunk;
 
                                     Interlocked.Add(ref m_Length, -length);
-                                    Interlocked.Exchange(ref m_Position, Math.Max(Interlocked.Read(ref m_Position) - length, 0L));
+                                    Interlocked.Exchange(ref m_Position, Math.Max(Interlocked.Read(ref m_Position) - length, Beginning));
                                     length = 0;
                                 }
                             }

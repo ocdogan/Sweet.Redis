@@ -34,6 +34,9 @@ namespace Sweet.Redis
     {
         #region Constants
 
+        private const long One = RedisConstants.One;
+        private const long Beginning = RedisConstants.Zero;
+
         private const int MinBufferSize = 512;
         private const int MaxBufferSize = 16 * 1024;
         private const int DefaultBufferSize = 4 * 1024;
@@ -151,6 +154,19 @@ namespace Sweet.Redis
             Write(Encoding.UTF8.GetBytes(val.Ticks.ToString(RedisConstants.InvariantCulture)));
         }
 
+        public void Write(byte val)
+        {
+            ValidateNotDisposed();
+
+            int currPosition;
+            var chunk = GetOutChunk(out currPosition);
+
+            chunk[currPosition] = val;
+
+            Interlocked.Add(ref m_Length, One);
+            Interlocked.Add(ref m_Position, One);
+        }
+
         public void Write(string val)
         {
             if (!String.IsNullOrEmpty(val))
@@ -167,19 +183,6 @@ namespace Sweet.Redis
                 else if (dataLength > 0)
                     Write(data, 0, data.Length);
             }
-        }
-
-        public void Write(byte val)
-        {
-            ValidateNotDisposed();
-
-            int currPosition;
-            var chunk = GetOutChunk(out currPosition);
-
-            chunk[currPosition] = val;
-
-            Interlocked.Add(ref m_Length, 1L);
-            Interlocked.Add(ref m_Position, 1L);
         }
 
         public void Write(byte[] data, int index, int length)
@@ -245,7 +248,7 @@ namespace Sweet.Redis
                 chunks.Add(chunk);
 
                 position = 0;
-                Interlocked.Exchange(ref m_Position, 0L);
+                Interlocked.Exchange(ref m_Position, Beginning);
             }
             return chunk;
         }
@@ -258,8 +261,8 @@ namespace Sweet.Redis
 
         private void ClearInternal()
         {
-            Interlocked.Exchange(ref m_Length, 0L);
-            Interlocked.Exchange(ref m_Position, 0L);
+            Interlocked.Exchange(ref m_Length, Beginning);
+            Interlocked.Exchange(ref m_Position, Beginning);
 
             var chunks = Interlocked.Exchange(ref m_Chunks, null);
             if (chunks != null)
@@ -270,8 +273,8 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var currLength = Interlocked.Exchange(ref m_Length, 0L);
-            var currPosition = Interlocked.Exchange(ref m_Position, 0L);
+            var currLength = Interlocked.Exchange(ref m_Length, Beginning);
+            var currPosition = Interlocked.Exchange(ref m_Position, Beginning);
 
             var chunks = Interlocked.Exchange(ref m_Chunks, null);
             if (chunks == null)
