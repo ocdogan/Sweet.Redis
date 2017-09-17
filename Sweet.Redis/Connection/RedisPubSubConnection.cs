@@ -23,36 +23,113 @@
 #endregion License
 
 using System;
+using System.Threading;
 
 namespace Sweet.Redis
 {
     internal class RedisPubSubConnection : RedisConnection, IRedisPubSubConnection
     {
+        #region Field Members
+
+        private long m_ReceiveState;
+        private RedisContinuousReader m_Reader;
+
+        private Action<RedisConnection, RedisResponse> m_OnReceiveResponse;
+
+        #endregion Field Members
+
         #region .Ctors
 
-        internal RedisPubSubConnection(string name, Action<RedisConnection,
-            RedisSocket> releaseAction, bool connectImmediately = false)
-            : this(name, new RedisSettings(), releaseAction, connectImmediately)
+        internal RedisPubSubConnection(string name, Action<RedisConnection, RedisResponse> onReceiveResponse,
+            Action<RedisConnection, RedisSocket> onReleaseSocket, bool connectImmediately = false)
+            : this(name, new RedisSettings(), onReceiveResponse, onReleaseSocket, connectImmediately)
         { }
 
         internal RedisPubSubConnection(string name, RedisSettings settings,
-            Action<RedisConnection, RedisSocket> releaseAction,
-            bool connectImmediately = true)
-            : base(name, settings, releaseAction, null, connectImmediately)
-        { }
+            Action<RedisConnection, RedisResponse> onReceiveResponse,
+            Action<RedisConnection, RedisSocket> onReleaseSocket, bool connectImmediately = true)
+            : base(name, settings, onReleaseSocket, null, connectImmediately)
+        {
+            m_OnReceiveResponse = onReceiveResponse;
+        }
 
         #endregion .Ctors
 
+        #region Destructor
+
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+
+            Interlocked.Exchange(ref m_OnReceiveResponse, null);
+            Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+
+            var reader = Interlocked.Exchange(ref m_Reader, null);
+            if (reader != null)
+                reader.Dispose();
+        }
+
+        #endregion Destructor
+
+        #region Properties
+
+        public bool Receiving
+        {
+            get { return Interlocked.Read(ref m_ReceiveState) != RedisConstants.Zero; }
+        }
+
+        #endregion Properties
+
         #region Methods
 
-        public void BeginReceive()
+        public bool BeginReceive()
         {
-            throw new NotImplementedException();
+            ValidateNotDisposed();
+
+            var onReceiveResponse = m_OnReceiveResponse;
+            if ((onReceiveResponse != null) &&
+                Interlocked.CompareExchange(ref m_ReceiveState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero)
+            {
+                try
+                {
+                    var reader = new RedisContinuousReader(this);
+
+                    var prevReader = Interlocked.Exchange(ref m_Reader, reader);
+                    if (prevReader != null)
+                        prevReader.Dispose();
+
+                    reader.BeginReceive((sr) =>
+                        {
+                            Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+                        },
+                        (sr, response) =>
+                        {
+                            onReceiveResponse(this, response);
+                        });
+
+                    return true;
+                }
+                catch (Exception)
+                {
+                    Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+                    throw;
+                }
+            }
+            return false;
         }
 
         public void EndReceive()
         {
-            throw new NotImplementedException();
+            ValidateNotDisposed();
+
+            if (Interlocked.Read(ref m_ReceiveState) != RedisConstants.Zero)
+            {
+                var reader = Interlocked.Exchange(ref m_Reader, null);
+                if (reader == null)
+                    Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+                else
+                    reader.Dispose();
+            }
         }
 
         #endregion Methods

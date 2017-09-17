@@ -28,7 +28,7 @@ namespace Sweet.Redis
 {
     public interface IRedisPubSubConnection : IRedisConnection
     {
-        void BeginReceive();
+        bool BeginReceive();
         void EndReceive();
     }
 }

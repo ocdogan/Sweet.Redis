@@ -5,5 +5,7 @@
         Undefined,
         PSubscription,
         Subscription,
+        PMessage,
+        SMessage,
     }
 }

@@ -16,7 +16,8 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingWithArgsEvalTest();
             // ScriptingShaWithArgsEvalTest();
             // PubSubTest1();
-            PubSubTest2();
+            // PubSubTest2();
+            PubSubTest3();
         }
 
         #region PubSub Tests
@@ -28,11 +29,22 @@ namespace Sweet.Redis.ConsoleTest
             {
                 pool.PubSubChannel.Subscribe((m) =>
                 {
-                    return;
+                    Console.WriteLine("Channel: " + m.Channel);
+                    if (m.Type == RedisPubSubType.Subscription)
+                        Console.WriteLine("Subscription count: " + m.Data);
+                    else
+                    {
+                        if (m.Data != null)
+                            Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                        else
+                            Console.WriteLine("Received data: ?");
+                    }
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
                 }, "abc", "xyz");
 
                 Console.WriteLine();
-                Console.WriteLine("Press any key to continue, ESC to escape ...");
+                Console.WriteLine("Press any key to escape ...");
 
                 Console.ReadKey();
             }
@@ -45,16 +57,22 @@ namespace Sweet.Redis.ConsoleTest
             {
                 pool.PubSubChannel.Subscribe((m) =>
                 {
-                    return;
+                    Console.WriteLine("Channel: " + m.Channel);
+                    if (m.Type == RedisPubSubType.Subscription)
+                        Console.WriteLine("Subscription count: " + m.Data);
+                    else
+                    {
+                        if (m.Data != null)
+                            Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                        else
+                            Console.WriteLine("Received data: ?");
+                    }
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
                 }, "abc");
 
-                /* pool.PubSubChannel.Subscribe((m) =>
-                {
-                    return;
-                }, "xyz"); */
-
                 Console.WriteLine();
-                Console.WriteLine("Press any key to continue, ESC to escape ...");
+                Console.WriteLine("Press any key to escape ...");
 
                 Console.ReadKey();
             }

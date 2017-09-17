@@ -44,6 +44,7 @@ namespace Sweet.Redis
 
         private long m_Id;
         private Socket m_Socket;
+        private Action<RedisSocket> m_OnConnect;
         private Action<RedisSocket> m_OnDisconnect;
 
         private NetworkStream m_ReadStream;
@@ -59,17 +60,19 @@ namespace Sweet.Redis
             m_Socket = socket;
         }
 
-        public RedisSocket(SocketInformation socketInformation, Action<RedisSocket> onDisconnect = null)
+        public RedisSocket(SocketInformation socketInformation, Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
             m_Id = NextId();
+            m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
             m_Socket = new RedisNativeSocket(socketInformation);
         }
 
         public RedisSocket(AddressFamily addressFamily, SocketType socketType,
-                           ProtocolType protocolType, Action<RedisSocket> onDisconnect = null)
+                           ProtocolType protocolType, Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
             m_Id = NextId();
+            m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
             m_Socket = new RedisNativeSocket(addressFamily, socketType, protocolType);
         }
@@ -410,116 +413,112 @@ namespace Sweet.Redis
 
         public IAsyncResult BeginAccept(int receiveSize, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginAccept(receiveSize, callback, state);
+            return m_Socket.BeginAccept(receiveSize, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginAccept(RedisSocket acceptSocket, int receiveSize, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginAccept(acceptSocket.m_Socket, receiveSize, callback, state);
+            return m_Socket.BeginAccept(acceptSocket.m_Socket, receiveSize, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginAccept(AsyncCallback callback, object state)
         {
-            return m_Socket.BeginAccept(callback, state);
+            return m_Socket.BeginAccept(callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginConnect(EndPoint end_point, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginConnect(end_point, callback, state);
+            var connState = new Tuple<Socket, bool>(m_Socket,  m_Socket.IsConnected());
+            return m_Socket.BeginConnect(end_point, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginConnect(IPAddress address, int port, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginConnect(address, port, callback, state);
+            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            return m_Socket.BeginConnect(address, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginConnect(IPAddress[] addresses, int port, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginConnect(addresses, port, callback, state);
+            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            return m_Socket.BeginConnect(addresses, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginConnect(string host, int port, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginConnect(host, port, callback, state);
+            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            return m_Socket.BeginConnect(host, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginDisconnect(bool reuseSocket, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginDisconnect(reuseSocket, callback, state);
+            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            return m_Socket.BeginDisconnect(reuseSocket, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginReceive(byte[] buffer, int offset, int size, SocketFlags socket_flags, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginReceive(buffer, offset, size, socket_flags, callback, state);
+            return m_Socket.BeginReceive(buffer, offset, size, socket_flags, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginReceive(byte[] buffer, int offset, int size, SocketFlags flags, out SocketError error, AsyncCallback callback, object state)
         {
-            error = SocketError.Success;
-            return m_Socket.BeginReceive(buffer, offset, size, flags, out error, callback, state);
+            return m_Socket.BeginReceive(buffer, offset, size, flags, out error, callback, new RedisAsyncStateWrapper(state));
         }
 
-        [CLSCompliant(false)]
         public IAsyncResult BeginReceive(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginReceive(buffers, socketFlags, callback, state);
+            return m_Socket.BeginReceive(buffers, socketFlags, callback, new RedisAsyncStateWrapper(state));
         }
 
-        [CLSCompliant(false)]
         public IAsyncResult BeginReceive(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags, out SocketError errorCode, AsyncCallback callback, object state)
         {
-            errorCode = SocketError.Success;
-            return m_Socket.BeginReceive(buffers, socketFlags, out errorCode, callback, state);
+            return m_Socket.BeginReceive(buffers, socketFlags, out errorCode, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginReceiveFrom(byte[] buffer, int offset, int size, SocketFlags socket_flags, ref EndPoint remote_end, AsyncCallback callback, object state)
         {
-
-            return m_Socket.BeginReceiveFrom(buffer, offset, size, socket_flags, ref remote_end, callback, state);
+            return m_Socket.BeginReceiveFrom(buffer, offset, size, socket_flags, ref remote_end, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginReceiveMessageFrom(byte[] buffer, int offset, int size, SocketFlags socketFlags, ref EndPoint remoteEP, AsyncCallback callback, object state)
         {
-
-            return m_Socket.BeginReceiveMessageFrom(buffer, offset, size, socketFlags, ref remoteEP, callback, state);
+            return m_Socket.BeginReceiveMessageFrom(buffer, offset, size, socketFlags, ref remoteEP, callback, new RedisAsyncStateWrapper(state));
         }
 
-        [CLSCompliant(false)]
         public IAsyncResult BeginSend(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags, out SocketError errorCode, AsyncCallback callback, object state)
         {
-            errorCode = SocketError.Success;
-            return m_Socket.BeginSend(buffers, socketFlags, callback, state);
+            return m_Socket.BeginSend(buffers, socketFlags, out errorCode, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginSend(byte[] buffer, int offset, int size, SocketFlags socket_flags, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginSend(buffer, offset, size, socket_flags, callback, state);
+            return m_Socket.BeginSend(buffer, offset, size, socket_flags, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginSend(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginSend(buffers, socketFlags, callback, state);
+            return m_Socket.BeginSend(buffers, socketFlags, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginSend(byte[] buffer, int offset, int size, SocketFlags socketFlags, out SocketError errorCode, AsyncCallback callback, object state)
         {
-            errorCode = SocketError.Success;
-            return m_Socket.BeginSend(buffer, offset, size, socketFlags, out errorCode, callback, state);
+            return m_Socket.BeginSend(buffer, offset, size, socketFlags, out errorCode, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginSendFile(string fileName, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginSendFile(fileName, callback, state);
+            return m_Socket.BeginSendFile(fileName, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginSendFile(string fileName, byte[] preBuffer, byte[] postBuffer, TransmitFileOptions flags, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginSendFile(fileName, preBuffer, postBuffer, flags, callback, state);
+            return m_Socket.BeginSendFile(fileName, preBuffer, postBuffer, flags, callback, new RedisAsyncStateWrapper(state));
         }
 
         public IAsyncResult BeginSendTo(byte[] buffer, int offset, int size, SocketFlags socket_flags, EndPoint remote_end, AsyncCallback callback, object state)
         {
-            return m_Socket.BeginSendTo(buffer, offset, size, socket_flags, remote_end, callback, state);
+            return m_Socket.BeginSendTo(buffer, offset, size, socket_flags, remote_end, callback, new RedisAsyncStateWrapper(state));
         }
 
         public void Bind(EndPoint local_end)
@@ -529,47 +528,115 @@ namespace Sweet.Redis
 
         public void Close()
         {
+            var onDisconnect = m_OnDisconnect;
+            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
+
             m_Socket.Close();
+
+            if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
+                onDisconnect(this);
         }
 
         public void Close(int timeout)
         {
+            var onDisconnect = m_OnDisconnect;
+            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
+
             m_Socket.Close(timeout);
+
+            if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
+                onDisconnect(this);
         }
 
         public void Connect(EndPoint remoteEP)
         {
+            var onConnect = m_OnConnect;
+            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
+
             m_Socket.Connect(remoteEP);
+
+            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
+                onConnect(this);
         }
 
         public void Connect(IPAddress address, int port)
         {
+            var onConnect = m_OnConnect;
+            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
+
             m_Socket.Connect(address, port);
+
+            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
+                onConnect(this);
         }
 
         public void Connect(IPAddress[] addresses, int port)
         {
+            var onConnect = m_OnConnect;
+            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
+
             m_Socket.Connect(addresses, port);
+
+            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
+                onConnect(this);
         }
 
         public void Connect(string host, int port)
         {
+            var onConnect = m_OnConnect;
+            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
+
             m_Socket.Connect(host, port);
+
+            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
+                onConnect(this);
         }
 
         public bool ConnectAsync(SocketAsyncEventArgs e)
         {
+            if (e == null)
+                throw new ArgumentNullException("e");
+            e.Completed += OnConnectComplete;
+
             return m_Socket.ConnectAsync(e);
+        }
+
+        private void OnConnectComplete(object sender, SocketAsyncEventArgs e)
+        {
+            e.Completed -= OnConnectComplete;
+
+            var onConnect = m_OnConnect;
+            if ((onConnect != null) && e.ConnectSocket.IsConnected())
+                onConnect(this);
         }
 
         public void Disconnect(bool reuseSocket)
         {
+            var onDisconnect = m_OnDisconnect;
+            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
+
             m_Socket.Disconnect(reuseSocket);
+
+            if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
+                onDisconnect(this);
         }
 
         public bool DisconnectAsync(SocketAsyncEventArgs e)
         {
+            if (e == null)
+                throw new ArgumentNullException("e");
+            e.Completed += OnDisconnectComplete;
+
             return m_Socket.DisconnectAsync(e);
+        }
+
+        private void OnDisconnectComplete(object sender, SocketAsyncEventArgs e)
+        {
+            e.Completed -= OnDisconnectComplete;
+
+            var onDisconnect = m_OnDisconnect;
+            if ((onDisconnect != null) && !e.ConnectSocket.IsConnected())
+                onDisconnect(this);
         }
 
         public SocketInformation DuplicateAndClose(int targetProcessId)
@@ -587,24 +654,46 @@ namespace Sweet.Redis
             return new RedisSocket(m_Socket.EndAccept(out buffer, out bytesTransferred, asyncResult));
         }
 
-        public RedisSocket EndAccept(IAsyncResult result)
+        public RedisSocket EndAccept(IAsyncResult asyncResult)
         {
-            return new RedisSocket(m_Socket.EndAccept(result));
+            return new RedisSocket(m_Socket.EndAccept(asyncResult));
         }
 
-        public void EndConnect(IAsyncResult result)
+        public void EndConnect(IAsyncResult asyncResult)
         {
-            m_Socket.EndConnect(result);
+            Tuple<Socket, bool> connState = null;
+
+            var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
+            if (wrapper != null)
+                connState = wrapper.Tag as Tuple<Socket, bool>;
+
+            m_Socket.EndConnect(asyncResult);
+
+            var onConnect = m_OnConnect;
+            if ((onConnect != null) && (connState != null) &&
+                !connState.Item2 && connState.Item1.IsConnected())
+                onConnect(this);
         }
 
         public void EndDisconnect(IAsyncResult asyncResult)
         {
+            Tuple<Socket, bool> connState = null;
+
+            var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
+            if (wrapper != null)
+                connState = wrapper.Tag as Tuple<Socket, bool>;
+
             m_Socket.EndDisconnect(asyncResult);
+
+            var onDisconnect = m_OnDisconnect;
+            if ((onDisconnect != null) && (connState != null) &&
+                connState.Item2 && !connState.Item1.IsConnected())
+                onDisconnect(this);
         }
 
-        public int EndReceive(IAsyncResult result)
+        public int EndReceive(IAsyncResult asyncResult)
         {
-            return m_Socket.EndReceive(result);
+            return m_Socket.EndReceive(asyncResult);
         }
 
         public int EndReceive(IAsyncResult asyncResult, out SocketError errorCode)
@@ -612,9 +701,9 @@ namespace Sweet.Redis
             return m_Socket.EndReceive(asyncResult, out errorCode);
         }
 
-        public int EndReceiveFrom(IAsyncResult result, ref EndPoint end_point)
+        public int EndReceiveFrom(IAsyncResult asyncResult, ref EndPoint end_point)
         {
-            return m_Socket.EndReceiveFrom(result, ref end_point);
+            return m_Socket.EndReceiveFrom(asyncResult, ref end_point);
         }
 
         public int EndReceiveMessageFrom(IAsyncResult asyncResult, ref SocketFlags socketFlags, ref EndPoint endPoint, out IPPacketInformation ipPacketInformation)
@@ -622,9 +711,9 @@ namespace Sweet.Redis
             return m_Socket.EndReceiveMessageFrom(asyncResult, ref socketFlags, ref endPoint, out ipPacketInformation);
         }
 
-        public int EndSend(IAsyncResult result)
+        public int EndSend(IAsyncResult asyncResult)
         {
-            return m_Socket.EndSend(result);
+            return m_Socket.EndSend(asyncResult);
         }
 
         public int EndSend(IAsyncResult asyncResult, out SocketError errorCode)
@@ -637,9 +726,9 @@ namespace Sweet.Redis
             m_Socket.EndSendFile(asyncResult);
         }
 
-        public int EndSendTo(IAsyncResult result)
+        public int EndSendTo(IAsyncResult asyncResult)
         {
-            return m_Socket.EndSendTo(result);
+            return m_Socket.EndSendTo(asyncResult);
         }
 
         public Stream GetReadStream()
@@ -708,7 +797,6 @@ namespace Sweet.Redis
             return m_Socket.Poll(time_us, mode);
         }
 
-        [CLSCompliant(false)]
         public int Receive(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags, out SocketError errorCode)
         {
             return m_Socket.Receive(buffers, socketFlags, out errorCode);
@@ -744,7 +832,6 @@ namespace Sweet.Redis
             return m_Socket.Receive(buffers);
         }
 
-        [CLSCompliant(false)]
         public int Receive(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags)
         {
             return m_Socket.Receive(buffers, socketFlags);
@@ -805,7 +892,6 @@ namespace Sweet.Redis
             return m_Socket.Send(buf, flags);
         }
 
-        [CLSCompliant(false)]
         public int Send(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags, out SocketError errorCode)
         {
             return m_Socket.Send(buffers, socketFlags, out errorCode);

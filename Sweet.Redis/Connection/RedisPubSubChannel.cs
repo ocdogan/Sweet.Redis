@@ -47,15 +47,15 @@ namespace Sweet.Redis
                 return false;
             }
 
-            public List<Action<RedisPubSubMessage>> CallbacksOf(string channel)
+            public ActionBag CallbacksOf(string channel)
             {
                 if (!String.IsNullOrEmpty(channel))
                 {
                     lock (m_SyncObj)
                     {
                         ActionBag callbacks;
-                        if (!m_Subscriptions.TryGetValue(channel, out callbacks) &&
-                            callbacks != null && callbacks.Count == 0)
+                        if (m_Subscriptions.TryGetValue(channel, out callbacks) &&
+                            callbacks != null && callbacks.Count > 0)
                             return new ActionBag(callbacks);
                     }
                 }
@@ -131,15 +131,16 @@ namespace Sweet.Redis
 
                 var result = false;
 
-                ActionBag callbacks;
-                if (!m_Subscriptions.TryGetValue(channel, out callbacks))
+                ActionBag bag;
+                if (!m_Subscriptions.TryGetValue(channel, out bag))
                 {
                     lock (m_SyncObj)
                     {
-                        if (!m_Subscriptions.TryGetValue(channel, out callbacks))
+                        if (!m_Subscriptions.TryGetValue(channel, out bag))
                         {
-                            callbacks = new ActionBag();
-                            callbacks.Add(callback);
+                            bag = new ActionBag();
+                            bag.Add(callback);
+                            m_Subscriptions[channel] = bag;
                             result = true;
                         }
                     }
@@ -151,16 +152,95 @@ namespace Sweet.Redis
                     {
                         var minfo = callback.Method;
 
-                        var index = callbacks.FindIndex(c => c.Method == minfo);
+                        var index = bag.FindIndex(c => c.Method == minfo);
                         if (index == -1)
                         {
-                            callbacks.Add(callback);
+                            bag.Add(callback);
                             result = true;
                         }
                     }
                 }
 
                 return result;
+            }
+
+            public bool Register(string channel, ActionBag callbacks)
+            {
+                if (String.IsNullOrEmpty(channel) || callbacks == null ||
+                    callbacks.Count == 0)
+                    return false;
+
+                var result = false;
+
+                ActionBag bag;
+                var processed = false;
+                if (!m_Subscriptions.TryGetValue(channel, out bag))
+                {
+                    lock (m_SyncObj)
+                    {
+                        if (!m_Subscriptions.TryGetValue(channel, out bag))
+                        {
+                            processed = true;
+                            bag = new ActionBag();
+
+                            foreach (var callback in callbacks)
+                            {
+                                if (callback != null)
+                                {
+                                    var minfo = callback.Method;
+
+                                    var index = bag.FindIndex(c => c.Method == minfo);
+                                    if (index == -1)
+                                    {
+                                        bag.Add(callback);
+                                        result = true;
+                                    }
+                                }
+                            }
+
+                            if (result)
+                                m_Subscriptions[channel] = bag;
+                        }
+                    }
+                }
+
+                if (!processed)
+                {
+                    lock (m_SyncObj)
+                    {
+                        foreach (var callback in callbacks)
+                        {
+                            if (callback != null)
+                            {
+                                var minfo = callback.Method;
+
+                                var index = bag.FindIndex(c => c.Method == minfo);
+                                if (index == -1)
+                                {
+                                    bag.Add(callback);
+                                    result = true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return result;
+            }
+
+            public ActionBag Drop(string channel)
+            {
+                if (!String.IsNullOrEmpty(channel))
+                {
+                    lock (m_SyncObj)
+                    {
+                        ActionBag callbacks;
+                        if (m_Subscriptions.TryGetValue(channel, out callbacks))
+                            m_Subscriptions.Remove(channel);
+                        return callbacks;
+                    }
+                }
+                return null;
             }
 
             public bool Unregister(string channel)
@@ -219,7 +299,7 @@ namespace Sweet.Redis
                     {
                         var callbacks = kvp.Value;
                         var count = callbacks.Count;
-                        
+
                         for (var i = count - 1; i > -1; i--)
                         {
                             if (callbacks[i].Method == minfo)
@@ -380,13 +460,18 @@ namespace Sweet.Redis
 
                     try
                     {
-                        connection = new RedisConnection(m_Pool.Name, m_Pool.Settings, 
+                        connection = new RedisPubSubConnection(m_Pool.Name, m_Pool.Settings,
+                            (receivedConnection, response) =>
+                            {
+                                ResponseReceived(response);
+                            },
                             (disposedConnection, releasedSocket) =>
                             {
                                 var innerConnection = Interlocked.CompareExchange(ref m_Connection, null, disposedConnection);
                                 if (innerConnection != null)
                                     innerConnection.Dispose();
-                            }, null, true);
+                            },
+                            true);
 
                         var prevConnection = Interlocked.Exchange(ref m_Connection, connection);
                         if (prevConnection != null && prevConnection != m_Connection)
@@ -404,7 +489,54 @@ namespace Sweet.Redis
             if (connection != null && !connection.Connected)
                 connection.Connect();
 
+            ((RedisPubSubConnection)connection).BeginReceive();
+
             return connection;
+        }
+
+        private void ResponseReceived(RedisResponse response)
+        {
+            var msg = RedisPubSubMessage.ToPubSubMessage(response);
+            if (!msg.IsEmpty)
+            {
+                switch (msg.Type)
+                {
+                    case RedisPubSubType.PSubscription:
+                        {
+                            var bag = m_PendingPSubscriptions.Drop(msg.Pattern);
+                            m_PSubscriptions.Register(msg.Pattern, bag);
+                        }
+                        break;
+                    case RedisPubSubType.Subscription:
+                        {
+                            var bag = m_PendingSubscriptions.Drop(msg.Channel);
+                            m_Subscriptions.Register(msg.Channel, bag);
+                        }
+                        break;
+                    case RedisPubSubType.PMessage:
+                    case RedisPubSubType.SMessage:
+                        {
+                            var subscriptions = (msg.Type == RedisPubSubType.PMessage ? m_PSubscriptions : m_Subscriptions);
+                            if (subscriptions != null)
+                            {
+                                var callbacks = subscriptions.CallbacksOf(msg.Type == RedisPubSubType.PMessage ? msg.Pattern : msg.Channel);
+                                if (callbacks != null && callbacks.Count > 0)
+                                {
+                                    foreach (var callback in callbacks)
+                                    {
+                                        try
+                                        {
+                                            callback.InvokeAsync(msg);
+                                        }
+                                        catch (Exception)
+                                        { }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
         }
 
         public void PSubscribe(Action<RedisPubSubMessage> callback, string pattern, params string[] patterns)
@@ -479,12 +611,12 @@ namespace Sweet.Redis
                 m_PendingSubscriptions.Register(channel, callback);
             }
 
-            foreach (var ptrn in channels)
+            foreach (var chnl in channels)
             {
-                if (!m_Subscriptions.Exists(ptrn, callback))
+                if (!m_Subscriptions.Exists(chnl, callback))
                 {
-                    newItems.Add(ptrn.ToBytes());
-                    m_PendingSubscriptions.Register(ptrn, callback);
+                    newItems.Add(chnl.ToBytes());
+                    m_PendingSubscriptions.Register(chnl, callback);
                 }
             }
 

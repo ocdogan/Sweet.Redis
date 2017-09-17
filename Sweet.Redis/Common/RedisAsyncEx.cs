@@ -42,7 +42,7 @@ namespace Sweet.Redis
 
             Dns.BeginGetHostAddresses(host, ar =>
                 {
-                    var innerTcs = (TaskCompletionSource<IPAddress>)ar.AsyncState;
+                    var innerTcs = ar.DiscoverTaskCompletionSource<IPAddress>();
                     try
                     {
                         var addrs = Dns.EndGetHostAddresses(ar);
@@ -66,7 +66,7 @@ namespace Sweet.Redis
 
             socket.BeginConnect(endPoint, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
@@ -83,12 +83,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this Socket socket, EndPoint remoteEP)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(remoteEP, iar =>
+            socket.BeginConnect(remoteEP, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((Socket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -102,12 +102,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this Socket socket, IPAddress address, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(address, port, iar =>
+            socket.BeginConnect(address, port, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((Socket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -121,12 +121,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this Socket socket, IPAddress[] addresses, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(addresses, port, iar =>
+            socket.BeginConnect(addresses, port, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((Socket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -140,12 +140,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this Socket socket, string host, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(host, port, iar =>
+            socket.BeginConnect(host, port, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((Socket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -162,7 +162,7 @@ namespace Sweet.Redis
 
             socket.BeginDisconnect(reuseSocket, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     ((Socket)innerTcs.Task.AsyncState).EndDisconnect(ar);
@@ -182,7 +182,7 @@ namespace Sweet.Redis
 
             socket.BeginSend(data, offset, count, socketFlags, ar =>
             {
-                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try
                 {
                     innerTcs.TrySetResult(((Socket)innerTcs.Task.AsyncState).EndSend(ar));
@@ -201,7 +201,7 @@ namespace Sweet.Redis
 
             socket.BeginReceive(data, offset, count, socketFlags, ar =>
             {
-                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try
                 {
                     innerTcs.TrySetResult(((Socket)innerTcs.Task.AsyncState).EndReceive(ar));
@@ -224,7 +224,7 @@ namespace Sweet.Redis
 
             socket.BeginConnect(endPoint, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
@@ -241,12 +241,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this RedisSocket socket, EndPoint remoteEP)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(remoteEP, iar =>
+            socket.BeginConnect(remoteEP, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -260,12 +260,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this RedisSocket socket, IPAddress address, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(address, port, iar =>
+            socket.BeginConnect(address, port, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -279,12 +279,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this RedisSocket socket, IPAddress[] addresses, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(addresses, port, iar =>
+            socket.BeginConnect(addresses, port, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -298,12 +298,12 @@ namespace Sweet.Redis
         public static Task ConnectAsync(this RedisSocket socket, string host, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(host, port, iar =>
+            socket.BeginConnect(host, port, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
                 catch (Exception e)
@@ -320,7 +320,7 @@ namespace Sweet.Redis
 
             socket.BeginDisconnect(reuseSocket, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     ((RedisSocket)innerTcs.Task.AsyncState).EndDisconnect(ar);
@@ -340,7 +340,7 @@ namespace Sweet.Redis
 
             socket.BeginSend(data, offset, count, socketFlags, ar =>
             {
-                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try
                 {
                     innerTcs.TrySetResult(((RedisSocket)innerTcs.Task.AsyncState).EndSend(ar));
@@ -359,7 +359,7 @@ namespace Sweet.Redis
 
             socket.BeginReceive(data, offset, count, socketFlags, ar =>
             {
-                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try
                 {
                     innerTcs.TrySetResult(((RedisSocket)innerTcs.Task.AsyncState).EndReceive(ar));
@@ -382,7 +382,7 @@ namespace Sweet.Redis
 
             stream.BeginWrite(data, offset, count, ar =>
             {
-                var innerTcs = (TaskCompletionSource<bool>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try
                 {
                     ((Stream)innerTcs.Task.AsyncState).EndWrite(ar);
@@ -402,7 +402,7 @@ namespace Sweet.Redis
 
             stream.BeginRead(data, offset, count, ar =>
             {
-                var innerTcs = (TaskCompletionSource<int>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try
                 {
                     innerTcs.TrySetResult(((Stream)innerTcs.Task.AsyncState).EndRead(ar));
@@ -419,13 +419,29 @@ namespace Sweet.Redis
 
         #region Generic
 
+        private static TaskCompletionSource<T> DiscoverTaskCompletionSource<T>(this IAsyncResult asyncResult)
+        {
+            if (asyncResult != null)
+            {
+                var innerTcs = asyncResult.AsyncState as TaskCompletionSource<T>;
+                if (innerTcs == null)
+                {
+                    var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
+                    if (wrapper != null)
+                        innerTcs = wrapper.RealState as TaskCompletionSource<T>;
+                }
+                return innerTcs;
+            }
+            return default(TaskCompletionSource<T>);
+        }
+
         public static Task InvokeAsync(this Action action)
         {
             var tcs = new TaskCompletionSource<object>(null);
 
             action.BeginInvoke(ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -445,7 +461,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -465,7 +481,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -485,7 +501,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -505,7 +521,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -525,7 +541,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -545,7 +561,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -565,7 +581,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar =>
             {
-                var innerTcs = (TaskCompletionSource<object>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
                 {
                     action.EndInvoke(ar);
@@ -585,7 +601,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(ar =>
             {
-                var innerTcs = (TaskCompletionSource<T>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<T>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -605,7 +621,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -625,7 +641,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -645,7 +661,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -665,7 +681,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -685,7 +701,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -705,7 +721,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
@@ -725,7 +741,7 @@ namespace Sweet.Redis
 
             action.BeginInvoke(arg1, arg2, arg3, arg4, arg5, arg6, arg7, ar =>
             {
-                var innerTcs = (TaskCompletionSource<K>)ar.AsyncState;
+                var innerTcs = ar.DiscoverTaskCompletionSource<K>();
                 try
                 {
                     var result = action.EndInvoke(ar);
