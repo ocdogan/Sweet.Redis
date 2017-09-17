@@ -22,54 +22,12 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Text;
-
 namespace Sweet.Redis
 {
-    public struct RedisPubSubMessage
+    public enum RedisPubSubMessageType
     {
-        #region Static Members
-
-        public static RedisPubSubMessage Empty = new RedisPubSubMessage(-1);
-
-        #endregion Static Members
-
-        #region .Ctors
-
-        public RedisPubSubMessage(int dummy = -1)
-            : this()
-        {
-            Channel = "";
-            Pattern = "";
-            Data = null;
-            Type = RedisPubSubMessageType.Undefined;
-            IsEmpty = true;
-        }
-
-        public RedisPubSubMessage(RedisPubSubMessageType type, string channel, string pattern, byte[] data)
-            : this()
-        {
-            Channel = channel;
-            Pattern = pattern ?? "";
-            Data = data;
-            Type = type;
-        }
-
-        #endregion .Ctors
-
-        #region Properties
-
-        public string Channel { get; private set; }
-
-        public byte[] Data { get; private set; }
-
-        public bool IsEmpty { get; private set; }
-
-        public string Pattern { get; private set; }
-
-        public RedisPubSubMessageType Type { get; private set; }
-
-        #endregion Properties
+        Undefined,
+        PMessage,
+        Message,
     }
 }

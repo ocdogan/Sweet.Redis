@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 using Sweet.Redis;
 
@@ -17,10 +18,68 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingShaWithArgsEvalTest();
             // PubSubTest1();
             // PubSubTest2();
-            PubSubTest3();
+            // PubSubTest3();
+            // PubSubTest4();
+            PubSubTest5();
         }
 
         #region PubSub Tests
+
+        static void PubSubTest5()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.PubSubChannel.Subscribe((m) =>
+                {
+                    Console.WriteLine("Channel: " + m.Channel);
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                }, "abc", "xyz");
+
+                Thread.Sleep(4000);
+
+                pool.PubSubChannel.Unsubscribe();
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        static void PubSubTest4()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.PubSubChannel.Subscribe((m) =>
+                {
+                    Console.WriteLine("Channel: " + m.Channel);
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                }, "abc", "xyz");
+
+                Thread.Sleep(4000);
+
+                pool.PubSubChannel.Unsubscribe("xyz");
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
 
         static void PubSubTest3()
         {
@@ -30,15 +89,11 @@ namespace Sweet.Redis.ConsoleTest
                 pool.PubSubChannel.Subscribe((m) =>
                 {
                     Console.WriteLine("Channel: " + m.Channel);
-                    if (m.Type == RedisPubSubType.Subscription)
-                        Console.WriteLine("Subscription count: " + m.Data);
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
                     else
-                    {
-                        if (m.Data != null)
-                            Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
-                        else
-                            Console.WriteLine("Received data: ?");
-                    }
+                        Console.WriteLine("Received data: ?");
+
                     Console.WriteLine();
                     Console.WriteLine("Press any key to escape ...");
                 }, "abc", "xyz");
@@ -58,15 +113,11 @@ namespace Sweet.Redis.ConsoleTest
                 pool.PubSubChannel.Subscribe((m) =>
                 {
                     Console.WriteLine("Channel: " + m.Channel);
-                    if (m.Type == RedisPubSubType.Subscription)
-                        Console.WriteLine("Subscription count: " + m.Data);
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
                     else
-                    {
-                        if (m.Data != null)
-                            Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
-                        else
-                            Console.WriteLine("Received data: ?");
-                    }
+                        Console.WriteLine("Received data: ?");
+
                     Console.WriteLine();
                     Console.WriteLine("Press any key to escape ...");
                 }, "abc");

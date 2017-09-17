@@ -494,34 +494,37 @@ namespace Sweet.Redis
             return connection;
         }
 
+        private static RedisPubSubMessage ToPubSubMessage(RedisPubSubResponse response)
+        {
+            if (response.IsEmpty)
+                return RedisPubSubMessage.Empty;
+
+            if (response.Type == RedisPubSubResponseType.PMessage)
+                return new RedisPubSubMessage(RedisPubSubMessageType.PMessage, response.Channel, response.Pattern, response.Data as byte[]);
+
+            if (response.Type == RedisPubSubResponseType.Message)
+                return new RedisPubSubMessage(RedisPubSubMessageType.Message, response.Channel, response.Pattern, response.Data as byte[]);
+
+            return RedisPubSubMessage.Empty;
+        }
+
         private void ResponseReceived(RedisResponse response)
         {
-            var msg = RedisPubSubMessage.ToPubSubMessage(response);
-            if (!msg.IsEmpty)
+            var pubSubResp = RedisPubSubResponse.ToPubSubResponse(response);
+            if (!pubSubResp.IsEmpty)
             {
-                switch (msg.Type)
+                switch (pubSubResp.Type)
                 {
-                    case RedisPubSubType.PSubscription:
+                    case RedisPubSubResponseType.Message:
+                    case RedisPubSubResponseType.PMessage:
                         {
-                            var bag = m_PendingPSubscriptions.Drop(msg.Pattern);
-                            m_PSubscriptions.Register(msg.Pattern, bag);
-                        }
-                        break;
-                    case RedisPubSubType.Subscription:
-                        {
-                            var bag = m_PendingSubscriptions.Drop(msg.Channel);
-                            m_Subscriptions.Register(msg.Channel, bag);
-                        }
-                        break;
-                    case RedisPubSubType.PMessage:
-                    case RedisPubSubType.SMessage:
-                        {
-                            var subscriptions = (msg.Type == RedisPubSubType.PMessage ? m_PSubscriptions : m_Subscriptions);
+                            var subscriptions = (pubSubResp.Type == RedisPubSubResponseType.PMessage ? m_PSubscriptions : m_Subscriptions);
                             if (subscriptions != null)
                             {
-                                var callbacks = subscriptions.CallbacksOf(msg.Type == RedisPubSubType.PMessage ? msg.Pattern : msg.Channel);
+                                var callbacks = subscriptions.CallbacksOf(pubSubResp.Type == RedisPubSubResponseType.PMessage ? pubSubResp.Pattern : pubSubResp.Channel);
                                 if (callbacks != null && callbacks.Count > 0)
                                 {
+                                    var msg = ToPubSubMessage(pubSubResp);
                                     foreach (var callback in callbacks)
                                     {
                                         try
@@ -532,6 +535,46 @@ namespace Sweet.Redis
                                         { }
                                     }
                                 }
+                            }
+                        }
+                        break;
+                    case RedisPubSubResponseType.Subscribe:
+                        {
+                            var bag = m_PendingSubscriptions.Drop(pubSubResp.Channel);
+                            m_Subscriptions.Register(pubSubResp.Channel, bag);
+                        }
+                        break;
+                    case RedisPubSubResponseType.PSubscribe:
+                        {
+                            var bag = m_PendingPSubscriptions.Drop(pubSubResp.Pattern);
+                            m_PSubscriptions.Register(pubSubResp.Pattern, bag);
+                        }
+                        break;
+                    case RedisPubSubResponseType.Unsubscribe:
+                        {
+                            if (String.IsNullOrEmpty(pubSubResp.Channel))
+                            {
+                                m_PendingSubscriptions.UnregisterAll();
+                                m_Subscriptions.UnregisterAll();
+                            }
+                            else
+                            {
+                                if (!m_Subscriptions.Unregister(pubSubResp.Channel))
+                                    m_PendingSubscriptions.Unregister(pubSubResp.Channel);
+                            }
+                        }
+                        break;
+                    case RedisPubSubResponseType.PUnsubscribe:
+                        {
+                            if (String.IsNullOrEmpty(pubSubResp.Channel))
+                            {
+                                m_PendingPSubscriptions.UnregisterAll();
+                                m_PSubscriptions.UnregisterAll();
+                            }
+                            else
+                            {
+                                if (!m_PSubscriptions.Unregister(pubSubResp.Pattern))
+                                    m_PendingPSubscriptions.Unregister(pubSubResp.Pattern);
                             }
                         }
                         break;

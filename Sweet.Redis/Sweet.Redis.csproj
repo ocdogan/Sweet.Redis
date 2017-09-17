@@ -104,7 +104,7 @@
     <Compile Include="Connection\RedisPubSubChannel.cs" />
     <Compile Include="Common\RedisCommand.cs" />
     <Compile Include="Connection\RedisPubSubMessage.cs" />
-    <Compile Include="Connection\RedisPubSubType.cs" />
+    <Compile Include="Connection\RedisPubSubResponseType.cs" />
     <Compile Include="Connection\RedisConnection.cs" />
     <Compile Include="Connection\IRedisConnection.cs" />
     <Compile Include="Connection\IRedisPubSubConnection.cs" />
@@ -112,6 +112,8 @@
     <Compile Include="Connection\RedisNativeSocket.cs" />
     <Compile Include="Connection\RedisContinuousReaderCtx.cs" />
     <Compile Include="Connection\RedisReceiveCallbackResult.cs" />
+    <Compile Include="Connection\RedisPubSubResponse.cs" />
+    <Compile Include="Connection\RedisPubSubMessageType.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
