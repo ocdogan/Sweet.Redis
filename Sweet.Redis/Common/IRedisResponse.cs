@@ -37,7 +37,7 @@ namespace Sweet.Redis
         int Length { get; }
         IRedisResponse Parent { get; }
         bool Ready { get; }
-        RedisObjectType Type { get; }
+        RedisRawObjType Type { get; }
         int TypeByte { get; }
 
         void Clear();

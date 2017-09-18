@@ -146,38 +146,38 @@ namespace Sweet.Redis
             }
         }
 
-        internal static RedisObjectType ResponseType(this byte b)
+        internal static RedisRawObjType ResponseType(this byte b)
         {
             switch (b)
             {
                 case (byte)'+':
-                    return RedisObjectType.SimpleString;
+                    return RedisRawObjType.SimpleString;
                 case (byte)'-':
-                    return RedisObjectType.Error;
+                    return RedisRawObjType.Error;
                 case (byte)'$':
-                    return RedisObjectType.BulkString;
+                    return RedisRawObjType.BulkString;
                 case (byte)':':
-                    return RedisObjectType.Integer;
+                    return RedisRawObjType.Integer;
                 case (byte)'*':
-                    return RedisObjectType.Array;
+                    return RedisRawObjType.Array;
                 default:
-                    return RedisObjectType.Undefined;
+                    return RedisRawObjType.Undefined;
             }
         }
 
-        internal static byte ResponseTypeByte(this RedisObjectType b)
+        internal static byte ResponseTypeByte(this RedisRawObjType b)
         {
             switch (b)
             {
-                case RedisObjectType.SimpleString:
+                case RedisRawObjType.SimpleString:
                     return (byte)'+';
-                case RedisObjectType.Error:
+                case RedisRawObjType.Error:
                     return (byte)'-';
-                case RedisObjectType.BulkString:
+                case RedisRawObjType.BulkString:
                     return (byte)'$';
-                case RedisObjectType.Integer:
+                case RedisRawObjType.Integer:
                     return (byte)':';
-                case RedisObjectType.Array:
+                case RedisRawObjType.Array:
                     return (byte)'*';
                 default:
                     return (byte)'?';

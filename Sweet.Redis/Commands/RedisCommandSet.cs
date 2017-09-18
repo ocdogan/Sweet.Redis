@@ -89,7 +89,7 @@ namespace Sweet.Redis
                 throw new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName);
         }
 
-        public RedisObject ExpectArray(byte[] cmd, params byte[][] parameters)
+        public RedisRawObj ExpectArray(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))

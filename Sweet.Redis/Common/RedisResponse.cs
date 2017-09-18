@@ -37,7 +37,7 @@ namespace Sweet.Redis
         private byte[] m_Data;
         private long m_Ready;
         private int m_TypeByte = -1;
-        private RedisObjectType? m_Type;
+        private RedisRawObjType? m_Type;
         private long m_Length = int.MinValue;
         private IRedisResponse m_Parent;
         private IList<IRedisResponse> m_List;
@@ -47,10 +47,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisResponse(IRedisResponse parent = null, RedisObjectType type = RedisObjectType.Undefined)
+        public RedisResponse(IRedisResponse parent = null, RedisRawObjType type = RedisRawObjType.Undefined)
         {
             m_Parent = parent;
-            if (type != RedisObjectType.Undefined)
+            if (type != RedisRawObjType.Undefined)
                 Type = type;
         }
 
@@ -72,7 +72,7 @@ namespace Sweet.Redis
         {
             get
             {
-                if (!m_Type.HasValue || m_Type != RedisObjectType.Array)
+                if (!m_Type.HasValue || m_Type != RedisRawObjType.Array)
                     return -1;
 
                 var list = m_List;
@@ -88,7 +88,7 @@ namespace Sweet.Redis
                 m_Data = value;
                 Interlocked.Exchange(ref m_HasData, RedisConstants.True);
 
-                if (m_Type.HasValue && m_Type != RedisObjectType.Array)
+                if (m_Type.HasValue && m_Type != RedisRawObjType.Array)
                     Ready = true;
             }
         }
@@ -97,7 +97,7 @@ namespace Sweet.Redis
         {
             get
             {
-                if (m_Type != RedisObjectType.Array)
+                if (m_Type != RedisRawObjType.Array)
                     return false;
 
                 var list = m_List;
@@ -112,7 +112,7 @@ namespace Sweet.Redis
                 if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
                     return true;
 
-                if (!m_Type.HasValue || m_Type == RedisObjectType.Array)
+                if (!m_Type.HasValue || m_Type == RedisRawObjType.Array)
                     return false;
 
                 var data = m_Data;
@@ -137,7 +137,7 @@ namespace Sweet.Redis
                 value = Math.Max(-1, value);
                 Interlocked.Exchange(ref m_Length, value);
 
-                if (m_Type == RedisObjectType.Array)
+                if (m_Type == RedisRawObjType.Array)
                 {
                     InitializeList(value);
                     if (value < 1)
@@ -175,9 +175,9 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisObjectType Type
+        public RedisRawObjType Type
         {
-            get { return m_Type.HasValue ? m_Type.Value : RedisObjectType.Undefined; }
+            get { return m_Type.HasValue ? m_Type.Value : RedisRawObjType.Undefined; }
             internal set
             {
                 if (!m_Type.HasValue)
@@ -185,7 +185,7 @@ namespace Sweet.Redis
                     m_Type = value;
                     m_TypeByte = value.ResponseTypeByte();
 
-                    if (value == RedisObjectType.Array)
+                    if (value == RedisRawObjType.Array)
                         NewArrayList();
 
                     if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
@@ -214,7 +214,7 @@ namespace Sweet.Redis
         public byte[] ReleaseData()
         {
             var data = Interlocked.Exchange(ref m_Data, null);
-            if (m_Type != RedisObjectType.Array)
+            if (m_Type != RedisRawObjType.Array)
                 Ready = Length > -1;
             return data;
         }
@@ -223,7 +223,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            if (m_Type != RedisObjectType.Array)
+            if (m_Type != RedisRawObjType.Array)
                 throw new ArgumentException("Can not add item to " + Type.ToString("F") + " type", "item");
 
             if (item == null)
@@ -246,7 +246,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            if (m_Type != RedisObjectType.Array)
+            if (m_Type != RedisRawObjType.Array)
                 throw new ArgumentException("Can not add/remove item to/from " + Type.ToString("F") + " type", "item");
 
             if (item == null)
@@ -271,7 +271,7 @@ namespace Sweet.Redis
         protected void ClearInternal()
         {
             Interlocked.Exchange(ref m_Data, null);
-            if (m_Type != RedisObjectType.Array)
+            if (m_Type != RedisRawObjType.Array)
                 Ready = Length > -1;
 
             var arrayItems = Interlocked.Exchange(ref m_List, null);
@@ -283,7 +283,7 @@ namespace Sweet.Redis
                 arrayItems.Clear();
             }
 
-            if (m_Type == RedisObjectType.Array)
+            if (m_Type == RedisRawObjType.Array)
                 Ready = Length == -1;
         }
 
@@ -334,7 +334,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var list = (m_Type == RedisObjectType.Array) ? new List<IRedisResponse>() : null;
+            var list = (m_Type == RedisRawObjType.Array) ? new List<IRedisResponse>() : null;
 
             Interlocked.Exchange(ref m_List, list);
             Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));

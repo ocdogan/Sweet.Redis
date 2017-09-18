@@ -58,7 +58,7 @@ namespace Sweet.Redis
                     var siblingCount = siblings.Count;
                     if (siblingCount > 0)
                     {
-                        var parent = new RedisResponse(type: RedisObjectType.Array);
+                        var parent = new RedisResponse(type: RedisRawObjType.Array);
                         parent.Length = siblingCount + 1;
 
                         parent.Add(item);
@@ -105,7 +105,7 @@ namespace Sweet.Redis
         private static bool NeedToReceiveMore(RedisResponse item, RedisByteBuffer buffer)
         {
             return (buffer.Length == 0) ||
-                (item.Type != RedisObjectType.Array &&
+                (item.Type != RedisRawObjType.Array &&
                  (item.Length > buffer.Length - buffer.Position + RedisConstants.CRLFLength));
         }
 
@@ -178,9 +178,9 @@ namespace Sweet.Redis
 
             switch (item.Type)
             {
-                case RedisObjectType.SimpleString:
-                case RedisObjectType.Error:
-                case RedisObjectType.Integer:
+                case RedisRawObjType.SimpleString:
+                case RedisRawObjType.Error:
+                case RedisRawObjType.Integer:
                     {
                         item.Data = header;
                         SetReady(item);
@@ -210,7 +210,7 @@ namespace Sweet.Redis
 
                         if (msgLength == 0)
                         {
-                            if (item.Type == RedisObjectType.BulkString)
+                            if (item.Type == RedisRawObjType.BulkString)
                             {
                                 item.Data = new byte[0];
                                 SetReady(item);
@@ -223,7 +223,7 @@ namespace Sweet.Redis
                             return true;
                         }
 
-                        receiveMore = ((item.Type == RedisObjectType.BulkString) &&
+                        receiveMore = ((item.Type == RedisRawObjType.BulkString) &&
                                        (buffer.Length < buffer.Position + msgLength + RedisConstants.CRLFLength));
                     }
                     break;
@@ -240,7 +240,7 @@ namespace Sweet.Redis
 
             switch (item.Type)
             {
-                case RedisObjectType.BulkString:
+                case RedisRawObjType.BulkString:
                     {
                         if (item.Length > 0)
                         {
@@ -272,7 +272,7 @@ namespace Sweet.Redis
                             return true;
                     }
                     break;
-                case RedisObjectType.Array:
+                case RedisRawObjType.Array:
                     {
                         for (var i = 0; i < item.Length; i++)
                         {
@@ -297,7 +297,7 @@ namespace Sweet.Redis
                     throw new RedisException("Unexpected byte for redis response type");
 
                 item.TypeByte = b;
-                if (item.Type == RedisObjectType.Undefined)
+                if (item.Type == RedisRawObjType.Undefined)
                     throw new RedisException("Undefined redis response type");
             }
         }

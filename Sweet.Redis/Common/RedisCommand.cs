@@ -175,7 +175,7 @@ namespace Sweet.Redis
                     return null;
                 }
 
-                if (response.Type != RedisObjectType.SimpleString)
+                if (response.Type != RedisRawObjType.SimpleString)
                 {
                     if (throwException)
                         throw new RedisException("Invalid data returned");
@@ -196,7 +196,7 @@ namespace Sweet.Redis
                     return null;
                 }
 
-                if (response.Type != RedisObjectType.SimpleString)
+                if (response.Type != RedisRawObjType.SimpleString)
                 {
                     if (throwException)
                         throw new RedisException("Invalid data returned");
@@ -233,7 +233,7 @@ namespace Sweet.Redis
                     return null;
                 }
 
-                if (response.Type != RedisObjectType.BulkString)
+                if (response.Type != RedisRawObjType.BulkString)
                 {
                     if (throwException)
                         throw new RedisException("Invalid data returned");
@@ -254,7 +254,7 @@ namespace Sweet.Redis
                     return null;
                 }
 
-                if (response.Type != RedisObjectType.BulkString)
+                if (response.Type != RedisRawObjType.BulkString)
                 {
                     if (throwException)
                         throw new RedisException("Invalid data returned");
@@ -305,7 +305,7 @@ namespace Sweet.Redis
                 return null;
             }
 
-            if (response.Type != RedisObjectType.Integer)
+            if (response.Type != RedisRawObjType.Integer)
             {
                 if (throwException)
                     throw new RedisException("Invalid data returned");
@@ -358,8 +358,8 @@ namespace Sweet.Redis
                 return double.MinValue;
             }
 
-            if (response.Type == RedisObjectType.Array ||
-                response.Type == RedisObjectType.Undefined)
+            if (response.Type == RedisRawObjType.Array ||
+                response.Type == RedisRawObjType.Undefined)
             {
                 if (throwException)
                     throw new RedisException("Invalid data returned");
@@ -384,7 +384,7 @@ namespace Sweet.Redis
             return double.MinValue;
         }
 
-        public RedisObject ExpectArray(RedisConnectionPool pool, bool throwException = true)
+        public RedisRawObj ExpectArray(RedisConnectionPool pool, bool throwException = true)
         {
             using (var response = ExecuteInternal(pool, throwException))
             {
@@ -394,11 +394,11 @@ namespace Sweet.Redis
                         throw new RedisException("No data returned");
                     return null;
                 }
-                return RedisObject.ToObject(response);
+                return RedisRawObj.ToObject(response);
             }
         }
 
-        public RedisObject ExpectArray(IRedisDbConnection connection, bool throwException = true)
+        public RedisRawObj ExpectArray(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -408,7 +408,7 @@ namespace Sweet.Redis
                         throw new RedisException("No data returned");
                     return null;
                 }
-                return RedisObject.ToObject(response);
+                return RedisRawObj.ToObject(response);
             }
         }
 
@@ -440,21 +440,21 @@ namespace Sweet.Redis
             var data = response.Data;
             switch (response.Type)
             {
-                case RedisObjectType.SimpleString:
-                case RedisObjectType.BulkString:
-                case RedisObjectType.Integer:
+                case RedisRawObjType.SimpleString:
+                case RedisRawObjType.BulkString:
+                case RedisRawObjType.Integer:
                     return data != null ? new string[] { Encoding.UTF8.GetString(data) } : null;
-                case RedisObjectType.Error:
+                case RedisRawObjType.Error:
                     {
                         if (!throwException)
                             return data != null ? new string[] { Encoding.UTF8.GetString(data) } : null;
                         throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
                     }
-                case RedisObjectType.Undefined:
+                case RedisRawObjType.Undefined:
                     if (throwException)
                         throw new RedisException("Undefined respone data");
                     return null;
-                case RedisObjectType.Array:
+                case RedisRawObjType.Array:
                     {
                         var len = response.Length;
                         if (len < 0)
@@ -475,14 +475,14 @@ namespace Sweet.Redis
                                     list.Add(null);
                                 else
                                 {
-                                    if (item.Type == RedisObjectType.Undefined)
+                                    if (item.Type == RedisRawObjType.Undefined)
                                     {
                                         if (throwException)
                                             throw new RedisException("Undefined respone data");
                                         return null;
                                     }
 
-                                    if (item.Type == RedisObjectType.Array)
+                                    if (item.Type == RedisRawObjType.Array)
                                     {
                                         if (throwException)
                                             throw new RedisException("Multi-array is not allowed for multi-data respone");
@@ -530,21 +530,21 @@ namespace Sweet.Redis
             var data = response.Data;
             switch (response.Type)
             {
-                case RedisObjectType.SimpleString:
-                case RedisObjectType.BulkString:
-                case RedisObjectType.Integer:
+                case RedisRawObjType.SimpleString:
+                case RedisRawObjType.BulkString:
+                case RedisRawObjType.Integer:
                     return data != null ? new byte[1][] { data } : null;
-                case RedisObjectType.Error:
+                case RedisRawObjType.Error:
                     {
                         if (!throwException)
                             return data != null ? new byte[1][] { data } : null;
                         throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
                     }
-                case RedisObjectType.Undefined:
+                case RedisRawObjType.Undefined:
                     if (throwException)
                         throw new RedisException("Undefined respone data");
                     return null;
-                case RedisObjectType.Array:
+                case RedisRawObjType.Array:
                     {
                         var len = response.Length;
                         if (len < 0)
@@ -565,14 +565,14 @@ namespace Sweet.Redis
                                     list.Add(null);
                                 else
                                 {
-                                    if (item.Type == RedisObjectType.Undefined)
+                                    if (item.Type == RedisRawObjType.Undefined)
                                     {
                                         if (throwException)
                                             throw new RedisException("Undefined respone data");
                                         return null;
                                     }
 
-                                    if (item.Type == RedisObjectType.Array)
+                                    if (item.Type == RedisRawObjType.Array)
                                     {
                                         if (throwException)
                                             throw new RedisException("Multi-array is not allowed for multi-data respone");
@@ -637,7 +637,7 @@ namespace Sweet.Redis
         {
             if (response != null)
             {
-                if (response.Type == RedisObjectType.Error)
+                if (response.Type == RedisRawObjType.Error)
                 {
                     var data = response.Data;
                     throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");

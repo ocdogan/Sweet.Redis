@@ -73,8 +73,8 @@
     <Compile Include="Buffers\RedisFixedBuffer.cs" />
     <Compile Include="Common\IRedisDisposable.cs" />
     <Compile Include="Common\IRedisResponse.cs" />
-    <Compile Include="Common\RedisObject.cs" />
-    <Compile Include="Common\RedisObjectType.cs" />
+    <Compile Include="Common\RedisRawObj.cs" />
+    <Compile Include="Common\RedisRawObjType.cs" />
     <Compile Include="Common\RedisResponse.cs" />
     <Compile Include="Connection\IRedisDbConnection.cs" />
     <Compile Include="Connection\IRedisDb.cs" />
@@ -114,6 +114,17 @@
     <Compile Include="Connection\RedisReceiveCallbackResult.cs" />
     <Compile Include="Connection\RedisPubSubResponse.cs" />
     <Compile Include="Connection\RedisPubSubMessageType.cs" />
+    <Compile Include="Common\RedisResult.cs" />
+    <Compile Include="Common\RedisInt.cs" />
+    <Compile Include="Common\RedisBool.cs" />
+    <Compile Include="Common\RedisString.cs" />
+    <Compile Include="Common\RedisObj.cs" />
+    <Compile Include="Common\RedisBytes.cs" />
+    <Compile Include="Common\RedisMultiBytes.cs" />
+    <Compile Include="Common\RedisRaw.cs" />
+    <Compile Include="Common\RedisResultType.cs" />
+    <Compile Include="Common\RedisDouble.cs" />
+    <Compile Include="Common\RedisError.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

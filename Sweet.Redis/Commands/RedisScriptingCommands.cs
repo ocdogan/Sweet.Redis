@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private RedisObject Eval(byte[] cmd, string source, params RedisKeyValue<string, string>[] args)
+        private RedisRawObj Eval(byte[] cmd, string source, params RedisKeyValue<string, string>[] args)
         {
             var argsLength = args.Length;
             if (argsLength == 0)
@@ -58,7 +58,7 @@ namespace Sweet.Redis
             return ExpectArray(cmd, parameters);
         }
 
-        private RedisObject Eval(byte[] cmd, string source, params RedisKeyValue<string, byte[]>[] args)
+        private RedisRawObj Eval(byte[] cmd, string source, params RedisKeyValue<string, byte[]>[] args)
         {
             var argsLength = args.Length;
             if (argsLength == 0)
@@ -78,7 +78,7 @@ namespace Sweet.Redis
             return ExpectArray(cmd, parameters);
         }
 
-        public RedisObject Eval(string script, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRawObj Eval(string script, params RedisKeyValue<string, byte[]>[] args)
         {
             if (String.IsNullOrEmpty(script))
                 throw new ArgumentNullException("script");
@@ -86,7 +86,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.Eval, script, args);
         }
 
-        public RedisObject EvalString(string script, params RedisKeyValue<string, string>[] args)
+        public RedisRawObj EvalString(string script, params RedisKeyValue<string, string>[] args)
         {
             if (String.IsNullOrEmpty(script))
                 throw new ArgumentNullException("script");
@@ -94,7 +94,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.Eval, script, args);
         }
 
-        public RedisObject EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRawObj EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -102,7 +102,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.EvalSha, sha1, args);
         }
 
-        public RedisObject EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRawObj EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -137,7 +137,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisObject EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args)
+        public RedisRawObj EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -145,7 +145,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.EvalSha, sha1, args);
         }
 
-        public RedisObject EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args)
+        public RedisRawObj EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -200,7 +200,7 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
 
-            RedisObject response = null;
+            RedisRawObj response = null;
             if (sha1s.Length == 0)
                 response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1.ToBytes());
             else
@@ -215,7 +215,7 @@ namespace Sweet.Redis
             var resultLength = sha1.Length + 1;
             var result = new long[resultLength];
 
-            if (response != null && response.Type == RedisObjectType.Array)
+            if (response != null && response.Type == RedisRawObjType.Array)
             {
                 var items = response.Items;
                 if (items != null)
@@ -226,7 +226,7 @@ namespace Sweet.Redis
                     {
                         var item = items[i];
                         if (item != null &&
-                            item.Type == RedisObjectType.Integer)
+                            item.Type == RedisRawObjType.Integer)
                         {
                             var data = item.Data;
                             if (data is long)
