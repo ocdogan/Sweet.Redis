@@ -133,19 +133,30 @@ namespace Sweet.Redis
                                             if (!String.IsNullOrEmpty(channel))
                                             {
                                                 var pattern = String.Empty;
-                                                if (type == RedisPubSubResponseType.PMessage)
+                                                switch (type)
                                                 {
-                                                    var patternItem = items[index++];
-                                                    if (patternItem != null)
-                                                    {
-                                                        data = patternItem.Data;
-                                                        if (data != null)
-                                                            pattern = Encoding.UTF8.GetString(data);
-                                                    }
+                                                    case RedisPubSubResponseType.PMessage:
+                                                        {
+                                                            var patternItem = items[index++];
+                                                            if (patternItem != null)
+                                                            {
+                                                                data = patternItem.Data;
+                                                                if (data != null)
+                                                                    pattern = Encoding.UTF8.GetString(data);
+                                                            }
 
-                                                    var tmp = channel;
-                                                    channel = pattern;
-                                                    pattern = tmp;
+                                                            var tmp = channel;
+                                                            channel = pattern;
+                                                            pattern = tmp;
+                                                        }
+                                                        break;
+                                                    case RedisPubSubResponseType.PSubscribe:
+                                                    case RedisPubSubResponseType.PUnsubscribe:
+                                                        {
+                                                            pattern = channel;
+                                                            channel = String.Empty;
+                                                        }
+                                                        break;
                                                 }
 
                                                 var dataItem = items[index++];
