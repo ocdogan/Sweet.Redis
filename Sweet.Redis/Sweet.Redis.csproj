@@ -125,6 +125,7 @@
     <Compile Include="Common\RedisResultType.cs" />
     <Compile Include="Common\RedisDouble.cs" />
     <Compile Include="Common\RedisError.cs" />
+    <Compile Include="Common\RedisResultStatus.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
