@@ -13,14 +13,14 @@ namespace Sweet.Redis.ConsoleTest
         static void Main(string[] args)
         {
             // PerformanceTest();
-            
+
             // ScriptingNoArgsEvalTest();
             // ScriptingShaNoArgsEvalTest();
             // ScriptingWithArgsEvalTest();
             // ScriptingShaWithArgsEvalTest();
-            
+
             // PubSubTest1();
-            PubSubTest2();
+            // PubSubTest2();
             // PubSubTest3();
             // PubSubTest4();
             // PubSubTest5();
@@ -29,9 +29,9 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest8();
             // PubSubTest9();
             // PubSubTest10();
-            
+
             // MultiThreading1();
-            // MultiThreading2();
+            MultiThreading2();
         }
 
         #region Multi-Threading
@@ -87,10 +87,15 @@ namespace Sweet.Redis.ConsoleTest
                                     var @this = tupple.Item1;
                                     var rdb = tupple.Item2;
 
+                                    var sw = new Stopwatch();
+
                                     for (var j = 0; j < 100; j++)
                                     {
+                                        sw.Restart();
                                         var data = rdb.Strings.Get("large_text");
-                                        Console.WriteLine(@this.Name + ": Get, " + (data != null && data.Length == largeText.Length ? "OK" : "FAILED"));
+                                        sw.Stop();
+
+                                        Console.WriteLine(@this.Name + ": Get, " + sw.ElapsedMilliseconds + " msec, " + (data != null && data.Length == largeText.Length ? "OK" : "FAILED"));
                                     }
                                 });
 
@@ -163,8 +168,16 @@ namespace Sweet.Redis.ConsoleTest
                                     var @this = tupple.Item1;
                                     var rdb = tupple.Item2;
 
+                                    var sw = new Stopwatch();
+
                                     for (var j = 0; j < 1000; j++)
-                                        Console.WriteLine(@this.Name + ": Ping, " + rdb.Connection.Ping());
+                                    {
+                                        sw.Restart();
+                                        var result = rdb.Connection.Ping();
+                                        sw.Stop();
+
+                                        Console.WriteLine(@this.Name + ": Ping, " + sw.ElapsedMilliseconds + " msec, " + result);
+                                    }
                                 });
 
                                 th.Name = loopIndex++ + "." + i;
@@ -256,7 +269,7 @@ namespace Sweet.Redis.ConsoleTest
                 Console.ReadKey();
             }
         }
-        
+
         static void PubSubTest8()
         {
             using (var pool = new RedisConnectionPool("My redis pool",

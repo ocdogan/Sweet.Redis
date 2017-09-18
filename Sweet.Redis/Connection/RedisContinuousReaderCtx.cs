@@ -399,7 +399,8 @@ namespace Sweet.Redis
                         try
                         {
                             var receivedLength = socket.Receive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None, out readStatus);
-                            if (readStatus == SocketError.TimedOut)
+                            if (readStatus == SocketError.TimedOut ||
+                                readStatus == SocketError.WouldBlock)
                                 continue;
 
                             received = true;

@@ -93,6 +93,12 @@ namespace Sweet.Redis
             return PubSubReceiveTimeout;
         }
 
+        protected override void DoConfigure(RedisSocket socket)
+        {
+            base.DoConfigure(socket);
+            socket.Blocking = true;
+        }
+
         public bool BeginReceive()
         {
             ValidateNotDisposed();
