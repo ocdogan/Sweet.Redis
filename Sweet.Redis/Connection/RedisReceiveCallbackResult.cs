@@ -65,7 +65,9 @@ namespace Sweet.Redis
                 Interlocked.Exchange(ref m_Waiting, RedisConstants.Zero);
                 if (@event != null)
                     using (@event)
+                    {
                         @event.Set();
+                    }
             }
         }
 

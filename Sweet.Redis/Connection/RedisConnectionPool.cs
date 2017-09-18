@@ -232,16 +232,15 @@ namespace Sweet.Redis
 
             if (store != null)
             {
-                var count = store.Count;
-                if (count > 0)
+                RedisConnectionPoolMember[] members;
+                lock (m_MemberStoreLock)
                 {
-                    RedisConnectionPoolMember[] members;
-                    lock (m_MemberStoreLock)
-                    {
-                        members = store.ToArray();
-                        store.Clear();
-                    }
+                    members = store.ToArray();
+                    store.Clear();
+                }
 
+                if (members.Length > 0)
+                {
                     if (members != null && members.Length > 0)
                     {
                         members.AsParallel().ForAll(m => m.Dispose());
@@ -252,28 +251,35 @@ namespace Sweet.Redis
 
         private RedisSocket Enqueue(int db)
         {
-            lock (m_MemberStoreLock)
+            var store = m_MemberStore;
+            if (store != null)
             {
-                var store = m_MemberStore;
-                if (store != null)
+                lock (m_MemberStoreLock)
                 {
                     RedisSocket socket = null;
                     var node = store.First;
 
                     while (node != null)
                     {
-                        if (node.Value.Db == db)
+                        try
                         {
-                            socket = node.Value.ReleaseSocket();
+                            if (node.Value.Db == db)
+                            {
+                                socket = node.Value.ReleaseSocket();
 
-                            store.Remove(node);
-                            if (socket.IsConnected())
-                                return socket;
+                                store.Remove(node);
+                                if (socket.IsConnected())
+                                    return socket;
 
-                            socket.DisposeSocket();
+                                socket.DisposeSocket();
+                            }
                         }
-
-                        node = node.Next;
+                        catch (Exception)
+                        { }
+                        finally
+                        {
+                            node = node.Next;
+                        }
                     }
                 }
             }
@@ -347,25 +353,30 @@ namespace Sweet.Redis
 
                 if (conn.Disposed)
                 {
-                    if (!socket.IsConnected())
-                        socket.DisposeSocket();
-                    else
+                    try
                     {
-                        var store = m_MemberStore;
-                        if (store != null)
+                        if (!socket.IsConnected())
+                            socket.DisposeSocket();
+                        else
                         {
-                            var db = 0;
-                            if (conn is IRedisDbConnection)
-                                db = ((IRedisDbConnection)conn).Db;
-
-                            lock (m_MemberStoreLock)
+                            var store = m_MemberStore;
+                            if (store != null)
                             {
-                                store.AddLast(new RedisConnectionPoolMember(socket, db));
+                                lock (m_MemberStoreLock)
+                                {
+                                    var db = 0;
+                                    if (conn is IRedisDbConnection)
+                                        db = ((IRedisDbConnection)conn).Db;
+
+                                    store.AddLast(new RedisConnectionPoolMember(socket, db));
+                                }
                             }
                         }
                     }
-
-                    DecCount();
+                    finally
+                    {
+                        DecCount();
+                    }
                 }
             }
         }
@@ -381,10 +392,10 @@ namespace Sweet.Redis
                 var now = DateTime.UtcNow;
                 var timeout = m_Settings.IdleTimeout;
 
-                lock (m_MemberStoreLock)
+                var store = m_MemberStore;
+                if (store != null)
                 {
-                    var store = m_MemberStore;
-                    if (store != null)
+                    lock (m_MemberStoreLock)
                     {
                         var node = store.First;
                         while (node != null)
@@ -401,7 +412,10 @@ namespace Sweet.Redis
                             }
                             catch (Exception)
                             { }
-                            node = node.Next;
+                            finally
+                            {
+                                node = node.Next;
+                            }
                         }
                     }
                 }

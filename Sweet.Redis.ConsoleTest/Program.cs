@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -12,13 +13,15 @@ namespace Sweet.Redis.ConsoleTest
         static void Main(string[] args)
         {
             // PerformanceTest();
+            
             // ScriptingNoArgsEvalTest();
             // ScriptingShaNoArgsEvalTest();
             // ScriptingWithArgsEvalTest();
             // ScriptingShaWithArgsEvalTest();
+            
             // PubSubTest1();
             // PubSubTest2();
-            PubSubTest3();
+            // PubSubTest3();
             // PubSubTest4();
             // PubSubTest5();
             // PubSubTest6();
@@ -26,7 +29,170 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest8();
             // PubSubTest9();
             // PubSubTest10();
+            
+            // MultiThreading1();
+            MultiThreading2();
         }
+
+        #region Multi-Threading
+
+        static void MultiThreading2()
+        {
+            var largeText = new string('x', 100000);
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 5, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    db.Strings.Set("large_text", largeText);
+                    db.Strings.Get("large_text");
+                }
+
+                const int ThreadCount = 20;
+
+                var loopIndex = 0;
+                List<Thread> thList = null;
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        Console.Clear();
+
+                        var oldThList = thList;
+                        if (oldThList != null)
+                        {
+                            for (var i = 0; i < oldThList.Count; i++)
+                            {
+                                var th = oldThList[i];
+                                try
+                                {
+                                    if (th.IsAlive)
+                                        th.Interrupt();
+                                }
+                                catch (Exception)
+                                { }
+                            }
+                        }
+
+                        thList = new List<Thread>(ThreadCount);
+                        try
+                        {
+                            for (var i = 0; i < ThreadCount; i++)
+                            {
+                                var th = new Thread((obj) =>
+                                {
+                                    var tupple = (Tuple<Thread, IRedisDb>)obj;
+
+                                    var @this = tupple.Item1;
+                                    var rdb = tupple.Item2;
+
+                                    for (var j = 0; j < 1000; j++)
+                                    {
+                                        var data = rdb.Strings.Get("large_text");
+                                        Console.WriteLine(@this.Name + ": Get, " + (data != null && data.Length == largeText.Length ? "OK" : "FAILED"));
+                                    }
+                                });
+
+                                th.Name = loopIndex++ + "." + i;
+                                th.IsBackground = true;
+                                thList.Add(th);
+                            }
+
+                            for (var i = 0; i < thList.Count; i++)
+                            {
+                                var th = thList[i];
+                                th.Start(new Tuple<Thread, IRedisDb>(th, db));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void MultiThreading1()
+        {
+            var largeText = new string('x', 100000);
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 5, idleTimeout: 5)))
+            {
+                const int ThreadCount = 30;
+
+                var loopIndex = 0;
+                List<Thread> thList = null;
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        Console.Clear();
+
+                        var oldThList = thList;
+                        if (oldThList != null)
+                        {
+                            for (var i = 0; i < oldThList.Count; i++)
+                            {
+                                var th = oldThList[i];
+                                try
+                                {
+                                    if (th.IsAlive)
+                                        th.Interrupt();
+                                }
+                                catch (Exception)
+                                { }
+                            }
+                        }
+
+                        thList = new List<Thread>(ThreadCount);
+                        try
+                        {
+                            for (var i = 0; i < ThreadCount; i++)
+                            {
+                                var th = new Thread((obj) =>
+                                {
+                                    var tupple = (Tuple<Thread, IRedisDb>)obj;
+
+                                    var @this = tupple.Item1;
+                                    var rdb = tupple.Item2;
+
+                                    for (var j = 0; j < 1000; j++)
+                                        Console.WriteLine(@this.Name + ": Ping, " + rdb.Connection.Ping());
+                                });
+
+                                th.Name = loopIndex++ + "." + i;
+                                th.IsBackground = true;
+                                thList.Add(th);
+                            }
+
+                            for (var i = 0; i < thList.Count; i++)
+                            {
+                                var th = thList[i];
+                                th.Start(new Tuple<Thread, IRedisDb>(th, db));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+
+        #endregion Multi-Threading
 
         #region PubSub Tests
 
