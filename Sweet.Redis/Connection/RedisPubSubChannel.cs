@@ -472,7 +472,7 @@ namespace Sweet.Redis
                     try
                     {
                         connection = new RedisPubSubConnection(m_Pool.Name, m_Pool.Settings,
-                            (receivedConnection, response) =>
+                            (response) =>
                             {
                                 ResponseReceived(response);
                             },

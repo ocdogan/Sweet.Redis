@@ -63,7 +63,7 @@ namespace Sweet.Redis
         private int m_ReadPosition;
         private byte[] m_Buffer = new byte[BufferSize];
 
-        private Action<RedisContinuousReader, RedisResponse> m_OnReceive;
+        private Action<RedisResponse> m_OnReceive;
 
         private long m_ProcessingReceivedQ;
         private ConcurrentQueue<RedisResponse> m_ReceivedResponseQ = new ConcurrentQueue<RedisResponse>();
@@ -75,8 +75,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisContinuousReaderCtx(RedisContinuousReader reader, RedisConnection connection, RedisSocket socket,
-                              Action<RedisContinuousReader, RedisResponse> onReceive)
+        public RedisContinuousReaderCtx(RedisContinuousReader reader, RedisConnection connection,
+                   RedisSocket socket, Action<RedisResponse> onReceive)
         {
             Reader = reader;
             Connection = connection;
@@ -248,7 +248,7 @@ namespace Sweet.Redis
                                 {
                                     var onReceive = m_OnReceive;
                                     if (onReceive != null)
-                                        onReceive.InvokeAsync(Reader, qItem);
+                                        onReceive.InvokeAsync(qItem);
                                 }
                                 catch (Exception)
                                 { }

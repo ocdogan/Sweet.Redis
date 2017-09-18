@@ -40,20 +40,20 @@ namespace Sweet.Redis
         private long m_ReceiveState;
         private RedisContinuousReader m_Reader;
 
-        private Action<RedisConnection, RedisResponse> m_OnReceiveResponse;
+        private Action<RedisResponse> m_OnReceiveResponse;
 
         #endregion Field Members
 
         #region .Ctors
 
-        internal RedisPubSubConnection(string name, Action<RedisConnection, RedisResponse> onReceiveResponse,
+        internal RedisPubSubConnection(string name, Action<RedisResponse> onReceiveResponse,
             Action<RedisConnection, RedisSocket> onReleaseSocket, bool connectImmediately = false)
             : this(name, new RedisSettings(), onReceiveResponse, onReleaseSocket, connectImmediately)
         { }
 
         internal RedisPubSubConnection(string name, RedisSettings settings,
-            Action<RedisConnection, RedisResponse> onReceiveResponse,
-            Action<RedisConnection, RedisSocket> onReleaseSocket, bool connectImmediately = true)
+            Action<RedisResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onReleaseSocket,
+            bool connectImmediately = true)
             : base(name, settings, onReleaseSocket, null, connectImmediately)
         {
             m_OnReceiveResponse = onReceiveResponse;
@@ -119,9 +119,9 @@ namespace Sweet.Redis
                         {
                             Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
                         },
-                        (sr, response) =>
+                        (response) =>
                         {
-                            onReceiveResponse(this, response);
+                            onReceiveResponse(response);
                         });
 
                     return true;

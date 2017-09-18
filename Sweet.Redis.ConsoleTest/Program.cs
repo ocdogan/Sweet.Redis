@@ -20,7 +20,7 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingShaWithArgsEvalTest();
 
             // PubSubTest1();
-            // PubSubTest2();
+            PubSubTest2();
             // PubSubTest3();
             // PubSubTest4();
             // PubSubTest5();
@@ -31,7 +31,7 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest10();
 
             // MultiThreading1();
-            MultiThreading2();
+            // MultiThreading2();
         }
 
         #region Multi-Threading
