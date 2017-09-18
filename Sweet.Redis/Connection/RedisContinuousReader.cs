@@ -116,6 +116,19 @@ namespace Sweet.Redis
                         {
                             Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
                             Interlocked.Exchange(ref m_Socket, null);
+
+                            if (socket != null)
+                            {
+                                try
+                                {
+                                    if (socket.IsConnected())
+                                        socket.Close();
+                                }
+                                catch (Exception)
+                                { }
+
+                                socket.DisposeSocket();
+                            }
                         }
                     }).ContinueWith(t =>
                     {

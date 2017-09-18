@@ -18,14 +18,14 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingShaWithArgsEvalTest();
             // PubSubTest1();
             // PubSubTest2();
-            // PubSubTest3();
+            PubSubTest3();
             // PubSubTest4();
             // PubSubTest5();
             // PubSubTest6();
             // PubSubTest7();
             // PubSubTest8();
             // PubSubTest9();
-            PubSubTest10();
+            // PubSubTest10();
         }
 
         #region PubSub Tests

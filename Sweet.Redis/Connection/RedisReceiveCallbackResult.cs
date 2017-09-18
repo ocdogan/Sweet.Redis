@@ -110,18 +110,26 @@ namespace Sweet.Redis
                 var socket = Interlocked.Exchange(ref m_Socket, null);
                 var asyncResult = Interlocked.Exchange(ref m_AsyncResult, null);
 
-                if (asyncResult != null && socket != null && socket.Connected)
+                if (asyncResult != null && (socket != null && socket.Connected))
                 {
                     try
                     {
-                        return socket.EndReceive(asyncResult);
+                        if (asyncResult.IsCompleted)
+                            return socket.EndReceive(asyncResult);
+
+                        var waitHandle = asyncResult.AsyncWaitHandle;
+                        if (waitHandle != null)
+                        {
+                            var safeWaitHandle = waitHandle.SafeWaitHandle;
+                            if (safeWaitHandle != null && !(safeWaitHandle.IsClosed || safeWaitHandle.IsInvalid))
+                                waitHandle.Close();
+                        }
                     }
                     catch (ObjectDisposedException)
                     {
                         return 0;
                     }
                 }
-                return int.MinValue;
             }
             return int.MinValue;
         }
