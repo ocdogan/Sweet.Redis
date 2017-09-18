@@ -185,8 +185,6 @@ namespace Sweet.Redis
                     {
                         Interlocked.Exchange(ref m_Socket, null);
                         socket.DisposeSocket();
-
-                        return null;
                     }
 
                     SetState((long)RedisConnectionState.Connecting);
@@ -243,24 +241,43 @@ namespace Sweet.Redis
             DoConfigure(socket);
         }
 
+        protected virtual int GetReceiveTimeout()
+        {
+            var settings = m_Settings;
+            if (settings != null)
+            {
+                return settings.ReceiveTimeout;
+            }
+            return Timeout.Infinite;
+        }
+
+        protected virtual int GetSendTimeout()
+        {
+            var settings = m_Settings;
+            if (settings != null)
+            {
+                return settings.SendTimeout;
+            }
+            return Timeout.Infinite;
+        }
+
         protected virtual void DoConfigure(RedisSocket socket)
         {
             SetIOLoopbackFastPath(socket);
 
-            var settings = m_Settings;
-            if (settings != null)
-            {
-                if (settings.SendTimeout > 0)
-                {
-                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout,
-                                           settings.SendTimeout == int.MaxValue ? Timeout.Infinite : settings.SendTimeout);
-                }
+            var sendTimeout = GetSendTimeout();
+            var receiveTimeout = GetReceiveTimeout();
 
-                if (settings.ReceiveTimeout > 0)
-                {
-                    socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout,
-                                           settings.ReceiveTimeout == int.MaxValue ? Timeout.Infinite : settings.ReceiveTimeout);
-                }
+            if (sendTimeout > 0)
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout,
+                                        sendTimeout == int.MaxValue ? Timeout.Infinite : sendTimeout);
+            }
+
+            if (receiveTimeout > 0)
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout,
+                                        receiveTimeout == int.MaxValue ? Timeout.Infinite : receiveTimeout);
             }
 
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);

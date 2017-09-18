@@ -20,7 +20,7 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingShaWithArgsEvalTest();
             
             // PubSubTest1();
-            // PubSubTest2();
+            PubSubTest2();
             // PubSubTest3();
             // PubSubTest4();
             // PubSubTest5();
@@ -31,7 +31,7 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest10();
             
             // MultiThreading1();
-            MultiThreading2();
+            // MultiThreading2();
         }
 
         #region Multi-Threading
@@ -49,7 +49,7 @@ namespace Sweet.Redis.ConsoleTest
                     db.Strings.Get("large_text");
                 }
 
-                const int ThreadCount = 20;
+                const int ThreadCount = 50;
 
                 var loopIndex = 0;
                 List<Thread> thList = null;
@@ -87,7 +87,7 @@ namespace Sweet.Redis.ConsoleTest
                                     var @this = tupple.Item1;
                                     var rdb = tupple.Item2;
 
-                                    for (var j = 0; j < 1000; j++)
+                                    for (var j = 0; j < 100; j++)
                                     {
                                         var data = rdb.Strings.Get("large_text");
                                         Console.WriteLine(@this.Name + ": Get, " + (data != null && data.Length == largeText.Length ? "OK" : "FAILED"));

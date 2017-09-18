@@ -29,6 +29,12 @@ namespace Sweet.Redis
 {
     internal class RedisPubSubConnection : RedisConnection, IRedisPubSubConnection
     {
+        #region Constants
+
+        private const int PubSubReceiveTimeout = 500;
+
+        #endregion Constants
+
         #region Field Members
 
         private long m_ReceiveState;
@@ -81,6 +87,11 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
+
+        protected override int GetReceiveTimeout()
+        {
+            return PubSubReceiveTimeout;
+        }
 
         public bool BeginReceive()
         {

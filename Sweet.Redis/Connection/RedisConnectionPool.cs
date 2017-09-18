@@ -440,7 +440,7 @@ namespace Sweet.Redis
                     s_PurgeTimer = new Timer((state) =>
                     {
                         var pools = GetPoolList();
-                        if (pools != null)
+                        if (pools != null && pools.Length > 0)
                         {
                             pools.AsParallel().ForAll(p => p.PurgeIdles());
                         }

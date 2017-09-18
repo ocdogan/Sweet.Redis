@@ -181,18 +181,6 @@ namespace Sweet.Redis
         {
             Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
 
-            if (Interlocked.Read(ref m_InReceive) != RedisConstants.Zero)
-            {
-                try
-                {
-                    var socket = m_Socket;
-                    if (socket != null && socket.Connected)
-                        socket.Close();
-                }
-                catch (Exception)
-                { }
-            }
-
             lock (m_ReceivedCallbackResultsLock)
             {
                 while (m_ReceivedCallbackResults.Count > 0)
@@ -385,67 +373,62 @@ namespace Sweet.Redis
         private bool TryToReceive(RedisSocket socket)
         {
             if (m_WritePosition == 0 || m_ReadPosition > m_WritePosition - 1)
-                return Receive(socket) > 0;
+                return BeginReceive(socket) > 0;
             return true;
         }
 
-        private int Receive(RedisSocket socket)
+        private int BeginReceive(RedisSocket socket)
         {
-            var received = int.MinValue;
-            if (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero)
+            if (socket.IsConnected() && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero) &&
+                (Interlocked.CompareExchange(ref m_InReceive, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero))
             {
-                var receiveSize = BufferSize - m_WritePosition;
-                if (receiveSize < 1)
-                {
-                    m_WritePosition = 0;
-                    m_ReadPosition = 0;
-                    receiveSize = BufferSize;
-                }
-
-                IAsyncResult asyncResult = null;
-                Interlocked.Exchange(ref m_InReceive, RedisConstants.One);
                 try
                 {
-                    asyncResult = socket.BeginReceive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None,
-                        (ar) =>
+                    var receiveSize = BufferSize - m_WritePosition;
+                    if (receiveSize < 1)
+                    {
+                        Interlocked.Exchange(ref m_WritePosition, 0);
+                        Interlocked.Exchange(ref m_ReadPosition, 0);
+                        receiveSize = BufferSize;
+                    }
+
+                    var received = false;
+                    var readStatus = SocketError.Success;
+                    do
+                    {
+                        try
                         {
-                            RedisReceiveCallbackResult callbackResult = null;
-                            try
-                            {
-                                received = CompleteAsyncResult(ar, out callbackResult);
-                                if (received > 0)
-                                    m_WritePosition += received;
-                                else if (received == 0 || received == -1)
-                                    Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
-                            }
-                            finally
-                            {
+                            var receivedLength = socket.Receive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None, out readStatus);
+                            if (readStatus == SocketError.TimedOut)
+                                continue;
+
+                            received = true;
+                            if (receivedLength > 0)
+                                IncWritePosition(receivedLength);
+                            else if (receivedLength == 0)
+                                Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
+
+                            return receivedLength;
+                        }
+                        catch (SocketException e)
+                        {
+                            if (e.SocketErrorCode != SocketError.TimedOut)
+                                throw;
+                        }
+                        catch (Exception e)
+                        {
+                            if (!(e is SocketException))
                                 Interlocked.Exchange(ref m_InReceive, RedisConstants.Zero);
-                                if (callbackResult != null)
-                                    callbackResult.Dispose();
-                            }
-                        }, socket);
+                        }
+                    }
+                    while (!received && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero));
                 }
-                catch (Exception)
+                finally
                 {
                     Interlocked.Exchange(ref m_InReceive, RedisConstants.Zero);
                 }
-
-                if (asyncResult != null && !asyncResult.IsCompleted)
-                {
-                    using (var cr = new RedisReceiveCallbackResult(socket, asyncResult))
-                    {
-                        lock (m_ReceivedCallbackResultsLock)
-                        {
-                            if (!cr.IsCompleted)
-                                m_ReceivedCallbackResults.AddLast(cr);
-                        }
-                        cr.WaitOne();
-                        RemoveCallbackResult(cr);
-                    }
-                }
             }
-            return received;
+            return int.MinValue;
         }
 
         private void RemoveCallbackResult(RedisReceiveCallbackResult callbackResult)
@@ -513,7 +496,12 @@ namespace Sweet.Redis
 
         private void IncReadPosition(int inc = 1)
         {
-            m_ReadPosition = Math.Min(BufferSize, Math.Max(0, m_ReadPosition + inc));
+            Interlocked.Exchange(ref m_ReadPosition, Math.Min(BufferSize, Math.Max(0, m_ReadPosition + inc)));
+        }
+
+        private void IncWritePosition(int inc = 1)
+        {
+            Interlocked.Exchange(ref m_WritePosition, Math.Min(BufferSize, Math.Max(0, m_WritePosition + inc)));
         }
 
         private byte[] ReadLine(RedisSocket socket)
