@@ -10,6 +10,19 @@ namespace Sweet.Redis
 
         #endregion Field Members
 
+        #region .Ctors
+
+        internal RedisResult()
+        { }
+
+        internal RedisResult(T value)
+        {
+            m_Value = value;
+            m_Status = RedisResultStatus.Completed;
+        }
+
+        #endregion .Ctors
+
         #region Properties
 
         public bool IsCompleted
