@@ -116,7 +116,7 @@ namespace Sweet.Redis
         {
             get
             {
-                return Socket.OSSupportsIPv4;
+                return Socket.SupportsIPv4;
             }
         }
 
@@ -419,7 +419,7 @@ namespace Sweet.Redis
 
         public IAsyncResult BeginConnect(EndPoint end_point, AsyncCallback callback, object state)
         {
-            var connState = new Tuple<Socket, bool>(m_Socket,  m_Socket.IsConnected());
+            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
             return m_Socket.BeginConnect(end_point, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
