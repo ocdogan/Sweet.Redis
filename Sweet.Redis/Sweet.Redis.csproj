@@ -44,7 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connection\RedisActionBag.cs" />
     <Compile Include="Connection\RedisAsyncStateWrapper.cs" />
+    <Compile Include="Connection\RedisCallbackHub.cs" />
     <Compile Include="Connection\RedisContinuousReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Buffers\RedisChunkBuffer.cs" />
@@ -108,7 +110,7 @@
     <Compile Include="Connection\RedisConnection.cs" />
     <Compile Include="Connection\IRedisConnection.cs" />
     <Compile Include="Connection\IRedisPubSubConnection.cs" />
-    <Compile Include="Connection\RedisPubSubConnection.cs" />
+    <Compile Include="Connection\RedisContinuousReaderConnection.cs" />
     <Compile Include="Connection\RedisNativeSocket.cs" />
     <Compile Include="Connection\RedisContinuousReaderCtx.cs" />
     <Compile Include="Connection\RedisReceiveCallbackResult.cs" />

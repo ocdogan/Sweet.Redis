@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisPubSubConnection : RedisConnection, IRedisPubSubConnection
+    internal class RedisContinuousReaderConnection : RedisConnection, IRedisPubSubConnection
     {
         #region Constants
 
@@ -46,12 +46,12 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisPubSubConnection(string name, Action<RedisResponse> onReceiveResponse,
+        internal RedisContinuousReaderConnection(string name, Action<RedisResponse> onReceiveResponse,
             Action<RedisConnection, RedisSocket> onReleaseSocket, bool connectImmediately = false)
             : this(name, new RedisSettings(), onReceiveResponse, onReleaseSocket, connectImmediately)
         { }
 
-        internal RedisPubSubConnection(string name, RedisSettings settings,
+        internal RedisContinuousReaderConnection(string name, RedisSettings settings,
             Action<RedisResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onReleaseSocket,
             bool connectImmediately = true)
             : base(name, settings, onReleaseSocket, null, connectImmediately)

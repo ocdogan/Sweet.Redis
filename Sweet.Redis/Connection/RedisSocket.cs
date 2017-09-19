@@ -112,20 +112,11 @@ namespace Sweet.Redis
             }
         }
 
-        public static bool SupportsIPv4
+        public static bool OSSupportsIPv4
         {
             get
             {
-                return Socket.SupportsIPv4;
-            }
-        }
-
-        [Obsolete("Use OSSupportsIPv6 instead")]
-        public static bool SupportsIPv6
-        {
-            get
-            {
-                return Socket.SupportsIPv6;
+                return Socket.OSSupportsIPv4;
             }
         }
 
