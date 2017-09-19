@@ -115,7 +115,6 @@ namespace Sweet.Redis
         private readonly Semaphore m_MaxCountSync;
         private readonly RedisSettings m_Settings;
         private readonly object m_MemberStoreLock = new object();
-        private readonly object m_PubSubChannelLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
 
         #endregion Field Readonly Members
@@ -124,7 +123,12 @@ namespace Sweet.Redis
         private string m_Name;
         private int m_PurgingIdles;
         private long m_WaitRetryCount;
+
+        private readonly object m_PubSubChannelLock = new object();
         private RedisPubSubChannel m_PubSubChannel;
+
+        private readonly object m_MonitorChannelLock = new object();
+        private RedisMonitorChannel m_MonitorChannel;
 
         #endregion Field Members
 
@@ -161,9 +165,13 @@ namespace Sweet.Redis
             if (!disposing)
                 m_MaxCountSync.Close();
 
-            var channel = Interlocked.Exchange(ref m_PubSubChannel, null);
-            if (channel != null)
-                channel.Dispose();
+            var monitorChannel = Interlocked.Exchange(ref m_MonitorChannel, null);
+            if (monitorChannel != null)
+                monitorChannel.Dispose();
+
+            var pubSubChannel = Interlocked.Exchange(ref m_PubSubChannel, null);
+            if (pubSubChannel != null)
+                pubSubChannel.Dispose();
         }
 
         #endregion Destructors
@@ -173,6 +181,29 @@ namespace Sweet.Redis
         public long Count
         {
             get { return Interlocked.Read(ref m_InitCount); }
+        }
+
+        public RedisMonitorChannel MonitorChannel
+        {
+            get
+            {
+                ValidateNotDisposed();
+
+                var channel = m_MonitorChannel;
+                if (channel == null)
+                {
+                    lock (m_MonitorChannelLock)
+                    {
+                        channel = m_MonitorChannel;
+                        if (channel == null)
+                        {
+                            channel = new RedisMonitorChannel(this);
+                            Interlocked.Exchange(ref m_MonitorChannel, channel);
+                        }
+                    }
+                }
+                return channel;
+            }
         }
 
         public string Name

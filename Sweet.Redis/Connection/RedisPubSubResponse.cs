@@ -76,6 +76,8 @@ namespace Sweet.Redis
 
         #endregion Properties
 
+        #region Methods
+
         public static RedisPubSubResponse ToPubSubResponse(RedisResponse response)
         {
             if (response != null &&
@@ -188,5 +190,7 @@ namespace Sweet.Redis
             }
             return RedisPubSubResponse.Empty;
         }
+
+        #endregion Methods
     }
 }

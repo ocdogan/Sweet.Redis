@@ -714,6 +714,27 @@ namespace Sweet.Redis
             return defaultValue;
         }
 
+        internal static int IndexOf(this byte[] data, byte b, int startPos = 0, int length = -1)
+        {
+            if (data != null && length != 0)
+            {
+                var dataLength = data.Length;
+
+                startPos = Math.Max(0, startPos);
+                if (dataLength > 0 && startPos < dataLength)
+                {
+                    var endPos = dataLength;
+                    if (length > 0)
+                        endPos = Math.Min(dataLength, startPos + length);
+
+                    for (var i = startPos; i < endPos; i++)
+                        if (data[i] == b)
+                            return i;
+                }
+            }
+            return -1;
+        }
+
         #endregion Methods
     }
 }

@@ -29,11 +29,15 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest8();
             // PubSubTest9();
             // PubSubTest10();
-            PubSubTest11();
-            PubSubTest12();
+            // PubSubTest11();
+            // PubSubTest12();
 
             // MultiThreading1();
             // MultiThreading2();
+
+            // MonitorTest1();
+            // MonitorTest2();
+            MonitorTest3();
         }
 
         #region Multi-Threading
@@ -208,6 +212,138 @@ namespace Sweet.Redis.ConsoleTest
 
 
         #endregion Multi-Threading
+
+        #region Monitor Tests
+
+        static void MonitorTest3()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.MonitorChannel.Subscribe((m) =>
+                {
+                    Console.WriteLine("Time: " + m.Time);
+                    Console.WriteLine("Client: " + m.ClientInfo);
+
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                });
+
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5; i++)
+                        db.Connection.Ping("1");
+                }
+
+                Thread.Sleep(1000);
+
+                pool.MonitorChannel.Quit();
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5; i++)
+                        db.Connection.Ping("2");
+                }
+
+                Thread.Sleep(1000);
+                pool.MonitorChannel.Monitor();
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5; i++)
+                        db.Connection.Ping("3");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        static void MonitorTest2()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.MonitorChannel.Subscribe((m) =>
+                {
+                    Console.WriteLine("Time: " + m.Time);
+                    Console.WriteLine("Client: " + m.ClientInfo);
+
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                });
+
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5; i++)
+                        db.Connection.Ping();
+                }
+
+                Thread.Sleep(5000);
+
+                pool.MonitorChannel.Quit();
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5; i++)
+                        db.Connection.Ping();
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        static void MonitorTest1()
+        {
+            var largeText = Encoding.UTF8.GetBytes(new string('x', 100000));
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.MonitorChannel.Subscribe((m) =>
+                {
+                    Console.WriteLine("Time: " + m.Time);
+                    Console.WriteLine("Client: " + m.ClientInfo);
+
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                });
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        #endregion Monitor Tests
 
         #region PubSub Tests
 
