@@ -153,11 +153,10 @@ namespace Sweet.Redis
         {
             get
             {
-                if (!Disposed &&
-                    Interlocked.Read(ref m_ReadState) != RedisConstants.Zero)
+                if (!Disposed && Interlocked.Read(ref m_ReadState) != RedisConstants.Zero)
                 {
                     var reader = Reader;
-                    return reader != null && !reader.Disposed && reader.Receiving;
+                    return (reader != null) && !reader.Disposed && reader.Receiving;
                 }
                 return false;
             }
@@ -272,17 +271,25 @@ namespace Sweet.Redis
 
         private RedisResponse ProcessResponse()
         {
-            var item = new RedisResponse();
-
             var b = ReadByte(Socket);
             if (b < 0)
+            {
+                if (!Receiving)
+                    return null;
+
                 throw new RedisException("Unexpected byte for redis response type");
+            }
+
+            var item = new RedisResponse();
 
             item.TypeByte = b;
             if (item.Type == RedisRawObjType.Undefined)
                 throw new RedisException("Undefined redis response type");
 
             var data = ReadLine(Socket);
+            if (data == null && !Receiving)
+                return null;
+
             switch (item.Type)
             {
                 case RedisRawObjType.Integer:
@@ -311,9 +318,16 @@ namespace Sweet.Redis
                             if (item.Length == 0)
                                 item.Data = new byte[0];
                             else
-                                item.Data = ReadBytes(Socket, item.Length);
+                            {
+                                data = ReadBytes(Socket, item.Length);
+                                if (data == null && !Receiving)
+                                    return null;
 
-                            EatCRLF(Socket);
+                                item.Data = data;
+                            }
+
+                            if (!EatCRLF(Socket))
+                                return null;
                         }
                         SetReady(item);
                     }
@@ -337,7 +351,12 @@ namespace Sweet.Redis
                             {
                                 var child = ProcessResponse();
                                 if (child == null)
+                                {
+                                    if (!Receiving)
+                                        return null;
+
                                     throw new RedisException("Unexpected response data, not valid data for array item");
+                                }
 
                                 item.Add(child);
                             }
@@ -345,7 +364,6 @@ namespace Sweet.Redis
                     }
                     break;
             }
-
             return item;
         }
 
@@ -362,18 +380,27 @@ namespace Sweet.Redis
             }
         }
 
-        private void EatCRLF(RedisSocket socket)
+        private bool EatCRLF(RedisSocket socket)
         {
             var data = ReadBytes(socket, RedisConstants.CRLFLength);
-            if (data == null || data.Length != RedisConstants.CRLFLength ||
-               data[0] != '\r' || data[1] != '\n')
+            if ((data == null || data.Length != RedisConstants.CRLFLength ||
+               data[0] != '\r' || data[1] != '\n'))
+            {
+                if (!Receiving)
+                    return false;
                 throw new RedisException("Corrupted redis response, not a line end");
+            }
+            return true;
         }
 
-        private bool TryToReceive(RedisSocket socket)
+        private bool TryToReceive(RedisSocket socket, out int receivedLength)
         {
+            receivedLength = 0;
             if (m_WritePosition == 0 || m_ReadPosition > m_WritePosition - 1)
-                return BeginReceive(socket) > 0;
+            {
+                receivedLength = BeginReceive(socket);
+                return receivedLength > 0;
+            }
             return true;
         }
 
@@ -485,14 +512,15 @@ namespace Sweet.Redis
 
         private int ReadByte(RedisSocket socket)
         {
-            if (TryToReceive(socket))
+            int receivedLength;
+            if (TryToReceive(socket, out receivedLength))
             {
                 var b = m_Buffer[m_ReadPosition];
                 IncReadPosition();
 
                 return b;
             }
-            return -1;
+            return receivedLength;
         }
 
         private void IncReadPosition(int inc = 1)
@@ -507,7 +535,8 @@ namespace Sweet.Redis
 
         private byte[] ReadLine(RedisSocket socket)
         {
-            if (TryToReceive(socket))
+            int receivedLength;
+            if (TryToReceive(socket, out receivedLength))
             {
                 byte[] line;
                 var state = TryReadLineFromBuffer(CRLFState.None, out line);
@@ -523,7 +552,7 @@ namespace Sweet.Redis
                     list.Add(line);
                 }
 
-                while (TryToReceive(socket))
+                while (TryToReceive(socket, out receivedLength))
                 {
                     state = TryReadLineFromBuffer(state, out line);
                     if (line != null && line.Length > 0)
@@ -535,6 +564,9 @@ namespace Sweet.Redis
                     if (state == CRLFState.CRLF)
                         break;
                 }
+
+                if (!Receiving)
+                    return null;
 
                 var listCount = list.Count;
                 if (listCount == 1)
@@ -622,7 +654,8 @@ namespace Sweet.Redis
             if (length == 0)
                 return new byte[0];
 
-            if (TryToReceive(socket))
+            int receivedLength;
+            if (TryToReceive(socket, out receivedLength))
             {
                 byte[] data;
                 var received = TryReadBytesFromBuffer(length, out data);
@@ -641,7 +674,7 @@ namespace Sweet.Redis
                     list.Add(data);
                 }
 
-                while (length > 0 && TryToReceive(socket))
+                while (length > 0 && TryToReceive(socket, out receivedLength))
                 {
                     received = TryReadBytesFromBuffer(length, out data);
                     if (received > 0)

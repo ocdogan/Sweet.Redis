@@ -20,7 +20,7 @@ namespace Sweet.Redis.ConsoleTest
             // ScriptingShaWithArgsEvalTest();
 
             // PubSubTest1();
-            PubSubTest2();
+            // PubSubTest2();
             // PubSubTest3();
             // PubSubTest4();
             // PubSubTest5();
@@ -29,6 +29,8 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest8();
             // PubSubTest9();
             // PubSubTest10();
+            PubSubTest11();
+            PubSubTest12();
 
             // MultiThreading1();
             // MultiThreading2();
@@ -208,6 +210,78 @@ namespace Sweet.Redis.ConsoleTest
         #endregion Multi-Threading
 
         #region PubSub Tests
+
+        static void PubSubTest12()
+        {
+            var largeText = Encoding.UTF8.GetBytes(new string('x', 100000));
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.PubSubChannel.PSubscribe((m) =>
+                {
+                    Console.WriteLine("Channel: " + m.Channel);
+                    Console.WriteLine("Pattern: " + m.Pattern);
+
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                }, "ab*", "xyz");
+
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 1000; i++)
+                        db.PubSubs.Publish("abc", largeText);
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
+
+        static void PubSubTest11()
+        {
+            var smallText = Encoding.UTF8.GetBytes(new string('x', 1000));
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                pool.PubSubChannel.PSubscribe((m) =>
+                {
+                    Console.WriteLine("Channel: " + m.Channel);
+                    Console.WriteLine("Pattern: " + m.Pattern);
+
+                    if (m.Data != null)
+                        Console.WriteLine("Received data: " + Encoding.UTF8.GetString((byte[])m.Data));
+                    else
+                        Console.WriteLine("Received data: ?");
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to escape ...");
+                }, "ab*", "xyz");
+
+                Thread.Sleep(1000);
+
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 1000; i++)
+                        db.PubSubs.Publish("abc", smallText);
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to escape ...");
+
+                Console.ReadKey();
+            }
+        }
 
         static void PubSubTest10()
         {
