@@ -36,7 +36,7 @@ namespace Sweet.Redis
 
         public object RawData { get { return m_Value; } }
 
-        public virtual RedisResultType Type { get; }
+        public virtual RedisResultType Type { get { return RedisResultType.Undefined; } }
 
         public RedisResultStatus Status
         {
