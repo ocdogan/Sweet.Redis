@@ -75,6 +75,11 @@ namespace Sweet.Redis
             return base.GetHashCode();
         }
 
+        public override string ToString()
+        {
+            return "(nil)";
+        }
+
         public static bool operator ==(RedisNull a, RedisNull b)
         {
             return true;
