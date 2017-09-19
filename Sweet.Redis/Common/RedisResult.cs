@@ -133,7 +133,7 @@ namespace Sweet.Redis
             get
             {
                 ValidateCompleted();
-                return default(TValue);
+                return m_Value;
             }
             internal set
             {
@@ -160,7 +160,7 @@ namespace Sweet.Redis
         {
             if (ReferenceEquals(obj, null))
             {
-                var val = Value;
+                var val = m_Value;
                 return ReferenceEquals(val, null) || (val == null);
             }
 
@@ -172,10 +172,22 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
+            var val = m_Value;
             if (ReferenceEquals(val, null))
                 return base.GetHashCode();
             return val.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            if (!IsCompleted)
+                return "(nil)";
+
+            var val = m_Value;
+            if (ReferenceEquals(val, null))
+                return "(nil)";
+            
+            return val.ToString();
         }
 
         public static bool operator ==(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)
