@@ -48,9 +48,13 @@ namespace Sweet.Redis
                         var addrs = Dns.EndGetHostAddresses(ar);
                         innerTcs.TrySetResult((addrs != null && addrs.Length > 0) ? addrs[0] : null);
                     }
-                    catch (Exception ex)
+                    catch (OperationCanceledException)
                     {
-                        innerTcs.TrySetException(ex);
+                        innerTcs.TrySetCanceled();
+                    }
+                    catch (Exception e)
+                    {
+                        innerTcs.TrySetException(e);
                     }
                 }, tcs);
             return tcs.Task;
@@ -72,9 +76,13 @@ namespace Sweet.Redis
                     ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -90,6 +98,10 @@ namespace Sweet.Redis
                 {
                     ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
+                }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
                 }
                 catch (Exception e)
                 {
@@ -110,6 +122,10 @@ namespace Sweet.Redis
                     ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
+                }
                 catch (Exception e)
                 {
                     innerTcs.TrySetException(e);
@@ -129,6 +145,10 @@ namespace Sweet.Redis
                     ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
+                }
                 catch (Exception e)
                 {
                     innerTcs.TrySetException(e);
@@ -147,6 +167,10 @@ namespace Sweet.Redis
                 {
                     ((Socket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
+                }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
                 }
                 catch (Exception e)
                 {
@@ -168,9 +192,13 @@ namespace Sweet.Redis
                     ((Socket)innerTcs.Task.AsyncState).EndDisconnect(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -187,9 +215,13 @@ namespace Sweet.Redis
                 {
                     innerTcs.TrySetResult(((Socket)innerTcs.Task.AsyncState).EndSend(ar));
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -206,9 +238,13 @@ namespace Sweet.Redis
                 {
                     innerTcs.TrySetResult(((Socket)innerTcs.Task.AsyncState).EndReceive(ar));
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -230,9 +266,13 @@ namespace Sweet.Redis
                     ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -248,6 +288,10 @@ namespace Sweet.Redis
                 {
                     ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
+                }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
                 }
                 catch (Exception e)
                 {
@@ -268,6 +312,10 @@ namespace Sweet.Redis
                     ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
+                }
                 catch (Exception e)
                 {
                     innerTcs.TrySetException(e);
@@ -287,6 +335,10 @@ namespace Sweet.Redis
                     ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
                 }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
+                }
                 catch (Exception e)
                 {
                     innerTcs.TrySetException(e);
@@ -305,6 +357,10 @@ namespace Sweet.Redis
                 {
                     ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
                     innerTcs.TrySetResult(true);
+                }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
                 }
                 catch (Exception e)
                 {
@@ -326,9 +382,13 @@ namespace Sweet.Redis
                     ((RedisSocket)innerTcs.Task.AsyncState).EndDisconnect(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -345,9 +405,13 @@ namespace Sweet.Redis
                 {
                     innerTcs.TrySetResult(((RedisSocket)innerTcs.Task.AsyncState).EndSend(ar));
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -364,9 +428,13 @@ namespace Sweet.Redis
                 {
                     innerTcs.TrySetResult(((RedisSocket)innerTcs.Task.AsyncState).EndReceive(ar));
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -388,9 +456,13 @@ namespace Sweet.Redis
                     ((Stream)innerTcs.Task.AsyncState).EndWrite(ar);
                     innerTcs.TrySetResult(true);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -407,9 +479,13 @@ namespace Sweet.Redis
                 {
                     innerTcs.TrySetResult(((Stream)innerTcs.Task.AsyncState).EndRead(ar));
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -447,9 +523,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -467,9 +547,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -487,9 +571,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -507,9 +595,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -527,9 +619,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -547,9 +643,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -567,9 +667,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -587,9 +691,13 @@ namespace Sweet.Redis
                     action.EndInvoke(ar);
                     innerTcs.TrySetResult(null);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -607,9 +715,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -627,9 +739,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -647,9 +763,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -667,9 +787,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -687,9 +811,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -707,9 +835,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -727,9 +859,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
@@ -747,9 +883,13 @@ namespace Sweet.Redis
                     var result = action.EndInvoke(ar);
                     innerTcs.TrySetResult(result);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException)
                 {
-                    innerTcs.TrySetException(ex);
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
                 }
             }, tcs);
             return tcs.Task;
