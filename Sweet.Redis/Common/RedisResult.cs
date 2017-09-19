@@ -42,8 +42,8 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private TValue m_Value;
-        private RedisResultStatus m_Status = RedisResultStatus.Pending;
+        protected TValue m_Value;
+        protected RedisResultStatus m_Status = RedisResultStatus.Pending;
 
         #endregion Field Members
 
@@ -109,13 +109,13 @@ namespace Sweet.Redis
             }
         }
 
-        public virtual int Length 
-        { 
-            get 
+        public virtual int Length
+        {
+            get
             {
                 ValidateCompleted();
-                return 0; 
-            } 
+                return 0;
+            }
         }
 
         public object RawData { get { return Value; } }
@@ -186,7 +186,7 @@ namespace Sweet.Redis
             var val = m_Value;
             if (ReferenceEquals(val, null))
                 return "(nil)";
-            
+
             return val.ToString();
         }
 
@@ -197,17 +197,20 @@ namespace Sweet.Redis
                 if (ReferenceEquals(b, null))
                     return true;
 
-                var val = b.Value;
-                return ReferenceEquals(val, null) || (val == null);
+                var val = b.m_Value;
+                return ReferenceEquals(val, null) || Object.Equals(val, null);
             }
 
             if (ReferenceEquals(b, null))
             {
-                var val = a.Value;
-                return ReferenceEquals(val, null) || (val == null);
+                var val = a.m_Value;
+                return ReferenceEquals(val, null) || Object.Equals(val, null);
             }
 
-            return Object.Equals(a.Value, b.Value);
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.Status == b.Status) && Object.Equals(a.Value, b.Value);
         }
 
         public static bool operator !=(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)

@@ -52,7 +52,7 @@ namespace Sweet.Redis
             return new RedisNullableDouble(value);
         }
 
-        public static implicit operator double?(RedisNullableDouble value)  // implicit RedisNullableDouble to double? conversion operator
+        public static implicit operator double? (RedisNullableDouble value)  // implicit RedisNullableDouble to double? conversion operator
         {
             return value.Value;
         }
@@ -83,18 +83,15 @@ namespace Sweet.Redis
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
-            {
-                var val = Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return false;
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisNullableDouble)
-                return Object.Equals(Value, ((RedisNullableDouble)obj).Value);
-
-            return Object.Equals(Value, obj);
+            var rObj = obj as RedisNullableDouble;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+            return false;
         }
 
         public override int GetHashCode()
@@ -108,21 +105,15 @@ namespace Sweet.Redis
         public static bool operator ==(RedisNullableDouble a, RedisNullableDouble b)
         {
             if (ReferenceEquals(a, null))
-            {
-                if (ReferenceEquals(b, null))
-                    return true;
-
-                var val = b.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return ReferenceEquals(b, null);
 
             if (ReferenceEquals(b, null))
-            {
-                var val = a.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return false;
 
-            return Object.Equals(a.Value, b.Value);
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.m_Status == b.m_Status) && (a.m_Value == b.m_Value);
         }
 
         public static bool operator !=(RedisNullableDouble a, RedisNullableDouble b)

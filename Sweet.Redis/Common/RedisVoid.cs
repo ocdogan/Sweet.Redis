@@ -59,12 +59,12 @@ namespace Sweet.Redis
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
-                return true;
+                return false;
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisNull)
+            if (obj is RedisVoid)
                 return true;
 
             return Object.Equals(obj, null);

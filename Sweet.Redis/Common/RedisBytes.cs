@@ -48,7 +48,7 @@ namespace Sweet.Redis
                 ValidateCompleted();
                 if (index < 0)
                     throw new ArgumentOutOfRangeException("index", "Index value is out of range");
-                
+
                 var val = Value;
                 if (val != null)
                     return val[index];
@@ -78,7 +78,7 @@ namespace Sweet.Redis
             return new RedisBytes(value);
         }
 
-        public static implicit operator byte[](RedisBytes value)  // implicit RedisBytes to byte[] conversion operator
+        public static implicit operator byte[] (RedisBytes value)  // implicit RedisBytes to byte[] conversion operator
         {
             return value.Value;
         }
@@ -90,18 +90,15 @@ namespace Sweet.Redis
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
-            {
-                var val = Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return false;
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisBytes)
-                return Object.Equals(Value, ((RedisBytes)obj).Value);
-
-            return Object.Equals(Value, obj);
+            var rObj = obj as RedisBytes;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+            return false;
         }
 
         public override int GetHashCode()
@@ -115,21 +112,15 @@ namespace Sweet.Redis
         public static bool operator ==(RedisBytes a, RedisBytes b)
         {
             if (ReferenceEquals(a, null))
-            {
-                if (ReferenceEquals(b, null))
-                    return true;
-
-                var val = b.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return ReferenceEquals(b, null);
 
             if (ReferenceEquals(b, null))
-            {
-                var val = a.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return false;
 
-            return Object.Equals(a.Value, b.Value);
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.m_Status == b.m_Status) && (a.m_Value == b.m_Value);
         }
 
         public static bool operator !=(RedisBytes a, RedisBytes b)

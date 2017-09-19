@@ -72,17 +72,17 @@ namespace Sweet.Redis
             return new RedisNullableInt((long?)value.Value);
         }
 
-        public static implicit operator long?(RedisNullableInt value)  // implicit RedisNullableInt to long conversion operator
+        public static implicit operator long? (RedisNullableInt value)  // implicit RedisNullableInt to long conversion operator
         {
             return value.Value;
         }
 
-        public static implicit operator int?(RedisNullableInt value)  // implicit RedisNullableInt to int conversion operator
+        public static implicit operator int? (RedisNullableInt value)  // implicit RedisNullableInt to int conversion operator
         {
             return (int)value.Value;
         }
 
-        public static implicit operator double?(RedisNullableInt value)  // implicit RedisNullableInt to double conversion operator
+        public static implicit operator double? (RedisNullableInt value)  // implicit RedisNullableInt to double conversion operator
         {
             return value.Value;
         }
@@ -94,18 +94,15 @@ namespace Sweet.Redis
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
-            {
-                var val = Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return false;
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisNullableInt)
-                return Object.Equals(Value, ((RedisNullableInt)obj).Value);
-
-            return Object.Equals(Value, obj);
+            var rObj = obj as RedisNullableInt;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+            return false;
         }
 
         public override int GetHashCode()
@@ -119,21 +116,15 @@ namespace Sweet.Redis
         public static bool operator ==(RedisNullableInt a, RedisNullableInt b)
         {
             if (ReferenceEquals(a, null))
-            {
-                if (ReferenceEquals(b, null))
-                    return true;
-
-                var val = b.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return ReferenceEquals(b, null);
 
             if (ReferenceEquals(b, null))
-            {
-                var val = a.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return false;
 
-            return Object.Equals(a.Value, b.Value);
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.m_Status == b.m_Status) && (a.m_Value == b.m_Value);
         }
 
         public static bool operator !=(RedisNullableInt a, RedisNullableInt b)
