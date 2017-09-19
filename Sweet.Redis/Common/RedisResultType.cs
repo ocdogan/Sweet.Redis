@@ -2,6 +2,7 @@
 {
     public enum RedisResultType
     {
+        Undefined,
         Boolean,
         Bytes,
         Double,
