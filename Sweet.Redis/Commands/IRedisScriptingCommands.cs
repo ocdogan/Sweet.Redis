@@ -55,20 +55,20 @@ namespace Sweet.Redis
      */
     public interface IRedisScriptingCommands
     {
-        RedisRawObj Eval(string script, params RedisKeyValue<string, byte[]>[] args);
-        RedisRawObj EvalString(string script, params RedisKeyValue<string, string>[] args);
+        RedisRaw Eval(string script, params RedisKeyValue<string, byte[]>[] args);
+        RedisRaw EvalString(string script, params RedisKeyValue<string, string>[] args);
 
-        RedisRawObj EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args);
-        RedisRawObj EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args);
-        RedisRawObj EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args);
-        RedisRawObj EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args);
+        RedisRaw EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args);
+        RedisRaw EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args);
+        RedisRaw EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args);
+        RedisRaw EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args);
 
-        bool ScriptDebugYes();
-        bool ScriptDebugSync();
-        bool ScriptDebugNo();
-        long[] ScriptExists(string sha1, params string[] sha1s);
-        bool ScriptFush();
-        bool ScriptKill();
-        string ScriptLoad(string script);
+        RedisBool ScriptDebugYes();
+        RedisBool ScriptDebugSync();
+        RedisBool ScriptDebugNo();
+        RedisMultiInt ScriptExists(string sha1, params string[] sha1s);
+        RedisBool ScriptFush();
+        RedisBool ScriptKill();
+        RedisString ScriptLoad(string script);
     }
 }

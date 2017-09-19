@@ -22,12 +22,24 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Text;
+
 namespace Sweet.Redis
 {
-    public enum RedisResultStatus
+    public class RedisNullVal
     {
-        Pending,
-        Queued,
-        Completed
+        #region Static Members
+
+        public static readonly RedisNullVal Value = new RedisNullVal();
+
+        #endregion Static Members
+
+        #region .Ctors
+
+        private RedisNullVal()
+        { }
+
+        #endregion .Ctors
     }
 }

@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private RedisRawObj Eval(byte[] cmd, string source, params RedisKeyValue<string, string>[] args)
+        private RedisRaw Eval(byte[] cmd, string source, params RedisKeyValue<string, string>[] args)
         {
             var argsLength = args.Length;
             if (argsLength == 0)
@@ -58,7 +58,7 @@ namespace Sweet.Redis
             return ExpectArray(cmd, parameters);
         }
 
-        private RedisRawObj Eval(byte[] cmd, string source, params RedisKeyValue<string, byte[]>[] args)
+        private RedisRaw Eval(byte[] cmd, string source, params RedisKeyValue<string, byte[]>[] args)
         {
             var argsLength = args.Length;
             if (argsLength == 0)
@@ -78,7 +78,7 @@ namespace Sweet.Redis
             return ExpectArray(cmd, parameters);
         }
 
-        public RedisRawObj Eval(string script, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRaw Eval(string script, params RedisKeyValue<string, byte[]>[] args)
         {
             if (String.IsNullOrEmpty(script))
                 throw new ArgumentNullException("script");
@@ -86,7 +86,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.Eval, script, args);
         }
 
-        public RedisRawObj EvalString(string script, params RedisKeyValue<string, string>[] args)
+        public RedisRaw EvalString(string script, params RedisKeyValue<string, string>[] args)
         {
             if (String.IsNullOrEmpty(script))
                 throw new ArgumentNullException("script");
@@ -94,7 +94,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.Eval, script, args);
         }
 
-        public RedisRawObj EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRaw EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -102,7 +102,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.EvalSha, sha1, args);
         }
 
-        public RedisRawObj EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRaw EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -137,7 +137,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisRawObj EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args)
+        public RedisRaw EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -145,7 +145,7 @@ namespace Sweet.Redis
             return Eval(RedisCommands.EvalSha, sha1, args);
         }
 
-        public RedisRawObj EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args)
+        public RedisRaw EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
@@ -180,27 +180,27 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ScriptDebugNo()
+        public RedisBool ScriptDebugNo()
         {
             return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.No);
         }
 
-        public bool ScriptDebugSync()
+        public RedisBool ScriptDebugSync()
         {
             return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.Sync);
         }
 
-        public bool ScriptDebugYes()
+        public RedisBool ScriptDebugYes()
         {
             return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.Yes);
         }
 
-        public long[] ScriptExists(string sha1, params string[] sha1s)
+        public RedisMultiInt ScriptExists(string sha1, params string[] sha1s)
         {
             if (String.IsNullOrEmpty(sha1))
                 throw new ArgumentNullException("sha1");
 
-            RedisRawObj response = null;
+            RedisRaw response = null;
             if (sha1s.Length == 0)
                 response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1.ToBytes());
             else
@@ -215,24 +215,28 @@ namespace Sweet.Redis
             var resultLength = sha1.Length + 1;
             var result = new long[resultLength];
 
-            if (response != null && response.Type == RedisRawObjType.Array)
+            if (response != null)
             {
-                var items = response.Items;
-                if (items != null)
+                var responseValue = response.Value;
+                if (responseValue != null && responseValue.Type == RedisRawObjType.Array)
                 {
-                    var responseLength = response.Count;
-
-                    for (var i = 0; i < resultLength && i < responseLength; i++)
+                    var items = responseValue.Items;
+                    if (items != null)
                     {
-                        var item = items[i];
-                        if (item != null &&
-                            item.Type == RedisRawObjType.Integer)
+                        var responseLength = responseValue.Count;
+
+                        for (var i = 0; i < resultLength && i < responseLength; i++)
                         {
-                            var data = item.Data;
-                            if (data is long)
-                                result[i] = (long)data;
-                            else if (data is double)
-                                result[i] = (long)(double)data;
+                            var item = items[i];
+                            if (item != null &&
+                                item.Type == RedisRawObjType.Integer)
+                            {
+                                var data = item.Data;
+                                if (data is long)
+                                    result[i] = (long)data;
+                                else if (data is double)
+                                    result[i] = (long)(double)data;
+                            }
                         }
                     }
                 }
@@ -240,17 +244,17 @@ namespace Sweet.Redis
             return result;
         }
 
-        public bool ScriptFush()
+        public RedisBool ScriptFush()
         {
             return ExpectOK(RedisCommands.Script, RedisCommands.Flush);
         }
 
-        public bool ScriptKill()
+        public RedisBool ScriptKill()
         {
             return ExpectOK(RedisCommands.Script, RedisCommands.Kill);
         }
 
-        public string ScriptLoad(string script)
+        public RedisString ScriptLoad(string script)
         {
             if (String.IsNullOrEmpty(script))
                 throw new ArgumentNullException("script");

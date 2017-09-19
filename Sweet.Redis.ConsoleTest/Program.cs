@@ -12,7 +12,7 @@ namespace Sweet.Redis.ConsoleTest
     {
         static void Main(string[] args)
         {
-            // PerformanceTest();
+            PerformanceTest();
 
             // ScriptingNoArgsEvalTest();
             // ScriptingShaNoArgsEvalTest();
@@ -37,7 +37,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // MonitorTest1();
             // MonitorTest2();
-            MonitorTest3();
+            // MonitorTest3();
         }
 
         #region Multi-Threading
@@ -703,14 +703,20 @@ namespace Sweet.Redis.ConsoleTest
                             Console.WriteLine("Numer of Subscribers:");
 
                             var result = db.PubSubs.PubSubNumerOfSubscribers("xyz");
-                            if (result == null || result.Length == 0)
+                            if (result == null)
                                 Console.WriteLine("(nil)");
                             else
                             {
-                                for (var i = 0; i < result.Length; i++)
+                                var value = result.Value;
+                                if (value == null || value.Length == 0)
+                                    Console.WriteLine("(nil)");
+                                else
                                 {
-                                    var channel = result[i];
-                                    Console.WriteLine((i + 1) + ") " + channel.Key + ": " + channel.Value);
+                                    for (var i = 0; i < value.Length; i++)
+                                    {
+                                        var channel = value[i];
+                                        Console.WriteLine((i + 1) + ") " + channel.Key + ": " + channel.Value);
+                                    }
                                 }
                             }
                         }
@@ -890,94 +896,13 @@ namespace Sweet.Redis.ConsoleTest
                     Console.Clear();
                     try
                     {
-                        /* using (var db = pool.GetDb())
-                        {
-                            WriteResult("Ping, ", db.Connection.Ping());
-                            WriteResult("Ping 1, ", db.Connection.Ping("1"));
-                            WriteResult("Ping String.Empty, ", db.Connection.Ping(String.Empty));
-                            WriteResult("Echo 1, ", db.Connection.Echo("1"));
-                            WriteResult("Echo String.Empty, ", db.Connection.Echo(String.Empty));
-                            WriteResult("LastSave, ", db.Server.LastSave());
-                            WriteResult("Time, ", db.Server.Time());
-
-                            var cfg = db.Server.ConfigGet("*");
-                            if (cfg == null || cfg.Count == 0)
-                                WriteResult("ConfigGet *, ", "(null)");
-                            else
-                            {
-                                WriteResult("ConfigGet *, ", "*");
-
-                                var i = 1;
-                                foreach (var kv in cfg)
-                                {
-                                    WriteResult("ConfigGet " + i++ + ") ",
-                                                kv.Key + " = " + kv.Value);
-                                }
-                            }
-
-                            var clients = db.Server.ClientListDictionary();
-                            if (clients == null || clients.Length == 0)
-                                WriteResult("ClientList, ", "(null)");
-                            else
-                            {
-                                var i = 0;
-                                foreach (var client in clients)
-                                {
-                                    i++;
-
-                                    var j = 1;
-                                    foreach (var kv in client)
-                                    {
-                                        WriteResult("ClientList " + i + ", " + j++ + ") ",
-                                                    kv.Key + " = " + kv.Value);
-                                    }
-                                }
-                            }
-                        } */
-
-                        /* using (var db = pool.GetDb(1))
-                        {
-                            WriteResult("Set key1 Hello, ", db.Strings.Set("key1", "Hello"));
-                            WriteResult("Set key2 World, ", db.Strings.Set("key2", "World"));
-                            WriteResult("Set key3 Hello\\r\\nWorld, ", db.Strings.Set("key3", "Hello\r\nWorld"));
-                            WriteResult("Set key4 largeText, ", db.Strings.Set("key4", largeText));
-
-                            WriteResult("GetString key1, ", db.Strings.GetString("key1"));
-                            WriteResult("GetString key2, ", db.Strings.GetString("key2"));
-                            WriteResult("GetString key3, ", db.Strings.GetString("key3"));
-                            // WriteResult("GetString key4 largeText, ", db.Strings.GetString("key4"));
-
-                            ConsoleWriteMultiline("MGet key1, ", db.Strings.MGet("key1"));
-                            ConsoleWriteMultiline("MGet key1 key2, ", db.Strings.MGet("key1", "key2"));
-                            ConsoleWriteMultiline("MGet key1 key2 key3, ", db.Strings.MGet("key1", "key2", "key3"));
-                            // ConsoleWriteMultiline("MGet key1 key2 key3 key4, ", db.Strings.MGet("key1", "key2", "key3", "key4"));
-                        } */
-
                         var sw = new Stopwatch();
                         using (var db = pool.GetDb())
                         {
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)
-                                db.Connection.Ping();
-                            // db.Strings.Get("large_text");
-
-                            /* for (var i = 0; i < 1000; i++)
-                                db.Connection.Ping(); */
-
-                            /* {
-                                Console.WriteLine((i + 1).ToString() + ") ");
-                                try
-                                {
-                                    Console.WriteLine((i + 1).ToString() + ") " + db.Connection.Ping());
-                                    // Console.WriteLine(db.Strings.GetString("key4"));
-                                }
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine(e);
-                                }
-                                Console.WriteLine();
-                            } */
+                                db.Connection.Ping();                            
                         }
 
                         sw.Stop();

@@ -32,7 +32,7 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        public static RedisMonitorMessage Empty = new RedisMonitorMessage(-1);
+        public static readonly RedisMonitorMessage Empty = new RedisMonitorMessage(-1);
 
         #endregion Static Members
 

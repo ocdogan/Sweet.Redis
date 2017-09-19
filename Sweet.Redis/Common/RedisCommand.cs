@@ -84,7 +84,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ExpectSimpleString(RedisConnectionPool pool, string expectedResult, bool throwException = true)
+        public RedisBool ExpectSimpleString(RedisConnectionPool pool, string expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleString(pool, throwException);
             if (!String.IsNullOrEmpty(result))
@@ -100,7 +100,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        public bool ExpectSimpleString(IRedisDbConnection connection, string expectedResult, bool throwException = true)
+        public RedisBool ExpectSimpleString(IRedisDbConnection connection, string expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleString(connection, throwException);
             if (!String.IsNullOrEmpty(result))
@@ -132,7 +132,7 @@ namespace Sweet.Redis
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public bool ExpectSimpleStringBytes(RedisConnectionPool pool, byte[] expectedResult, bool throwException = true)
+        public RedisBool ExpectSimpleStringBytes(RedisConnectionPool pool, byte[] expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleStringBytes(pool, throwException);
             if (result != null && result.Length > 0)
@@ -148,7 +148,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        public bool ExpectSimpleStringBytes(IRedisDbConnection connection, byte[] expectedResult, bool throwException = true)
+        public RedisBool ExpectSimpleStringBytes(IRedisDbConnection connection, byte[] expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleStringBytes(connection, throwException);
             if (result != null && result.Length > 0)
@@ -384,7 +384,7 @@ namespace Sweet.Redis
             return double.MinValue;
         }
 
-        public RedisRawObj ExpectArray(RedisConnectionPool pool, bool throwException = true)
+        public RedisRaw ExpectArray(RedisConnectionPool pool, bool throwException = true)
         {
             using (var response = ExecuteInternal(pool, throwException))
             {
@@ -394,11 +394,11 @@ namespace Sweet.Redis
                         throw new RedisException("No data returned");
                     return null;
                 }
-                return RedisRawObj.ToObject(response);
+                return new RedisRaw(RedisRawObj.ToObject(response));
             }
         }
 
-        public RedisRawObj ExpectArray(IRedisDbConnection connection, bool throwException = true)
+        public RedisRaw ExpectArray(IRedisDbConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -408,7 +408,7 @@ namespace Sweet.Redis
                         throw new RedisException("No data returned");
                     return null;
                 }
-                return RedisRawObj.ToObject(response);
+                return new RedisRaw(RedisRawObj.ToObject(response));
             }
         }
 

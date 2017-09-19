@@ -47,11 +47,11 @@ namespace Sweet.Redis
      */
     public interface IRedisConnectionCommands
     {
-        bool Auth(string password);
+        RedisBool Auth(string password);
 
-        string Echo(string msg);
-        string Ping();
-        string Ping(string msg);
-        bool Quit();
+        RedisString Echo(string msg);
+        RedisString Ping();
+        RedisString Ping(string msg);
+        RedisBool Quit();
     }
 }

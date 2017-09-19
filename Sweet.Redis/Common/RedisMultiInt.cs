@@ -26,14 +26,14 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisObj : RedisResult<object>
+    public class RedisMultiInt : RedisResult<long[], long>
     {
         #region .Ctors
 
-        internal RedisObj()
+        internal RedisMultiInt()
         { }
 
-        internal RedisObj(object value)
+        internal RedisMultiInt(long[] value)
             : base(value)
         { }
 
@@ -41,9 +41,78 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public override RedisResultType Type { get { return RedisResultType.Object; } }
+        public override long this[int index]
+        {
+            get
+            {
+                ValidateCompleted();
+                if (index < 0)
+                    throw new ArgumentOutOfRangeException("index", "Index value is out of range");
+
+                var val = Value;
+                if (val != null)
+                    return val[index];
+
+                throw new ArgumentOutOfRangeException("index", "Index value is out of range");
+            }
+        }
+
+        public override int Length
+        {
+            get
+            {
+                ValidateCompleted();
+                var val = Value;
+                return (val != null) ? val.Length : 0;
+            }
+        }
+
+        public override RedisResultType Type { get { return RedisResultType.MultiInt; } }
 
         #endregion Properties
+
+        #region Conversion Methods
+
+        public static implicit operator RedisMultiInt(long[] value)  // implicit long[] to RedisMultiInt conversion operator
+        {
+            return new RedisMultiInt(value);
+        }
+
+        public static implicit operator long[](RedisMultiInt value)  // implicit RedisMultiInt to long[] conversion operator
+        {
+            return value.Value;
+        }
+
+        public static implicit operator RedisMultiInt(int[] value)  // implicit int[] to RedisMultiInt conversion operator
+        {
+            long[] longs = null;
+            if (value != null)
+            {
+                var length = value.Length;
+
+                longs = new long[length];
+                if (length > 0)
+                    Buffer.BlockCopy(value, 0, longs, 0, length);
+            }
+            return new RedisMultiInt(longs);
+        }
+
+        public static implicit operator int[](RedisMultiInt value)  // implicit RedisMultiInt to int[] conversion operator
+        {
+            var longs = value.Value;
+            if (longs != null)
+            {
+                var length = longs.Length;
+
+                var result = new int[length];
+                if (length > 0)
+                    Buffer.BlockCopy(longs, 0, result, 0, length);
+            }
+            return null;
+        }
+
+        #endregion Conversion Methods
+
         #region Operator Overloads
 
         public override bool Equals(object obj)
@@ -57,8 +126,8 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisObj)
-                return Object.Equals(Value, ((RedisObj)obj).Value);
+            if (obj is RedisMultiInt)
+                return Object.Equals(Value, ((RedisMultiInt)obj).Value);
 
             return Object.Equals(Value, obj);
         }
@@ -71,7 +140,7 @@ namespace Sweet.Redis
             return val.GetHashCode();
         }
 
-        public static bool operator ==(RedisObj a, RedisObj b)
+        public static bool operator ==(RedisMultiInt a, RedisMultiInt b)
         {
             if (ReferenceEquals(a, null))
             {
@@ -91,7 +160,7 @@ namespace Sweet.Redis
             return Object.Equals(a.Value, b.Value);
         }
 
-        public static bool operator !=(RedisObj a, RedisObj b)
+        public static bool operator !=(RedisMultiInt a, RedisMultiInt b)
         {
             return !(a == b);
         }

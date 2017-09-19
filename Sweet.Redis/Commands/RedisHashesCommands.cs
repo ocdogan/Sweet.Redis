@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public long HDel(string key, byte[] field, params byte[][] fields)
+        public RedisInt HDel(string key, byte[] field, params byte[][] fields)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -61,7 +61,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HDel, key.ToBytes(), field);
         }
 
-        public long HDel(string key, string field, params string[] fields)
+        public RedisInt HDel(string key, string field, params string[] fields)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -82,7 +82,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HDel, key.ToBytes(), field.ToBytes());
         }
 
-        public bool HExists(string key, byte[] field)
+        public RedisBool HExists(string key, byte[] field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -93,7 +93,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HExists, key.ToBytes(), field);
         }
 
-        public bool HExists(string key, string field)
+        public RedisBool HExists(string key, string field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -104,7 +104,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HExists, key.ToBytes(), field.ToBytes());
         }
 
-        public byte[] HGet(string key, byte[] field)
+        public RedisBytes HGet(string key, byte[] field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -115,7 +115,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.HGet, key.ToBytes(), field);
         }
 
-        public byte[] HGet(string key, string field)
+        public RedisBytes HGet(string key, string field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -126,7 +126,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.HGet, key.ToBytes(), field.ToBytes());
         }
 
-        public byte[][] HGetAll(string key)
+        public RedisMultiBytes HGetAll(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -134,7 +134,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.HGetAll, key.ToBytes());
         }
 
-        public Dictionary<string, string> HGetAllDictionary(string key)
+        public RedisResult<Dictionary<string, string>> HGetAllDictionary(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -148,12 +148,12 @@ namespace Sweet.Redis
                 for (var i = 0; i < length; i += 2)
                     d[result[i]] = result[i + 1];
 
-                return d;
+                return new RedisResult<Dictionary<string, string>>(d);
             }
-            return null;
+            return new RedisResult<Dictionary<string, string>>(null);
         }
 
-        public Hashtable HGetAllHashtable(string key)
+        public RedisResult<Hashtable> HGetAllHashtable(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -167,12 +167,12 @@ namespace Sweet.Redis
                 for (var i = 0; i < length; i += 2)
                     h[result[i]] = result[i + 1];
 
-                return h;
+                return new RedisResult<Hashtable>(h);
             }
-            return null;
+            return new RedisResult<Hashtable>(null);
         }
 
-        public string HGetString(string key, string field)
+        public RedisString HGetString(string key, string field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -183,7 +183,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.HGet, key.ToBytes(), field.ToBytes());
         }
 
-        public long HIncrBy(string key, byte[] field, int increment)
+        public RedisInt HIncrBy(string key, byte[] field, int increment)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -194,7 +194,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HIncrBy, key.ToBytes(), field, increment.ToBytes());
         }
 
-        public long HIncrBy(string key, byte[] field, long increment)
+        public RedisInt HIncrBy(string key, byte[] field, long increment)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -205,7 +205,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HIncrBy, key.ToBytes(), field, increment.ToBytes());
         }
 
-        public double HIncrByFloat(string key, byte[] field, double increment)
+        public RedisDouble HIncrByFloat(string key, byte[] field, double increment)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -216,7 +216,7 @@ namespace Sweet.Redis
             return ExpectDouble(RedisCommands.HIncrByFloat, key.ToBytes(), field, increment.ToBytes());
         }
 
-        public byte[][] HKeys(string key)
+        public RedisMultiBytes HKeys(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -224,7 +224,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.HKeys, key.ToBytes());
         }
 
-        public string[] HKeyStrings(string key)
+        public RedisMultiString HKeyStrings(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -232,7 +232,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.HKeys, key.ToBytes());
         }
 
-        public long HLen(string key)
+        public RedisInt HLen(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -240,7 +240,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HLen, key.ToBytes());
         }
 
-        public byte[][] HMGet(string key, byte[] field, params byte[][] fields)
+        public RedisMultiBytes HMGet(string key, byte[] field, params byte[][] fields)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -261,7 +261,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.HMGet, key.ToBytes(), field);
         }
 
-        public byte[][] HMGet(string key, string field, params string[] fields)
+        public RedisMultiBytes HMGet(string key, string field, params string[] fields)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -282,7 +282,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.HMGet, key.ToBytes(), field.ToBytes());
         }
 
-        public string[] HMGetStrings(string key, string field, params string[] fields)
+        public RedisMultiString HMGetStrings(string key, string field, params string[] fields)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -303,7 +303,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.HMGet, key.ToBytes(), field.ToBytes());
         }
 
-        public bool HMSet(string key, byte[] field, byte[] value, byte[][] fields = null, byte[][] values = null)
+        public RedisBool HMSet(string key, byte[] field, byte[] value, byte[][] fields = null, byte[][] values = null)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -331,7 +331,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, key.ToBytes(), field, value);
         }
 
-        public bool HMSet(string key, string field, byte[] value, string[] fields = null, byte[][] values = null)
+        public RedisBool HMSet(string key, string field, byte[] value, string[] fields = null, byte[][] values = null)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -359,7 +359,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, key.ToBytes(), field.ToBytes(), value);
         }
 
-        public bool HMSet(string key, string field, string value, string[] fields = null, string[] values = null)
+        public RedisBool HMSet(string key, string field, string value, string[] fields = null, string[] values = null)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -388,7 +388,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, key.ToBytes(), field.ToBytes(), bytes);
         }
 
-        public bool HMSet(string key, Hashtable values)
+        public RedisBool HMSet(string key, Hashtable values)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -410,7 +410,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, parameters);
         }
 
-        public bool HMSet(string key, Dictionary<string, string> values)
+        public RedisBool HMSet(string key, Dictionary<string, string> values)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -432,17 +432,17 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, parameters);
         }
 
-        public byte[][] HScan(string key, int count = 10, string match = null)
+        public RedisMultiBytes HScan(string key, int count = 10, string match = null)
         {
             throw new NotImplementedException();
         }
 
-        public string[] HScanString(string key, int count = 10, string match = null)
+        public RedisMultiString HScanString(string key, int count = 10, string match = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool HSet(string key, byte[] field, byte[] value)
+        public RedisBool HSet(string key, byte[] field, byte[] value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -456,7 +456,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSet, key.ToBytes(), field, value);
         }
 
-        public bool HSet(string key, string field, byte[] value)
+        public RedisBool HSet(string key, string field, byte[] value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -470,7 +470,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSet, key.ToBytes(), field.ToBytes(), value);
         }
 
-        public bool HSet(string key, string field, string value)
+        public RedisBool HSet(string key, string field, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -487,7 +487,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSet, key.ToBytes(), field.ToBytes(), bytes);
         }
 
-        public bool HSetNx(string key, byte[] field, byte[] value)
+        public RedisBool HSetNx(string key, byte[] field, byte[] value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -503,7 +503,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSetNx, key.ToBytes(), field, value);
         }
 
-        public bool HSetNx(string key, string field, byte[] value)
+        public RedisBool HSetNx(string key, string field, byte[] value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -519,7 +519,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSetNx, key.ToBytes(), field.ToBytes(), value);
         }
 
-        public bool HSetNx(string key, string field, string value)
+        public RedisBool HSetNx(string key, string field, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -536,7 +536,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSetNx, key.ToBytes(), field.ToBytes(), bytes);
         }
 
-        public long HStrLen(string key, byte[] field)
+        public RedisInt HStrLen(string key, byte[] field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -547,7 +547,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HStrLen, key.ToBytes(), field);
         }
 
-        public long HStrLen(string key, string field)
+        public RedisInt HStrLen(string key, string field)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -558,7 +558,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HStrLen, key.ToBytes(), field.ToBytes());
         }
 
-        public byte[][] HVals(string key)
+        public RedisMultiBytes HVals(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -566,7 +566,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.HVals, key.ToBytes());
         }
 
-        public string[] HValStrings(string key)
+        public RedisMultiString HValStrings(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");

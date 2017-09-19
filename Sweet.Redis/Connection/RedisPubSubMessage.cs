@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        public static RedisPubSubMessage Empty = new RedisPubSubMessage(-1);
+        public static readonly RedisPubSubMessage Empty = new RedisPubSubMessage(-1);
 
         #endregion Static Members
 

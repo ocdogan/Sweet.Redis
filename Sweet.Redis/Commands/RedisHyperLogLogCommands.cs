@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public bool PfAdd(string key, string element, params string[] elements)
+        public RedisBool PfAdd(string key, string element, params string[] elements)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -58,7 +58,7 @@ namespace Sweet.Redis
             return ExpectOne(RedisCommands.PfAdd, key.ToBytes(), element.ToBytes());
         }
 
-        public long PfCount(string key, params string[] keys)
+        public RedisInt PfCount(string key, params string[] keys)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -75,7 +75,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.PfAdd, key.ToBytes());
         }
 
-        public bool PfMerge(string destKey, string sourceKey, params string[] sourceKeys)
+        public RedisBool PfMerge(string destKey, string sourceKey, params string[] sourceKeys)
         {
             if (destKey == null)
                 throw new ArgumentNullException("destKey");

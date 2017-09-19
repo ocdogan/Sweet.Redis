@@ -44,6 +44,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\RedisDate.cs" />
+    <Compile Include="Common\RedisMultiInt.cs" />
+    <Compile Include="Common\RedisMultiString.cs" />
+    <Compile Include="Common\RedisNull.cs" />
+    <Compile Include="Common\RedisNullableDouble.cs" />
+    <Compile Include="Common\RedisNullableInt.cs" />
+    <Compile Include="Common\RedisNullVal.cs" />
+    <Compile Include="Common\RedisVoid.cs" />
+    <Compile Include="Common\RedisVoidVal.cs" />
     <Compile Include="Connection\RedisActionBag.cs" />
     <Compile Include="Connection\RedisAsyncStateWrapper.cs" />
     <Compile Include="Connection\RedisCallbackHub.cs" />

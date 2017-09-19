@@ -26,14 +26,14 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisObj : RedisResult<object>
+    public class RedisMultiString : RedisResult<string[], string>
     {
         #region .Ctors
 
-        internal RedisObj()
+        internal RedisMultiString()
         { }
 
-        internal RedisObj(object value)
+        internal RedisMultiString(string[] value)
             : base(value)
         { }
 
@@ -41,9 +41,50 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public override RedisResultType Type { get { return RedisResultType.Object; } }
+        public override string this[int index]
+        {
+            get
+            {
+                ValidateCompleted();
+                if (index < 0)
+                    throw new ArgumentOutOfRangeException("index", "Index value is out of range");
+
+                var val = Value;
+                if (val != null)
+                    return val[index];
+
+                throw new ArgumentOutOfRangeException("index", "Index value is out of range");
+            }
+        }
+
+        public override int Length
+        {
+            get
+            {
+                ValidateCompleted();
+                var val = Value;
+                return (val != null) ? val.Length : 0;
+            }
+        }
+
+        public override RedisResultType Type { get { return RedisResultType.MultiString; } }
 
         #endregion Properties
+
+        #region Conversion Methods
+
+        public static implicit operator RedisMultiString(string[] value)  // implicit string[] to RedisMultiString conversion operator
+        {
+            return new RedisMultiString(value);
+        }
+
+        public static implicit operator string[](RedisMultiString value)  // implicit RedisMultiString to string[] conversion operator
+        {
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
         #region Operator Overloads
 
         public override bool Equals(object obj)
@@ -57,8 +98,8 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisObj)
-                return Object.Equals(Value, ((RedisObj)obj).Value);
+            if (obj is RedisMultiString)
+                return Object.Equals(Value, ((RedisMultiString)obj).Value);
 
             return Object.Equals(Value, obj);
         }
@@ -71,7 +112,7 @@ namespace Sweet.Redis
             return val.GetHashCode();
         }
 
-        public static bool operator ==(RedisObj a, RedisObj b)
+        public static bool operator ==(RedisMultiString a, RedisMultiString b)
         {
             if (ReferenceEquals(a, null))
             {
@@ -91,7 +132,7 @@ namespace Sweet.Redis
             return Object.Equals(a.Value, b.Value);
         }
 
-        public static bool operator !=(RedisObj a, RedisObj b)
+        public static bool operator !=(RedisMultiString a, RedisMultiString b)
         {
             return !(a == b);
         }

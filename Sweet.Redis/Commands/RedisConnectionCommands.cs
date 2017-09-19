@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public bool Auth(string password)
+        public RedisBool Auth(string password)
         {
             if (password == null)
                 throw new ArgumentNullException("password");
@@ -46,7 +46,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.Auth, password.ToBytes());
         }
 
-        public string Echo(string msg)
+        public RedisString Echo(string msg)
         {
             if (msg == null)
                 throw new ArgumentNullException("msg");
@@ -54,19 +54,19 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.Echo, msg.ToBytes());
         }
 
-        public string Ping()
+        public RedisString Ping()
         {
             return Ping(null);
         }
 
-        public string Ping(string msg)
+        public RedisString Ping(string msg)
         {
             if (String.IsNullOrEmpty(msg))
                 return ExpectSimpleString(RedisCommands.Ping);
             return ExpectBulkString(RedisCommands.Ping, msg.ToBytes());
         }
 
-        public bool Quit()
+        public RedisBool Quit()
         {
             return ExpectOK(RedisCommands.Quit);
         }

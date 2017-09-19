@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public long SAdd(string key, byte[] member, params byte[][] members)
+        public RedisInt SAdd(string key, byte[] member, params byte[][] members)
         {
             ValidateNotDisposed();
             ValidateKeyAndValue(key, member, valueName: "member");
@@ -54,7 +54,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SAdd, key.ToBytes(), member);
         }
 
-        public long SAdd(string key, string member, params string[] members)
+        public RedisInt SAdd(string key, string member, params string[] members)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -72,7 +72,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SAdd, key.ToBytes(), member.ToBytes());
         }
 
-        public long SCard(string key)
+        public RedisInt SCard(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -80,7 +80,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SCard, key.ToBytes());
         }
 
-        public byte[][] SDiff(string fromKey, params string[] keys)
+        public RedisMultiBytes SDiff(string fromKey, params string[] keys)
         {
             if (fromKey == null)
                 throw new ArgumentNullException("fromKey");
@@ -97,7 +97,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SDiff, fromKey.ToBytes());
         }
 
-        public long SDiffStore(string toKey, string fromKey, params string[] keys)
+        public RedisInt SDiffStore(string toKey, string fromKey, params string[] keys)
         {
             if (toKey == null)
                 throw new ArgumentNullException("toKey");
@@ -118,7 +118,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SDiffStore, toKey.ToBytes(), fromKey.ToBytes());
         }
 
-        public string[] SDiffString(string fromKey, params string[] keys)
+        public RedisMultiString SDiffString(string fromKey, params string[] keys)
         {
             if (fromKey == null)
                 throw new ArgumentNullException("fromKey");
@@ -135,7 +135,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.SDiff, fromKey.ToBytes());
         }
 
-        public byte[][] SInter(string key, params string[] keys)
+        public RedisMultiBytes SInter(string key, params string[] keys)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -152,7 +152,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SDiff, key.ToBytes());
         }
 
-        public long SInterStore(string toKey, params string[] keys)
+        public RedisInt SInterStore(string toKey, params string[] keys)
         {
             if (toKey == null)
                 throw new ArgumentNullException("toKey");
@@ -169,7 +169,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SInterStore, toKey.ToBytes());
         }
 
-        public string[] SInterStrings(string key, params string[] keys)
+        public RedisMultiString SInterStrings(string key, params string[] keys)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -186,7 +186,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.SDiff, key.ToBytes());
         }
 
-        public bool SIsMember(string key, byte[] member)
+        public RedisBool SIsMember(string key, byte[] member)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -194,7 +194,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.SIsMember, key.ToBytes(), member);
         }
 
-        public bool SIsMember(string key, string member)
+        public RedisBool SIsMember(string key, string member)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -202,7 +202,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.SIsMember, key.ToBytes(), member.ToBytes());
         }
 
-        public byte[][] SMembers(string key)
+        public RedisMultiBytes SMembers(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -210,7 +210,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SMembers, key.ToBytes());
         }
 
-        public string[] SMemberStrings(string key)
+        public RedisMultiString SMemberStrings(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -218,7 +218,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.SMembers, key.ToBytes());
         }
 
-        public bool SMove(string fromKey, string toKey, byte[] member)
+        public RedisBool SMove(string fromKey, string toKey, byte[] member)
         {
             if (fromKey == null)
                 throw new ArgumentNullException("fromKey");
@@ -229,7 +229,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.SMove, fromKey.ToBytes(), toKey.ToBytes(), member);
         }
 
-        public bool SMove(string fromKey, string toKey, string member)
+        public RedisBool SMove(string fromKey, string toKey, string member)
         {
             if (fromKey == null)
                 throw new ArgumentNullException("fromKey");
@@ -240,7 +240,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.SMove, fromKey.ToBytes(), toKey.ToBytes(), member.ToBytes());
         }
 
-        public byte[] SPop(string key)
+        public RedisBytes SPop(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -248,7 +248,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.SPop, key.ToBytes());
         }
 
-        public string SPopString(string key)
+        public RedisString SPopString(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -256,7 +256,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.SPop, key.ToBytes());
         }
 
-        public byte[] SRandMember(string key)
+        public RedisBytes SRandMember(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -264,7 +264,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.SRandMember, key.ToBytes());
         }
 
-        public byte[][] SRandMember(string key, int count)
+        public RedisMultiBytes SRandMember(string key, int count)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -272,7 +272,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SRandMember, key.ToBytes(), count.ToBytes());
         }
 
-        public string SRandMemberString(string key)
+        public RedisString SRandMemberString(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -280,7 +280,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.SRandMember, key.ToBytes());
         }
 
-        public string[] SRandMemberString(string key, int count)
+        public RedisMultiString SRandMemberString(string key, int count)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -288,7 +288,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.SRandMember, key.ToBytes(), count.ToBytes());
         }
 
-        public long SRem(string key, byte[] member, params byte[][] members)
+        public RedisInt SRem(string key, byte[] member, params byte[][] members)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -309,7 +309,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SRem, key.ToBytes(), member);
         }
 
-        public long SRem(string key, string member, params string[] members)
+        public RedisInt SRem(string key, string member, params string[] members)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -330,17 +330,17 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SRem, key.ToBytes(), member.ToBytes());
         }
 
-        public byte[][] SScan(string key, int count = 10, string match = null)
+        public RedisMultiBytes SScan(string key, int count = 10, string match = null)
         {
             throw new NotImplementedException();
         }
 
-        public string[] SScanString(string key, int count = 10, string match = null)
+        public RedisMultiString SScanString(string key, int count = 10, string match = null)
         {
             throw new NotImplementedException();
         }
 
-        public byte[][] SUnion(string key, params string[] keys)
+        public RedisMultiBytes SUnion(string key, params string[] keys)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -357,7 +357,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SUnion, key.ToBytes());
         }
 
-        public long SUnionStore(string toKey, params string[] keys)
+        public RedisInt SUnionStore(string toKey, params string[] keys)
         {
             if (toKey == null)
                 throw new ArgumentNullException("toKey");
@@ -374,7 +374,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SUnionStore, toKey.ToBytes());
         }
 
-        public string[] SUnionStrings(string key, params string[] keys)
+        public RedisMultiString SUnionStrings(string key, params string[] keys)
         {
             if (key == null)
                 throw new ArgumentNullException("key");

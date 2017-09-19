@@ -39,7 +39,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public bool BGRewriteAOF()
+        public RedisBool BGRewriteAOF()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.BGRewriteAOF))
@@ -48,7 +48,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool BGSave()
+        public RedisBool BGSave()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.BGSave))
@@ -57,7 +57,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string ClientGetName()
+        public RedisString ClientGetName()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.GetName))
@@ -66,7 +66,7 @@ namespace Sweet.Redis
             }
         }
 
-        public long ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true)
+        public RedisInt ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true)
         {
             ValidateNotDisposed();
 
@@ -109,7 +109,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisClientInfo[] ClientList()
+        public RedisResult<RedisClientInfo[]> ClientList()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.List))
@@ -127,14 +127,14 @@ namespace Sweet.Redis
                             if (info != null)
                                 list.Add(info);
                         }
-                        return (list.Count > 0) ? list.ToArray() : null;
+                        return new RedisResult<RedisClientInfo[]>((list.Count > 0) ? list.ToArray() : null);
                     }
                 }
             }
-            return null;
+            return new RedisResult<RedisClientInfo[]>(null);
         }
 
-        public IDictionary<string, string>[] ClientListDictionary()
+        public RedisResult<IDictionary<string, string>[]> ClientListDictionary()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.List))
@@ -152,14 +152,14 @@ namespace Sweet.Redis
                             if (info != null)
                                 list.Add(info);
                         }
-                        return (list.Count > 0) ? list.ToArray() : null;
+                        return new RedisResult<IDictionary<string, string>[]>((list.Count > 0) ? list.ToArray() : null);
                     }
                 }
             }
-            return null;
+            return new RedisResult<IDictionary<string, string>[]>(null);
         }
 
-        public bool ClientPause(int timeout)
+        public RedisBool ClientPause(int timeout)
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Pause, timeout.ToBytes()))
@@ -168,7 +168,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ClientReplyOff()
+        public RedisBool ClientReplyOff()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.Off))
@@ -177,7 +177,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ClientReplyOn()
+        public RedisBool ClientReplyOn()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.On))
@@ -186,7 +186,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ClientReplySkip()
+        public RedisBool ClientReplySkip()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip))
@@ -195,7 +195,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ClientSetName(string connectionName)
+        public RedisBool ClientSetName(string connectionName)
         {
             if (connectionName == null)
                 throw new ArgumentNullException("connectionName");
@@ -207,7 +207,7 @@ namespace Sweet.Redis
             }
         }
 
-        public IDictionary<string, string> ConfigGet(string parameter)
+        public RedisResult<IDictionary<string, string>> ConfigGet(string parameter)
         {
             if (parameter == null)
                 throw new ArgumentNullException("parameter");
@@ -228,14 +228,14 @@ namespace Sweet.Redis
                             if (!String.IsNullOrEmpty(key))
                                 result[key] = (lines[i + 1] ?? String.Empty).Trim();
                         }
-                        return result;
+                        return new RedisResult<IDictionary<string, string>>(result);
                     }
                 }
             }
-            return null;
+            return new RedisResult<IDictionary<string, string>>(null);
         }
 
-        public bool ConfigResetStat()
+        public RedisBool ConfigResetStat()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.ResetStat))
@@ -244,7 +244,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ConfigRewrite()
+        public RedisBool ConfigRewrite()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Config, RedisCommands.Rewrite))
@@ -253,7 +253,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ConfigSet(string parameter, string value)
+        public RedisBool ConfigSet(string parameter, string value)
         {
             if (parameter == null)
                 throw new ArgumentNullException("parameter");
@@ -273,7 +273,7 @@ namespace Sweet.Redis
             }
         }
 
-        public long DbSize()
+        public RedisInt DbSize()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.DbSize))
@@ -282,7 +282,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool FlushAll()
+        public RedisBool FlushAll()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushAll))
@@ -291,7 +291,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool FlushAllAsync()
+        public RedisBool FlushAllAsync()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushAll, RedisCommands.Async))
@@ -300,7 +300,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool FlushDb()
+        public RedisBool FlushDb()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushDb))
@@ -309,7 +309,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool FlushDbAsync()
+        public RedisBool FlushDbAsync()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.FlushDb, RedisCommands.Async))
@@ -318,7 +318,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string[] Info(string section)
+        public RedisMultiString Info(string section)
         {
             if (section == null)
                 throw new ArgumentNullException("section");
@@ -330,7 +330,7 @@ namespace Sweet.Redis
             }
         }
 
-        public DateTime LastSave()
+        public RedisDate LastSave()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.LastSave))
@@ -339,7 +339,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool Save()
+        public RedisBool Save()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Save))
@@ -348,25 +348,27 @@ namespace Sweet.Redis
             }
         }
 
-        public void ShutDown()
+        public RedisVoid ShutDown()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.ShutDown))
             {
                 cmd.ExpectSimpleString(Db.Pool, true);
             }
+            return new RedisVoid();
         }
 
-        public void ShutDownSave()
+        public RedisVoid ShutDownSave()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.ShutDown, RedisCommands.Async))
             {
                 cmd.ExpectSimpleString(Db.Pool, true);
             }
+            return new RedisVoid();
         }
 
-        public bool SlaveOf(string host, int port)
+        public RedisBool SlaveOf(string host, int port)
         {
             if (host == null)
                 throw new ArgumentNullException("host");
@@ -381,7 +383,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool SlaveOfNoOne()
+        public RedisBool SlaveOfNoOne()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.SlaveOf, RedisCommands.NoOne))
@@ -390,7 +392,7 @@ namespace Sweet.Redis
             }
         }
 
-        public DateTime Time()
+        public RedisDate Time()
         {
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(Db.Db, RedisCommands.Time))

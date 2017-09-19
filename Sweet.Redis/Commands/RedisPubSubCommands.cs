@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public long Publish(string channel, string message)
+        public RedisInt Publish(string channel, string message)
         {
             if (channel == null)
                 throw new ArgumentNullException("channel");
@@ -49,7 +49,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.Publish, channel.ToBytes(), message.ToBytes());
         }
 
-        public long Publish(string channel, byte[] message)
+        public RedisInt Publish(string channel, byte[] message)
         {
             if (channel == null)
                 throw new ArgumentNullException("channel");
@@ -60,88 +60,95 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.Publish, channel.ToBytes(), message);
         }
 
-        public string[] PubSubChannels(string pattern = null)
+        public RedisMultiString PubSubChannels(string pattern = null)
         {
-            RedisRawObj response;
+            RedisRaw response;
             if (!String.IsNullOrEmpty(pattern))
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels, pattern.ToBytes());
             else
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels);
 
-            if (response != null && response.Type == RedisRawObjType.Array)
+            if (response != null)
             {
-                var items = response.Items;
-                if (items != null)
+                var responseValue = response.Value;
+                if (responseValue != null && responseValue.Type == RedisRawObjType.Array)
                 {
-                    var itemCount = items.Count;
-                    var result = new string[itemCount];
-
-                    if (itemCount > 0)
+                    var items = responseValue.Items;
+                    if (items != null)
                     {
-                        for (var i = 0; i < itemCount; i++)
+                        var itemCount = items.Count;
+                        var result = new string[itemCount];
+
+                        if (itemCount > 0)
                         {
-                            var item = items[i];
+                            for (var i = 0; i < itemCount; i++)
+                            {
+                                var item = items[i];
 
-                            if (item != null &&
-                                (item.Type == RedisRawObjType.BulkString ||
-                                 item.Type == RedisRawObjType.SimpleString))
-                                result[i] = item.Data as string ?? String.Empty;
+                                if (item != null &&
+                                    (item.Type == RedisRawObjType.BulkString ||
+                                     item.Type == RedisRawObjType.SimpleString))
+                                    result[i] = item.Data as string ?? String.Empty;
+                            }
                         }
-                    }
 
-                    return result;
+                        return result;
+                    }
                 }
             }
-
             return new string[0];
         }
 
-        public RedisKeyValue<string, long>[] PubSubNumerOfSubscribers(params string[] channels)
+        public RedisResult<RedisKeyValue<string, long>[]> PubSubNumerOfSubscribers(params string[] channels)
         {
-            RedisRawObj response;
+            RedisRaw response;
             if (channels.Length > 0)
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.NumSub.Join(channels.ToBytesArray()));
             else
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.NumSub);
 
-            if (response != null && response.Type == RedisRawObjType.Array)
+            if (response != null)
             {
-                var items = response.Items;
-                if (items != null)
+                var responseValue = response.Value;
+                if (responseValue != null && responseValue.Type == RedisRawObjType.Array)
                 {
-                    var itemCount = items.Count;
-                    var result = new RedisKeyValue<string, long>[itemCount / 2];
-
-                    if (itemCount > 0)
+                    var items = responseValue.Items;
+                    if (items != null)
                     {
-                        for (int i = 0, index = 0; i < itemCount; index++)
+                        var itemCount = items.Count;
+                        var result = new RedisKeyValue<string, long>[itemCount / 2];
+
+                        if (itemCount > 0)
                         {
-                            var nameItem = items[i++];
-                            var countItem = items[i++];
+                            for (int i = 0, index = 0; i < itemCount; index++)
+                            {
+                                var nameItem = items[i++];
+                                var countItem = items[i++];
 
-                            var name = String.Empty;
-                            var count = RedisConstants.Zero;
+                                var name = String.Empty;
+                                var count = RedisConstants.Zero;
 
-                            if (nameItem != null &&
-                                (nameItem.Type == RedisRawObjType.BulkString ||
-                                 nameItem.Type == RedisRawObjType.SimpleString))
-                                name = nameItem.Data as string ?? String.Empty;
+                                if (nameItem != null &&
+                                    (nameItem.Type == RedisRawObjType.BulkString ||
+                                     nameItem.Type == RedisRawObjType.SimpleString))
+                                    name = nameItem.Data as string ?? String.Empty;
 
-                            if (countItem != null &&
-                                countItem.Type == RedisRawObjType.Integer)
-                                count = (long)countItem.Data;
+                                if (countItem != null &&
+                                    countItem.Type == RedisRawObjType.Integer)
+                                    count = (long)countItem.Data;
 
-                            result[index] = new RedisKeyValue<string, long>(name, count);
+                                result[index] = new RedisKeyValue<string, long>(name, count);
+                            }
                         }
-                    }
 
-                    return result;
+                        return new RedisResult<RedisKeyValue<string, long>[]>(result);
+                    }
                 }
             }
-            return new RedisKeyValue<string, long>[0];
+            return new RedisResult<RedisKeyValue<string, long>[]>(new RedisKeyValue<string, long>[0]);
         }
 
-        public long PubSubNumerOfSubscriptionsToPatterns()
+        public RedisInt PubSubNumerOfSubscriptionsToPatterns()
         {
             return ExpectInteger(RedisCommands.PubSub, RedisCommands.NumPat);
         }

@@ -39,7 +39,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public byte[][] BLPop(string key, int timeout)
+        public RedisMultiBytes BLPop(string key, int timeout)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -47,7 +47,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.BLPop, key.ToBytes(), timeout.ToBytes());
         }
 
-        public byte[][] BRPop(string key, int timeout)
+        public RedisMultiBytes BRPop(string key, int timeout)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -55,7 +55,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.BRPop, key.ToBytes(), timeout.ToBytes());
         }
 
-        public byte[] BRPopLPush(string source, string destination)
+        public RedisBytes BRPopLPush(string source, string destination)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
@@ -66,7 +66,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.BRPopLPush, source.ToBytes(), destination.ToBytes());
         }
 
-        public string BRPopLPushString(string source, string destination)
+        public RedisString BRPopLPushString(string source, string destination)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
@@ -77,7 +77,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.BRPopLPush, source.ToBytes(), destination.ToBytes());
         }
 
-        public byte[] LIndex(string key, int index)
+        public RedisBytes LIndex(string key, int index)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -85,7 +85,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.LIndex, key.ToBytes(), index.ToBytes());
         }
 
-        public string LIndexString(string key, int index)
+        public RedisString LIndexString(string key, int index)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -93,7 +93,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.LIndex, key.ToBytes(), index.ToBytes());
         }
 
-        public bool LInsert(string key, bool insertBefore, byte[] pivot, byte[] value)
+        public RedisBool LInsert(string key, bool insertBefore, byte[] pivot, byte[] value)
         {
             ValidateNotDisposed();
             ValidateKeyAndValue(key, value);
@@ -102,7 +102,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.LInsert, key.ToBytes(), prePost, pivot, value);
         }
 
-        public long LLen(string key)
+        public RedisInt LLen(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -110,7 +110,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.LLen, key.ToBytes());
         }
 
-        public byte[] LPop(string key)
+        public RedisBytes LPop(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -118,7 +118,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.LPop, key.ToBytes());
         }
 
-        public string LPopString(string key)
+        public RedisString LPopString(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -126,14 +126,14 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.LPop, key.ToBytes());
         }
 
-        public long LPush(string key, byte[] value)
+        public RedisInt LPush(string key, byte[] value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.LPush, key.ToBytes(), value);
         }
 
-        public long LPush(string key, string value)
+        public RedisInt LPush(string key, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -150,14 +150,14 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.LPush, key.ToBytes(), bytes);
         }
 
-        public long LPushX(string key, byte[] value)
+        public RedisInt LPushX(string key, byte[] value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.LPushX, key.ToBytes(), value);
         }
 
-        public long LPushX(string key, string value)
+        public RedisInt LPushX(string key, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -174,7 +174,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.LPushX, key.ToBytes(), bytes);
         }
 
-        public byte[][] LRange(string key, int start, int end)
+        public RedisMultiBytes LRange(string key, int start, int end)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -182,7 +182,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.LRange, key.ToBytes(), start.ToBytes(), end.ToBytes());
         }
 
-        public string[] LRangeString(string key, int start, int end)
+        public RedisMultiString LRangeString(string key, int start, int end)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -190,14 +190,14 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.LRange, key.ToBytes(), start.ToBytes(), end.ToBytes());
         }
 
-        public long LRem(string key, int count, byte[] value)
+        public RedisInt LRem(string key, int count, byte[] value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.LRem, key.ToBytes(), count.ToBytes(), value);
         }
 
-        public long LRem(string key, int count, string value)
+        public RedisInt LRem(string key, int count, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -214,14 +214,14 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.LRem, key.ToBytes(), count.ToBytes(), bytes);
         }
 
-        public bool LSet(string key, int index, byte[] value)
+        public RedisBool LSet(string key, int index, byte[] value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectOK(RedisCommands.LSet, key.ToBytes(), index.ToBytes(), value);
         }
 
-        public bool LSet(string key, int index, string value)
+        public RedisBool LSet(string key, int index, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -238,7 +238,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.LSet, key.ToBytes(), index.ToBytes(), bytes);
         }
 
-        public bool LTrim(string key, int start, int end)
+        public RedisBool LTrim(string key, int start, int end)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -246,23 +246,23 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.LTrim, key.ToBytes(), start.ToBytes(), end.ToBytes());
         }
 
-        public byte[] RPop(string key)
+        public RedisBytes RPop(string key)
         {
             var result = RPopString(key);
             if (result != null)
                 return Encoding.UTF8.GetBytes(result);
-            return null;
+            return new RedisBytes(null);
         }
 
-        public byte[] RPopLPush(string source, string destination)
+        public RedisBytes RPopLPush(string source, string destination)
         {
             var result = RPopLPushString(source, destination);
             if (result != null)
                 return Encoding.UTF8.GetBytes(result);
-            return null;
+            return new RedisBytes(null);
         }
 
-        public string RPopLPushString(string source, string destination)
+        public RedisString RPopLPushString(string source, string destination)
         {
             if (source == null)
                 throw new ArgumentNullException("source");
@@ -273,7 +273,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.RPopLPush, source.ToBytes(), destination.ToBytes());
         }
 
-        public string RPopString(string key)
+        public RedisString RPopString(string key)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -281,7 +281,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.RPop, key.ToBytes());
         }
 
-        public long RPush(string key, byte[][] values)
+        public RedisInt RPush(string key, byte[][] values)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -292,7 +292,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.RPush, key.ToBytes().Join(values));
         }
 
-        public long RPush(string key, string[] values)
+        public RedisInt RPush(string key, string[] values)
         {
             if (key == null)
                 throw new ArgumentNullException("key");
@@ -303,14 +303,14 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.RPush, key.ToBytes().Join(values));
         }
 
-        public long RPushX(string key, byte[] value)
+        public RedisInt RPushX(string key, byte[] value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.RPushX, key.ToBytes(), value);
         }
 
-        public long RPushX(string key, string value)
+        public RedisInt RPushX(string key, string value)
         {
             if (key == null)
                 throw new ArgumentNullException("key");

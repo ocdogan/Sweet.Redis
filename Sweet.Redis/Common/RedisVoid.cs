@@ -26,72 +26,61 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisObj : RedisResult<object>
+    public class RedisVoid : RedisResult<RedisVoidVal>
     {
         #region .Ctors
 
-        internal RedisObj()
-        { }
-
-        internal RedisObj(object value)
-            : base(value)
+        internal RedisVoid()
         { }
 
         #endregion .Ctors
 
         #region Properties
 
-        public override RedisResultType Type { get { return RedisResultType.Object; } }
+        public override RedisVoidVal Value
+        {
+            get
+            {
+                ValidateCompleted();
+                return RedisVoidVal.Value;
+            }
+            internal set
+            {
+                base.Value = RedisVoidVal.Value;
+            }
+        }
+
+        public override RedisResultType Type { get { return RedisResultType.Void; } }
 
         #endregion Properties
+
         #region Operator Overloads
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
-            {
-                var val = Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
+                return true;
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisObj)
-                return Object.Equals(Value, ((RedisObj)obj).Value);
+            if (obj is RedisNull)
+                return true;
 
-            return Object.Equals(Value, obj);
+            return Object.Equals(obj, null);
         }
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
-                return base.GetHashCode();
-            return val.GetHashCode();
+            return base.GetHashCode();
         }
 
-        public static bool operator ==(RedisObj a, RedisObj b)
+        public static bool operator ==(RedisVoid a, RedisVoid b)
         {
-            if (ReferenceEquals(a, null))
-            {
-                if (ReferenceEquals(b, null))
-                    return true;
-
-                var val = b.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
-
-            if (ReferenceEquals(b, null))
-            {
-                var val = a.Value;
-                return ReferenceEquals(val, null) || (val == null);
-            }
-
-            return Object.Equals(a.Value, b.Value);
+            return true;
         }
 
-        public static bool operator !=(RedisObj a, RedisObj b)
+        public static bool operator !=(RedisVoid a, RedisVoid b)
         {
             return !(a == b);
         }

@@ -123,48 +123,48 @@ namespace Sweet.Redis
      */
     public interface IRedisStringsCommands
     {
-        long Append(string key, byte[] value);
+        RedisInt Append(string key, byte[] value);
 
-        long BitCount(string key);
-        long BitCount(string key, int start, int end);
+        RedisInt BitCount(string key);
+        RedisInt BitCount(string key, int start, int end);
 
-        long Decr(string key);
-        long DecrBy(string key, int count);
-        long DecrBy(string key, long count);
+        RedisInt Decr(string key);
+        RedisInt DecrBy(string key, int count);
+        RedisInt DecrBy(string key, long count);
 
-        byte[] Get(string key);
-        long GetBit(string key, int offset);
-        byte[] GetRange(string key, int start, int end);
-        string GetRangeString(string key, int start, int end);
-        byte[] GetSet(string key, byte[] value);
-        string GetSet(string key, string value);
-        string GetString(string key);
+        RedisBytes Get(string key);
+        RedisInt GetBit(string key, int offset);
+        RedisBytes GetRange(string key, int start, int end);
+        RedisString GetRangeString(string key, int start, int end);
+        RedisBytes GetSet(string key, byte[] value);
+        RedisString GetSet(string key, string value);
+        RedisString GetString(string key);
 
-        long Incr(string key);
-        long IncrBy(string key, int count);
-        long IncrBy(string key, long count);
-        double IncrByFloat(string key, double increment);
+        RedisInt Incr(string key);
+        RedisInt IncrBy(string key, int count);
+        RedisInt IncrBy(string key, long count);
+        RedisDouble IncrByFloat(string key, double increment);
 
-        byte[][] MGet(params byte[][] keys);
-        string[] MGet(params string[] keys);
+        RedisMultiBytes MGet(params byte[][] keys);
+        RedisMultiString MGet(params string[] keys);
 
-        bool MSet(byte[][] keys, byte[][] values);
-        bool MSet(string[] keys, string[] values);
-        bool MSetNx(byte[][] keys, byte[][] values);
-        bool MSetNx(string[] keys, string[] values);
-        bool PSetEx(string key, long milliseconds, byte[] value);
+        RedisBool MSet(byte[][] keys, byte[][] values);
+        RedisBool MSet(string[] keys, string[] values);
+        RedisBool MSetNx(byte[][] keys, byte[][] values);
+        RedisBool MSetNx(string[] keys, string[] values);
+        RedisBool PSetEx(string key, long milliseconds, byte[] value);
 
-        bool Set(string key, byte[] value);
-        bool Set(string key, byte[] value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
-        bool Set(string key, string value);
-        bool Set(string key, string value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
-        long SetBit(string key, int offset, int value);
-        bool SetEx(string key, int seconds, byte[] value);
-        bool SetEx(string key, int seconds, string value);
-        bool SetNx(string key, byte[] value);
-        bool SetNx(string key, string value);
-        long SetRange(string key, int offset, byte[] value);
+        RedisBool Set(string key, byte[] value);
+        RedisBool Set(string key, byte[] value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
+        RedisBool Set(string key, string value);
+        RedisBool Set(string key, string value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
+        RedisInt SetBit(string key, int offset, int value);
+        RedisBool SetEx(string key, int seconds, byte[] value);
+        RedisBool SetEx(string key, int seconds, string value);
+        RedisBool SetNx(string key, byte[] value);
+        RedisBool SetNx(string key, string value);
+        RedisInt SetRange(string key, int offset, byte[] value);
 
-        long StrLen(string key);
+        RedisInt StrLen(string key);
     }
 }

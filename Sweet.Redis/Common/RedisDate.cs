@@ -26,14 +26,14 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisObj : RedisResult<object>
+    public class RedisDate : RedisResult<DateTime>
     {
         #region .Ctors
 
-        internal RedisObj()
+        internal RedisDate()
         { }
 
-        internal RedisObj(object value)
+        internal RedisDate(DateTime value)
             : base(value)
         { }
 
@@ -41,9 +41,24 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public override RedisResultType Type { get { return RedisResultType.Object; } }
+        public override RedisResultType Type { get { return RedisResultType.Boolean; } }
 
         #endregion Properties
+
+        #region Conversion Methods
+
+        public static implicit operator RedisDate(DateTime value)  // implicit DateTime to RedisDate conversion operator
+        {
+            return new RedisDate(value);
+        }
+
+        public static implicit operator DateTime(RedisDate value)  // implicit RedisDate to DateTime conversion operator
+        {
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
         #region Operator Overloads
 
         public override bool Equals(object obj)
@@ -57,8 +72,8 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            if (obj is RedisObj)
-                return Object.Equals(Value, ((RedisObj)obj).Value);
+            if (obj is RedisDate)
+                return Object.Equals(Value, ((RedisDate)obj).Value);
 
             return Object.Equals(Value, obj);
         }
@@ -71,7 +86,7 @@ namespace Sweet.Redis
             return val.GetHashCode();
         }
 
-        public static bool operator ==(RedisObj a, RedisObj b)
+        public static bool operator ==(RedisDate a, RedisDate b)
         {
             if (ReferenceEquals(a, null))
             {
@@ -91,7 +106,7 @@ namespace Sweet.Redis
             return Object.Equals(a.Value, b.Value);
         }
 
-        public static bool operator !=(RedisObj a, RedisObj b)
+        public static bool operator !=(RedisDate a, RedisDate b)
         {
             return !(a == b);
         }

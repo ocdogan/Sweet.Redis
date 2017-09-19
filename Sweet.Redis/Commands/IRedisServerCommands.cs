@@ -154,38 +154,38 @@ namespace Sweet.Redis
      */
     public interface IRedisServerCommands
     {
-        bool BGRewriteAOF();
-        bool BGSave();
+        RedisBool BGRewriteAOF();
+        RedisBool BGSave();
 
-        string ClientGetName();
-        long ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true);
-        RedisClientInfo[] ClientList();
-        IDictionary<string, string>[] ClientListDictionary();
-        bool ClientPause(int timeout);
-        bool ClientReplyOn();
-        bool ClientReplyOff();
-        bool ClientReplySkip();
-        bool ClientSetName(string connectionName);
+        RedisString ClientGetName();
+        RedisInt ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true);
+        RedisResult<RedisClientInfo[]> ClientList();
+        RedisResult<IDictionary<string, string>[]> ClientListDictionary();
+        RedisBool ClientPause(int timeout);
+        RedisBool ClientReplyOn();
+        RedisBool ClientReplyOff();
+        RedisBool ClientReplySkip();
+        RedisBool ClientSetName(string connectionName);
 
-        IDictionary<string, string> ConfigGet(string parameter);
-        bool ConfigResetStat();
-        bool ConfigRewrite();
-        bool ConfigSet(string parameter, string value);
+        RedisResult<IDictionary<string, string>> ConfigGet(string parameter);
+        RedisBool ConfigResetStat();
+        RedisBool ConfigRewrite();
+        RedisBool ConfigSet(string parameter, string value);
 
-        long DbSize();
+        RedisInt DbSize();
 
-        bool FlushAll();
-        bool FlushAllAsync();
-        bool FlushDb();
-        bool FlushDbAsync();
+        RedisBool FlushAll();
+        RedisBool FlushAllAsync();
+        RedisBool FlushDb();
+        RedisBool FlushDbAsync();
 
-        string[] Info(string section);
-        DateTime LastSave();
-        bool Save();
-        void ShutDown();
-        void ShutDownSave();
-        bool SlaveOf(string host, int port);
-        bool SlaveOfNoOne();
-        DateTime Time();
+        RedisMultiString Info(string section);
+        RedisDate LastSave();
+        RedisBool Save();
+        RedisVoid ShutDown();
+        RedisVoid ShutDownSave();
+        RedisBool SlaveOf(string host, int port);
+        RedisBool SlaveOfNoOne();
+        RedisDate Time();
     }
 }

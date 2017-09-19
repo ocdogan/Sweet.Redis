@@ -123,50 +123,50 @@ namespace Sweet.Redis
      */
     public interface IRedisKeysCommands
     {
-        long Del(string key, params string[] keys);
+        RedisInt Del(string key, params string[] keys);
 
-        byte[] Dump(string key);
+        RedisBytes Dump(string key);
 
-        bool Exists(string key);
-        bool Expire(string key, int seconds);
-        bool ExpireAt(string key, int timestamp);
+        RedisBool Exists(string key);
+        RedisBool Expire(string key, int seconds);
+        RedisBool ExpireAt(string key, int timestamp);
 
-        string[] Keys(string pattern);
+        RedisMultiString Keys(string pattern);
 
-        bool Migrate(string host, int port, string key, int destinationDb,
+        RedisBool Migrate(string host, int port, string key, int destinationDb,
                      long timeoutMs, bool copy, bool replace, params string[] keys);
-        bool Move(string key, int db);
+        RedisBool Move(string key, int db);
 
-        long ObjectRefCount(string key);
-        byte[] ObjectEncoding(string key);
-        string ObjectEncodingString(string key);
-        long ObjectIdleTime(string key);
+        RedisInt ObjectRefCount(string key);
+        RedisBytes ObjectEncoding(string key);
+        RedisString ObjectEncodingString(string key);
+        RedisInt ObjectIdleTime(string key);
 
-        bool Persist(string key);
+        RedisBool Persist(string key);
 
-        bool PExpire(string key, long milliseconds);
-        bool PExpireAt(string key, long millisecondsTimestamp);
-        long PTtl(string key);
+        RedisBool PExpire(string key, long milliseconds);
+        RedisBool PExpireAt(string key, long millisecondsTimestamp);
+        RedisInt PTtl(string key);
 
-        string RandomKey();
+        RedisString RandomKey();
 
-        bool Rename(string key, string newKey);
-        bool RenameNx(string key, string newKey);
+        RedisBool Rename(string key, string newKey);
+        RedisBool RenameNx(string key, string newKey);
 
-        bool Restore(string key, long ttl, byte[] value);
+        RedisBool Restore(string key, long ttl, byte[] value);
 
-        byte[][] Scan(int count = 10, string match = null);
-        string[] ScanString(int count = 10, string match = null);
+        RedisMultiBytes Scan(int count = 10, string match = null);
+        RedisMultiString ScanString(int count = 10, string match = null);
 
-        byte[][] Sort(string key, bool descending, bool alpha = false,
+        RedisMultiBytes Sort(string key, bool descending, bool alpha = false,
                       int start = -1, int end = -1, string by = null, string get = null);
 
-        long Touch(string key, params string[] keys);
+        RedisInt Touch(string key, params string[] keys);
 
-        long Ttl(string key);
+        RedisInt Ttl(string key);
 
-        string Type(string key);
+        RedisString Type(string key);
 
-        long Wait(int numberOfSlaves, int timeout);
+        RedisInt Wait(int numberOfSlaves, int timeout);
     }
 }

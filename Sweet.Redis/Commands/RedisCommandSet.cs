@@ -89,7 +89,7 @@ namespace Sweet.Redis
                 throw new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName);
         }
 
-        public RedisRawObj ExpectArray(byte[] cmd, params byte[][] parameters)
+        public RedisRaw ExpectArray(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -98,7 +98,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string ExpectBulkString(byte[] cmd, params byte[][] parameters)
+        public RedisString ExpectBulkString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -107,7 +107,7 @@ namespace Sweet.Redis
             }
         }
 
-        public byte[] ExpectBulkStringBytes(byte[] cmd, params byte[][] parameters)
+        public RedisBytes ExpectBulkStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -116,7 +116,7 @@ namespace Sweet.Redis
             }
         }
 
-        public double ExpectDouble(byte[] cmd, params byte[][] parameters)
+        public RedisDouble ExpectDouble(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -124,7 +124,8 @@ namespace Sweet.Redis
                 return rcmd.ExpectDouble(Db.Pool, Db.ThrowOnError);
             }
         }
-        public bool ExpectGreaterThanZero(byte[] cmd, params byte[][] parameters)
+
+        public RedisBool ExpectGreaterThanZero(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -133,7 +134,7 @@ namespace Sweet.Redis
             }
         }
 
-        public long ExpectInteger(byte[] cmd, params byte[][] parameters)
+        public RedisInt ExpectInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -142,7 +143,7 @@ namespace Sweet.Redis
             }
         }
 
-        public byte[][] ExpectMultiDataBytes(byte[] cmd, params byte[][] parameters)
+        public RedisMultiBytes ExpectMultiDataBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -151,7 +152,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string[] ExpectMultiDataStrings(byte[] cmd, params byte[][] parameters)
+        public RedisMultiString ExpectMultiDataStrings(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -169,12 +170,12 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ExpectOK(byte[] cmd, params byte[][] parameters)
+        public RedisBool ExpectOK(byte[] cmd, params byte[][] parameters)
         {
             return ExpectSimpleString(cmd, "OK", parameters);
         }
 
-        public bool ExpectOne(byte[] cmd, params byte[][] parameters)
+        public RedisBool ExpectOne(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -183,7 +184,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ExpectSimpleString(byte[] cmd, string expectedResult, params byte[][] parameters)
+        public RedisBool ExpectSimpleString(byte[] cmd, string expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -192,7 +193,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string ExpectSimpleString(byte[] cmd, params byte[][] parameters)
+        public RedisString ExpectSimpleString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -201,7 +202,7 @@ namespace Sweet.Redis
             }
         }
 
-        public bool ExpectSimpleStringBytes(byte[] cmd, byte[] expectedResult, params byte[][] parameters)
+        public RedisBool ExpectSimpleStringBytes(byte[] cmd, byte[] expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
@@ -210,7 +211,7 @@ namespace Sweet.Redis
             }
         }
 
-        public byte[] ExpectSimpleStringBytes(byte[] cmd, params byte[][] parameters)
+        public RedisBytes ExpectSimpleStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
