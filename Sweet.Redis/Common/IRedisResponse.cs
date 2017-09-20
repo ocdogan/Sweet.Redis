@@ -33,6 +33,7 @@ namespace Sweet.Redis
         byte[] Data { get; }
         bool HasChild { get; }
         bool HasData { get; }
+        bool IsVoid { get; }
         IList<IRedisResponse> Items { get; }
         int Length { get; }
         IRedisResponse Parent { get; }

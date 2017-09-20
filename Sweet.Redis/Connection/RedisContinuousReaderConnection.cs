@@ -40,19 +40,19 @@ namespace Sweet.Redis
         private long m_ReceiveState;
         private RedisContinuousReader m_Reader;
 
-        private Action<RedisResponse> m_OnReceiveResponse;
+        private Action<IRedisResponse> m_OnReceiveResponse;
 
         #endregion Field Members
 
         #region .Ctors
 
-        internal RedisContinuousReaderConnection(string name, Action<RedisResponse> onReceiveResponse,
+        internal RedisContinuousReaderConnection(string name, Action<IRedisResponse> onReceiveResponse,
             Action<RedisConnection, RedisSocket> onReleaseSocket, bool connectImmediately = false)
             : this(name, new RedisSettings(), onReceiveResponse, onReleaseSocket, connectImmediately)
         { }
 
         internal RedisContinuousReaderConnection(string name, RedisSettings settings,
-            Action<RedisResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onReleaseSocket,
+            Action<IRedisResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onReleaseSocket,
             bool connectImmediately = true)
             : base(name, settings, onReleaseSocket, null, connectImmediately)
         {

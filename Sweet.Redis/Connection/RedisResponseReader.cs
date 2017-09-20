@@ -23,288 +23,241 @@
 #endregion License
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisResponseReader : RedisDisposable
+    internal class RedisResponseReader : RedisDisposable, IRedisReceiver
     {
-        #region Methods
+        #region CRLFState
+
+        protected enum CRLFState : int
+        {
+            None = 0,
+            CR = 1,
+            CRLF = 2
+        }
+
+        #endregion CRLFState
+
+        #region Constants
+
+        public const int MaxBufferSize = 32 * 1024;
+        public const int DefaultBufferSize = 1024;
+
+        protected const int Beginning = (int)RedisConstants.Zero;
+
+        #endregion Constants
+
+        #region Field Members
+
+        protected long m_ReadState;
+        protected long m_ReceiveStarted;
+
+        private int m_BufferSize;
+        private byte[] m_Buffer;
+        
+        protected int m_WritePosition;
+        protected int m_ReadPosition;
+
+        #endregion Field Members
+
+        #region .Ctors
+
+        protected RedisResponseReader(int bufferSize = -1)
+        {
+            m_BufferSize = Math.Min(MaxBufferSize, Math.Max(DefaultBufferSize, Math.Max(0, bufferSize)));
+            m_Buffer = new byte[m_BufferSize];
+        }
+
+        #endregion .Ctors
+
+        #region Destructors
 
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
+            EndRead();
         }
 
-        public IRedisResponse Execute(RedisSocket socket)
+        #endregion Destructors
+
+        #region Properties
+
+        protected byte[] Buffer
         {
-            using (var buffer = new RedisByteBuffer())
+            get { return m_Buffer; }
+        }
+
+        protected int BufferSize
+        {
+            get { return m_BufferSize; }
+        }
+
+        public Exception Error { get; protected set; }
+
+        public virtual bool ReceiveStarted
+        {
+            get { return Interlocked.Read(ref m_ReceiveStarted) != RedisConstants.Zero; }
+        }
+
+        public virtual bool Receiving
+        {
+            get { return (!Disposed && Interlocked.Read(ref m_ReadState) != RedisConstants.Zero); }
+        }
+
+        public int ReadPosition
+        {
+            get { return Math.Max(Beginning, Math.Min(BufferSize, m_ReadPosition)); }
+        }
+
+        public int WritePosition
+        {
+            get { return Math.Max(Beginning, Math.Min(BufferSize, m_WritePosition)); }
+        }
+
+        #endregion Properties
+
+        #region Methods
+
+        protected virtual void EndRead()
+        {
+            Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
+        }
+
+        protected virtual IRedisResponse ReadResponse(RedisSocket socket)
+        {
+            if (socket == null)
+                throw new ArgumentNullException("socket");
+
+            ValidateNotDisposed();
+
+            if (socket.IsConnected())
             {
-                var item = ReadThrough(socket, buffer, true);
-
-                var available = 0;
-                if (buffer.Position < buffer.Length || (available = socket.Available) > 0)
+                Error = null;
+                try
                 {
-                    var siblings = new List<IRedisResponse>();
-                    do
-                    {
-                        var sibling = ReadThrough(socket, buffer, available > 0);
-                        if (sibling != null)
-                            siblings.Add(sibling);
-                    }
-                    while (buffer.Position < buffer.Length || (available = socket.Available) > 0);
+                    var result = ProcessResponse(socket);
+                    OnResponse(result);
 
-                    var siblingCount = siblings.Count;
-                    if (siblingCount > 0)
-                    {
-                        var parent = new RedisResponse(type: RedisRawObjType.Array);
-                        parent.Length = siblingCount + 1;
-
-                        parent.Add(item);
-                        for (var i = 0; i < siblingCount; i++)
-                            parent.Add(siblings[i]);
-
-                        return parent;
-                    }
+                    return result;
                 }
-                return item;
+                catch (Exception e)
+                {
+                    Error = e;
+                }
             }
+            return RedisVoidResponse.Void;
         }
 
-        private IRedisResponse ReadThrough(RedisSocket socket, RedisByteBuffer buffer, bool receiveMore = false)
+        protected virtual void OnResponse(IRedisResponse response)
+        { }
+
+        protected RedisResponse ProcessResponse(RedisSocket socket)
         {
+            var b = ReadByte(socket);
+            if (b < 0)
+            {
+                if (!Receiving)
+                    return null;
+
+                throw new RedisException("Unexpected byte for redis response type");
+            }
+
             var item = new RedisResponse();
-            while (receiveMore || !item.Ready)
-            {
-                if (!receiveMore)
-                    receiveMore = NeedToReceiveMore(item, buffer);
 
-                if (receiveMore)
-                {
-                    receiveMore = false;
-                    Receive(socket, buffer);
-                }
+            item.SetTypeByte(b);
+            if (item.Type == RedisRawObjType.Undefined)
+                throw new RedisException("Undefined redis response type");
 
-                if (item.Length < -1)
-                {
-                    ReadObjectType(item, buffer);
-                    if (ReadHeader(item, buffer, out receiveMore))
-                        return item;
-
-                    if (receiveMore)
-                        continue;
-                }
-
-                if (ReadBody(item, socket, buffer, out receiveMore))
-                    return item;
-            }
-            return null;
-        }
-
-        private static bool NeedToReceiveMore(RedisResponse item, RedisByteBuffer buffer)
-        {
-            return (buffer.Length == 0) ||
-                (item.Type != RedisRawObjType.Array &&
-                 (item.Length > buffer.Length - buffer.Position + RedisConstants.CRLFLength));
-        }
-
-        private void Receive(RedisSocket socket, RedisByteBuffer buffer)
-        {
-            if (socket == null || !socket.IsConnected())
-                throw new RedisException("Can not establish socket to complete redis response read");
-
-            var offset = 0;
-            var length = 0;
-            var data = (byte[])null;
-
-            var remainingLength = socket.Available;
-            do
-            {
-                if (length == 0)
-                {
-                    offset = 0;
-                    length = (remainingLength == 0) ?
-                        RedisConstants.ReadBufferSize :
-                                      remainingLength;
-
-                    data = new byte[length];
-                }
-
-                var receivedLength = socket.ReceiveAsync(data, offset, length).Result;
-
-                if (receivedLength > 0)
-                    offset += receivedLength;
-
-                if (receivedLength < length)
-                {
-                    if (offset > 0)
-                    {
-                        if (offset == data.Length)
-                            buffer.Put(data);
-                        else
-                        {
-                            var tmp = new byte[offset];
-                            Buffer.BlockCopy(data, 0, tmp, 0, offset);
-
-                            buffer.Put(tmp);
-                        }
-                    }
-
-                    break;
-                }
-
-                length -= receivedLength;
-                if (length == 0)
-                {
-                    buffer.Put(data);
-
-                    data = null;
-                    offset = 0;
-                }
-            }
-            while ((remainingLength = socket.Available) > 0);
-        }
-
-        private bool ReadHeader(RedisResponse item, RedisByteBuffer buffer, out bool receiveMore)
-        {
-            receiveMore = false;
-
-            var header = buffer.ReadLine();
-
-            receiveMore = (header == null);
-            if (receiveMore)
-                return false;
+            var data = ReadLine(socket);
+            if (data == null && !Receiving)
+                return null;
 
             switch (item.Type)
             {
+                case RedisRawObjType.Integer:
                 case RedisRawObjType.SimpleString:
                 case RedisRawObjType.Error:
-                case RedisRawObjType.Integer:
+                    item.SetData(data);
+                    SetReady(item);
+                    break;
+                case RedisRawObjType.BulkString:
                     {
-                        item.Data = header;
-                        SetReady(item);
-
-                        return true;
-                    }
-                default:
-                    {
-                        var lenStr = Encoding.UTF8.GetString(header);
+                        var lenStr = Encoding.UTF8.GetString(data);
                         if (String.IsNullOrEmpty(lenStr))
-                            throw new RedisException("Corrupted redis response, empty length string");
+                            throw new RedisException("Corrupted redis response, empty length for bulk string");
 
                         int msgLength;
                         if (!int.TryParse(lenStr, out msgLength))
-                            throw new RedisException("Corrupted redis response, not an integer value");
+                            throw new RedisException("Corrupted redis response, not an integer value for bulk string");
 
-                        msgLength = Math.Max(-1, msgLength);
-                        item.Length = msgLength;
-
-                        if (msgLength == -1)
+                        item.SetLength(Math.Max(-1, msgLength));
+                        if (item.Length == -1)
                         {
-                            item.Data = null;
-                            SetReady(item);
-
-                            return true;
+                            item.SetData(null);
                         }
-
-                        if (msgLength == 0)
+                        else
                         {
-                            if (item.Type == RedisRawObjType.BulkString)
+                            if (item.Length == 0)
+                                item.SetData(new byte[0]);
+                            else
                             {
-                                item.Data = new byte[0];
-                                SetReady(item);
+                                data = ReadBytes(socket, item.Length);
+                                if (data == null && !Receiving)
+                                    return null;
 
-                                receiveMore = !buffer.EatCRLF();
-                                return !receiveMore;
+                                item.SetData(data);
                             }
 
-                            SetReady(item);
-                            return true;
+                            if (!EatCRLF(socket))
+                                return null;
                         }
-
-                        receiveMore = ((item.Type == RedisRawObjType.BulkString) &&
-                                       (buffer.Length < buffer.Position + msgLength + RedisConstants.CRLFLength));
-                    }
-                    break;
-            }
-
-            return false;
-        }
-
-        private bool ReadBody(RedisResponse item, RedisSocket socket, RedisByteBuffer buffer, out bool receiveMore)
-        {
-            receiveMore = false;
-            if (socket == null || !socket.IsConnected())
-                throw new RedisException("Can not establish socket to complete redis response read");
-
-            switch (item.Type)
-            {
-                case RedisRawObjType.BulkString:
-                    {
-                        if (item.Length > 0)
-                        {
-                            receiveMore = (buffer.Length < buffer.Position + item.Length + RedisConstants.CRLFLength);
-                            if (receiveMore)
-                                return false;
-
-                            var data = buffer.Read(item.Length);
-
-                            receiveMore = (data == null);
-                            if (receiveMore)
-                                return false;
-
-                            item.Data = data;
-                            SetReady(item);
-
-                            receiveMore = !buffer.EatCRLF();
-
-                            return !receiveMore;
-                        }
-
-                        if (item.Length == 0)
-                        {
-                            receiveMore = !buffer.EatCRLF();
-                            return !receiveMore;
-                        }
-
-                        if (item.Length == -1)
-                            return true;
+                        SetReady(item);
                     }
                     break;
                 case RedisRawObjType.Array:
                     {
-                        for (var i = 0; i < item.Length; i++)
+                        var lenStr = Encoding.UTF8.GetString(data);
+                        if (String.IsNullOrEmpty(lenStr))
+                            throw new RedisException("Corrupted redis response, empty length for array");
+
+                        int arrayLen;
+                        if (!int.TryParse(lenStr, out arrayLen))
+                            throw new RedisException("Corrupted redis response, not an integer value for array");
+
+                        arrayLen = Math.Max(-1, arrayLen);
+                        item.SetLength(arrayLen);
+
+                        if (arrayLen > 0)
                         {
-                            var child = ReadThrough(socket, buffer);
-                            if (child == null)
-                                throw new RedisException("Unexpected response data, not valid data for array item");
+                            for (var i = 0; i < arrayLen; i++)
+                            {
+                                var child = ProcessResponse(socket);
+                                if (child == null)
+                                {
+                                    if (!Receiving)
+                                        return null;
 
-                            item.Add(child);
+                                    throw new RedisException("Unexpected response data, not valid data for array item");
+                                }
+
+                                item.Add(child);
+                            }
                         }
-                        return true;
                     }
+                    break;
             }
-            return false;
+            return item;
         }
 
-        private static void ReadObjectType(RedisResponse item, RedisByteBuffer buffer)
+        protected static void SetReady(RedisResponse child)
         {
-            if (item.TypeByte < 0)
-            {
-                var b = buffer.ReadByte();
-                if (b < 0)
-                    throw new RedisException("Unexpected byte for redis response type");
-
-                item.TypeByte = b;
-                if (item.Type == RedisRawObjType.Undefined)
-                    throw new RedisException("Undefined redis response type");
-            }
-        }
-
-        private static void SetReady(RedisResponse child)
-        {
-            child.Ready = true;
+            child.SetReady(true);
 
             var parent = child.Parent as RedisResponse;
             if (parent != null)
@@ -313,6 +266,307 @@ namespace Sweet.Redis
                 if (count == 0 || count == parent.Length)
                     SetReady(parent);
             }
+        }
+
+        protected bool EatCRLF(RedisSocket socket)
+        {
+            var data = ReadBytes(socket, RedisConstants.CRLFLength);
+            if ((data == null || data.Length != RedisConstants.CRLFLength ||
+               data[0] != '\r' || data[1] != '\n'))
+            {
+                if (!Receiving)
+                    return false;
+                throw new RedisException("Corrupted redis response, not a line end");
+            }
+            return true;
+        }
+
+        protected bool TryToReceive(RedisSocket socket, int length, out int receivedLength)
+        {
+            receivedLength = 0;
+            if (m_WritePosition == Beginning || m_ReadPosition > m_WritePosition - 1)
+            {
+                receivedLength = BeginReceive(socket, length);
+                return receivedLength > 0;
+            }
+            return true;
+        }
+
+        private int BeginReceive(RedisSocket socket, int length)
+        {
+            if ((length != 0) && socket.IsConnected() && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero) &&
+                (Interlocked.CompareExchange(ref m_ReceiveStarted, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero))
+            {
+                try
+                {
+                    var receiveSize = BufferSize - m_WritePosition;
+                    if (receiveSize < 1)
+                    {
+                        Interlocked.Exchange(ref m_WritePosition, Beginning);
+                        Interlocked.Exchange(ref m_ReadPosition, Beginning);
+                        receiveSize = BufferSize;
+                    }
+
+                    if (length > 0)
+                        receiveSize = Math.Min(length, receiveSize);
+
+                    var received = false;
+                    var readStatus = SocketError.Success;
+                    do
+                    {
+                        try
+                        {
+                            var receivedLength = socket.Receive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None, out readStatus);
+                            if (readStatus == SocketError.TimedOut ||
+                                readStatus == SocketError.WouldBlock)
+                                continue;
+
+                            received = true;
+                            if (receivedLength > 0)
+                                IncrementWritePosition(receivedLength);
+                            else if (receivedLength == 0)
+                                Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
+
+                            return receivedLength;
+                        }
+                        catch (SocketException e)
+                        {
+                            if (e.SocketErrorCode != SocketError.TimedOut)
+                                throw;
+                        }
+                        catch (Exception e)
+                        {
+                            if (!(e is SocketException))
+                                Interlocked.Exchange(ref m_ReceiveStarted, RedisConstants.Zero);
+                        }
+                    }
+                    while (!received && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero));
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref m_ReceiveStarted, RedisConstants.Zero);
+                }
+            }
+            return int.MinValue;
+        }
+
+        protected int ReadByte(RedisSocket socket)
+        {
+            int receivedLength;
+            if (TryToReceive(socket, 1, out receivedLength))
+            {
+                var b = m_Buffer[m_ReadPosition];
+                IncrementReadPosition();
+
+                return b;
+            }
+            return receivedLength;
+        }
+
+        protected void IncrementReadPosition(int inc = 1)
+        {
+            Interlocked.Exchange(ref m_ReadPosition, Math.Min(BufferSize, Math.Max(Beginning, m_ReadPosition + inc)));
+        }
+
+        protected void IncrementWritePosition(int inc = 1)
+        {
+            Interlocked.Exchange(ref m_WritePosition, Math.Min(BufferSize, Math.Max(Beginning, m_WritePosition + inc)));
+        }
+
+        protected byte[] ReadLine(RedisSocket socket)
+        {
+            int receivedLength;
+            if (TryToReceive(socket, -1, out receivedLength))
+            {
+                byte[] line;
+                var state = TryReadLineFromBuffer(CRLFState.None, out line);
+                if (state == CRLFState.CRLF)
+                    return line;
+
+                var list = new List<byte[]>();
+
+                var readLength = 0;
+                if (line != null && line.Length > 0)
+                {
+                    readLength = line.Length;
+                    list.Add(line);
+                }
+
+                while (TryToReceive(socket, -1, out receivedLength))
+                {
+                    state = TryReadLineFromBuffer(state, out line);
+                    if (line != null && line.Length > 0)
+                    {
+                        readLength += line.Length;
+                        list.Add(line);
+                    }
+
+                    if (state == CRLFState.CRLF)
+                        break;
+                }
+
+                if (!Receiving)
+                    return null;
+
+                var listCount = list.Count;
+                if (listCount == 1)
+                    return list[0];
+
+                if (readLength == 0)
+                    return new byte[0];
+
+                line = list[listCount - 1];
+                if (line.Length > 0 && line[line.Length - 1] == '\n')
+                    readLength--;
+
+                var offset = 0;
+                var result = new byte[readLength];
+
+                for (var i = 0; i < listCount; i++)
+                {
+                    line = list[i];
+
+                    if (i == listCount - 1)
+                        System.Buffer.BlockCopy(line, 0, result, offset, readLength);
+                    else
+                    {
+                        System.Buffer.BlockCopy(line, 0, result, offset, line.Length);
+
+                        offset += line.Length;
+                        readLength -= line.Length;
+                    }
+                }
+                return result;
+            }
+            return null;
+        }
+
+        protected CRLFState TryReadLineFromBuffer(CRLFState currState, out byte[] line)
+        {
+            line = null;
+
+            var startPos = m_ReadPosition;
+            var stopPos = m_WritePosition;
+
+            for (; m_ReadPosition < stopPos; IncrementReadPosition())
+            {
+                switch (m_Buffer[m_ReadPosition])
+                {
+                    case (byte)'\r':
+                        currState = CRLFState.CR;
+                        break;
+                    case (byte)'\n':
+                        if (currState == CRLFState.CR)
+                        {
+                            IncrementReadPosition();
+                            currState = CRLFState.CRLF;
+                            line = CopyBuffer(startPos, m_ReadPosition - startPos - 2);
+                            return currState;
+                        }
+                        break;
+                    default:
+                        currState = CRLFState.None;
+                        break;
+                }
+            }
+
+            line = CopyBuffer(startPos, stopPos - startPos);
+            return currState;
+        }
+
+        protected byte[] CopyBuffer(int offset, int length)
+        {
+            if (length < 0)
+                return null;
+
+            var result = new byte[length];
+            if (length > 0)
+                System.Buffer.BlockCopy(m_Buffer, offset, result, 0, length);
+
+            return result;
+        }
+
+        protected byte[] ReadBytes(RedisSocket socket, int length)
+        {
+            if (length < 0)
+                return null;
+
+            if (length == 0)
+                return new byte[0];
+
+            int receivedLength;
+            if (TryToReceive(socket, length, out receivedLength))
+            {
+                byte[] data;
+                var received = TryReadBytesFromBuffer(length, out data);
+                if (received == length)
+                    return data;
+
+                if (received > 0)
+                    length -= received;
+
+                var readLength = 0;
+                var list = new List<byte[]>();
+
+                if (received > 0)
+                {
+                    readLength += received;
+                    list.Add(data);
+                }
+
+                while (length > 0 && TryToReceive(socket, length, out receivedLength))
+                {
+                    received = TryReadBytesFromBuffer(length, out data);
+                    if (received > 0)
+                    {
+                        readLength += received;
+                        list.Add(data);
+
+                        length -= received;
+                    }
+                }
+
+                var listCount = list.Count;
+                if (listCount == 1)
+                    return list[0];
+
+                if (readLength == 0)
+                    return new byte[0];
+
+                var offset = 0;
+                var result = new byte[readLength];
+
+                for (var i = 0; i < listCount; i++)
+                {
+                    data = list[i];
+
+                    System.Buffer.BlockCopy(data, 0, result, offset, data.Length);
+                    offset += data.Length;
+                }
+                return result;
+            }
+            return null;
+        }
+
+        protected int TryReadBytesFromBuffer(int length, out byte[] data)
+        {
+            data = null;
+
+            var validDataSize = m_WritePosition - m_ReadPosition;
+            if (validDataSize < 1)
+                return 0;
+
+            length = Math.Min(length, validDataSize);
+            if (length == 0)
+                data = new byte[0];
+            else if (length > 0)
+            {
+                data = new byte[length];
+
+                System.Buffer.BlockCopy(m_Buffer, m_ReadPosition, data, 0, length);
+                IncrementReadPosition(length);
+            }
+            return length;
         }
 
         #endregion Methods

@@ -82,7 +82,7 @@ namespace Sweet.Redis
                 .ContinueWith<IRedisResponse>((ret) =>
                 {
                     if (ret.IsCompleted && ret.Result > 0)
-                        using (var reader = new RedisResponseReader())
+                        using (var reader = new RedisSingleResponseReader())
                             return reader.Execute(socket);
                     return null;
                 });
@@ -106,7 +106,7 @@ namespace Sweet.Redis
             }
 
             cmd.WriteTo(socket);
-            using (var reader = new RedisResponseReader())
+            using (var reader = new RedisSingleResponseReader())
                 return reader.Execute(socket);
         }
 

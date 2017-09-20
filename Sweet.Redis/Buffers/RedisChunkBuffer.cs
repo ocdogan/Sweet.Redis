@@ -156,8 +156,6 @@ namespace Sweet.Redis
 
         public void Write(byte val)
         {
-            ValidateNotDisposed();
-
             int currPosition;
             var chunk = GetOutChunk(out currPosition);
 
@@ -187,8 +185,6 @@ namespace Sweet.Redis
 
         public void Write(byte[] data, int index, int length)
         {
-            ValidateNotDisposed();
-
             if (index < 0)
                 throw new ArgumentException("Index value is out of bounds", "index");
 
@@ -255,7 +251,6 @@ namespace Sweet.Redis
 
         public void Clear()
         {
-            ValidateNotDisposed();
             ClearInternal();
         }
 
@@ -271,8 +266,6 @@ namespace Sweet.Redis
 
         public byte[] ReleaseBuffer()
         {
-            ValidateNotDisposed();
-
             var currLength = Interlocked.Exchange(ref m_Length, Beginning);
             var currPosition = Interlocked.Exchange(ref m_Position, Beginning);
 

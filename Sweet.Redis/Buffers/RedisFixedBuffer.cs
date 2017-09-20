@@ -32,16 +32,18 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        private const long Beginning = RedisConstants.Zero;
+        public const int DefaultBufferSize = 1024;
+
+        private const int Beginning = (int)RedisConstants.Zero;
 
         #endregion Constants
 
         #region Field Members
 
-        private byte[] m_Data;
-        private long m_Length;
-        private long m_Capacity;
-        private long m_Position;
+        private byte[] m_Buffer;
+        private int m_Capacity;
+        private int m_ReadPosition;
+        private int m_WritePosition;
 
         #endregion Field Members
 
@@ -49,7 +51,10 @@ namespace Sweet.Redis
 
         public RedisFixedBuffer(int capacity)
         {
-            m_Capacity = Math.Max(0, capacity);
+            capacity = Math.Max(0, capacity);
+            m_Capacity = capacity == 0 ? DefaultBufferSize : capacity;
+
+            m_Buffer = new byte[m_Capacity];
         }
 
         #endregion .Ctors
@@ -58,7 +63,7 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            ClearInternal();
+            Reset();
         }
 
         #endregion Destructors
@@ -67,31 +72,27 @@ namespace Sweet.Redis
 
         public int Capacity
         {
-            get { return (int)Interlocked.Read(ref m_Capacity); }
+            get { return m_Capacity; }
         }
 
         public bool Completed
         {
-            get
-            {
-                return Interlocked.Read(ref m_Position) >=
-                              Interlocked.Read(ref m_Length);
-            }
+            get { return m_WritePosition >= m_Capacity; }
         }
 
-        public byte[] Data
+        public byte[] Buffer
         {
-            get { return m_Data; }
+            get { return m_Buffer; }
         }
 
-        public int Length
+        public int ReadPosition
         {
-            get { return (int)Interlocked.Read(ref m_Length); }
+            get { return m_ReadPosition; }
         }
 
-        public int Position
+        public int WritePosition
         {
-            get { return (int)Interlocked.Read(ref m_Position); }
+            get { return m_WritePosition; }
         }
 
         #endregion Properties
@@ -184,33 +185,14 @@ namespace Sweet.Redis
 
         public void Write(byte val)
         {
-            ValidateNotDisposed();
             ValidateNotCompleted();
 
-            GetBuffer()[Position] = val;
-
-            Interlocked.Add(ref m_Position, RedisConstants.One);
-        }
-
-        private byte[] GetBuffer()
-        {
-            var buffer = m_Data;
-            if (buffer == null)
-            {
-                var capacity = Capacity;
-                buffer = new byte[capacity];
-
-                Interlocked.Exchange(ref m_Data, buffer);
-
-                Interlocked.Exchange(ref m_Position, Beginning);
-                Interlocked.Exchange(ref m_Length, capacity);
-            }
-            return buffer;
+            GetBuffer()[m_WritePosition] = val;
+            IncrementWritePosition();
         }
 
         public void Write(byte[] data, int index, int length)
         {
-            ValidateNotDisposed();
             ValidateNotCompleted();
 
             if (index < 0)
@@ -227,52 +209,53 @@ namespace Sweet.Redis
                     if (index + length > dataLength)
                         throw new ArgumentException("Length can not exceed data size", "length");
 
-                    var currPosition = Position;
-                    if (length > Length - currPosition)
+                    var currPosition = m_WritePosition;
+                    if (length > m_Capacity - currPosition)
                         throw new ArgumentException("Length can not exceed buffer capacitye", "length");
 
                     var buffer = GetBuffer();
 
-                    Buffer.BlockCopy(data, index, buffer, currPosition, length);
-
-                    Interlocked.Add(ref m_Position, length);
+                    System.Buffer.BlockCopy(data, index, buffer, currPosition, length);
+                    IncrementWritePosition(length);
                 }
             }
         }
 
-        public void Clear()
+        private byte[] GetBuffer()
         {
-            ValidateNotDisposed();
-            ClearInternal();
+            var buffer = m_Buffer;
+            if (buffer == null)
+            {
+                buffer = m_Buffer = new byte[m_Capacity];
+                Reset();
+            }
+            return buffer;
         }
 
-        private void ClearInternal()
+        private void IncrementReadPosition(int inc = 1)
         {
-            Interlocked.Exchange(ref m_Length, Beginning);
-            Interlocked.Exchange(ref m_Position, Beginning);
-
-            Interlocked.Exchange(ref m_Data, null);
+            m_ReadPosition = Math.Min(m_Capacity, Math.Max(Beginning, m_ReadPosition + inc));
         }
 
-        public int ReleaseBuffer(out byte[] data, bool reinit = false)
+        private void IncrementWritePosition(int inc = 1)
         {
-            ValidateNotDisposed();
+            m_WritePosition = Math.Min(m_Capacity, Math.Max(Beginning, m_WritePosition + inc));
+        }
 
-            data = m_Data;
-            var pos = (int)Interlocked.Exchange(ref m_Position, Beginning);
+        public void Reset()
+        {
+            m_ReadPosition = Beginning;
+            m_WritePosition = Beginning;
+        }
 
-            if (reinit)
-            {
-                var capacity = Capacity;
+        public int ReleaseBuffer(out byte[] data)
+        {
+            data = m_Buffer;
+            m_Buffer = new byte[m_Capacity];
 
-                Interlocked.Exchange(ref m_Length, capacity);
-                Interlocked.Exchange(ref m_Data, new byte[capacity]);
-            }
-            else
-            {
-                Interlocked.Exchange(ref m_Length, Beginning);
-                Interlocked.Exchange(ref m_Data, null);
-            }
+            var pos = m_WritePosition;
+
+            Reset();
 
             return pos;
         }

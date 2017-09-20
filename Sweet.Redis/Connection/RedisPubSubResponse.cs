@@ -78,7 +78,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public static RedisPubSubResponse ToPubSubResponse(RedisResponse response)
+        public static RedisPubSubResponse ToPubSubResponse(IRedisResponse response)
         {
             if (response != null &&
                 response.Type == RedisRawObjType.Array)

@@ -49,14 +49,25 @@ namespace Sweet.Redis
 
         private void Dispose(bool disposing)
         {
-            if (SetDisposed())
-                return;
+            var alreadyDisposed = SetDisposed();
+            try
+            {
+                OnBeforeDispose(disposing, alreadyDisposed);
+            }
+            finally
+            {
+                if (!alreadyDisposed)
+                {
+                    if (disposing)
+                        GC.SuppressFinalize(this);
 
-            if (disposing)
-                GC.SuppressFinalize(this);
-
-            OnDispose(disposing);
+                    OnDispose(disposing);
+                }
+            }
         }
+
+        protected virtual void OnBeforeDispose(bool disposing, bool alreadyDisposed)
+        { }
 
         protected virtual void OnDispose(bool disposing)
         { }

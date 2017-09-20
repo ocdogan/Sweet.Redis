@@ -51,7 +51,7 @@ namespace Sweet.Redis
         {
             m_Parent = parent;
             if (type != RedisRawObjType.Undefined)
-                Type = type;
+                SetType(type);
         }
 
         #endregion .Ctors
@@ -83,14 +83,6 @@ namespace Sweet.Redis
         public byte[] Data
         {
             get { return m_Data; }
-            internal set
-            {
-                m_Data = value;
-                Interlocked.Exchange(ref m_HasData, RedisConstants.True);
-
-                if (m_Type.HasValue && m_Type != RedisRawObjType.Array)
-                    Ready = true;
-            }
         }
 
         public bool HasChild
@@ -124,6 +116,11 @@ namespace Sweet.Redis
             }
         }
 
+        public bool IsVoid
+        {
+            get { return false; }
+        }
+
         public IList<IRedisResponse> Items
         {
             get { return m_ReadOnlyList; }
@@ -132,90 +129,104 @@ namespace Sweet.Redis
         public int Length
         {
             get { return (int)Interlocked.Read(ref m_Length); }
-            internal set
-            {
-                value = Math.Max(-1, value);
-                Interlocked.Exchange(ref m_Length, value);
-
-                if (m_Type == RedisRawObjType.Array)
-                {
-                    InitializeList(value);
-                    if (value < 1)
-                        Ready = true;
-                    else
-                    {
-                        var items = m_ReadOnlyList;
-                        Ready = items.Count == value;
-                    }
-                }
-            }
         }
 
         public IRedisResponse Parent
         {
             get { return m_Parent; }
-            internal set
-            {
-                var parent = Interlocked.Exchange(ref m_Parent, value);
-                if (parent != null && value != parent)
-                {
-                    var response = parent as RedisResponse;
-                    if (response != null)
-                        response.Remove(this);
-                }
-            }
         }
 
         public bool Ready
         {
             get { return Interlocked.Read(ref m_Ready) != RedisConstants.False; }
-            internal set
-            {
-                Interlocked.Exchange(ref m_Ready, value ? RedisConstants.True : RedisConstants.False);
-            }
         }
 
         public RedisRawObjType Type
         {
             get { return m_Type.HasValue ? m_Type.Value : RedisRawObjType.Undefined; }
-            internal set
-            {
-                if (!m_Type.HasValue)
-                {
-                    m_Type = value;
-                    m_TypeByte = value.ResponseTypeByte();
-
-                    if (value == RedisRawObjType.Array)
-                        NewArrayList();
-
-                    if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
-                        Ready = true;
-                }
-            }
         }
 
         public int TypeByte
         {
             get { return m_TypeByte; }
-            internal set
-            {
-                if (m_TypeByte < 0 && value > -1 && value < 256)
-                {
-                    m_TypeByte = value;
-                    Type = ((byte)value).ResponseType();
-                }
-            }
         }
 
         #endregion Properties
 
         #region Methods
 
+        internal void SetData(byte[] value)
+        {
+            m_Data = value;
+            Interlocked.Exchange(ref m_HasData, RedisConstants.True);
+
+            if (m_Type.HasValue && m_Type != RedisRawObjType.Array)
+                SetReady(true);
+        }
+
+        internal void SetLength(int value)
+        {
+            value = Math.Max(-1, value);
+            Interlocked.Exchange(ref m_Length, value);
+
+            if (m_Type == RedisRawObjType.Array)
+            {
+                InitializeList(value);
+                if (value < 1)
+                    SetReady(true);
+                else
+                {
+                    var items = m_ReadOnlyList;
+                    SetReady(items.Count == value);
+                }
+            }
+        }
+
+        internal void SetParent(IRedisResponse value)
+        {
+            var parent = Interlocked.Exchange(ref m_Parent, value);
+            if (parent != null && value != parent)
+            {
+                var response = parent as RedisResponse;
+                if (response != null)
+                    response.Remove(this);
+            }
+        }
+
+        internal void SetReady(bool value)
+        {
+            Interlocked.Exchange(ref m_Ready, value ? RedisConstants.True : RedisConstants.False);
+        }
+
+        internal void SetType(RedisRawObjType value)
+        {
+            if (!m_Type.HasValue)
+            {
+                m_Type = value;
+                m_TypeByte = value.ResponseTypeByte();
+
+                if (value == RedisRawObjType.Array)
+                    NewArrayList();
+
+                if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
+                    SetReady(true);
+            }
+        }
+
+        internal void SetTypeByte(int value)
+        {
+            if (m_TypeByte < 0 && value > -1 && value < 256)
+            {
+                m_TypeByte = value;
+                SetType(((byte)value).ResponseType());
+            }
+        }
+
         public byte[] ReleaseData()
         {
             var data = Interlocked.Exchange(ref m_Data, null);
             if (m_Type != RedisRawObjType.Array)
-                Ready = Length > -1;
+                SetReady(Length > -1);
             return data;
         }
 
@@ -234,12 +245,12 @@ namespace Sweet.Redis
 
             var response = item as RedisResponse;
             if (response != null)
-                response.Parent = this;
+                response.SetParent(this);
 
             var list = GetArrayList();
             list.Add(item);
 
-            Ready = list.Count >= Length;
+            SetReady(list.Count >= Length);
         }
 
         internal void Remove(IRedisResponse item)
@@ -260,19 +271,19 @@ namespace Sweet.Redis
 
             var response = item as RedisResponse;
             if (response != null)
-                response.Parent = null;
+                response.SetParent(null);
 
             var list = GetArrayList();
             list.Remove(item);
 
-            Ready = list.Count >= Length;
+            SetReady(list.Count >= Length);
         }
 
         protected void ClearInternal()
         {
             Interlocked.Exchange(ref m_Data, null);
             if (m_Type != RedisRawObjType.Array)
-                Ready = Length > -1;
+                SetReady(Length > -1);
 
             var arrayItems = Interlocked.Exchange(ref m_List, null);
             if (arrayItems != null)
@@ -284,7 +295,7 @@ namespace Sweet.Redis
             }
 
             if (m_Type == RedisRawObjType.Array)
-                Ready = Length == -1;
+                SetReady(Length == -1);
         }
 
         public void Clear()

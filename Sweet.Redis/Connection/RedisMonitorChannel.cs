@@ -199,7 +199,7 @@ namespace Sweet.Redis
             return connection;
         }
 
-        private void ResponseReceived(RedisResponse response)
+        private void ResponseReceived(IRedisResponse response)
         {
             var monitorMsg = RedisMonitorMessage.ToMonitorMessage(response);
             if (!monitorMsg.IsEmpty)

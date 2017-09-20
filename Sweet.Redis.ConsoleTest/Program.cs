@@ -12,7 +12,8 @@ namespace Sweet.Redis.ConsoleTest
     {
         static void Main(string[] args)
         {
-            PerformanceTest();
+            PerformanceTest1();
+            // PerformanceTest2();
 
             // ScriptingNoArgsEvalTest();
             // ScriptingShaNoArgsEvalTest();
@@ -878,7 +879,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Performance Tests
 
-        static void PerformanceTest()
+        static void PerformanceTest2()
         {
             var largeText = new string('x', 100000);
 
@@ -902,7 +903,48 @@ namespace Sweet.Redis.ConsoleTest
                             sw.Restart();
 
                             for (var i = 0; i < 1000; i++)
-                                db.Connection.Ping();                            
+                                db.Strings.Get("large_text");
+                        }
+
+                        sw.Stop();
+                        Console.WriteLine("Elleapsed time: " + sw.ElapsedMilliseconds + " msec");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void PerformanceTest1()
+        {
+            var largeText = new string('x', 100000);
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1, idleTimeout: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    db.Connection.Ping();
+                }
+
+                do
+                {
+                    Console.Clear();
+                    try
+                    {
+                        var sw = new Stopwatch();
+                        using (var db = pool.GetDb())
+                        {
+                            sw.Restart();
+
+                            for (var i = 0; i < 1000; i++)
+                                db.Connection.Ping();
                         }
 
                         sw.Stop();

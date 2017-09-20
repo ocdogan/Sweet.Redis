@@ -29,7 +29,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisStreamWriter : RedisDisposable, IRedisWriter
+    internal class RedisStreamWriter : RedisDisposable, IRedisWriter
     {
         #region Field Members
 
@@ -161,8 +161,6 @@ namespace Sweet.Redis
 
         public void Write(byte[] data, int index, int length)
         {
-            ValidateNotDisposed();
-
             if (index < 0)
                 throw new ArgumentException("Index value is out of bounds", "index");
 
