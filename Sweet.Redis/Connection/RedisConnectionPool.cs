@@ -114,6 +114,8 @@ namespace Sweet.Redis
 
         private readonly Semaphore m_MaxCountSync;
         private readonly RedisSettings m_Settings;
+
+        private RedisConnectionPoolMember m_MemberStoreTail;
         private readonly object m_MemberStoreLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
 
@@ -255,6 +257,17 @@ namespace Sweet.Redis
 
         private void CloseStore()
         {
+            RedisConnectionPoolMember tail;
+            lock (m_MemberStoreLock)
+            {
+                tail = Interlocked.Exchange(ref m_MemberStoreTail, null);
+            }
+
+            if (tail != null)
+            {
+                tail.Dispose();
+            }
+
             LinkedList<RedisConnectionPoolMember> store;
             lock (m_MemberStoreLock)
             {
@@ -288,15 +301,36 @@ namespace Sweet.Redis
                 lock (m_MemberStoreLock)
                 {
                     RedisSocket socket = null;
-                    var node = store.First;
 
+                    var member = m_MemberStoreTail;
+                    if (member != null)
+                    {
+                        try
+                        {
+                            if (member.Db == db)
+                            {
+                                socket = member.ReleaseSocket();
+
+                                m_MemberStoreTail = null;
+                                if (socket.IsConnected())
+                                    return socket;
+
+                                socket.DisposeSocket();
+                            }
+                        }
+                        catch (Exception)
+                        { }
+                    }
+
+                    var node = store.First;
                     while (node != null)
                     {
                         try
                         {
-                            if (node.Value.Db == db)
+                            member = node.Value;
+                            if (member.Db == db)
                             {
-                                socket = node.Value.ReleaseSocket();
+                                socket = member.ReleaseSocket();
 
                                 store.Remove(node);
                                 if (socket.IsConnected())
@@ -390,16 +424,21 @@ namespace Sweet.Redis
                             socket.DisposeSocket();
                         else
                         {
-                            var store = m_MemberStore;
-                            if (store != null)
-                            {
-                                lock (m_MemberStoreLock)
-                                {
-                                    var db = 0;
-                                    if (conn is IRedisDbConnection)
-                                        db = ((IRedisDbConnection)conn).Db;
+                            var db = 0;
+                            if (conn is IRedisDbConnection)
+                                db = ((IRedisDbConnection)conn).Db;
 
-                                    store.AddLast(new RedisConnectionPoolMember(socket, db));
+                            var member = new RedisConnectionPoolMember(socket, db);
+                            lock (m_MemberStoreLock)
+                            {
+                                var prevTail = Interlocked.Exchange(ref m_MemberStoreTail, member);
+                                if (prevTail != null)
+                                {
+                                    var store = m_MemberStore;
+                                    if (store != null)
+                                    {
+                                        store.AddLast(prevTail);
+                                    }
                                 }
                             }
                         }

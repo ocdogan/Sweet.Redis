@@ -31,7 +31,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisContinuousReaderCtx : RedisResponseReader
+    internal class RedisContinuousReaderCtx : RedisResponseReader, IRedisReceiver
     {
         #region Field Members
 
@@ -50,7 +50,7 @@ namespace Sweet.Redis
 
         public RedisContinuousReaderCtx(RedisContinuousReader reader, RedisConnection connection,
                    RedisSocket socket, Action<IRedisResponse> onReceive)
-            : base(16 * 1024)
+            : base(connection.Settings, 16 * 1024)
         {
             Reader = reader;
             Connection = connection;
@@ -137,6 +137,11 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
+
+        protected override int GetLoopedReceiveTimeout()
+        {
+            return Timeout.Infinite;
+        }
 
         public void Read()
         {

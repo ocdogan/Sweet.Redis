@@ -199,7 +199,8 @@ namespace Sweet.Redis
                         throw new RedisException("Can not resolce host address");
 
                     socket.ConnectAsync(ipAddress, m_Settings.Port)
-                        .ContinueWith(ca => {
+                        .ContinueWith(ca =>
+                        {
                             if (ca.IsCompleted)
                             {
                                 SetState((long)RedisConnectionState.Connected);
@@ -248,7 +249,7 @@ namespace Sweet.Redis
             {
                 return settings.ReceiveTimeout;
             }
-            return Timeout.Infinite;
+            return RedisConstants.DefaultReceiveTimeout;
         }
 
         protected virtual int GetSendTimeout()
@@ -258,7 +259,7 @@ namespace Sweet.Redis
             {
                 return settings.SendTimeout;
             }
-            return Timeout.Infinite;
+            return RedisConstants.DefaultSendTimeout;
         }
 
         protected virtual void DoConfigure(RedisSocket socket)

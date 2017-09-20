@@ -55,12 +55,14 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private RedisSettings m_Settings;
+
         protected long m_ReadState;
         protected long m_ReceiveStarted;
 
         private int m_BufferSize;
         private byte[] m_Buffer;
-        
+
         protected int m_WritePosition;
         protected int m_ReadPosition;
 
@@ -68,8 +70,9 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        protected RedisResponseReader(int bufferSize = -1)
+        protected RedisResponseReader(RedisSettings settings, int bufferSize = -1)
         {
+            m_Settings = settings;
             m_BufferSize = Math.Min(MaxBufferSize, Math.Max(DefaultBufferSize, Math.Max(0, bufferSize)));
             m_Buffer = new byte[m_BufferSize];
         }
@@ -82,6 +85,8 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
             EndReading();
+
+            Interlocked.Exchange(ref m_Settings, null);
         }
 
         #endregion Destructors
@@ -113,6 +118,11 @@ namespace Sweet.Redis
         public int ReadPosition
         {
             get { return Math.Max(Beginning, Math.Min(BufferSize, m_ReadPosition)); }
+        }
+
+        public RedisSettings Settings
+        {
+            get { return m_Settings; }
         }
 
         public int WritePosition
@@ -297,6 +307,17 @@ namespace Sweet.Redis
             return true;
         }
 
+        protected virtual int GetLoopedReceiveTimeout()
+        {
+            var result = m_Settings != null ?
+                m_Settings.ReceiveTimeout : RedisConstants.DefaultReceiveTimeout;
+
+            if (result < 0)
+                result = RedisConstants.DefaultReceiveTimeout;
+
+            return result;
+        }
+
         private int BeginReceive(RedisSocket socket, int length)
         {
             if ((length != 0) && socket.IsConnected() && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero) &&
@@ -315,16 +336,34 @@ namespace Sweet.Redis
                     if (length > 0)
                         receiveSize = Math.Min(length, receiveSize);
 
+                    var timeout = false;
                     var received = false;
+
+                    double receiveTimeout = GetLoopedReceiveTimeout();
+                    var infiniteTimeout = (long)receiveTimeout == Timeout.Infinite;
+
                     var readStatus = SocketError.Success;
                     do
                     {
                         try
                         {
+                            var now = DateTime.UtcNow;
+
                             var receivedLength = socket.Receive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None, out readStatus);
                             if (readStatus == SocketError.TimedOut ||
                                 readStatus == SocketError.WouldBlock)
+                            {
+                                if (!infiniteTimeout)
+                                {
+                                    receiveTimeout -= (DateTime.UtcNow - now).TotalMilliseconds;
+                                    if (receiveTimeout <= 0)
+                                    {
+                                        timeout = true;
+                                        throw new SocketException((int)SocketError.TimedOut);
+                                    }
+                                }
                                 continue;
+                            }
 
                             received = true;
                             if (receivedLength > 0)
@@ -336,7 +375,9 @@ namespace Sweet.Redis
                         }
                         catch (SocketException e)
                         {
-                            if (e.SocketErrorCode != SocketError.TimedOut)
+                            if (!infiniteTimeout ||
+                                !(e.SocketErrorCode == SocketError.TimedOut ||
+                                  e.SocketErrorCode == SocketError.WouldBlock))
                                 throw;
                         }
                         catch (Exception e)
@@ -345,7 +386,7 @@ namespace Sweet.Redis
                                 Interlocked.Exchange(ref m_ReceiveStarted, RedisConstants.Zero);
                         }
                     }
-                    while (!received && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero));
+                    while (!(received || timeout) && (Interlocked.Read(ref m_ReadState) != RedisConstants.Zero));
                 }
                 finally
                 {

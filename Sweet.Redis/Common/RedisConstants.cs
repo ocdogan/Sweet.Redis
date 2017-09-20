@@ -72,7 +72,7 @@ namespace Sweet.Redis
         public const int MaxConnectionTimeout = 60000;
 
         public const int MaxConnectionCount = 1000;
-        public const int DefaultMaxConnectionCount = 100;
+        public const int DefaultMaxConnectionCount = 10;
 
         public const int DefaultWaitTimeout = 5000;
         public const int MinWaitTimeout = 1000;

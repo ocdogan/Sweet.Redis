@@ -22,22 +22,14 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-
-
 namespace Sweet.Redis
 {
     internal class RedisSingleResponseReader : RedisResponseReader
     {
         #region .Ctors
 
-        public RedisSingleResponseReader()
-            : base(16 * 1024)
+        public RedisSingleResponseReader(RedisSettings settings)
+            : base(settings, 16 * 1024)
         { }
 
         #endregion .Ctors

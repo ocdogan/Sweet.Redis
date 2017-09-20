@@ -27,11 +27,11 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisContinuousReaderConnection : RedisConnection, IRedisPubSubConnection
+    internal class RedisContinuousReaderConnection : RedisConnection, IRedisPubSubConnection, IRedisReceiver
     {
         #region Constants
 
-        private const int PubSubReceiveTimeout = 500;
+        private const int CRReceiveTimeout = 500;
 
         #endregion Constants
 
@@ -90,7 +90,7 @@ namespace Sweet.Redis
 
         protected override int GetReceiveTimeout()
         {
-            return PubSubReceiveTimeout;
+            return CRReceiveTimeout;
         }
 
         protected override void DoConfigure(RedisSocket socket)

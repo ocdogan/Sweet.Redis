@@ -23,14 +23,18 @@
 #endregion License
 
 using System;
-using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace Sweet.Redis
 {
     internal class RedisDbConnection : RedisConnection, IRedisDbConnection
     {
+        #region Constants
+
+        private const int DbReceiveTimeout = 100;
+
+        #endregion Constants
+
         #region Field Members
 
         private int m_Db;
@@ -41,7 +45,7 @@ namespace Sweet.Redis
 
         internal RedisDbConnection(string name, Action<RedisConnection, RedisSocket> releaseAction,
             int db, RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, new RedisSettings(), releaseAction, db, socket, connectImmediately)
+            : this(name, RedisSettings.Default, releaseAction, db, socket, connectImmediately)
         { }
 
         internal RedisDbConnection(string name, RedisSettings settings,
@@ -65,6 +69,11 @@ namespace Sweet.Redis
 
         #region Member Methods
 
+        protected override int GetReceiveTimeout()
+        {
+            return DbReceiveTimeout;
+        }
+
         public IRedisResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
@@ -82,7 +91,7 @@ namespace Sweet.Redis
                 .ContinueWith<IRedisResponse>((ret) =>
                 {
                     if (ret.IsCompleted && ret.Result > 0)
-                        using (var reader = new RedisSingleResponseReader())
+                        using (var reader = new RedisSingleResponseReader(Settings))
                             return reader.Execute(socket);
                     return null;
                 });
@@ -106,7 +115,7 @@ namespace Sweet.Redis
             }
 
             cmd.WriteTo(socket);
-            using (var reader = new RedisSingleResponseReader())
+            using (var reader = new RedisSingleResponseReader(Settings))
                 return reader.Execute(socket);
         }
 

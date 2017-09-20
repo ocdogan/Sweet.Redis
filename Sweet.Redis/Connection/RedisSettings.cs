@@ -28,7 +28,13 @@ namespace Sweet.Redis
 {
     public class RedisSettings
     {
-        # region .Ctors
+        #region Static Members
+
+        public static readonly RedisSettings Default = new RedisSettings();
+
+        #endregion Static Members
+
+        #region .Ctors
 
         public RedisSettings(string host = "127.0.0.1", int port = RedisConstants.DefaultPort,
             string password = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
