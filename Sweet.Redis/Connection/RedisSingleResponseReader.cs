@@ -46,8 +46,7 @@ namespace Sweet.Redis
 
         public IRedisResponse Execute(RedisSocket socket)
         {
-            if (socket.IsConnected() &&
-                Interlocked.CompareExchange(ref m_ReadState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero)
+            if (socket.IsConnected() && BeginReading())
             {
                 try
                 {
@@ -58,7 +57,7 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
+                    EndReading();
                 }
             }
             return null;

@@ -66,7 +66,7 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            EndRead();
+            EndReading();
 
             Interlocked.Exchange(ref m_OnReceive, null);
 
@@ -142,8 +142,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            if (!(Socket == null || Connection == null) &&
-                Interlocked.CompareExchange(ref m_ReadState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero)
+            if (!(Socket == null || Connection == null) && BeginReading())
             {
                 try
                 {
@@ -159,7 +158,7 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
+                    EndReading();
                 }
             }
         }

@@ -81,7 +81,7 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
-            EndRead();
+            EndReading();
         }
 
         #endregion Destructors
@@ -124,9 +124,14 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected virtual void EndRead()
+        protected virtual bool BeginReading()
         {
-            Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero);
+            return Interlocked.CompareExchange(ref m_ReadState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero;
+        }
+
+        protected virtual bool EndReading()
+        {
+            return Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero) == RedisConstants.One;
         }
 
         protected virtual IRedisResponse ReadResponse(RedisSocket socket)
