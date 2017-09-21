@@ -55,7 +55,7 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
-        
+
             Interlocked.Exchange(ref m_OnReceiveResponse, null);
 
             var connection = Interlocked.Exchange(ref m_Connection, null);
@@ -63,9 +63,9 @@ namespace Sweet.Redis
                 connection.Dispose();
         }
 
-        protected override Semaphore CreateConnectionLimiter()
+        protected override RedisConnectionLimiter CreateConnectionLimiter()
         {
-            return new Semaphore(1, 1);
+            return new RedisConnectionLimiter(1);
         }
 
         protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)

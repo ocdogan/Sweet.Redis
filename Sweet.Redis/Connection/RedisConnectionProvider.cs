@@ -29,12 +29,17 @@ namespace Sweet.Redis
 {
     public class RedisConnectionProvider : RedisDisposable
     {
+        #region Constants
+
+        private const int SpinStepMilliseconds = 50;
+
+        #endregion Constants
+
         #region Field Members
 
-        private long m_Count;
         private string m_Name;
         private RedisSettings m_Settings;
-        private Semaphore m_MaxConnectionCountSync;
+        private RedisConnectionLimiter m_MaxConnectionLimiter;
 
         #endregion Field Members
 
@@ -54,7 +59,7 @@ namespace Sweet.Redis
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
 
-            m_MaxConnectionCountSync = CreateConnectionLimiter();
+            m_MaxConnectionLimiter = CreateConnectionLimiter();
         }
 
         #endregion .Ctors
@@ -65,18 +70,23 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            var countSync = Interlocked.Exchange(ref m_MaxConnectionCountSync, null);
-            if (countSync != null)
-                countSync.Close();
+            var connectionLimiter = Interlocked.Exchange(ref m_MaxConnectionLimiter, null);
+            if (connectionLimiter != null)
+                connectionLimiter.Dispose();
         }
 
         #endregion Destructors
 
         #region Properties
 
-        public long Count
+        public int InUseCount
         {
-            get { return Interlocked.Read(ref m_Count); }
+            get
+            {
+                ValidateNotDisposed();
+                var connectionLimiter = m_MaxConnectionLimiter;
+                return (connectionLimiter != null) ? connectionLimiter.InUseCount : 0;
+            }
         }
 
         public string Name
@@ -93,10 +103,10 @@ namespace Sweet.Redis
             return m_Settings;
         }
 
-        protected virtual Semaphore CreateConnectionLimiter()
+        protected virtual RedisConnectionLimiter CreateConnectionLimiter()
         {
             var settings = GetSettings() ?? RedisSettings.Default;
-            return new Semaphore(settings.MaxCount, settings.MaxCount);
+            return new RedisConnectionLimiter(settings.MaxCount);
         }
 
         internal virtual IRedisConnection Connect(int db = -1)
@@ -109,39 +119,22 @@ namespace Sweet.Redis
             timeout = timeout <= 0 ? RedisConstants.MaxConnectionTimeout : timeout;
 
             var now = DateTime.UtcNow;
-            var remainingTime = timeout;
 
             var retryCount = 0;
+            var remainingTime = timeout;
+            var waitRetryCount = Math.Ceiling((double)settings.WaitTimeout / SpinStepMilliseconds);
 
             while (remainingTime > 0)
             {
-                var signaled = m_MaxConnectionCountSync.WaitOne(settings.WaitTimeout);
-                if (!signaled)
-                {
-                    retryCount++;
-                    if (retryCount > settings.WaitRetryCount)
-                        throw new RedisException("Wait retry count exited the given maximum limit");
-                }
+                var signaled = m_MaxConnectionLimiter.Wait(SpinStepMilliseconds);
+                if (signaled)
+                    return NewConnection(Dequeue(db), db, true);
 
-                var socket = Dequeue(db);
-
-                if ((socket != null) ||
-                    (Interlocked.Read(ref m_Count) < settings.MaxCount))
-                {
-                    IRedisConnection conn = null;
-                    try
-                    {
-                        conn = NewConnection(socket, db, true);
-                        return conn;
-                    }
-                    finally
-                    {
-                        if (conn != null)
-                            IncrementCount();
-                    }
-                }
-
+                retryCount++;
                 remainingTime = timeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
+
+                if (retryCount > waitRetryCount)
+                    throw new RedisException("Wait retry count exited the given maximum limit");
             }
             throw new RedisException("Connection timeout occured while trying to connect");
         }
@@ -156,26 +149,18 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected void IncrementCount()
-        {
-            Interlocked.Increment(ref m_Count);
-        }
-
         protected virtual void OnRelease(IRedisConnection conn, RedisSocket socket)
         {
             ValidateNotDisposed();
-
-            if (Interlocked.Read(ref m_Count) > RedisConstants.Zero)
+            try
             {
-                try
-                {
-                    Interlocked.Decrement(ref m_Count);
-                    CompleteRelease(conn, socket);
-                }
-                finally
-                {
-                    m_MaxConnectionCountSync.Release();
-                }
+                CompleteRelease(conn, socket);
+            }
+            finally
+            {
+                var connectionLimiter = m_MaxConnectionLimiter;
+                if (connectionLimiter != null)
+                    connectionLimiter.Release();
             }
         }
 

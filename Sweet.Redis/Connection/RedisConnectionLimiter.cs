@@ -27,21 +27,21 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisConnectionLimiter : RedisDisposable
+    public class RedisConnectionLimiter : RedisDisposable
     {
         #region Field Members
 
-        private long m_Count;
-        private int m_MaxCount; 
-        private Semaphore m_CountSync;
+        private int m_MaxCount;
+        private SemaphoreSlim m_CountSync;
+        private readonly object m_SyncLock = new object();
 
         #endregion Field Members
         #region .Ctors
 
         public RedisConnectionLimiter(int maxCount)
         {
-            m_MaxCount = Math.Max(1, maxCount);
-            m_CountSync = new Semaphore(maxCount, maxCount);
+            m_MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
+            m_CountSync = new SemaphoreSlim(maxCount, m_MaxCount);
         }
 
         #endregion .Ctors
@@ -52,34 +52,63 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            var countSync = Interlocked.Exchange(ref m_CountSync, null);
-            if (countSync != null)
-                countSync.Close();
+            lock (m_SyncLock)
+            {
+                var countSync = Interlocked.Exchange(ref m_CountSync, null);
+                if (countSync != null)
+                {
+                    try
+                    {
+                        countSync.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+            }
         }
 
         #endregion Destructors
 
+        #region Properties
+
+        public int AvailableCount
+        {
+            get
+            {
+                var countSync = m_CountSync;
+                return (countSync != null) ? countSync.CurrentCount : 0;
+            }
+        }
+
+        public int InUseCount
+        {
+            get
+            {
+                var countSync = m_CountSync;
+                return (countSync != null) ? m_MaxCount - countSync.CurrentCount : 0;
+            }
+        }
+
+        #endregion Properties
+
         #region Methods
 
-        public bool WaitOne(int timeout = Timeout.Infinite)
+        public bool Wait(int timeout = Timeout.Infinite)
         {
-            var signalled = m_CountSync.WaitOne(Math.Max(Timeout.Infinite, timeout));
-            if (signalled)
-                Interlocked.Increment(ref m_Count);
-
-            return signalled;
+            return m_CountSync.Wait(Math.Max(Timeout.Infinite, timeout));
         }
 
         public int Release()
         {
-            var count = Interlocked.Read(ref m_Count);
-            if (count > RedisConstants.Zero)
+            lock (m_SyncLock)
             {
-                var oldCount = m_CountSync.Release();
-                if (oldCount != count)
-                    Interlocked.Decrement(ref m_Count);
+                var count = m_CountSync.CurrentCount;
+                if (count < m_MaxCount)
+                {
+                    count = m_CountSync.Release();
+                }
+                return (int)count;
             }
-            return (int)count;
         }
 
         #endregion Methods

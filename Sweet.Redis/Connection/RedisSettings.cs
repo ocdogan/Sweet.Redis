@@ -40,8 +40,7 @@ namespace Sweet.Redis
             string password = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
-            int waitRetryCount = RedisConstants.DefaultWaitRetryCount, int idleTimeout = RedisConstants.DefaultIdleTimeout,
-            int readBufferSize = 0, int writeBufferSize = 0)
+            int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0)
         {
             Host = host;
             Port = port;
@@ -52,7 +51,6 @@ namespace Sweet.Redis
             ReadBufferSize = Math.Max(0, readBufferSize);
             ReceiveTimeout = Math.Max(RedisConstants.MinReceiveTimeout, Math.Min(RedisConstants.MaxReceiveTimeout, receiveTimeout));
             SendTimeout = Math.Max(RedisConstants.MinSendTimeout, Math.Min(RedisConstants.MaxSendTimeout, sendTimeout));
-            WaitRetryCount = Math.Max(RedisConstants.MinWaitRetryCount, Math.Min(waitRetryCount, RedisConstants.MaxWaitRetryCount));
             WaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, waitTimeout));
             WriteBufferSize = Math.Max(0, writeBufferSize);
         }
@@ -70,7 +68,6 @@ namespace Sweet.Redis
         public int ReadBufferSize { get; private set; }
         public int ReceiveTimeout { get; private set; }
         public int SendTimeout { get; private set; }
-        public int WaitRetryCount { get; private set; }
         public int WaitTimeout { get; private set; }
         public int WriteBufferSize { get; private set; }
 
