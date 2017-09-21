@@ -36,11 +36,17 @@ namespace Sweet.Redis
         RedisSettings Settings { get; }
         RedisConnectionState State { get; }
 
+        RedisSocket Connect();
+        Task<RedisSocket> ConnectAsync();
+
         void Send(byte[] data);
         void Send(IRedisCommand cmd);
 
         Task SendAsync(byte[] data);
         Task SendAsync(IRedisCommand cmd);
+
+        IRedisResponse SendReceive(byte[] data);
+        IRedisResponse SendReceive(IRedisCommand cmd);
     }
 }
 

@@ -88,6 +88,18 @@ namespace Sweet.Redis
 
         #region Methods
 
+        public override IRedisResponse SendReceive(byte[] data)
+        {
+            ValidateNotDisposed();
+            throw new NotImplementedException("SendAndReceive is not supported by continuous reader connections. Use Send method for sending data.");
+        }
+
+        public override IRedisResponse SendReceive(IRedisCommand cmd)
+        {
+            ValidateNotDisposed();
+            throw new NotImplementedException("SendAndReceive is not supported by continuous reader connections. Use Send method for sending command.");
+        }
+
         protected override int GetReceiveTimeout()
         {
             return CRReceiveTimeout;

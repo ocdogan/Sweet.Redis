@@ -29,8 +29,5 @@ namespace Sweet.Redis
     public interface IRedisDbConnection : IRedisConnection
     {
         int Db { get; }
-
-        IRedisResponse SendReceive(byte[] data);
-        IRedisResponse SendReceive(IRedisCommand cmd);
     }
 }

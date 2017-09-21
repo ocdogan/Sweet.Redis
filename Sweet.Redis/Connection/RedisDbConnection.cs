@@ -74,7 +74,7 @@ namespace Sweet.Redis
             return DbReceiveTimeout;
         }
 
-        public IRedisResponse SendReceive(byte[] data)
+        public override IRedisResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
 
@@ -98,7 +98,7 @@ namespace Sweet.Redis
             return task.Result;
         }
 
-        public IRedisResponse SendReceive(IRedisCommand cmd)
+        public override IRedisResponse SendReceive(IRedisCommand cmd)
         {
             if (cmd == null)
                 throw new ArgumentNullException("cmd");

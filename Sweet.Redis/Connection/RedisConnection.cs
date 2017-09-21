@@ -140,6 +140,18 @@ namespace Sweet.Redis
 
         #region Member Methods
 
+        public virtual IRedisResponse SendReceive(byte[] data)
+        {
+            ValidateNotDisposed();
+            throw new NotImplementedException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
+        }
+
+        public virtual IRedisResponse SendReceive(IRedisCommand cmd)
+        {
+            ValidateNotDisposed();
+            throw new NotImplementedException("SendAndReceive is not supported by base connection. Use Send method for sending command.");
+        }
+
         public override void ValidateNotDisposed()
         {
             if (Disposed)
@@ -156,13 +168,13 @@ namespace Sweet.Redis
             return base.SetDisposed();
         }
 
-        internal RedisSocket Connect()
+        public RedisSocket Connect()
         {
             ValidateNotDisposed();
             return ConnectInternal();
         }
 
-        internal Task<RedisSocket> ConnectAsync()
+        public Task<RedisSocket> ConnectAsync()
         {
             Func<RedisSocket> f = () =>
             {

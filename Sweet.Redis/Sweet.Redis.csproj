@@ -58,6 +58,8 @@
     <Compile Include="Connection\RedisActionBag.cs" />
     <Compile Include="Connection\RedisAsyncStateWrapper.cs" />
     <Compile Include="Connection\RedisCallbackHub.cs" />
+    <Compile Include="Connection\RedisConnectionProvider.cs" />
+    <Compile Include="Connection\RedisContinuousConnectionProvider.cs" />
     <Compile Include="Connection\RedisContinuousReader.cs" />
     <Compile Include="Connection\RedisMonitorChannel.cs" />
     <Compile Include="Connection\RedisMonitorMessage.cs" />

@@ -65,20 +65,19 @@ namespace Sweet.Redis
 
         private long m_Disposed;
         private RedisConnectionPool m_Pool;
-        private RedisConnection m_Connection;
-        private Semaphore m_ConnectionSync = new Semaphore(1, 1);
+        private RedisContinuousConnectionProvider m_ConnectionProvider;
 
         private readonly object m_SubscriptionLock = new object();
-
         private RedisMonitorSubscriptions m_Subscriptions = new RedisMonitorSubscriptions();
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisMonitorChannel(RedisConnectionPool pool)
+        internal RedisMonitorChannel(RedisConnectionPool pool)
         {
             m_Pool = pool;
+            m_ConnectionProvider = new RedisContinuousConnectionProvider(pool.Name, ResponseReceived);
         }
 
         #endregion .Ctors
@@ -103,13 +102,11 @@ namespace Sweet.Redis
             if (disposing)
                 GC.SuppressFinalize(this);
 
-            m_ConnectionSync.Close();
-
             Interlocked.Exchange(ref m_Pool, null);
 
-            var connection = Interlocked.Exchange(ref m_Connection, null);
-            if (connection != null)
-                connection.Dispose();
+            var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
+            if (connectionProvider != null)
+                connectionProvider.Dispose();
         }
 
         #endregion Destructors
@@ -136,67 +133,23 @@ namespace Sweet.Redis
                 throw new RedisException(GetType().Name + " is disposed");
         }
 
-        private RedisConnection Connect()
+        private IRedisConnection Connect()
         {
             ValidateNotDisposed();
 
-            var connection = m_Connection;
-            if (connection == null)
+            var connectionProvider = m_ConnectionProvider;
+            if (connectionProvider != null)
             {
-                var settings = m_Pool.Settings;
+                var connection = connectionProvider.Connect(-1);
 
-                var timeout = settings.ConnectionTimeout;
-                timeout = timeout <= 0 ? RedisConstants.MaxConnectionTimeout : timeout;
+                if (connection != null && !connection.Connected)
+                    connection.Connect();
 
-                var now = DateTime.UtcNow;
-                var remainingTime = timeout;
+                ((RedisContinuousReaderConnection)connection).BeginReceive();
 
-                var retryCount = 0;
-
-                while (remainingTime > 0)
-                {
-                    var signaled = m_ConnectionSync.WaitOne(settings.WaitTimeout);
-                    if (!signaled)
-                    {
-                        retryCount++;
-                        if (retryCount > settings.WaitRetryCount)
-                            throw new RedisException("Wait retry count exited the given maximum limit");
-                    }
-
-                    try
-                    {
-                        connection = new RedisContinuousReaderConnection(m_Pool.Name, m_Pool.Settings,
-                            (response) =>
-                            {
-                                ResponseReceived(response);
-                            },
-                            (disposedConnection, releasedSocket) =>
-                            {
-                                var innerConnection = Interlocked.CompareExchange(ref m_Connection, null, disposedConnection);
-                                if (innerConnection != null)
-                                    innerConnection.Dispose();
-                            },
-                            true);
-
-                        var prevConnection = Interlocked.Exchange(ref m_Connection, connection);
-                        if (prevConnection != null && prevConnection != m_Connection)
-                            prevConnection.Dispose();
-
-                        break;
-                    }
-                    catch (Exception)
-                    { }
-
-                    remainingTime = timeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
-                }
+                return connection;
             }
-
-            if (connection != null && !connection.Connected)
-                connection.Connect();
-
-            ((RedisContinuousReaderConnection)connection).BeginReceive();
-
-            return connection;
+            return null;
         }
 
         private void ResponseReceived(IRedisResponse response)

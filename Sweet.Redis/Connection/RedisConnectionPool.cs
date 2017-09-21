@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    public class RedisConnectionPool : RedisDisposable
+    public class RedisConnectionPool : RedisConnectionProvider
     {
         #region RedisConnectionPoolMember
 
@@ -112,19 +112,13 @@ namespace Sweet.Redis
 
         #region Field Readonly Members
 
-        private readonly Semaphore m_MaxCountSync;
-        private readonly RedisSettings m_Settings;
-
         private RedisConnectionPoolMember m_MemberStoreTail;
         private readonly object m_MemberStoreLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
 
         #endregion Field Readonly Members
 
-        private long m_InitCount;
-        private string m_Name;
         private int m_PurgingIdles;
-        private long m_WaitRetryCount;
 
         private readonly object m_PubSubChannelLock = new object();
         private RedisPubSubChannel m_PubSubChannel;
@@ -137,21 +131,12 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisConnectionPool(string name)
-            : this(name, new RedisSettings())
+            : this(name, RedisSettings.Default)
         { }
 
         public RedisConnectionPool(string name, RedisSettings settings)
+            : base(name, settings)
         {
-            if (settings == null)
-                throw new ArgumentNullException("settings");
-
-            m_Settings = settings;
-
-            name = (name ?? String.Empty).Trim();
-            m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
-
-            m_MaxCountSync = new Semaphore(settings.MaxCount, settings.MaxCount);
-
             Register(this);
         }
 
@@ -164,8 +149,7 @@ namespace Sweet.Redis
             RedisConnectionPool.Unregister(this);
             CloseStore();
 
-            if (!disposing)
-                m_MaxCountSync.Close();
+            base.OnDispose(disposing);
 
             var monitorChannel = Interlocked.Exchange(ref m_MonitorChannel, null);
             if (monitorChannel != null)
@@ -179,11 +163,6 @@ namespace Sweet.Redis
         #endregion Destructors
 
         #region Properties
-
-        public long Count
-        {
-            get { return Interlocked.Read(ref m_InitCount); }
-        }
 
         public RedisMonitorChannel MonitorChannel
         {
@@ -206,11 +185,6 @@ namespace Sweet.Redis
                 }
                 return channel;
             }
-        }
-
-        public string Name
-        {
-            get { return m_Name; }
         }
 
         public RedisPubSubChannel PubSubChannel
@@ -238,7 +212,7 @@ namespace Sweet.Redis
 
         public RedisSettings Settings
         {
-            get { return m_Settings; }
+            get { return GetSettings(); }
         }
 
         #endregion Properties
@@ -293,7 +267,7 @@ namespace Sweet.Redis
             }
         }
 
-        private RedisSocket Enqueue(int db)
+        protected override RedisSocket Enqueue(int db)
         {
             var store = m_MemberStore;
             if (store != null)
@@ -356,96 +330,29 @@ namespace Sweet.Redis
             return new RedisDb(this, db);
         }
 
-        internal IRedisDbConnection Connect(int db)
+        protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
-            ValidateNotDisposed();
-
-            var timeout = m_Settings.ConnectionTimeout;
-            timeout = timeout <= 0 ? RedisConstants.MaxConnectionTimeout : timeout;
-
-            var now = DateTime.UtcNow;
-            var remainingTime = timeout;
-
-            while (remainingTime > 0)
-            {
-                var signaled = m_MaxCountSync.WaitOne(m_Settings.WaitTimeout);
-                if (!signaled)
-                {
-                    var retryCount = Interlocked.Increment(ref m_WaitRetryCount);
-                    if (retryCount > m_Settings.WaitRetryCount)
-                        throw new RedisException("Wait retry count exited the given maximum limit");
-                }
-
-                var socket = Enqueue(db);
-
-                if ((socket != null) ||
-                    (Interlocked.Read(ref m_InitCount) < m_Settings.MaxCount))
-                {
-                    Interlocked.Exchange(ref m_WaitRetryCount, 0);
-                    return NewConnection(socket, db, true);
-                }
-
-                remainingTime = timeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
-            }
-            throw new RedisException("Connection timeout occured while trying to connect");
-        }
-
-        private IRedisDbConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
-        {
-            var conn = new RedisDbConnection(this.Name, m_Settings, this.Release, db,
+            var settings = GetSettings() ?? RedisSettings.Default;
+            return new RedisDbConnection(this.Name, settings, this.OnRelease, db,
                                            socket.IsConnected() ? socket : null, connectImmediately);
-
-            Interlocked.Increment(ref m_InitCount);
-            return conn;
         }
 
-        private void DecCount()
+        protected override void CompleteRelease(IRedisConnection conn, RedisSocket socket)
         {
-            var count = Interlocked.Decrement(ref m_InitCount);
-            if (count < 0)
+            var db = 0;
+            if (conn is IRedisDbConnection)
+                db = ((IRedisDbConnection)conn).Db;
+
+            var member = new RedisConnectionPoolMember(socket, db);
+            lock (m_MemberStoreLock)
             {
-                Interlocked.Increment(ref m_InitCount);
-            }
-        }
-
-        private void Release(RedisConnection conn, RedisSocket socket)
-        {
-            ValidateNotDisposed();
-
-            if (conn != null)
-            {
-                m_MaxCountSync.Release();
-
-                if (conn.Disposed)
+                var prevTail = Interlocked.Exchange(ref m_MemberStoreTail, member);
+                if (prevTail != null)
                 {
-                    try
+                    var store = m_MemberStore;
+                    if (store != null)
                     {
-                        if (!socket.IsConnected())
-                            socket.DisposeSocket();
-                        else
-                        {
-                            var db = 0;
-                            if (conn is IRedisDbConnection)
-                                db = ((IRedisDbConnection)conn).Db;
-
-                            var member = new RedisConnectionPoolMember(socket, db);
-                            lock (m_MemberStoreLock)
-                            {
-                                var prevTail = Interlocked.Exchange(ref m_MemberStoreTail, member);
-                                if (prevTail != null)
-                                {
-                                    var store = m_MemberStore;
-                                    if (store != null)
-                                    {
-                                        store.AddLast(prevTail);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        DecCount();
+                        store.AddLast(prevTail);
                     }
                 }
             }
@@ -460,7 +367,7 @@ namespace Sweet.Redis
             try
             {
                 var now = DateTime.UtcNow;
-                var timeout = m_Settings.IdleTimeout;
+                var timeout = (GetSettings() ?? RedisSettings.Default).IdleTimeout;
 
                 var store = m_MemberStore;
                 if (store != null)
