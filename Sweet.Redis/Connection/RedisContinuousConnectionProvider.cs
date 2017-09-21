@@ -63,7 +63,7 @@ namespace Sweet.Redis
                 connection.Dispose();
         }
 
-        protected override Semaphore CreateMaxConnectionCountSync()
+        protected override Semaphore CreateConnectionLimiter()
         {
             return new Semaphore(1, 1);
         }

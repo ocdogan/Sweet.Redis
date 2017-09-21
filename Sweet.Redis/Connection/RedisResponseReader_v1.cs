@@ -25,20 +25,58 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Sweet.Redis
 {
     internal class RedisResponseReader_v1 : RedisDisposable
     {
-        #region Methods
+        #region Field Members
+
+        private long m_ReadState;
+        private RedisSettings m_Settings;
+
+        #endregion Field Members
+
+        #region .Ctors
+
+        protected RedisResponseReader_v1(RedisSettings settings, int bufferSize = -1)
+        {
+            m_Settings = settings;
+        }
+
+        #endregion .Ctors
+
+        #region Destructors
 
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
+
+            Interlocked.Exchange(ref m_Settings, null);
         }
 
-        public IRedisResponse Execute(RedisSocket socket)
+        #endregion Destructors
+
+        #region Methods
+
+        protected virtual bool BeginReading()
         {
+            return Interlocked.CompareExchange(ref m_ReadState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero;
+        }
+
+        protected virtual bool EndReading()
+        {
+            return Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero) == RedisConstants.One;
+        }
+
+        protected virtual IRedisResponse ReadResponse(RedisSocket socket)
+        {
+            if (socket == null)
+                throw new ArgumentNullException("socket");
+
+            ValidateNotDisposed();
+
             using (var buffer = new RedisByteBuffer())
             {
                 var item = ReadThrough(socket, buffer, true);

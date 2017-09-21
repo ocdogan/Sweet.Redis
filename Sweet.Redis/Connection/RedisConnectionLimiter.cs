@@ -22,37 +22,64 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Threading;
+
 namespace Sweet.Redis
 {
-    internal class RedisSingleResponseReader : RedisResponseReader // RedisResponseReader_v1
+    internal class RedisConnectionLimiter : RedisDisposable
     {
+        #region Field Members
+
+        private long m_Count;
+        private int m_MaxCount; 
+        private Semaphore m_CountSync;
+
+        #endregion Field Members
         #region .Ctors
 
-        public RedisSingleResponseReader(RedisSettings settings)
-            : base(settings, 16 * 1024)
-        { }
+        public RedisConnectionLimiter(int maxCount)
+        {
+            m_MaxCount = Math.Max(1, maxCount);
+            m_CountSync = new Semaphore(maxCount, maxCount);
+        }
 
         #endregion .Ctors
 
+        #region Destructors
+
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+
+            var countSync = Interlocked.Exchange(ref m_CountSync, null);
+            if (countSync != null)
+                countSync.Close();
+        }
+
+        #endregion Destructors
+
         #region Methods
 
-        public IRedisResponse Execute(RedisSocket socket)
+        public bool WaitOne(int timeout = Timeout.Infinite)
         {
-            if (socket.IsConnected() && base.BeginReading())
+            var signalled = m_CountSync.WaitOne(Math.Max(Timeout.Infinite, timeout));
+            if (signalled)
+                Interlocked.Increment(ref m_Count);
+
+            return signalled;
+        }
+
+        public int Release()
+        {
+            var count = Interlocked.Read(ref m_Count);
+            if (count > RedisConstants.Zero)
             {
-                try
-                {
-                    var result = base.ReadResponse(socket);
-                    if (result != null && result.IsVoid)
-                        return null;
-                    return result;
-                }
-                finally
-                {
-                    EndReading();
-                }
+                var oldCount = m_CountSync.Release();
+                if (oldCount != count)
+                    Interlocked.Decrement(ref m_Count);
             }
-            return null;
+            return (int)count;
         }
 
         #endregion Methods

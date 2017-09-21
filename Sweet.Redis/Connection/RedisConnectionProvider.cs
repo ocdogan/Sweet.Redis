@@ -54,7 +54,7 @@ namespace Sweet.Redis
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
 
-            m_MaxConnectionCountSync = CreateMaxConnectionCountSync();
+            m_MaxConnectionCountSync = CreateConnectionLimiter();
         }
 
         #endregion .Ctors
@@ -93,7 +93,7 @@ namespace Sweet.Redis
             return m_Settings;
         }
 
-        protected virtual Semaphore CreateMaxConnectionCountSync()
+        protected virtual Semaphore CreateConnectionLimiter()
         {
             var settings = GetSettings() ?? RedisSettings.Default;
             return new Semaphore(settings.MaxCount, settings.MaxCount);
@@ -123,7 +123,7 @@ namespace Sweet.Redis
                         throw new RedisException("Wait retry count exited the given maximum limit");
                 }
 
-                var socket = Enqueue(db);
+                var socket = Dequeue(db);
 
                 if ((socket != null) ||
                     (Interlocked.Read(ref m_Count) < settings.MaxCount))
@@ -151,47 +151,30 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected virtual RedisSocket Enqueue(int db)
+        protected virtual RedisSocket Dequeue(int db)
         {
             return null;
         }
 
         protected void IncrementCount()
         {
-            var count = Interlocked.Decrement(ref m_Count);
-            if (count < 0)
-            {
-                Interlocked.Increment(ref m_Count);
-            }
-        }
-
-        protected void DecrementCount()
-        {
-            var count = Interlocked.Decrement(ref m_Count);
-            if (count < 0)
-            {
-                Interlocked.Increment(ref m_Count);
-            }
+            Interlocked.Increment(ref m_Count);
         }
 
         protected virtual void OnRelease(IRedisConnection conn, RedisSocket socket)
         {
             ValidateNotDisposed();
 
-            if (conn != null)
+            if (Interlocked.Read(ref m_Count) > RedisConstants.Zero)
             {
-                m_MaxConnectionCountSync.Release();
-
-                if (conn.Disposed)
+                try
                 {
-                    try
-                    {
-                        CompleteRelease(conn, socket);
-                    }
-                    finally
-                    {
-                        DecrementCount();
-                    }
+                    Interlocked.Decrement(ref m_Count);
+                    CompleteRelease(conn, socket);
+                }
+                finally
+                {
+                    m_MaxConnectionCountSync.Release();
                 }
             }
         }

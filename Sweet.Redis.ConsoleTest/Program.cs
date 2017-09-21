@@ -35,8 +35,8 @@ namespace Sweet.Redis.ConsoleTest
 
             // MultiThreading1();
             // MultiThreading2();
-            MultiThreading3();
-            // MultiThreading4();
+            // MultiThreading3();
+            MultiThreading4();
 
             // MonitorTest1();
             // MonitorTest2();

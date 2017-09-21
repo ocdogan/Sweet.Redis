@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\IRedisReceiver.cs" />
+    <Compile Include="Common\RedisAsyncRequest.cs" />
     <Compile Include="Common\RedisDate.cs" />
     <Compile Include="Common\RedisMultiInt.cs" />
     <Compile Include="Common\RedisMultiString.cs" />
@@ -56,8 +57,10 @@
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\RedisVoidVal.cs" />
     <Compile Include="Connection\RedisActionBag.cs" />
+    <Compile Include="Connection\RedisAsyncMessageQ.cs" />
     <Compile Include="Connection\RedisAsyncStateWrapper.cs" />
     <Compile Include="Connection\RedisCallbackHub.cs" />
+    <Compile Include="Connection\RedisConnectionLimiter.cs" />
     <Compile Include="Connection\RedisConnectionProvider.cs" />
     <Compile Include="Connection\RedisContinuousConnectionProvider.cs" />
     <Compile Include="Connection\RedisContinuousReader.cs" />

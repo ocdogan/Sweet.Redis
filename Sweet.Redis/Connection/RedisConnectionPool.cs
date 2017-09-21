@@ -267,34 +267,38 @@ namespace Sweet.Redis
             }
         }
 
-        protected override RedisSocket Enqueue(int db)
+        protected override RedisSocket Dequeue(int db)
         {
+            lock (m_MemberStoreLock)
+            {
+                var member = m_MemberStoreTail;
+                if (member != null)
+                {
+                    try
+                    {
+                        if (member.Db == db)
+                        {
+                            var socket = member.ReleaseSocket();
+
+                            m_MemberStoreTail = null;
+                            if (socket.IsConnected())
+                                return socket;
+
+                            socket.DisposeSocket();
+                        }
+                    }
+                    catch (Exception)
+                    { }
+                }
+            }
+
             var store = m_MemberStore;
             if (store != null)
             {
                 lock (m_MemberStoreLock)
                 {
                     RedisSocket socket = null;
-
-                    var member = m_MemberStoreTail;
-                    if (member != null)
-                    {
-                        try
-                        {
-                            if (member.Db == db)
-                            {
-                                socket = member.ReleaseSocket();
-
-                                m_MemberStoreTail = null;
-                                if (socket.IsConnected())
-                                    return socket;
-
-                                socket.DisposeSocket();
-                            }
-                        }
-                        catch (Exception)
-                        { }
-                    }
+                    RedisConnectionPoolMember member;
 
                     var node = store.First;
                     while (node != null)
