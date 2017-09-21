@@ -76,6 +76,7 @@ namespace Sweet.Redis
                 {
                     ResponseReceived(response);
                 },
+                null,
                 OnRelease,
                 true);
         }

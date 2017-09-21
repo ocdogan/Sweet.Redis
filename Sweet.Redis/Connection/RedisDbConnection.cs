@@ -43,15 +43,16 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisDbConnection(string name, Action<RedisConnection, RedisSocket> releaseAction,
-            int db, RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, RedisSettings.Default, releaseAction, db, socket, connectImmediately)
+        internal RedisDbConnection(string name, Action<RedisConnection, RedisSocket> onCreateSocket,
+            Action<RedisConnection, RedisSocket> onReleaseSocket, int db, RedisSocket socket = null,
+            bool connectImmediately = false)
+            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, db, socket, connectImmediately)
         { }
 
         internal RedisDbConnection(string name, RedisSettings settings,
-            Action<RedisConnection, RedisSocket> releaseAction, int db, RedisSocket socket = null,
-            bool connectImmediately = false)
-            : base(name, settings, releaseAction, socket, connectImmediately)
+            Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
+            int db, RedisSocket socket = null, bool connectImmediately = false)
+            : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         {
             m_Db = db;
         }

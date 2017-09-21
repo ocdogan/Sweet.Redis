@@ -48,29 +48,34 @@ namespace Sweet.Redis
         private long m_State = (long)RedisConnectionState.Idle;
 
         private string m_Name;
+        private Action<RedisConnection, RedisSocket> m_CreateAction;
         private Action<RedisConnection, RedisSocket> m_ReleaseAction;
 
         #endregion Field Members
 
         #region .Ctors
 
-        internal RedisConnection(string name, Action<RedisConnection, RedisSocket> releaseAction,
+        internal RedisConnection(string name,
+            Action<RedisConnection, RedisSocket> onCreateSocket,
+            Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, new RedisSettings(), releaseAction, socket, connectImmediately)
+            : this(name, new RedisSettings(), onCreateSocket, onReleaseSocket, socket, connectImmediately)
         { }
 
         internal RedisConnection(string name, RedisSettings settings,
-            Action<RedisConnection, RedisSocket> releaseAction, RedisSocket socket = null,
-            bool connectImmediately = false)
+            Action<RedisConnection, RedisSocket> onCreateSocket,
+            Action<RedisConnection, RedisSocket> onReleaseSocket,
+            RedisSocket socket = null, bool connectImmediately = false)
         {
             if (settings == null)
                 throw new ArgumentNullException("settings");
 
-            if (releaseAction == null)
+            if (onReleaseSocket == null)
                 throw new ArgumentNullException("releaseAction");
 
             m_Settings = settings;
-            m_ReleaseAction = releaseAction;
+            m_CreateAction = onCreateSocket;
+            m_ReleaseAction = onReleaseSocket;
             m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N") : name;
 
             if ((socket != null) && socket.Connected)
@@ -90,16 +95,22 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            base.OnDispose(disposing);
+
             Interlocked.Exchange(ref m_Settings, null);
 
             var socket = Interlocked.Exchange(ref m_Socket, null);
             if (socket == null)
                 return;
 
+            Interlocked.Exchange(ref m_CreateAction, null);
+
+            var onReleaseSocket = Interlocked.Exchange(ref m_ReleaseAction, null);
+            if (onReleaseSocket != null)
+                onReleaseSocket(this, socket);
+
             if (!disposing)
                 socket.DisposeSocket();
-            else if (m_ReleaseAction != null)
-                m_ReleaseAction(this, socket);
         }
 
         #endregion Destructors
@@ -186,6 +197,17 @@ namespace Sweet.Redis
         protected virtual void OnConnect(RedisSocket socket)
         { }
 
+        protected virtual RedisSocket NewSocket()
+        {
+            var socket = new RedisSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            var onCreateSocket = m_CreateAction;
+            if (onCreateSocket != null)
+                onCreateSocket(this, socket);
+
+            return socket;
+        }
+
         protected RedisSocket ConnectInternal()
         {
             var socket = m_Socket;
@@ -203,7 +225,7 @@ namespace Sweet.Redis
 
                     var task = RedisAsyncEx.GetHostAddressesAsync(m_Settings.Host);
 
-                    socket = new RedisSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    socket = NewSocket();
                     ConfigureInternal(socket);
 
                     var ipAddress = task.Result;

@@ -84,25 +84,9 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisBool ExpectSimpleString(RedisConnectionPool pool, string expectedResult, bool throwException = true)
-        {
-            var result = ExpectSimpleString(pool, throwException);
-            if (!String.IsNullOrEmpty(result))
-            {
-                if (!String.IsNullOrEmpty(expectedResult))
-                    return result.Equals(expectedResult, StringComparison.OrdinalIgnoreCase);
-
-                if (result.StartsWith("-", StringComparison.Ordinal))
-                    return false;
-
-                return true;
-            }
-            return false;
-        }
-
         public RedisBool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
         {
-            var result = ExpectSimpleString(connection, throwException);
+            var result = ExpectSimpleStringInternal(connection, throwException);
             if (!String.IsNullOrEmpty(result))
             {
                 if (!String.IsNullOrEmpty(expectedResult))
@@ -116,15 +100,12 @@ namespace Sweet.Redis
             return false;
         }
 
-        public string ExpectSimpleString(RedisConnectionPool pool, bool throwException = true)
+        public RedisString ExpectSimpleString(IRedisConnection connection, bool throwException = true)
         {
-            var bytes = ExpectSimpleStringBytes(pool, throwException);
-            if (bytes == null)
-                return null;
-            return Encoding.UTF8.GetString(bytes);
+            return ExpectSimpleStringInternal(connection, throwException);
         }
 
-        public string ExpectSimpleString(IRedisConnection connection, bool throwException = true)
+        private string ExpectSimpleStringInternal(IRedisConnection connection, bool throwException = true)
         {
             var bytes = ExpectSimpleStringBytes(connection, throwException);
             if (bytes == null)
@@ -132,60 +113,27 @@ namespace Sweet.Redis
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public RedisBool ExpectSimpleStringBytes(RedisConnectionPool pool, byte[] expectedResult, bool throwException = true)
-        {
-            var result = ExpectSimpleStringBytes(pool, throwException);
-            if (result != null && result.Length > 0)
-            {
-                if (expectedResult != null && expectedResult.Length > 0)
-                    return result.Equals(expectedResult, (b1, b2) => char.ToUpper((char)b1) == char.ToUpper((char)b2));
-
-                if (result[0] == '-')
-                    return false;
-
-                return true;
-            }
-            return false;
-        }
-
         public RedisBool ExpectSimpleStringBytes(IRedisConnection connection, byte[] expectedResult, bool throwException = true)
         {
-            var result = ExpectSimpleStringBytes(connection, throwException);
-            if (result != null && result.Length > 0)
-            {
-                if (expectedResult != null && expectedResult.Length > 0)
-                    return result.Equals(expectedResult, (b1, b2) => char.ToUpper((char)b1) == char.ToUpper((char)b2));
+            var result = ExpectSimpleStringBytesInternal(connection, throwException);
+            if (result == null)
+                return expectedResult == null;
 
-                if (result[0] == '-')
-                    return false;
+            if (expectedResult != null)
+                return result == expectedResult;
 
-                return true;
-            }
+            if (result.Length > 0 && result[0] == (byte)'-')
+                return false;
+
             return false;
         }
 
-        public byte[] ExpectSimpleStringBytes(RedisConnectionPool pool, bool throwException = true)
+        public RedisBytes ExpectSimpleStringBytes(IRedisConnection connection, bool throwException = true)
         {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                if (response == null)
-                {
-                    if (throwException)
-                        throw new RedisException("No data returned");
-                    return null;
-                }
-
-                if (response.Type != RedisRawObjType.SimpleString)
-                {
-                    if (throwException)
-                        throw new RedisException("Invalid data returned");
-                    return null;
-                }
-                return response.ReleaseData();
-            }
+            return ExpectSimpleStringBytesInternal(connection, throwException);
         }
 
-        public byte[] ExpectSimpleStringBytes(IRedisConnection connection, bool throwException = true)
+        private byte[] ExpectSimpleStringBytesInternal(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -206,15 +154,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string ExpectBulkString(RedisConnectionPool pool, bool throwException = true)
-        {
-            var bytes = ExpectBulkStringBytes(pool, throwException);
-            if (bytes == null)
-                return null;
-            return Encoding.UTF8.GetString(bytes);
-        }
-
-        public string ExpectBulkString(IRedisConnection connection, bool throwException = true)
+        public RedisString ExpectBulkString(IRedisConnection connection, bool throwException = true)
         {
             var bytes = ExpectBulkStringBytes(connection, throwException);
             if (bytes == null)
@@ -222,28 +162,7 @@ namespace Sweet.Redis
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public byte[] ExpectBulkStringBytes(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                if (response == null)
-                {
-                    if (throwException)
-                        throw new RedisException("No data returned");
-                    return null;
-                }
-
-                if (response.Type != RedisRawObjType.BulkString)
-                {
-                    if (throwException)
-                        throw new RedisException("Invalid data returned");
-                    return null;
-                }
-                return response.ReleaseData();
-            }
-        }
-
-        public byte[] ExpectBulkStringBytes(IRedisConnection connection, bool throwException = true)
+        public RedisBytes ExpectBulkStringBytes(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -264,15 +183,7 @@ namespace Sweet.Redis
             }
         }
 
-        public long ExpectInteger(RedisConnectionPool pool, bool throwException = true)
-        {
-            var result = ExpectNullableInteger(pool, throwException);
-            if (result == null)
-                return long.MinValue;
-            return result.Value;
-        }
-
-        public long ExpectInteger(IRedisConnection connection, bool throwException = true)
+        public RedisInt ExpectInteger(IRedisConnection connection, bool throwException = true)
         {
             var result = ExpectNullableInteger(connection, throwException);
             if (result == null)
@@ -280,15 +191,7 @@ namespace Sweet.Redis
             return result.Value;
         }
 
-        public long? ExpectNullableInteger(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                return ForNullableInteger(response, throwException);
-            }
-        }
-
-        public long? ExpectNullableInteger(IRedisConnection connection, bool throwException = true)
+        public RedisNullableInt ExpectNullableInteger(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -333,15 +236,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public double ExpectDouble(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                return ForDouble(response, throwException);
-            }
-        }
-
-        public double ExpectDouble(IRedisConnection connection, bool throwException = true)
+        public RedisDouble ExpectDouble(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -384,20 +279,6 @@ namespace Sweet.Redis
             return double.MinValue;
         }
 
-        public RedisRaw ExpectArray(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                if (response == null)
-                {
-                    if (throwException)
-                        throw new RedisException("No data returned");
-                    return null;
-                }
-                return new RedisRaw(RedisRawObj.ToObject(response));
-            }
-        }
-
         public RedisRaw ExpectArray(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
@@ -412,15 +293,7 @@ namespace Sweet.Redis
             }
         }
 
-        public string[] ExpectMultiDataStrings(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                return ForMutiDataStrings(response, throwException);
-            }
-        }
-
-        public string[] ExpectMultiDataStrings(IRedisConnection connection, bool throwException = true)
+        public RedisMultiString ExpectMultiDataStrings(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -502,15 +375,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public byte[][] ExpectMultiDataBytes(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(pool, throwException))
-            {
-                return ForMultiDataBytes(response, throwException);
-            }
-        }
-
-        public byte[][] ExpectMultiDataBytes(IRedisConnection connection, bool throwException = true)
+        public RedisMultiBytes ExpectMultiDataBytes(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -591,27 +456,6 @@ namespace Sweet.Redis
             return null;
         }
 
-        public IRedisResponse Execute(RedisConnectionPool pool, bool throwException = true)
-        {
-            if (pool == null)
-                throw new ArgumentNullException("pool");
-
-            ValidateNotDisposed();
-
-            using (var connection = pool.Connect(m_Db))
-            {
-                return ExecuteInternal(connection, throwException);
-            }
-        }
-
-        private IRedisResponse ExecuteInternal(RedisConnectionPool pool, bool throwException = true)
-        {
-            using (var connection = pool.Connect(m_Db))
-            {
-                return ExecuteInternal(connection, throwException);
-            }
-        }
-
         public IRedisResponse Execute(IRedisConnection connection, bool throwException = true)
         {
             if (connection == null)
@@ -690,7 +534,7 @@ namespace Sweet.Redis
                 }
             }
         }
-       
+
         public void WriteTo(Stream stream)
         {
             if (stream == null)

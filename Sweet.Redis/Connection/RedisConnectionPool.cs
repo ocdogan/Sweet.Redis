@@ -126,6 +126,8 @@ namespace Sweet.Redis
         private readonly object m_MonitorChannelLock = new object();
         private RedisMonitorChannel m_MonitorChannel;
 
+        private RedisAsyncMessageQ m_MessageQ = new RedisAsyncMessageQ();
+
         #endregion Field Members
 
         #region .Ctors
@@ -334,10 +336,25 @@ namespace Sweet.Redis
             return new RedisDb(this, db);
         }
 
+        protected override int GetWaitRetryCount()
+        {
+            return base.GetWaitRetryCount();
+        }
+
+        protected override void OnConnectionLimitExceed(out bool throwError)
+        {
+            throwError = true;
+        }
+
+        protected override void OnConnectionTimeout(out bool throwError)
+        {
+            throwError = true;
+        }
+
         protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
-            return new RedisDbConnection(this.Name, settings, this.OnRelease, db,
+            return new RedisDbConnection(this.Name, settings, null, this.OnRelease, db,
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
 

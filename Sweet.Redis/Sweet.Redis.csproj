@@ -105,7 +105,6 @@
     <Compile Include="Connection\RedisConnectionState.cs" />
     <Compile Include="Connection\RedisDb.cs" />
     <Compile Include="Connection\RedisResponseReader.cs" />
-    <Compile Include="Connection\RedisServerCommands.cs" />
     <Compile Include="Connection\RedisSettings.cs" />
     <Compile Include="Connection\RedisSocket.cs" />
     <Compile Include="Connection\IRedisCommand.cs" />
@@ -148,6 +147,7 @@
     <Compile Include="Common\RedisDouble.cs" />
     <Compile Include="Common\RedisError.cs" />
     <Compile Include="Common\RedisResultStatus.cs" />
+    <Compile Include="Commands\RedisServerCommands.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
