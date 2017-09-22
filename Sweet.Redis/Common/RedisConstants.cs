@@ -64,8 +64,8 @@ namespace Sweet.Redis
 
         public const int ConnectionPurgePeriod = 1000; // milliseconds
 
-        public const int MinDbNo = -1; 
-        public const int MaxDbNo = 16;
+        public const int MinDbIndex = -1; 
+        public const int MaxDbIndex = 16;
 
         public const int DefaultPort = 6379;
 

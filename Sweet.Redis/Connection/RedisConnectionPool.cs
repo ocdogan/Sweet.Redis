@@ -269,7 +269,7 @@ namespace Sweet.Redis
         {
             if (socket != null)
             {
-                var member = new RedisConnectionPoolMember(socket, socket.Db);
+                var member = new RedisConnectionPoolMember(socket, socket.DbIndex);
                 lock (m_MemberStoreLock)
                 {
                     var prevTail = Interlocked.Exchange(ref m_MemberStoreTail, member);

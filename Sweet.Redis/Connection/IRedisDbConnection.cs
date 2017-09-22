@@ -28,6 +28,6 @@ namespace Sweet.Redis
 {
     public interface IRedisDbConnection : IRedisConnection
     {
-        int Db { get; }
+        int DbIndex { get; }
     }
 }

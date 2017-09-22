@@ -37,7 +37,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private int m_Db;
+        private int m_DbIndex;
 
         #endregion Field Members
 
@@ -54,16 +54,16 @@ namespace Sweet.Redis
             int db, RedisSocket socket = null, bool connectImmediately = false)
             : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         {
-            m_Db = Math.Min(Math.Max(db, RedisConstants.MinDbNo), RedisConstants.MaxDbNo);
+            m_DbIndex = Math.Min(Math.Max(db, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
         }
 
         #endregion .Ctors
 
         #region Properties
 
-        public int Db
+        public int DbIndex
         {
-            get { return m_Db; }
+            get { return m_DbIndex; }
         }
 
         #endregion Properties
@@ -87,12 +87,12 @@ namespace Sweet.Redis
                         socket.SetAuthenticated(true);
                 }
 
-                if (m_Db > RedisConstants.MinDbNo)
+                if (m_DbIndex > RedisConstants.MinDbIndex)
                 {
                     try
                     {
-                        if (Select(m_Db, true))
-                            socket.SetDb(m_Db);
+                        if (Select(m_DbIndex, true))
+                            socket.SetDb(m_DbIndex);
                     }
                     catch (Exception)
                     {

@@ -34,7 +34,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private int m_Db;
+        private int m_DbIndex;
         private byte[] m_Command;
         private byte[][] m_Arguments;
 
@@ -47,7 +47,7 @@ namespace Sweet.Redis
             if (command == null)
                 throw new ArgumentNullException("command");
 
-            m_Db = db;
+            m_DbIndex = db;
             m_Command = command;
             m_Arguments = args;
         }
@@ -65,7 +65,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public int Db { get { return m_Db; } }
+        public int DbIndex { get { return m_DbIndex; } }
 
         public byte[] Command { get { return m_Command; } }
 

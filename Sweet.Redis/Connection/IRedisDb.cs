@@ -30,7 +30,7 @@ namespace Sweet.Redis
     {
         bool Disposed { get; }
         Guid Id { get; }
-        int Db { get; }
+        int DbIndex { get; }
         bool ThrowOnError { get; }
 
         RedisConnectionPool Pool { get; }

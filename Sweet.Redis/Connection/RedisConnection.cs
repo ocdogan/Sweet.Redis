@@ -160,7 +160,7 @@ namespace Sweet.Redis
         protected bool Select(int db, bool throwException)
         {
             ValidateNotDisposed();
-            if (db > RedisConstants.MinDbNo && db <= RedisConstants.MaxDbNo)
+            if (db > RedisConstants.MinDbIndex && db <= RedisConstants.MaxDbIndex)
             {
                 using (var cmd = new RedisCommand(db, RedisCommands.Select, db.ToBytes()))
                 {

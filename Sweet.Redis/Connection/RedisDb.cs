@@ -31,8 +31,8 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private int m_Db;
         private Guid m_Id;
+        private int m_DbIndex;
 
         private RedisConnectionPool m_Pool;
 
@@ -57,7 +57,7 @@ namespace Sweet.Redis
             m_Id = Guid.NewGuid();
             m_Pool = pool;
 
-            m_Db = db;
+            m_DbIndex = db;
             ThrowOnError = throwOnError;
         }
 
@@ -90,9 +90,9 @@ namespace Sweet.Redis
             }
         }
 
-        public int Db
+        public int DbIndex
         {
-            get { return m_Db; }
+            get { return m_DbIndex; }
         }
 
         public Guid Id

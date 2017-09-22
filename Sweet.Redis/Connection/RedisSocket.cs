@@ -42,7 +42,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private int m_Db = -1;
+        private int m_DbIndex = -1;
         private bool m_Authenticated;
 
         private long m_Id;
@@ -169,9 +169,9 @@ namespace Sweet.Redis
             }
         }
 
-        public int Db
+        public int DbIndex
         {
-            get { return m_Db; }
+            get { return m_DbIndex; }
         }
 
         public bool DontFragment
@@ -414,7 +414,7 @@ namespace Sweet.Redis
 
         internal void SetDb(int db)
         {
-            m_Db = Math.Min(Math.Max(db, RedisConstants.MinDbNo), RedisConstants.MaxDbNo);
+            m_DbIndex = Math.Min(Math.Max(db, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
         }
 
         #endregion Redis Based Methods

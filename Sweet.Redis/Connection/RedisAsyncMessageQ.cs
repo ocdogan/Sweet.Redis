@@ -136,7 +136,7 @@ namespace Sweet.Redis
                     try
                     {
                         var command = member.Command;
-                        if (command.Db == db)
+                        if (command.DbIndex == db)
                         {
                             m_QTail = null;
 
@@ -167,7 +167,7 @@ namespace Sweet.Redis
                                 try
                                 {
                                     var command = member.Command;
-                                    if (command.Db == db)
+                                    if (command.DbIndex == db)
                                     {
                                         store.Remove(node);
                                         if (member.IsCompleted)

@@ -92,9 +92,9 @@ namespace Sweet.Redis
         protected RedisRaw ExpectArray(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectArray(connection, Db.ThrowOnError);
                 }
@@ -104,9 +104,9 @@ namespace Sweet.Redis
         protected RedisString ExpectBulkString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectBulkString(connection, Db.ThrowOnError);
                 }
@@ -116,9 +116,9 @@ namespace Sweet.Redis
         protected RedisBytes ExpectBulkStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectBulkStringBytes(connection, Db.ThrowOnError);
                 }
@@ -128,9 +128,9 @@ namespace Sweet.Redis
         protected RedisDouble ExpectDouble(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectDouble(connection, Db.ThrowOnError);
                 }
@@ -140,9 +140,9 @@ namespace Sweet.Redis
         protected RedisBool ExpectGreaterThanZero(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectInteger(connection, Db.ThrowOnError) > RedisConstants.Zero;
                 }
@@ -152,9 +152,9 @@ namespace Sweet.Redis
         protected RedisInt ExpectInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectInteger(connection, Db.ThrowOnError);
                 }
@@ -164,9 +164,9 @@ namespace Sweet.Redis
         protected RedisMultiBytes ExpectMultiDataBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectMultiDataBytes(connection, Db.ThrowOnError);
                 }
@@ -176,9 +176,9 @@ namespace Sweet.Redis
         public RedisMultiString ExpectMultiDataStrings(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectMultiDataStrings(connection, Db.ThrowOnError);
                 }
@@ -188,9 +188,9 @@ namespace Sweet.Redis
         public RedisNullableInt ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectNullableInteger(connection, Db.ThrowOnError);
                 }
@@ -205,9 +205,9 @@ namespace Sweet.Redis
         public RedisBool ExpectOne(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectInteger(connection, Db.ThrowOnError) == RedisConstants.One;
                 }
@@ -217,9 +217,9 @@ namespace Sweet.Redis
         public RedisBool ExpectSimpleString(byte[] cmd, string expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectSimpleString(connection, expectedResult, Db.ThrowOnError);
                 }
@@ -229,9 +229,9 @@ namespace Sweet.Redis
         public RedisString ExpectSimpleString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectSimpleString(connection, Db.ThrowOnError);
                 }
@@ -241,9 +241,9 @@ namespace Sweet.Redis
         public RedisBool ExpectSimpleStringBytes(byte[] cmd, byte[] expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectSimpleStringBytes(connection, expectedResult, Db.ThrowOnError);
                 }
@@ -253,9 +253,9 @@ namespace Sweet.Redis
         public RedisBytes ExpectSimpleStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            using (var connection = Db.Pool.Connect(Db.Db))
+            using (var connection = Db.Pool.Connect(Db.DbIndex))
             {
-                using (var rcmd = new RedisCommand(Db.Db, cmd, parameters))
+                using (var rcmd = new RedisCommand(Db.DbIndex, cmd, parameters))
                 {
                     return rcmd.ExpectSimpleStringBytes(connection, Db.ThrowOnError);
                 }
