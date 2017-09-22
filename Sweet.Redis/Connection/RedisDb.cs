@@ -59,23 +59,6 @@ namespace Sweet.Redis
 
             m_Db = db;
             ThrowOnError = throwOnError;
-
-            var pwd = pool.Settings.Password;
-            if (!String.IsNullOrEmpty(pwd))
-                Auth(pwd);
-
-            if (db != 0)
-            {
-                try
-                {
-                    Select(db, true);
-                }
-                catch (Exception)
-                {
-                    m_Pool = null;
-                    throw;
-                }
-            }
         }
 
         #endregion .Ctors
@@ -246,27 +229,6 @@ namespace Sweet.Redis
         {
             if (Disposed)
                 throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N"));
-        }
-
-        private bool Select(int db, bool throwException)
-        {
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(m_Db, RedisCommands.Select, db.ToBytes()))
-            {
-                return cmd.ExpectSimpleString(m_Pool.Connect(), RedisConstants.OK, throwException);
-            }
-        }
-
-        private bool Auth(string password)
-        {
-            if (password == null)
-                throw new ArgumentNullException("password");
-
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(m_Db, RedisCommands.Auth, password.ToBytes()))
-            {
-                return cmd.ExpectSimpleString(m_Pool.Connect(), RedisConstants.OK, true);
-            }
         }
 
         #endregion Methods

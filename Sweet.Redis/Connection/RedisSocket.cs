@@ -42,6 +42,9 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private int m_Db = -1;
+        private bool m_Authenticated;
+
         private long m_Id;
         private Socket m_Socket;
         private Action<RedisSocket> m_OnConnect;
@@ -132,6 +135,11 @@ namespace Sweet.Redis
             }
         }
 
+        public bool Authenticated
+        {
+            get { return m_Authenticated; }
+        }
+
         public int Available
         {
             get
@@ -159,6 +167,11 @@ namespace Sweet.Redis
             {
                 return m_Socket.Connected;
             }
+        }
+
+        public int Db
+        {
+            get { return m_Db; }
         }
 
         public bool DontFragment
@@ -391,6 +404,20 @@ namespace Sweet.Redis
         #endregion Static Methods
 
         #region Methods
+ 
+        #region Redis Based Methods
+
+        internal void SetAuthenticated(bool value)
+        {
+            m_Authenticated = value;
+        }
+
+        internal void SetDb(int db)
+        {
+            m_Db = Math.Min(Math.Max(db, RedisConstants.MinDbNo), RedisConstants.MaxDbNo);
+        }
+
+        #endregion Redis Based Methods
 
         public RedisSocket Accept()
         {

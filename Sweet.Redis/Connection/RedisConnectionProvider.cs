@@ -59,7 +59,7 @@ namespace Sweet.Redis
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
 
-            m_ConnectionLimiter = CreateConnectionLimiter();
+            m_ConnectionLimiter = NewConnectionLimiter();
         }
 
         #endregion .Ctors
@@ -103,7 +103,7 @@ namespace Sweet.Redis
             return m_Settings;
         }
 
-        protected virtual RedisConnectionLimiter CreateConnectionLimiter()
+        protected virtual RedisConnectionLimiter NewConnectionLimiter()
         {
             var settings = GetSettings() ?? RedisSettings.Default;
             return new RedisConnectionLimiter(settings.MaxCount);
@@ -131,13 +131,13 @@ namespace Sweet.Redis
 
             var settings = (GetSettings() ?? RedisSettings.Default);
 
-            var timeout = settings.ConnectionTimeout;
-            timeout = timeout <= 0 ? RedisConstants.MaxConnectionTimeout : timeout;
+            var connectionTimeout = settings.ConnectionTimeout;
+            connectionTimeout = connectionTimeout <= 0 ? RedisConstants.MaxConnectionTimeout : connectionTimeout;
 
             var now = DateTime.UtcNow;
 
             var retryCount = 0;
-            var remainingTime = timeout;
+            var remainingTime = connectionTimeout;
             var waitRetryCount = GetWaitRetryCount();
 
             while (remainingTime > 0)
@@ -147,7 +147,7 @@ namespace Sweet.Redis
                     return NewConnection(Dequeue(db), db, true);
 
                 retryCount++;
-                remainingTime = timeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
+                remainingTime = connectionTimeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
 
                 if (retryCount >= waitRetryCount)
                 {
@@ -183,7 +183,7 @@ namespace Sweet.Redis
                 connectionLimiter.Release();
         }
 
-        protected virtual void OnRelease(IRedisConnection conn, RedisSocket socket)
+        protected virtual void OnReleaseSocket(IRedisConnection conn, RedisSocket socket)
         {
             ValidateNotDisposed();
             try

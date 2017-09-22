@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisConnection : RedisDisposable, IRedisConnection
+    internal abstract class RedisConnection : RedisDisposable, IRedisConnection
     {
         #region Constants
 
@@ -98,19 +98,25 @@ namespace Sweet.Redis
             base.OnDispose(disposing);
 
             Interlocked.Exchange(ref m_Settings, null);
-
-            var socket = Interlocked.Exchange(ref m_Socket, null);
-            if (socket == null)
-                return;
-
             Interlocked.Exchange(ref m_CreateAction, null);
 
-            var onReleaseSocket = Interlocked.Exchange(ref m_ReleaseAction, null);
-            if (onReleaseSocket != null)
-                onReleaseSocket(this, socket);
-
-            if (!disposing)
-                socket.DisposeSocket();
+            var disposeSocket = disposing;
+            var socket = Interlocked.Exchange(ref m_Socket, null);
+            try
+            {
+                var onReleaseSocket = Interlocked.Exchange(ref m_ReleaseAction, null);
+                if (onReleaseSocket != null)
+                    onReleaseSocket(this, socket);
+            }
+            catch (Exception)
+            {
+                disposeSocket = true;
+            }
+            finally
+            {
+                if (!disposeSocket)
+                    socket.DisposeSocket();
+            }
         }
 
         #endregion Destructors
@@ -150,6 +156,31 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Member Methods
+
+        protected bool Select(int db, bool throwException)
+        {
+            ValidateNotDisposed();
+            if (db > RedisConstants.MinDbNo && db <= RedisConstants.MaxDbNo)
+            {
+                using (var cmd = new RedisCommand(db, RedisCommands.Select, db.ToBytes()))
+                {
+                    return cmd.ExpectSimpleString(this, RedisConstants.OK, throwException);
+                }
+            }
+            return true;
+        }
+
+        protected bool Auth(string password)
+        {
+            if (password == null)
+                throw new ArgumentNullException("password");
+
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(-1, RedisCommands.Auth, password.ToBytes()))
+            {
+                return cmd.ExpectSimpleString(this, RedisConstants.OK, true);
+            }
+        }
 
         public virtual IRedisResponse SendReceive(byte[] data)
         {

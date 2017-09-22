@@ -63,7 +63,7 @@ namespace Sweet.Redis
                 connection.Dispose();
         }
 
-        protected override RedisConnectionLimiter CreateConnectionLimiter()
+        protected override RedisConnectionLimiter NewConnectionLimiter()
         {
             return new RedisConnectionLimiter(1);
         }
@@ -77,7 +77,7 @@ namespace Sweet.Redis
                     ResponseReceived(response);
                 },
                 null,
-                OnRelease,
+                OnReleaseSocket,
                 true);
         }
 

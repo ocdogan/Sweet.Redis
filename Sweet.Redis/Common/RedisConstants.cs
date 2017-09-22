@@ -64,7 +64,9 @@ namespace Sweet.Redis
 
         public const int ConnectionPurgePeriod = 1000; // milliseconds
 
+        public const int MinDbNo = -1; 
         public const int MaxDbNo = 16;
+
         public const int DefaultPort = 6379;
 
         public const int DefaultConnectionTimeout = 10000;
@@ -83,9 +85,9 @@ namespace Sweet.Redis
         public const int MinWaitRetryCount = 1;
         public const int MaxWaitRetryCount = 10;
 
-        public const int DefaultIdleTimeout = 300;
-        public const int MinIdleTimeout = 10;
-        public const int MaxIdleTimeout = 3600;
+        public const int DefaultIdleTimeout = 300000;
+        public const int MinIdleTimeout = 10000;
+        public const int MaxIdleTimeout = 1200000;
 
         public const int DefaultSendTimeout = 15000;
         public const int MinSendTimeout = 100;

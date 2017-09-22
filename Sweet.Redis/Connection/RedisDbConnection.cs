@@ -54,7 +54,7 @@ namespace Sweet.Redis
             int db, RedisSocket socket = null, bool connectImmediately = false)
             : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         {
-            m_Db = db;
+            m_Db = Math.Min(Math.Max(db, RedisConstants.MinDbNo), RedisConstants.MaxDbNo);
         }
 
         #endregion .Ctors
@@ -73,6 +73,33 @@ namespace Sweet.Redis
         protected override int GetReceiveTimeout()
         {
             return DbReceiveTimeout;
+        }
+
+        protected override void OnConnect(RedisSocket socket)
+        {
+            base.OnConnect(socket);
+            if (socket.IsConnected())
+            {
+                var pwd = (Settings ?? RedisSettings.Default).Password;
+                if (!String.IsNullOrEmpty(pwd))
+                {
+                    if (Auth(pwd))
+                        socket.SetAuthenticated(true);
+                }
+
+                if (m_Db > RedisConstants.MinDbNo)
+                {
+                    try
+                    {
+                        if (Select(m_Db, true))
+                            socket.SetDb(m_Db);
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                    }
+                }
+            }
         }
 
         public override IRedisResponse SendReceive(byte[] data)
