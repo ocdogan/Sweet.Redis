@@ -236,21 +236,6 @@ namespace Sweet.Redis
             return new RedisDb(this, db);
         }
 
-        protected override int GetWaitRetryCount()
-        {
-            return base.GetWaitRetryCount();
-        }
-
-        protected override void OnConnectionLimitExceed(out bool throwError)
-        {
-            throwError = true;
-        }
-
-        protected override void OnConnectionTimeout(out bool throwError)
-        {
-            throwError = true;
-        }
-
         protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
@@ -446,6 +431,156 @@ namespace Sweet.Redis
         }
 
         #endregion Member Store Methods
+
+        #region Command Execution
+        
+        internal IRedisResponse Execute(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.Execute(connection, throwException);
+            }
+        }
+
+        internal RedisRaw ExpectArray(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectArray(connection, throwException);
+            }
+        }
+
+        internal RedisString ExpectBulkString(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectBulkString(connection, throwException);
+            }
+        }
+
+        internal RedisBytes ExpectBulkStringBytes(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectBulkStringBytes(connection, throwException);
+            }
+        }
+
+        internal RedisDouble ExpectDouble(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectDouble(connection, throwException);
+            }
+        }
+
+        internal RedisBool ExpectGreaterThanZero(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectInteger(connection, throwException) > RedisConstants.Zero; 
+            }
+        }
+
+        internal RedisInt ExpectInteger(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectInteger(connection, throwException);
+            }
+        }
+
+        internal RedisMultiBytes ExpectMultiDataBytes(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectMultiDataBytes(connection, throwException);
+            }
+        }
+
+        internal RedisMultiString ExpectMultiDataStrings(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectMultiDataStrings(connection, throwException);
+            }
+        }
+
+        internal RedisNullableInt ExpectNullableInteger(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectNullableInteger(connection, throwException);
+            }
+        }
+
+        internal RedisBool ExpectOK(RedisCommand command, bool throwException = true)
+        {
+            return ExpectSimpleString(command, "OK");
+        }
+
+        internal RedisBool ExpectOne(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectInteger(connection, throwException) == RedisConstants.One;
+            }
+        }
+
+        internal RedisBool ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleString(connection, expectedResult, throwException);
+            }
+        }
+
+        internal RedisString ExpectSimpleString(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleString(connection, throwException);
+            }
+        }
+
+        internal RedisBool ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
+            }
+        }
+
+        internal RedisBytes ExpectSimpleStringBytes(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleStringBytes(connection, throwException);
+            }
+        }
+
+        #endregion Command Execution
 
         #endregion Member Methods
 
