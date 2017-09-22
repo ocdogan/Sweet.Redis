@@ -252,11 +252,11 @@ namespace Sweet.Redis
 
         protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         {
-            /* if (e.CurrentRetryCount > 2)
+            if (e.CurrentRetryCount > 0)
             {
                 e.ThrowError = false;
                 e.ContinueToSpin = false;
-            } */
+            }
         }
 
         #endregion Connection Methods
@@ -483,7 +483,15 @@ namespace Sweet.Redis
         internal RedisBytes ExpectBulkStringBytes(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_MessageQ.Enqueue(command, RedisCommandExpect.BulkStringBytes, null);
+                return null;
+            }
+
+            using (connection)
             {
                 return command.ExpectBulkStringBytes(connection, throwException);
             }

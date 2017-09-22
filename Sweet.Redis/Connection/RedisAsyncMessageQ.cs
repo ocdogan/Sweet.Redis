@@ -190,14 +190,14 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisAsyncRequest Enqueue(RedisCommand command)
+        public RedisAsyncRequest Enqueue(RedisCommand command, RedisCommandExpect expect, string okFor)
         {
             if (command != null)
             {
                 ValidateNotDisposed();
 
                 var tcs = new TaskCompletionSource<IRedisResponse>(command);
-                var member = new RedisAsyncRequest(command, tcs);
+                var member = new RedisAsyncRequest(command, expect, okFor, tcs);
 
                 lock (m_AsyncMessageQLock)
                 {

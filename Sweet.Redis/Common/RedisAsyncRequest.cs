@@ -36,15 +36,20 @@ namespace Sweet.Redis
 
         private long m_Disposed;
 
+        private string m_OKFor;
         private RedisCommand m_Command;
+        private RedisCommandExpect m_Expect;
         private TaskCompletionSource<IRedisResponse> m_CompletionSource;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisAsyncRequest(RedisCommand command, TaskCompletionSource<IRedisResponse> completionSource)
+        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expect, string okFor,
+            TaskCompletionSource<IRedisResponse> completionSource)
         {
+            m_OKFor = okFor;
+            m_Expect = expect;
             m_Command = command;
             m_CompletionSource = completionSource;
         }
@@ -72,6 +77,21 @@ namespace Sweet.Redis
             get { return m_Command; }
         }
 
+        public TaskCompletionSource<IRedisResponse> CompletionSource
+        {
+            get { return m_CompletionSource; }
+        }
+
+        public bool Disposed
+        {
+            get { return Interlocked.Read(ref m_Disposed) != RedisConstants.Zero; }
+        }
+
+        public RedisCommandExpect Expect
+        {
+            get { return m_Expect; }
+        }
+
         public bool IsCompleted
         {
             get
@@ -86,14 +106,9 @@ namespace Sweet.Redis
             }
         }
 
-        public TaskCompletionSource<IRedisResponse> CompletionSource
+        public string OKFor
         {
-            get { return m_CompletionSource; }
-        }
-
-        public bool Disposed
-        {
-            get { return Interlocked.Read(ref m_Disposed) != RedisConstants.Zero; }
+            get { return m_OKFor; }
         }
 
         public Task<IRedisResponse> Task
