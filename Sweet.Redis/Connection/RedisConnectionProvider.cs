@@ -29,55 +29,6 @@ namespace Sweet.Redis
 {
     public class RedisConnectionProvider : RedisDisposable
     {
-        #region ConnectionRetryInfo
-
-        protected class ConnectionRetryEventArgs
-        {
-            public ConnectionRetryEventArgs(int retryCountLimit, int spinStepTimeoutMs, int connectionTimeout, int remainingTime)
-            {
-                StartTime = DateTime.UtcNow;
-                RetryCountLimit = retryCountLimit;
-                SpinStepTimeoutMs = spinStepTimeoutMs;
-                ConnectionTimeout = connectionTimeout;
-                RemainingTime = remainingTime;
-
-                ContinueToSpin = true;
-                ThrowError = true;
-            }
-
-            #region ConnectionRetryInfo
-
-            public DateTime StartTime { get; private set; }
-
-            public int RetryCountLimit { get; private set; }
-
-            public int CurrentRetryCount { get; private set; }
-            
-            public int SpinStepTimeoutMs { get; private set; }
-            
-            public int ConnectionTimeout { get; private set; }
-
-            public int RemainingTime { get; private set; }
-
-            public bool ContinueToSpin { get; set; }
-            
-            public bool ThrowError { get; set; }
-
-            #endregion Properties
-
-            #region Methods
-
-            internal void Entered()
-            {
-                CurrentRetryCount++;
-                RemainingTime = ConnectionTimeout - (int)(DateTime.UtcNow - StartTime).TotalMilliseconds; 
-            }
-
-            #endregion Methods
-        }
-
-        #endregion ConnectionTrack
-
         #region Constants
 
         protected const int ConnectionSpinStepTimeoutMilliseconds = 20;
@@ -163,13 +114,13 @@ namespace Sweet.Redis
             return ConnectionSpinStepTimeoutMilliseconds;
         }
 
-        protected virtual void OnConnectionRetry(ConnectionRetryEventArgs retryEventArgs)
+        protected virtual void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         { }
 
-        protected virtual void OnConnectionLimitExceed(ConnectionRetryEventArgs retryInfo)
+        protected virtual void OnConnectionLimitExceed(RedisConnectionRetryEventArgs e)
         { }
 
-        protected virtual void OnConnectionTimeout(ConnectionRetryEventArgs retryInfo)
+        protected virtual void OnConnectionTimeout(RedisConnectionRetryEventArgs e)
         { }
 
         internal virtual IRedisConnection Connect(int db)
@@ -183,7 +134,7 @@ namespace Sweet.Redis
             var connectionTimeout = settings.ConnectionTimeout;
             connectionTimeout = connectionTimeout <= 0 ? RedisConstants.MaxConnectionTimeout : connectionTimeout;
 
-            var retryInfo = new ConnectionRetryEventArgs((int)Math.Ceiling((double)settings.WaitTimeout / spinStepTimeoutMs), 
+            var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.WaitTimeout / spinStepTimeoutMs), 
                 spinStepTimeoutMs, connectionTimeout, connectionTimeout);
 
             while (retryInfo.RemainingTime > 0)

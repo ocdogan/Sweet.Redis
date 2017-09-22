@@ -62,6 +62,7 @@
     <Compile Include="Connection\RedisCallbackHub.cs" />
     <Compile Include="Connection\RedisConnectionLimiter.cs" />
     <Compile Include="Connection\RedisConnectionProvider.cs" />
+    <Compile Include="Connection\RedisConnectionRetryEventArgs.cs" />
     <Compile Include="Connection\RedisContinuousConnectionProvider.cs" />
     <Compile Include="Connection\RedisContinuousReader.cs" />
     <Compile Include="Connection\RedisMonitorChannel.cs" />

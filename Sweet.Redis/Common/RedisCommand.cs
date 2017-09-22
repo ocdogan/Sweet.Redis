@@ -75,14 +75,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private byte[] PrepareData()
-        {
-            using (var buffer = new RedisChunkBuffer(RedisConstants.ReadBufferSize))
-            {
-                WriteTo(buffer);
-                return buffer.ReleaseBuffer();
-            }
-        }
+        #region Execution Methods
 
         public RedisBool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
         {
@@ -458,17 +451,19 @@ namespace Sweet.Redis
 
         public IRedisResponse Execute(IRedisConnection connection, bool throwException = true)
         {
-            if (connection == null)
-                throw new ArgumentNullException("connection");
-
             ValidateNotDisposed();
-
             return ExecuteInternal(connection, throwException);
         }
 
         private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true)
         {
-            var data = PrepareData();
+            if (connection == null)
+            {
+                if (throwException)
+                    throw new ArgumentNullException("connection");
+                return null;
+            }
+
             var response = connection.SendReceive(this);
             if (response == null && throwException)
                 throw new RedisException("Corrupted redis response data");
@@ -494,46 +489,9 @@ namespace Sweet.Redis
             }
         }
 
-        private void WriteTo(IRedisWriter writer)
-        {
-            var argsLength = m_Arguments != null ? m_Arguments.Length : 0;
+        #endregion Execution Methods
 
-            writer.Write((byte)'*');
-            writer.Write(argsLength + 1);
-            writer.Write(RedisConstants.LineEnd);
-            writer.Write((byte)'$');
-            writer.Write(m_Command.Length);
-            writer.Write(RedisConstants.LineEnd);
-            writer.Write(m_Command);
-            writer.Write(RedisConstants.LineEnd);
-
-            if (argsLength > 0)
-            {
-                byte[] arg;
-                for (var i = 0; i < argsLength; i++)
-                {
-                    arg = m_Arguments[i];
-
-                    if (arg == null)
-                    {
-                        writer.Write(RedisConstants.NullBulkString);
-                    }
-                    else if (arg.Length == 0)
-                    {
-                        writer.Write(RedisConstants.EmptyBulkString);
-                        writer.Write(RedisConstants.LineEnd);
-                    }
-                    else
-                    {
-                        writer.Write((byte)'$');
-                        writer.Write(arg.Length);
-                        writer.Write(RedisConstants.LineEnd);
-                        writer.Write(arg);
-                    }
-                    writer.Write(RedisConstants.LineEnd);
-                }
-            }
-        }
+        #region WriteTo Methods
 
         public void WriteTo(Stream stream)
         {
@@ -589,6 +547,49 @@ namespace Sweet.Redis
             };
             return action.InvokeAsync(socket.GetWriteStream());
         }
+
+        private void WriteTo(IRedisWriter writer)
+        {
+            var argsLength = m_Arguments != null ? m_Arguments.Length : 0;
+
+            writer.Write((byte)'*');
+            writer.Write(argsLength + 1);
+            writer.Write(RedisConstants.LineEnd);
+            writer.Write((byte)'$');
+            writer.Write(m_Command.Length);
+            writer.Write(RedisConstants.LineEnd);
+            writer.Write(m_Command);
+            writer.Write(RedisConstants.LineEnd);
+
+            if (argsLength > 0)
+            {
+                byte[] arg;
+                for (var i = 0; i < argsLength; i++)
+                {
+                    arg = m_Arguments[i];
+
+                    if (arg == null)
+                    {
+                        writer.Write(RedisConstants.NullBulkString);
+                    }
+                    else if (arg.Length == 0)
+                    {
+                        writer.Write(RedisConstants.EmptyBulkString);
+                        writer.Write(RedisConstants.LineEnd);
+                    }
+                    else
+                    {
+                        writer.Write((byte)'$');
+                        writer.Write(arg.Length);
+                        writer.Write(RedisConstants.LineEnd);
+                        writer.Write(arg);
+                    }
+                    writer.Write(RedisConstants.LineEnd);
+                }
+            }
+        }
+
+        #endregion WriteTo Methods
 
         #endregion Methods
     }

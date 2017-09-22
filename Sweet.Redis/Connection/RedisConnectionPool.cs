@@ -236,6 +236,8 @@ namespace Sweet.Redis
             return new RedisDb(this, db);
         }
 
+        #region Connection Methods
+
         protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
@@ -247,6 +249,17 @@ namespace Sweet.Redis
         {
             EnqueueSocket(socket);
         }
+
+        protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
+        {
+            /* if (e.CurrentRetryCount > 2)
+            {
+                e.ThrowError = false;
+                e.ContinueToSpin = false;
+            } */
+        }
+
+        #endregion Connection Methods
 
         #region Member Store Methods
 
