@@ -258,22 +258,18 @@ namespace Sweet.Redis
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
 
-        protected override void CompleteRelease(IRedisConnection conn, RedisSocket socket)
+        protected override void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
         {
-            Enqueue(conn, socket);
+            EnqueueSocket(socket);
         }
 
         #region Member Store Methods
 
-        private void Enqueue(IRedisConnection conn, RedisSocket socket)
+        protected void EnqueueSocket(RedisSocket socket)
         {
             if (socket != null)
             {
-                var db = RedisConstants.MinDbNo;
-                if (conn is IRedisDbConnection)
-                    db = ((IRedisDbConnection)conn).Db;
-
-                var member = new RedisConnectionPoolMember(socket, db);
+                var member = new RedisConnectionPoolMember(socket, socket.Db);
                 lock (m_MemberStoreLock)
                 {
                     var prevTail = Interlocked.Exchange(ref m_MemberStoreTail, member);
@@ -289,7 +285,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected override RedisSocket Dequeue(int db)
+        protected override RedisSocket DequeueSocket(int db)
         {
             lock (m_MemberStoreLock)
             {
@@ -319,31 +315,34 @@ namespace Sweet.Redis
             {
                 lock (m_MemberStoreLock)
                 {
-                    RedisSocket socket = null;
-                    RedisConnectionPoolMember member;
-
-                    var node = store.First;
-                    while (node != null)
+                    if (store.Count > 0)
                     {
-                        try
+                        RedisSocket socket = null;
+                        RedisConnectionPoolMember member;
+
+                        var node = store.First;
+                        while (node != null)
                         {
-                            member = node.Value;
-                            if (member.Db == db)
+                            try
                             {
-                                socket = member.ReleaseSocket();
+                                member = node.Value;
+                                if (member.Db == db)
+                                {
+                                    socket = member.ReleaseSocket();
 
-                                store.Remove(node);
-                                if (socket.IsConnected())
-                                    return socket;
+                                    store.Remove(node);
+                                    if (socket.IsConnected())
+                                        return socket;
 
-                                socket.DisposeSocket();
+                                    socket.DisposeSocket();
+                                }
                             }
-                        }
-                        catch (Exception)
-                        { }
-                        finally
-                        {
-                            node = node.Next;
+                            catch (Exception)
+                            { }
+                            finally
+                            {
+                                node = node.Next;
+                            }
                         }
                     }
                 }

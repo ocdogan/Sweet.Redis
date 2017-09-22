@@ -125,7 +125,7 @@ namespace Sweet.Redis
             throwError = true;
         }
 
-        internal virtual IRedisConnection Connect(int db = -1)
+        internal virtual IRedisConnection Connect(int db)
         {
             ValidateNotDisposed();
 
@@ -144,7 +144,7 @@ namespace Sweet.Redis
             {
                 var signaled = m_ConnectionLimiter.Wait(SpinStepMilliseconds);
                 if (signaled)
-                    return NewConnection(Dequeue(db), db, true);
+                    return NewConnection(DequeueSocket(db), db, true);
 
                 retryCount++;
                 remainingTime = connectionTimeout - (int)(DateTime.UtcNow - now).TotalMilliseconds;
@@ -171,7 +171,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected virtual RedisSocket Dequeue(int db)
+        protected virtual RedisSocket DequeueSocket(int db)
         {
             return null;
         }
@@ -188,7 +188,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             try
             {
-                CompleteRelease(conn, socket);
+                CompleteSocketRelease(conn, socket);
             }
             finally
             {
@@ -196,7 +196,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual void CompleteRelease(IRedisConnection conn, RedisSocket socket)
+        protected virtual void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
         {
         }
 

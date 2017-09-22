@@ -91,7 +91,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected override void CompleteRelease(IRedisConnection conn, RedisSocket socket)
+        protected override void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
         {
             var innerConnection = Interlocked.CompareExchange(ref m_Connection, null, conn);
             if (innerConnection != null)
