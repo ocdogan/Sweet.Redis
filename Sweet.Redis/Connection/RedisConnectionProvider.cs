@@ -193,16 +193,10 @@ namespace Sweet.Redis
                     return NewConnection(DequeueSocket(db), db, true);
 
                 retryInfo.Entered();
-
                 OnConnectionRetry(retryInfo);
-                if (!retryInfo.ContinueToSpin)
-                {
-                    if (retryInfo.ThrowError)
-                        break;
-                    return null;
-                }
 
-                if (retryInfo.CurrentRetryCount >= retryInfo.RetryCountLimit)
+                if (!retryInfo.ContinueToSpin ||
+                    retryInfo.CurrentRetryCount >= retryInfo.RetryCountLimit)
                 {
                     OnConnectionLimitExceed(retryInfo);
                     if (retryInfo.ThrowError)
