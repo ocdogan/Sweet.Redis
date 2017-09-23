@@ -26,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -112,6 +111,8 @@ namespace Sweet.Redis
 
         #region Field Readonly Members
 
+        private RedisAsyncMessageQProcessor m_Processor;
+
         private RedisConnectionPoolMember m_MemberStoreTail;
         private readonly object m_MemberStoreLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
@@ -132,14 +133,11 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisConnectionPool(string name)
-            : this(name, RedisSettings.Default)
-        { }
-
-        public RedisConnectionPool(string name, RedisSettings settings)
+        public RedisConnectionPool(string name, RedisSettings settings = null)
             : base(name, settings)
         {
             Register(this);
+            m_Processor = new RedisAsyncMessageQProcessor(m_MessageQ, Settings);
         }
 
         #endregion .Ctors
@@ -152,6 +150,8 @@ namespace Sweet.Redis
             CloseMemberStore();
 
             base.OnDispose(disposing);
+
+            StopToProcessQ();
 
             var monitorChannel = Interlocked.Exchange(ref m_MonitorChannel, null);
             if (monitorChannel != null)
@@ -212,6 +212,15 @@ namespace Sweet.Redis
             }
         }
 
+        public bool ProcessingQ
+        {
+            get
+            {
+                var processor = m_Processor;
+                return processor != null && processor.Processing;
+            }
+        }
+
         public RedisSettings Settings
         {
             get { return GetSettings(); }
@@ -235,6 +244,24 @@ namespace Sweet.Redis
         {
             return new RedisDb(this, db);
         }
+
+        #region Processor Methods
+
+        private void StartToProcessQ()
+        {
+            var processor = m_Processor;
+            if (processor != null)
+                processor.Start();
+        }
+
+        private void StopToProcessQ()
+        {
+            var processor = Interlocked.Exchange(ref m_Processor, null);
+            if (processor != null)
+                processor.Stop();
+        }
+
+        #endregion Processor Methods
 
         #region Connection Methods
 
@@ -446,7 +473,7 @@ namespace Sweet.Redis
         #endregion Member Store Methods
 
         #region Command Execution
-        
+
         internal IRedisResponse Execute(RedisCommand command, bool throwException = true)
         {
             if (command == null)
@@ -487,11 +514,13 @@ namespace Sweet.Redis
             var connection = Connect(command.DbIndex);
             if (connection == null)
             {
-                var asyncRequest = m_MessageQ.Enqueue(command, RedisCommandExpect.BulkStringBytes, null);
-                return null;
+                var asyncRequest = m_MessageQ.Enqueue<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
             }
 
-            using (connection)
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectBulkStringBytes(connection, throwException);
             }
@@ -511,7 +540,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var connection = Connect(command.DbIndex))
             {
-                return command.ExpectInteger(connection, throwException) > RedisConstants.Zero; 
+                return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
             }
         }
 

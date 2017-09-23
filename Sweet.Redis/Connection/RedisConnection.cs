@@ -157,7 +157,12 @@ namespace Sweet.Redis
 
         #region Member Methods
 
-        protected bool Select(int db, bool throwException)
+        protected RedisSocket GetSocket()
+        {
+            return m_Socket;
+        }
+
+        protected bool SelectInternal(int db, bool throwException)
         {
             ValidateNotDisposed();
             if (db > RedisConstants.MinDbIndex && db <= RedisConstants.MaxDbIndex)

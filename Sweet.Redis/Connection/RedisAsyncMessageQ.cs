@@ -24,7 +24,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -107,15 +106,7 @@ namespace Sweet.Redis
             {
                 try
                 {
-                    var tcs = member.CompletionSource;
-                    if (tcs != null)
-                    {
-                        var task = tcs.Task;
-                        if (task != null && !task.IsCompleted)
-                        {
-                            tcs.SetCanceled();
-                        }
-                    }
+                    member.Cancel();
                 }
                 finally
                 {
@@ -124,7 +115,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisAsyncRequest Dequeue(int db)
+        public RedisAsyncRequest Dequeue(int dbIndex)
         {
             ValidateNotDisposed();
 
@@ -136,12 +127,10 @@ namespace Sweet.Redis
                     try
                     {
                         var command = member.Command;
-                        if (command.DbIndex == db)
+                        if (dbIndex < 0 || command.DbIndex == dbIndex)
                         {
                             m_QTail = null;
-
-                            if (member.IsCompleted)
-                                return member;
+                            return member;
                         }
                     }
                     catch (Exception)
@@ -167,11 +156,10 @@ namespace Sweet.Redis
                                 try
                                 {
                                     var command = member.Command;
-                                    if (command.DbIndex == db)
+                                    if (dbIndex < 0 || command.DbIndex == dbIndex)
                                     {
                                         store.Remove(node);
-                                        if (member.IsCompleted)
-                                            return member;
+                                        return member;
                                     }
                                 }
                                 catch (Exception)
@@ -190,14 +178,14 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisAsyncRequest Enqueue(RedisCommand command, RedisCommandExpect expect, string okFor)
+        public RedisAsyncRequest<T> Enqueue<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
         {
             if (command != null)
             {
                 ValidateNotDisposed();
 
-                var tcs = new TaskCompletionSource<IRedisResponse>(command);
-                var member = new RedisAsyncRequest(command, expect, okFor, tcs);
+                var member = new RedisAsyncRequest<T>(command, expect, okIf,
+                                  new TaskCompletionSource<T>(command));
 
                 lock (m_AsyncMessageQLock)
                 {

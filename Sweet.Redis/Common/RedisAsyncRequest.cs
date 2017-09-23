@@ -30,28 +30,28 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisAsyncRequest : IRedisDisposable
+    internal abstract class RedisAsyncRequest : IRedisDisposable
     {
         #region Field Members
 
         private long m_Disposed;
 
-        private string m_OKFor;
+        private string m_OKIf;
         private RedisCommand m_Command;
-        private RedisCommandExpect m_Expect;
-        private TaskCompletionSource<IRedisResponse> m_CompletionSource;
+        private RedisCommandExpect m_Expectation;
+        private object m_StateObject;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expect, string okFor,
-            TaskCompletionSource<IRedisResponse> completionSource)
+        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
+                                 string okIf, object stateObject)
         {
-            m_OKFor = okFor;
-            m_Expect = expect;
+            m_OKIf = okIf;
+            m_Expectation = expectation;
             m_Command = command;
-            m_CompletionSource = completionSource;
+            m_StateObject = stateObject;
         }
 
         #endregion .Ctors
@@ -60,11 +60,19 @@ namespace Sweet.Redis
 
         public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref m_Disposed, RedisConstants.One, RedisConstants.Zero) ==
-                RedisConstants.Zero)
+            try
             {
-                Interlocked.Exchange(ref m_Command, null);
-                Interlocked.Exchange(ref m_CompletionSource, null);
+                if (Interlocked.Read(ref m_Disposed) != RedisConstants.Zero)
+                    Cancel();
+            }
+            finally
+            {
+                if (Interlocked.CompareExchange(ref m_Disposed, RedisConstants.One, RedisConstants.Zero) ==
+                    RedisConstants.Zero)
+                {
+                    Interlocked.Exchange(ref m_Command, null);
+                    Interlocked.Exchange(ref m_StateObject, null);
+                }
             }
         }
 
@@ -77,9 +85,11 @@ namespace Sweet.Redis
             get { return m_Command; }
         }
 
-        public TaskCompletionSource<IRedisResponse> CompletionSource
+        public abstract bool IsCompleted { get; }
+
+        public object StateObject
         {
-            get { return m_CompletionSource; }
+            get { return m_StateObject; }
         }
 
         public bool Disposed
@@ -87,39 +97,14 @@ namespace Sweet.Redis
             get { return Interlocked.Read(ref m_Disposed) != RedisConstants.Zero; }
         }
 
-        public RedisCommandExpect Expect
+        public RedisCommandExpect Expectation
         {
-            get { return m_Expect; }
+            get { return m_Expectation; }
         }
 
-        public bool IsCompleted
+        public string OKIf
         {
-            get
-            {
-                var tcs = m_CompletionSource;
-                if (tcs != null)
-                {
-                    var task = tcs.Task;
-                    return (task == null) || task.IsCompleted;
-                }
-                return true;
-            }
-        }
-
-        public string OKFor
-        {
-            get { return m_OKFor; }
-        }
-
-        public Task<IRedisResponse> Task
-        {
-            get
-            {
-                var tcs = m_CompletionSource;
-                if (tcs != null)
-                    return tcs.Task;
-                return null;
-            }
+            get { return m_OKIf; }
         }
 
         #endregion Properties
@@ -131,6 +116,10 @@ namespace Sweet.Redis
             if (Disposed)
                 throw new RedisException(GetType().Name + " is disposed");
         }
+
+        public abstract void Cancel();
+
+        public abstract void Process(IRedisConnection connection);
 
         #endregion Methods
     }

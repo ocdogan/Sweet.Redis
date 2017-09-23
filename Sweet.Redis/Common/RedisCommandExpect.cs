@@ -39,8 +39,6 @@ namespace Sweet.Redis
         OK,
         One,
         SimpleString,
-        SimpleString,
-        SimpleStringBytes,
         SimpleStringBytes
     }
 }

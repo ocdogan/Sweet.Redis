@@ -24,6 +24,7 @@
 
 using System;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Sweet.Redis
 {
@@ -44,17 +45,17 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisDbConnection(string name, Action<RedisConnection, RedisSocket> onCreateSocket,
-            Action<RedisConnection, RedisSocket> onReleaseSocket, int db, RedisSocket socket = null,
+            Action<RedisConnection, RedisSocket> onReleaseSocket, int dbIndex, RedisSocket socket = null,
             bool connectImmediately = false)
-            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, db, socket, connectImmediately)
+            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, dbIndex, socket, connectImmediately)
         { }
 
         internal RedisDbConnection(string name, RedisSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
-            int db, RedisSocket socket = null, bool connectImmediately = false)
+            int dbIndex, RedisSocket socket = null, bool connectImmediately = false)
             : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         {
-            m_DbIndex = Math.Min(Math.Max(db, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
         }
 
         #endregion .Ctors
@@ -89,16 +90,25 @@ namespace Sweet.Redis
 
                 if (m_DbIndex > RedisConstants.MinDbIndex)
                 {
-                    try
-                    {
-                        if (Select(m_DbIndex, true))
-                            socket.SetDb(m_DbIndex);
-                    }
-                    catch (Exception)
-                    {
-                        throw;
-                    }
+                    if (SelectInternal(m_DbIndex, true))
+                        socket.SetDb(m_DbIndex);
                 }
+            }
+        }
+
+        public void Select(int dbIndex)
+        {
+            dbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+            if (dbIndex != m_DbIndex)
+            {
+                var socket = GetSocket();
+                if (socket != null)
+                {
+                    if (dbIndex != RedisConstants.MinDbIndex)
+                        SelectInternal(m_DbIndex, true);
+                    socket.SetDb(m_DbIndex);
+                }
+                Interlocked.Exchange(ref m_DbIndex, dbIndex);
             }
         }
 

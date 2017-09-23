@@ -46,6 +46,8 @@
   <ItemGroup>
     <Compile Include="Common\IRedisReceiver.cs" />
     <Compile Include="Common\RedisAsyncRequest.cs" />
+    <Compile Include="Common\RedisAsyncRequest_T.cs" />
+    <Compile Include="Common\RedisCommandExpect.cs" />
     <Compile Include="Common\RedisDate.cs" />
     <Compile Include="Common\RedisMultiInt.cs" />
     <Compile Include="Common\RedisMultiString.cs" />
@@ -149,6 +151,7 @@
     <Compile Include="Common\RedisError.cs" />
     <Compile Include="Common\RedisResultStatus.cs" />
     <Compile Include="Commands\RedisServerCommands.cs" />
+    <Compile Include="Connection\RedisAsyncMessageQProcessor.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

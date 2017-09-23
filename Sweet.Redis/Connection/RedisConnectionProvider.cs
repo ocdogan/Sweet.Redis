@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        protected const int ConnectionSpinStepTimeoutMilliseconds = 20;
+        protected const int ConnectionSpinStepTimeoutMillisecs = 20;
 
         #endregion Constants
 
@@ -45,21 +45,19 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisConnectionProvider(string name)
-            : this(name, RedisSettings.Default)
-        { }
-
-        public RedisConnectionProvider(string name, RedisSettings settings)
+        protected RedisConnectionProvider(string name, RedisSettings settings = null,
+                                      Func<int, RedisConnectionLimiter> connectionLimiter = null)
         {
-            if (settings == null)
-                throw new ArgumentNullException("settings");
-
             m_Settings = settings ?? RedisSettings.Default;
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
 
-            m_ConnectionLimiter = NewConnectionLimiter();
+            if (connectionLimiter == null)
+                connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);
+
+            m_ConnectionLimiter = connectionLimiter.Invoke(settings.MaxCount) ??
+                                                   new RedisConnectionLimiter(settings.MaxCount);
         }
 
         #endregion .Ctors
@@ -103,15 +101,15 @@ namespace Sweet.Redis
             return m_Settings;
         }
 
-        protected virtual RedisConnectionLimiter NewConnectionLimiter()
+        protected virtual RedisConnectionLimiter NewConnectionLimiter(int maxCount)
         {
-            var settings = GetSettings() ?? RedisSettings.Default;
-            return new RedisConnectionLimiter(settings.MaxCount);
+            maxCount = Math.Max(1, Math.Min(maxCount, RedisConstants.MaxConnectionCount));
+            return new RedisConnectionLimiter(maxCount);
         }
 
         protected virtual int GetConnectionSpinStepTimeout()
         {
-            return ConnectionSpinStepTimeoutMilliseconds;
+            return ConnectionSpinStepTimeoutMillisecs;
         }
 
         protected virtual void OnConnectionRetry(RedisConnectionRetryEventArgs e)
@@ -134,7 +132,7 @@ namespace Sweet.Redis
             var connectionTimeout = settings.ConnectionTimeout;
             connectionTimeout = connectionTimeout <= 0 ? RedisConstants.MaxConnectionTimeout : connectionTimeout;
 
-            var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.WaitTimeout / spinStepTimeoutMs), 
+            var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.WaitTimeout / spinStepTimeoutMs),
                 spinStepTimeoutMs, connectionTimeout, connectionTimeout);
 
             while (retryInfo.RemainingTime > 0)
