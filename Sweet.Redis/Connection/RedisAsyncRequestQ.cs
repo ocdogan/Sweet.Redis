@@ -33,8 +33,8 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        private const int TimeoutPeriod = 1000;
         private const int MaxTimeout = 60 * 1000;
+        private const int TimeoutCheckPeriod = 5000;
 
         #endregion Constants
 
@@ -355,7 +355,7 @@ namespace Sweet.Redis
                             Interlocked.Exchange(ref s_TimeoutTickState, RedisConstants.Zero);
                         }
                     },
-                    null, TimeoutPeriod, TimeoutPeriod);
+                    null, TimeoutCheckPeriod, TimeoutCheckPeriod);
 
                 try
                 {
