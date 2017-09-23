@@ -162,12 +162,12 @@ namespace Sweet.Redis
 
         private void StopCurrent()
         {
-            var prevThread = Interlocked.Exchange(ref m_Thread, null);
-            if (prevThread != null && prevThread.IsAlive)
+            var thread = Interlocked.Exchange(ref m_Thread, null);
+            if (thread != null && thread.IsAlive)
             {
                 try
                 {
-                    prevThread.Interrupt();
+                    thread.Interrupt();
                 }
                 catch (Exception)
                 { }
