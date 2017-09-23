@@ -59,7 +59,7 @@
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\RedisVoidVal.cs" />
     <Compile Include="Connection\RedisActionBag.cs" />
-    <Compile Include="Connection\RedisAsyncMessageQ.cs" />
+    <Compile Include="Connection\RedisAsyncRequestQ.cs" />
     <Compile Include="Connection\RedisAsyncStateWrapper.cs" />
     <Compile Include="Connection\RedisCallbackHub.cs" />
     <Compile Include="Connection\RedisConnectionLimiter.cs" />

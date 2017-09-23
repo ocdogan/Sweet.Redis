@@ -105,7 +105,7 @@ namespace Sweet.Redis.ConsoleTest
 
                                         var sw = new Stopwatch();
 
-                                        for (var j = 0; j < 100; j++)
+                                        for (var j = 0; j < 1000; j++)
                                         {
                                             sw.Restart();
                                             var data = rdb.Strings.Get("small_text");

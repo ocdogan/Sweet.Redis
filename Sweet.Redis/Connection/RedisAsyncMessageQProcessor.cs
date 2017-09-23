@@ -48,7 +48,7 @@ namespace Sweet.Redis
             #region .Ctors
 
             public ProcessParameters(RedisAsyncMessageQProcessor processor,
-                                     Thread thread, RedisAsyncMessageQ queue,
+                                     Thread thread, RedisAsyncRequestQ queue,
                                      RedisSettings settings)
             {
                 Me = thread;
@@ -65,7 +65,7 @@ namespace Sweet.Redis
 
             public RedisAsyncMessageQProcessor Processor { get; private set; }
 
-            public RedisAsyncMessageQ Queue { get; private set; }
+            public RedisAsyncRequestQ Queue { get; private set; }
 
             public RedisSettings Settings { get; private set; }
 
@@ -91,7 +91,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisAsyncMessageQProcessor(RedisAsyncMessageQ queue, RedisSettings settings)
+        public RedisAsyncMessageQProcessor(RedisAsyncRequestQ queue, RedisSettings settings)
         {
             Queue = queue;
             Settings = settings;
@@ -119,7 +119,7 @@ namespace Sweet.Redis
             get { return Interlocked.Read(ref m_State) != (long)ProcessingState.Idle; }
         }
 
-        public RedisAsyncMessageQ Queue { get; private set; }
+        public RedisAsyncRequestQ Queue { get; private set; }
 
         public RedisSettings Settings { get; private set; }
 

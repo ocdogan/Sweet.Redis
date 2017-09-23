@@ -127,7 +127,7 @@ namespace Sweet.Redis
         private readonly object m_MonitorChannelLock = new object();
         private RedisMonitorChannel m_MonitorChannel;
 
-        private RedisAsyncMessageQ m_MessageQ = new RedisAsyncMessageQ();
+        private RedisAsyncRequestQ m_AsycRequestQ;
 
         #endregion Field Members
 
@@ -137,7 +137,11 @@ namespace Sweet.Redis
             : base(name, settings)
         {
             Register(this);
-            m_Processor = new RedisAsyncMessageQProcessor(m_MessageQ, Settings);
+
+            var thisSettings = Settings;
+
+            m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
+            m_Processor = new RedisAsyncMessageQProcessor(m_AsycRequestQ, thisSettings);
         }
 
         #endregion .Ctors
@@ -256,9 +260,18 @@ namespace Sweet.Redis
 
         private void StopToProcessQ()
         {
-            var processor = Interlocked.Exchange(ref m_Processor, null);
-            if (processor != null)
-                processor.Stop();
+            try
+            {
+                var processor = Interlocked.Exchange(ref m_Processor, null);
+                if (processor != null)
+                    processor.Stop();
+            }
+            finally
+            {
+                var queue = Interlocked.Exchange(ref m_AsycRequestQ, null);
+                if (queue != null)
+                    queue.Dispose();
+            }
         }
 
         #endregion Processor Methods
@@ -515,7 +528,7 @@ namespace Sweet.Redis
             var connection = Connect(command.DbIndex);
             if (connection == null)
             {
-                var asyncRequest = m_MessageQ.Enqueue<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, null);
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, null);
                 StartToProcessQ();
 
                 return asyncRequest.Task.Result;

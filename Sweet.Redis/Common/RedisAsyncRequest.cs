@@ -35,6 +35,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_Disposed;
+        private DateTime m_CreationTime;
 
         private string m_OKIf;
         private RedisCommand m_Command;
@@ -52,6 +53,7 @@ namespace Sweet.Redis
             m_Expectation = expectation;
             m_Command = command;
             m_StateObject = stateObject;
+            m_CreationTime = DateTime.UtcNow;
         }
 
         #endregion .Ctors
@@ -83,6 +85,11 @@ namespace Sweet.Redis
         public RedisCommand Command
         {
             get { return m_Command; }
+        }
+
+        public DateTime CreationTime
+        {
+            get { return m_CreationTime; }
         }
 
         public abstract bool IsCompleted { get; }
