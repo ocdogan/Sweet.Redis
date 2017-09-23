@@ -151,7 +151,7 @@
     <Compile Include="Common\RedisError.cs" />
     <Compile Include="Common\RedisResultStatus.cs" />
     <Compile Include="Commands\RedisServerCommands.cs" />
-    <Compile Include="Connection\RedisAsyncMessageQProcessor.cs" />
+    <Compile Include="Connection\RedisAsyncRequestQProcessor.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

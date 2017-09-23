@@ -111,7 +111,7 @@ namespace Sweet.Redis
 
         #region Field Readonly Members
 
-        private RedisAsyncMessageQProcessor m_Processor;
+        private RedisAsyncRequestQProcessor m_Processor;
 
         private RedisConnectionPoolMember m_MemberStoreTail;
         private readonly object m_MemberStoreLock = new object();
@@ -141,7 +141,7 @@ namespace Sweet.Redis
             var thisSettings = Settings;
 
             m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
-            m_Processor = new RedisAsyncMessageQProcessor(m_AsycRequestQ, thisSettings);
+            m_Processor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
         }
 
         #endregion .Ctors
