@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -71,21 +72,9 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Conversion Methods
+        #region Methods
 
-        public static implicit operator RedisBytes(byte[] value)  // implicit byte[] to RedisBytes conversion operator
-        {
-            return new RedisBytes(value);
-        }
-
-        public static implicit operator byte[] (RedisBytes value)  // implicit RedisBytes to byte[] conversion operator
-        {
-            return value.Value;
-        }
-
-        #endregion Conversion Methods
-
-        #region Operator Overloads
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -103,11 +92,43 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return "(nil)";
+
+            if (value.Length == 0)
+                return "(empty)";
+
+            return "\"" + Encoding.UTF8.GetString(value) + "\"";
+        }
+
+        #endregion Methods
+
+        #endregion Overrides
+
+        #region Conversion Methods
+
+        public static implicit operator RedisBytes(byte[] value)  // implicit byte[] to RedisBytes conversion operator
+        {
+            return new RedisBytes(value);
+        }
+
+        public static implicit operator byte[] (RedisBytes value)  // implicit RedisBytes to byte[] conversion operator
+        {
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisBytes a, RedisBytes b)
         {

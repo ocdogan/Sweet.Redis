@@ -36,12 +36,100 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading1();
             // MultiThreading2();
             // MultiThreading3();
-            MultiThreading4();
+            // MultiThreading4();
 
             // MonitorTest1();
             // MonitorTest2();
             // MonitorTest3();
+
+            Geo1();
         }
+
+        #region Geo
+
+        static void Geo1()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            var addResult = db.Geo.GeoAdd("Sicily",
+                                          new RedisGeospatialItem(13.361389, 38.115556, "Palermo"),
+                                          new RedisGeospatialItem(15.087269, 37.502669, "Catania"));
+
+                            Console.WriteLine("GEOADD Sicily 13.361389 38.115556 \"Palermo\" 15.087269 37.502669 \"Catania\"");
+                            Console.WriteLine(addResult);
+
+                            var distResult = db.Geo.GeoDistanceString("Sicily", "Palermo", "Catania");
+                            Console.WriteLine("GEODIST Sicily Palermo Catania");
+                            Console.WriteLine(distResult);
+
+                            distResult = db.Geo.GeoDistanceString("Sicily", "Palermo", "Catania", RedisGeoDistanceUnit.Kilometers);
+                            Console.WriteLine("GEODIST Sicily Palermo Catania km");
+                            Console.WriteLine(distResult);
+
+                            distResult = db.Geo.GeoDistanceString("Sicily", "Palermo", "Catania", RedisGeoDistanceUnit.Miles);
+                            Console.WriteLine("GEODIST Sicily Palermo Catania mi");
+                            Console.WriteLine(distResult);
+
+                            distResult = db.Geo.GeoDistanceString("Sicily", "Foo", "Bar");
+                            Console.WriteLine("GEODIST Sicily Foo Bar");
+                            Console.WriteLine(distResult);
+
+                            var hashResult = db.Geo.GeoHashString("Sicily", "Palermo", "Catania");
+                            Console.WriteLine("GEOHASH Sicily Palermo Catania");
+                            Console.WriteLine(hashResult);
+
+                            var posResult = db.Geo.GeoPositionString("Sicily", "Palermo", "Catania", "NonExisting");
+                            Console.WriteLine("GEOPOS Sicily Palermo Catania NonExisting");
+                            Console.WriteLine(posResult);
+
+                            var radiusResult = db.Geo.GeoRadius("Sicily", new RedisGeoPosition(15, 37),
+                                                                200, RedisGeoDistanceUnit.Kilometers);
+                            Console.WriteLine("GEORADIUS Sicily 15 37 200 km");
+                            Console.WriteLine(radiusResult);
+
+                            radiusResult = db.Geo.GeoRadius("Sicily", new RedisGeoPosition(15, 37),
+                                                                200, RedisGeoDistanceUnit.Kilometers, withDist: true);
+                            Console.WriteLine("GEORADIUS Sicily 15 37 200 km WITHDIST");
+                            Console.WriteLine(radiusResult);
+
+                            radiusResult = db.Geo.GeoRadius("Sicily", new RedisGeoPosition(15, 37),
+                                                                200, RedisGeoDistanceUnit.Kilometers, withCoord: true);
+                            Console.WriteLine("GEORADIUS Sicily 15 37 200 km WITHCOORD");
+                            Console.WriteLine(radiusResult);
+
+                            radiusResult = db.Geo.GeoRadius("Sicily", new RedisGeoPosition(15, 37),
+                                        200, RedisGeoDistanceUnit.Kilometers, true, true);
+                            Console.WriteLine("GEORADIUS Sicily 15 37 200 km WITHCOORD WITHDIST");
+                            Console.WriteLine(radiusResult);
+
+                            radiusResult = db.Geo.GeoRadius("Sicily", new RedisGeoPosition(15, 37),
+                                                            200, RedisGeoDistanceUnit.Kilometers, true, true, true);
+                            Console.WriteLine("GEORADIUS Sicily 15 37 200 km WITHCOORD WITHDIST WITHHASH");
+                            Console.WriteLine(radiusResult);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        #endregion Geo
 
         #region Multi-Threading
 
@@ -105,7 +193,7 @@ namespace Sweet.Redis.ConsoleTest
 
                                         var sw = new Stopwatch();
 
-                                        for (var j = 0; j < 1000; j++)
+                                        for (var j = 0; j < 100; j++)
                                         {
                                             sw.Restart();
                                             var data = rdb.Strings.Get("small_text");

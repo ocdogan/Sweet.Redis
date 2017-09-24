@@ -45,40 +45,11 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Conversion Methods
+        #region Methods
 
-        public static implicit operator RedisNullableDouble(double? value)  // implicit double? to RedisNullableDouble conversion operator
-        {
-            return new RedisNullableDouble(value);
-        }
+        #region Overrides
 
-        public static implicit operator double? (RedisNullableDouble value)  // implicit RedisNullableDouble to double? conversion operator
-        {
-            return value.Value;
-        }
-
-        public static implicit operator RedisNullableDouble(long? value)  // implicit long? to RedisNullableDouble conversion operator
-        {
-            return new RedisNullableDouble(value);
-        }
-
-        public static implicit operator RedisNullableDouble(int? value)  // implicit int? to RedisNullableDouble conversion operator
-        {
-            return new RedisNullableDouble(value);
-        }
-
-        public static implicit operator RedisNullableDouble(RedisInt value)  // implicit RedisInt to RedisNullableDouble conversion operator
-        {
-            return new RedisNullableDouble(value);
-        }
-
-        public static implicit operator RedisNullableDouble(RedisNullableInt value)  // implicit RedisNullableInt to RedisNullableDouble conversion operator
-        {
-            return new RedisNullableDouble(value);
-        }
-
-        #endregion Conversion Methods
-        #region Operator Overloads
+        #endregion Methods
 
         public override bool Equals(object obj)
         {
@@ -96,11 +67,73 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (value == null)
+                return "(nil)";
+
+            return "\"" + value.Value.ToString() + "\"";
+        }
+
+        #endregion Overrides
+
+        #region Conversion Methods
+
+        public static implicit operator RedisNullableDouble(double? value)  // implicit double? to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator RedisNullableDouble(double value)  // implicit double to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator double? (RedisNullableDouble value)  // implicit RedisNullableDouble to double? conversion operator
+        {
+            return value.Value;
+        }
+
+        public static implicit operator RedisNullableDouble(long? value)  // implicit long? to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator RedisNullableDouble(long value)  // implicit long to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator RedisNullableDouble(int? value)  // implicit int? to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator RedisNullableDouble(int value)  // implicit int? to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator RedisNullableDouble(RedisInt value)  // implicit RedisInt to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        public static implicit operator RedisNullableDouble(RedisNullableInt value)  // implicit RedisNullableInt to RedisNullableDouble conversion operator
+        {
+            return new RedisNullableDouble(value);
+        }
+
+        #endregion Conversion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisNullableDouble a, RedisNullableDouble b)
         {

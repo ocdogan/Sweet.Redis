@@ -289,5 +289,25 @@ namespace Sweet.Redis
         public static readonly byte[] Channels = "CHANNELS".ToBytes();
         public static readonly byte[] NumSub = "NUMSUB".ToBytes();
         public static readonly byte[] NumPat = "NUMPAT".ToBytes();
+
+        // Geo commands
+        public static readonly byte[] GeoAdd = "GEOADD".ToBytes();
+        public static readonly byte[] GeoDist = "GEODIST".ToBytes();
+        public static readonly byte[] GeoHash = "GEOHASH".ToBytes();
+        public static readonly byte[] GeoPos = "GEOPOS".ToBytes();
+        public static readonly byte[] GeoRadius = "GEORADIUS".ToBytes();
+        public static readonly byte[] GeoRadiusByMember = "GEORADIUSBYMEMBER".ToBytes();
+
+        // Geo commands options
+        public static readonly byte[] Meters = "m".ToBytes();
+        public static readonly byte[] Kilometers = "km".ToBytes();
+        public static readonly byte[] Feet = "ft".ToBytes();
+        public static readonly byte[] Miles = "mi".ToBytes();
+        public static readonly byte[] WithCoord = "WITHCOORD".ToBytes();
+        public static readonly byte[] WithDist = "WITHDIST".ToBytes();
+        public static readonly byte[] WithHash = "WITHHASH".ToBytes();
+        public static readonly byte[] Ascending = "ASC".ToBytes();
+        public static readonly byte[] Store = "STORE".ToBytes();
+        public static readonly byte[] StoreDist = "STOREDIST".ToBytes();
     }
 }

@@ -45,21 +45,9 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Conversion Methods
+        #region Methods
 
-        public static implicit operator RedisBool(bool value)  // implicit bool to RedisBool conversion operator
-        {
-            return new RedisBool(value);
-        }
-
-        public static implicit operator bool(RedisBool value)  // implicit RedisBool to bool conversion operator
-        {
-            return value.Value;
-        }
-
-        #endregion Conversion Methods
-
-        #region Operator Overloads
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -77,11 +65,31 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
+
+        #endregion Methods
+
+        #endregion Overrides
+
+        #region Conversion Methods
+
+        public static implicit operator RedisBool(bool value)  // implicit bool to RedisBool conversion operator
+        {
+            return new RedisBool(value);
+        }
+
+        public static implicit operator bool(RedisBool value)  // implicit RedisBool to bool conversion operator
+        {
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisBool a, RedisBool b)
         {

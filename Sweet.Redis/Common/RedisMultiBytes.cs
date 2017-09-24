@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -85,7 +86,9 @@ namespace Sweet.Redis
 
         #endregion Conversion Methods
 
-        #region Operator Overloads
+        #region Methods
+
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -103,11 +106,56 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
+            var val = m_Value;
             if (ReferenceEquals(val, null))
                 return base.GetHashCode();
             return val.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (value == null)
+                return "(nil)";
+
+            var multiBytes = value as byte[][];
+            if (multiBytes == null)
+                return "(nil)";
+
+            var length = multiBytes.Length;
+            if (length == 0)
+                return "(empty)";
+
+            var sBuilder = new StringBuilder();
+
+            for (var i = 0; i < length; i++)
+            {
+                sBuilder.Append(i + 1);
+                sBuilder.Append(") ");
+
+                var bytes = multiBytes[i];
+                if (bytes == null)
+                    sBuilder.Append("(nil)");
+                else if (bytes.Length == 0)
+                    sBuilder.Append("(empty)");
+                else
+                {
+                    sBuilder.Append('"');
+                    sBuilder.Append(Encoding.UTF8.GetString(bytes));
+                    sBuilder.Append('"');
+                }
+
+                sBuilder.AppendLine();
+            }
+
+            return sBuilder.ToString();
+        }
+
+        #endregion Overrides
+
+        #endregion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisMultiBytes a, RedisMultiBytes b)
         {

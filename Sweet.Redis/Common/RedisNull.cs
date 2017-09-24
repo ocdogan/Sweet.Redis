@@ -54,7 +54,9 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Operator Overloads
+        #region Methods
+
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -79,6 +81,12 @@ namespace Sweet.Redis
         {
             return "(nil)";
         }
+
+        #endregion Overrides
+
+        #endregion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisNull a, RedisNull b)
         {

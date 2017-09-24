@@ -137,6 +137,12 @@ namespace Sweet.Redis
             return Db.Pool.ExpectMultiDataStrings(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
         }
 
+        protected RedisNullableDouble ExpectNullableDouble(byte[] cmd, params byte[][] parameters)
+        {
+            ValidateNotDisposed();
+            return Db.Pool.ExpectNullableDouble(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+        }
+
         protected RedisNullableInt ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();

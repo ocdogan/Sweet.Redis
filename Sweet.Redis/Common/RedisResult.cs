@@ -23,7 +23,9 @@
 #endregion License
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -152,16 +154,14 @@ namespace Sweet.Redis
                 throw new RedisException("Result is not completed");
         }
 
-        #endregion Methods
-
-        #region Operator Overloads
+        #region Overrides
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
             {
-                var val = m_Value;
-                return ReferenceEquals(val, null) || (val == null);
+                var value = m_Value;
+                return ReferenceEquals(value, null) || (value == null);
             }
 
             if (ReferenceEquals(obj, this))
@@ -172,23 +172,52 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = m_Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
 
         public override string ToString()
         {
             if (!IsCompleted)
+                return "(nil) - [Not completed]";
+
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return "(nil)";
 
-            var val = m_Value;
-            if (ReferenceEquals(val, null))
-                return "(nil)";
+            if (value is IEnumerable)
+            {
+                var enumerable = (IEnumerable)value;
 
-            return val.ToString();
+                var i = 0;
+                var sBuilder = new StringBuilder();
+
+                foreach (var item in enumerable)
+                {
+                    sBuilder.Append(++i);
+                    sBuilder.Append(") ");
+
+                    if (item == null)
+                        sBuilder.Append("(nil)");
+                    else
+                        sBuilder.Append(item);
+
+                    sBuilder.AppendLine();
+                }
+
+                return sBuilder.ToString();
+            }
+
+            return value.ToString();
         }
+
+        #endregion Overrides
+
+        #endregion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)
         {

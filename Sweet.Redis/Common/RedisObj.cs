@@ -44,7 +44,10 @@ namespace Sweet.Redis
         public override RedisResultType Type { get { return RedisResultType.Object; } }
 
         #endregion Properties
-        #region Operator Overloads
+
+        #region Methods
+
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -62,11 +65,17 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
+
+        #endregion Methods
+
+        #endregion Overrides
+
+        #region Operator Overloads        		
 
         public static bool operator ==(RedisObj a, RedisObj b)
         {

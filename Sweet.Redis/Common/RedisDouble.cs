@@ -45,6 +45,44 @@ namespace Sweet.Redis
 
         #endregion Properties
 
+        #region Methods
+
+        #region Overrides
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null))
+                return false;
+
+            if (ReferenceEquals(obj, this))
+                return true;
+
+            var rObj = obj as RedisDouble;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && Object.Equals(rObj.m_Value, m_Value);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return base.GetHashCode();
+            return value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return "(nil)";
+
+            return "\"" + value.ToString() + "\"";
+        }
+        #endregion Methods
+
+        #endregion Overrides
+
         #region Conversion Methods
 
         public static implicit operator RedisDouble(double value)  // implicit double to RedisDouble conversion operator
@@ -75,28 +113,6 @@ namespace Sweet.Redis
         #endregion Conversion Methods
 
         #region Operator Overloads
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            if (ReferenceEquals(obj, this))
-                return true;
-
-            var rObj = obj as RedisDouble;
-            if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && Object.Equals(rObj.m_Value, m_Value);
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            var val = Value;
-            if (ReferenceEquals(val, null))
-                return base.GetHashCode();
-            return val.GetHashCode();
-        }
 
         public static bool operator ==(RedisDouble a, RedisDouble b)
         {

@@ -22,8 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
     public class RedisInt : RedisResult<long>
@@ -44,6 +42,45 @@ namespace Sweet.Redis
         public override RedisResultType Type { get { return RedisResultType.Integer; } }
 
         #endregion Properties
+
+        #region Methods
+
+        #region Overrides
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null))
+                return false;
+
+            if (ReferenceEquals(obj, this))
+                return true;
+
+            var rObj = obj as RedisInt;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return base.GetHashCode();
+            return value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return "(nil)";
+
+            return ":" + value.ToString();
+        }
+
+        #endregion Overrides
+
+        #endregion Methods
 
         #region Conversion Methods
 
@@ -85,28 +122,6 @@ namespace Sweet.Redis
         #endregion Conversion Methods
 
         #region Operator Overloads
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            if (ReferenceEquals(obj, this))
-                return true;
-
-            var rObj = obj as RedisInt;
-            if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            var val = Value;
-            if (ReferenceEquals(val, null))
-                return base.GetHashCode();
-            return val.GetHashCode();
-        }
 
         public static bool operator ==(RedisInt a, RedisInt b)
         {

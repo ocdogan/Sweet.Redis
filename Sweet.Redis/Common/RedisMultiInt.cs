@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -71,6 +72,64 @@ namespace Sweet.Redis
 
         #endregion Properties
 
+        #region Methods
+
+        #region Overrides
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null))
+                return false;
+
+            if (ReferenceEquals(obj, this))
+                return true;
+
+            var rObj = obj as RedisMultiInt;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return base.GetHashCode();
+            return value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (value == null)
+                return "(nil)";
+
+            var longs = value as long[];
+            if (longs == null)
+                return "(nil)";
+
+            var length = longs.Length;
+            if (length == 0)
+                return "(empty)";
+
+            var sBuilder = new StringBuilder();
+
+            for (var i = 0; i < length; i++)
+            {
+                sBuilder.Append(i + 1);
+                sBuilder.Append(") :");
+                sBuilder.Append(longs[i]);
+
+                sBuilder.AppendLine();
+            }
+
+            return sBuilder.ToString();
+        }
+
+        #endregion Overrides
+
+        #endregion Methods
+
         #region Conversion Methods
 
         public static implicit operator RedisMultiInt(long[] value)  // implicit long[] to RedisMultiInt conversion operator
@@ -114,28 +173,6 @@ namespace Sweet.Redis
         #endregion Conversion Methods
 
         #region Operator Overloads
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            if (ReferenceEquals(obj, this))
-                return true;
-
-            var rObj = obj as RedisMultiInt;
-            if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            var val = Value;
-            if (ReferenceEquals(val, null))
-                return base.GetHashCode();
-            return val.GetHashCode();
-        }
 
         public static bool operator ==(RedisMultiInt a, RedisMultiInt b)
         {

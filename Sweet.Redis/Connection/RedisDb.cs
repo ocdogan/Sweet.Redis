@@ -37,6 +37,7 @@ namespace Sweet.Redis
         private RedisConnectionPool m_Pool;
 
         private IRedisConnectionCommands m_Connection;
+        private IRedisGeoCommands m_Geo;
         private IRedisHashesCommands m_Hashes;
         private IRedisHyperLogLogCommands m_HyperLogLogCommands;
         private IRedisKeysCommands m_Keys;
@@ -93,6 +94,17 @@ namespace Sweet.Redis
         public int DbIndex
         {
             get { return m_DbIndex; }
+        }
+
+        public IRedisGeoCommands Geo
+        {
+            get
+            {
+                ValidateNotDisposed();
+                if (m_Geo == null)
+                    m_Geo = new RedisGeoCommands(this);
+                return m_Geo;
+            }
         }
 
         public Guid Id

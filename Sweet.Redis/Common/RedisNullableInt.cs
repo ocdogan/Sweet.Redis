@@ -45,6 +45,45 @@ namespace Sweet.Redis
 
         #endregion Properties
 
+        #region Methods
+
+        #region Overrides
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null))
+                return false;
+
+            if (ReferenceEquals(obj, this))
+                return true;
+
+            var rObj = obj as RedisNullableInt;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return base.GetHashCode();
+            return value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (value == null)
+                return "(nil)";
+
+            return ":" + value.Value.ToString();
+        }
+
+        #endregion Methods
+
+        #endregion Overrides
+
         #region Conversion Methods
 
         public static implicit operator RedisNullableInt(long? value)  // implicit long to RedisNullableInt conversion operator
@@ -90,28 +129,6 @@ namespace Sweet.Redis
         #endregion Conversion Methods
 
         #region Operator Overloads
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            if (ReferenceEquals(obj, this))
-                return true;
-
-            var rObj = obj as RedisNullableInt;
-            if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            var val = Value;
-            if (ReferenceEquals(val, null))
-                return base.GetHashCode();
-            return val.GetHashCode();
-        }
 
         public static bool operator ==(RedisNullableInt a, RedisNullableInt b)
         {

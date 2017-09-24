@@ -237,6 +237,14 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisNullableDouble ExpectNullableDouble(IRedisConnection connection, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(connection, throwException))
+            {
+                return ForNullableDouble(response, throwException);
+            }
+        }
+
         private static double ForDouble(IRedisResponse response, bool throwException)
         {
             if (response == null)
@@ -270,6 +278,47 @@ namespace Sweet.Redis
                 throw new RedisException("Not a double result");
 
             return double.MinValue;
+        }
+
+        private static double? ForNullableDouble(IRedisResponse response, bool throwException)
+        {
+            if (response == null)
+            {
+                if (throwException)
+                    throw new RedisException("No data returned");
+                return null;
+            }
+
+            if (response.Type == RedisRawObjType.Array ||
+                response.Type == RedisRawObjType.Undefined)
+            {
+                if (throwException)
+                    throw new RedisException("Invalid data returned");
+                return null;
+            }
+
+            var data = response.Data;
+            if (data == null)
+                return null;
+
+            if (data.Length == 0)
+            {
+                if (throwException)
+                    throw new RedisException("No data returned");
+                return null;
+            }
+
+            if (data == RedisConstants.Nil)
+                return null;
+
+            double result;
+            if (double.TryParse(Encoding.UTF8.GetString(data), out result))
+                return result;
+
+            if (throwException)
+                throw new RedisException("Not a double result");
+
+            return null;
         }
 
         public RedisRaw ExpectArray(IRedisConnection connection, bool throwException = true)

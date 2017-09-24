@@ -585,6 +585,15 @@ namespace Sweet.Redis
             }
         }
 
+        internal RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectNullableDouble(connection, throwException);
+            }
+        }
+
         internal RedisNullableInt ExpectNullableInteger(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();

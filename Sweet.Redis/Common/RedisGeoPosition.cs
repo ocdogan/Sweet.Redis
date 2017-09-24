@@ -26,78 +26,48 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisVoid : RedisResult<RedisVoidVal>
+    public struct RedisGeoPosition
     {
+        #region Static Members
+
+        public static readonly RedisGeoPosition Empty = new RedisGeoPosition(0, 0);
+
+        #endregion Static Members
+
         #region .Ctors
 
-        internal RedisVoid()
-        { }
+        public RedisGeoPosition(double longitude, double latitude)
+            : this()
+        {
+            Longitude = longitude;
+            Latitude = latitude;
+        }
 
         #endregion .Ctors
 
         #region Properties
 
-        public override RedisVoidVal Value
+        public bool IsEmpty
         {
-            get
-            {
-                ValidateCompleted();
-                return RedisVoidVal.Value;
-            }
-            internal set
-            {
-                base.Value = RedisVoidVal.Value;
-            }
+            get { return Longitude.Equals(0d) && Latitude.Equals(0d); }
         }
 
-        public override RedisResultType Type { get { return RedisResultType.Void; } }
+        public double Longitude { get; private set; }
+
+        public double Latitude { get; private set; }
 
         #endregion Properties
 
         #region Methods
 
-        #region Overrides
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            if (ReferenceEquals(obj, this))
-                return true;
-
-            if (obj is RedisVoid)
-                return true;
-
-            return Object.Equals(obj, null);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
         public override string ToString()
         {
-            return "void";
+            if (IsEmpty)
+                return "(nil)";
+            return String.Format("[Longitude={0}, Latitude={1}]",
+                                 Longitude.ToString("G17"), Latitude.ToString("G17"));
         }
 
         #endregion Methods
-
-        #endregion Overrides
-
-        #region Operator Overloads        		
-
-        public static bool operator ==(RedisVoid a, RedisVoid b)
-        {
-            return true;
-        }
-
-        public static bool operator !=(RedisVoid a, RedisVoid b)
-        {
-            return !(a == b);
-        }
-
-        #endregion Operator Overloads
     }
 }

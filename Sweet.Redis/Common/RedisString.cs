@@ -71,21 +71,9 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Conversion Methods
+        #region Methods
 
-        public static implicit operator RedisString(string value)  // implicit string to RedisString conversion operator
-        {
-            return new RedisString(value);
-        }
-
-        public static implicit operator string(RedisString value)  // implicit RedisString to string conversion operator
-        {
-            return value.Value;
-        }
-
-        #endregion Conversion Methods
-
-        #region Operator Overloads
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -103,11 +91,43 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
+                return "(nil)";
+
+            if (value.Length == 0)
+                return "(empty)";
+
+            return "\"" + value + "\"";
+        }
+
+        #endregion Methods
+
+        #endregion Overrides
+
+        #region Conversion Methods
+
+        public static implicit operator RedisString(string value)  // implicit string to RedisString conversion operator
+        {
+            return new RedisString(value);
+        }
+
+        public static implicit operator string(RedisString value)  // implicit RedisString to string conversion operator
+        {
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisString a, RedisString b)
         {

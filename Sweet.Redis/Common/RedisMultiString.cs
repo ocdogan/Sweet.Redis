@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -71,21 +72,9 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Conversion Methods
+        #region Methods
 
-        public static implicit operator RedisMultiString(string[] value)  // implicit string[] to RedisMultiString conversion operator
-        {
-            return new RedisMultiString(value);
-        }
-
-        public static implicit operator string[] (RedisMultiString value)  // implicit RedisMultiString to string[] conversion operator
-        {
-            return value.Value;
-        }
-
-        #endregion Conversion Methods
-
-        #region Operator Overloads
+        #region Overrides
 
         public override bool Equals(object obj)
         {
@@ -103,11 +92,70 @@ namespace Sweet.Redis
 
         public override int GetHashCode()
         {
-            var val = Value;
-            if (ReferenceEquals(val, null))
+            var value = m_Value;
+            if (ReferenceEquals(value, null))
                 return base.GetHashCode();
-            return val.GetHashCode();
+            return value.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            var value = m_Value;
+            if (value == null)
+                return "(nil)";
+
+            var strings = value as string[];
+            if (strings == null)
+                return "(nil)";
+
+            var length = strings.Length;
+            if (length == 0)
+                return "(empty)";
+
+            var sBuilder = new StringBuilder();
+
+            for (var i = 0; i < length; i++)
+            {
+                sBuilder.Append(i + 1);
+                sBuilder.Append(") ");
+
+                var s = strings[i];
+                if (s == null)
+                    sBuilder.Append("(nil)");
+                else if (s.Length == 0)
+                    sBuilder.Append("(empty)");
+                else
+                {
+                    sBuilder.Append('"');
+                    sBuilder.Append(s);
+                    sBuilder.Append('"');
+                }
+
+                sBuilder.AppendLine();
+            }
+
+            return sBuilder.ToString();
+        }
+
+        #endregion Overrides
+
+        #endregion Methods
+
+        #region Conversion Methods
+
+        public static implicit operator RedisMultiString(string[] value)  // implicit string[] to RedisMultiString conversion operator
+        {
+            return new RedisMultiString(value);
+        }
+
+        public static implicit operator string[] (RedisMultiString value)  // implicit RedisMultiString to string[] conversion operator
+        {
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
+        #region Operator Overloads
 
         public static bool operator ==(RedisMultiString a, RedisMultiString b)
         {

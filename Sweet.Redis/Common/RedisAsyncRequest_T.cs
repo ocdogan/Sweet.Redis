@@ -166,6 +166,12 @@ namespace Sweet.Redis
                                         (tcs as TaskCompletionSource<RedisMultiString>).TrySetResult(result);
                                     }
                                     break;
+                                case RedisCommandExpect.NullableDouble:
+                                    {
+                                        var result = command.ExpectNullableDouble(connection);
+                                        (tcs as TaskCompletionSource<RedisNullableDouble>).TrySetResult(result);
+                                    }
+                                    break;
                                 case RedisCommandExpect.NullableInteger:
                                     {
                                         var result = command.ExpectNullableInteger(connection);

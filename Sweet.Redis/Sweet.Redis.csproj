@@ -91,8 +91,6 @@
     <Compile Include="Common\RedisCommon.cs" />
     <Compile Include="Common\RedisConstants.cs" />
     <Compile Include="Common\RedisDisposable.cs" />
-    <Compile Include="Commands\RedisClientInfo.cs" />
-    <Compile Include="Commands\RedisClientInfoFlag.cs" />
     <Compile Include="Common\RedisAsyncEx.cs" />
     <Compile Include="Common\RedisException.cs" />
     <Compile Include="Buffers\RedisFixedBuffer.cs" />
@@ -116,7 +114,6 @@
     <Compile Include="Commands\RedisUpdateOption.cs" />
     <Compile Include="Commands\IRedisSortedSetsCommands.cs" />
     <Compile Include="Common\RedisKeyValue.cs" />
-    <Compile Include="Commands\RedisAggregate.cs" />
     <Compile Include="Commands\RedisSortedSetsCommands.cs" />
     <Compile Include="Commands\IRedisHyperLogLogCommands.cs" />
     <Compile Include="Common\RedisCommands.cs" />
@@ -152,6 +149,17 @@
     <Compile Include="Common\RedisResultStatus.cs" />
     <Compile Include="Commands\RedisServerCommands.cs" />
     <Compile Include="Connection\RedisAsyncRequestQProcessor.cs" />
+    <Compile Include="Common\RedisGeospatialItem.cs" />
+    <Compile Include="Commands\IRedisGeoCommands.cs" />
+    <Compile Include="Common\RedisGeoDistanceUnit.cs" />
+    <Compile Include="Common\RedisBoolParam.cs" />
+    <Compile Include="Common\RedisGeoPosition.cs" />
+    <Compile Include="Common\RedisGeoRadiusResult.cs" />
+    <Compile Include="Common\RedisSortDirection.cs" />
+    <Compile Include="Common\RedisAggregate.cs" />
+    <Compile Include="Common\RedisClientInfo.cs" />
+    <Compile Include="Common\RedisClientInfoFlag.cs" />
+    <Compile Include="Commands\RedisGeoCommands.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

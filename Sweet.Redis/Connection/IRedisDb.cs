@@ -36,6 +36,7 @@ namespace Sweet.Redis
         RedisConnectionPool Pool { get; }
 
         IRedisConnectionCommands Connection { get; }
+        IRedisGeoCommands Geo { get; }
         IRedisHashesCommands Hashes { get; }
         IRedisHyperLogLogCommands HyperLogLogCommands { get; }
         IRedisKeysCommands Keys { get; }

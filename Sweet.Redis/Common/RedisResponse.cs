@@ -309,8 +309,9 @@ namespace Sweet.Redis
             if (value < 1)
             {
                 var list = (value < 0) ? null : new List<IRedisResponse>();
+
                 var oldList = Interlocked.Exchange(ref m_List, list);
-                Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));
+                Interlocked.Exchange(ref m_ReadOnlyList, list == null ? null : new ReadOnlyCollection<IRedisResponse>(list));
 
                 if (oldList != null)
                 {

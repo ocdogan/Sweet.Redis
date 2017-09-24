@@ -26,78 +26,55 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisVoid : RedisResult<RedisVoidVal>
+    public struct RedisGeospatialItem
     {
+        #region Static Members
+
+        public static readonly RedisGeospatialItem Empty = new RedisGeospatialItem(0, 0, null);
+
+        #endregion Static Members
+
         #region .Ctors
 
-        internal RedisVoid()
-        { }
+        public RedisGeospatialItem(double longitude, double latitude, string name)
+            : this()
+        {
+            Longitude = longitude;
+            Latitude = latitude;
+            Name = name;
+        }
 
         #endregion .Ctors
 
         #region Properties
 
-        public override RedisVoidVal Value
+        public bool IsEmpty
         {
             get
             {
-                ValidateCompleted();
-                return RedisVoidVal.Value;
-            }
-            internal set
-            {
-                base.Value = RedisVoidVal.Value;
+                return Longitude.Equals(0d) && Latitude.Equals(0d) &&
+                                string.IsNullOrEmpty(Name);
             }
         }
 
-        public override RedisResultType Type { get { return RedisResultType.Void; } }
+        public double Longitude { get; private set; }
+
+        public double Latitude { get; private set; }
+
+        public string Name { get; private set; }
 
         #endregion Properties
 
         #region Methods
 
-        #region Overrides
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            if (ReferenceEquals(obj, this))
-                return true;
-
-            if (obj is RedisVoid)
-                return true;
-
-            return Object.Equals(obj, null);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
         public override string ToString()
         {
-            return "void";
+            if (IsEmpty)
+                return "(nil)";
+            return String.Format("[Longitude={0}, Latitude={1}, Name={2}]",
+                                 Longitude.ToString("G17"), Latitude.ToString("G17"), Name ?? "(nil)");
         }
 
         #endregion Methods
-
-        #endregion Overrides
-
-        #region Operator Overloads        		
-
-        public static bool operator ==(RedisVoid a, RedisVoid b)
-        {
-            return true;
-        }
-
-        public static bool operator !=(RedisVoid a, RedisVoid b)
-        {
-            return !(a == b);
-        }
-
-        #endregion Operator Overloads
     }
 }

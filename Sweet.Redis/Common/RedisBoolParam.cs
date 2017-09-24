@@ -22,55 +22,12 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    internal class RedisConnectionCommands : RedisCommandSet, IRedisConnectionCommands
+    public enum RedisBoolParam
     {
-        #region .Ctors
-
-        public RedisConnectionCommands(IRedisDb db)
-            : base(db)
-        { }
-
-        #endregion .Ctors
-
-        #region Methods
-
-        public RedisBool Auth(string password)
-        {
-            if (password == null)
-                throw new ArgumentNullException("password");
-
-            return ExpectOK(RedisCommands.Auth, password.ToBytes());
-        }
-
-        public RedisString Echo(string msg)
-        {
-            if (msg == null)
-                throw new ArgumentNullException("msg");
-
-            return ExpectBulkString(RedisCommands.Echo, msg.ToBytes());
-        }
-
-        public RedisString Ping()
-        {
-            return Ping(null);
-        }
-
-        public RedisString Ping(string msg)
-        {
-            if (String.IsNullOrEmpty(msg))
-                return ExpectSimpleString(RedisCommands.Ping);
-            return ExpectBulkString(RedisCommands.Ping, msg.ToBytes());
-        }
-
-        public RedisBool Quit()
-        {
-            return ExpectOK(RedisCommands.Quit);
-        }
-
-        #endregion Methods
+        Default,
+        True,
+        False
     }
 }
