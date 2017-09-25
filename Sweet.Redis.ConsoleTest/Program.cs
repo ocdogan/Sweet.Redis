@@ -37,6 +37,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading2();
             // MultiThreading3();
             // MultiThreading4();
+            MultiThreading5();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -177,6 +178,124 @@ namespace Sweet.Redis.ConsoleTest
         #endregion Geo
 
         #region Multi-Threading
+
+        static void MultiThreading5()
+        {
+            var smallText = new string('x', 1000);
+
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 5)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    db.Strings.Set("small_text", smallText);
+                    db.Strings.Get("small_text");
+                }
+
+                const int ThreadCount = 50;
+
+                var loopIndex = 0;
+                List<Thread> thList = null;
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        var ticks = 0L;
+                        Console.Clear();
+
+                        var oldThList = thList;
+                        if (oldThList != null)
+                        {
+                            for (var i = 0; i < oldThList.Count; i++)
+                            {
+                                var th = oldThList[i];
+                                try
+                                {
+                                    if (th.IsAlive)
+                                        th.Interrupt();
+                                }
+                                catch (Exception)
+                                { }
+                            }
+                        }
+
+                        thList = new List<Thread>(ThreadCount);
+                        try
+                        {
+                            loopIndex = 0;
+                            var ticksLock = new object();
+
+                            for (var i = 0; i < ThreadCount; i++)
+                            {
+                                var th = new Thread((obj) =>
+                                {
+                                    var tupple = (Tuple<Thread, IRedisDb, AutoResetEvent>)obj;
+
+                                    var autoReset = tupple.Item3;
+                                    try
+                                    {
+                                        var @this = tupple.Item1;
+                                        var rdb = tupple.Item2;
+
+                                        var sw = new Stopwatch();
+
+                                        for (var j = 0; j < 100; j++)
+                                        {
+                                            sw.Restart();
+                                            var data = rdb.Strings.Get("small_text");
+                                            sw.Stop();
+
+                                            Console.WriteLine(@this.Name + ": Get, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " + (data != null && data.Length == smallText.Length ? "OK" : "FAILED"));
+
+                                            lock (ticksLock)
+                                            {
+                                                ticks += sw.ElapsedTicks;
+                                            }
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        autoReset.Set();
+                                    }
+                                });
+
+                                th.Name = loopIndex++.ToString("D2") + "." + i.ToString("D2");
+                                th.IsBackground = true;
+                                thList.Add(th);
+                            }
+
+                            var autoResets = new AutoResetEvent[thList.Count];
+                            try
+                            {
+                                for (var i = 0; i < thList.Count; i++)
+                                {
+                                    var th = thList[i];
+
+                                    var autoReset = new AutoResetEvent(false);
+                                    autoResets[i] = autoReset;
+
+                                    th.Start(new Tuple<Thread, IRedisDb, AutoResetEvent>(th, db, autoReset));
+                                }
+                            }
+                            finally
+                            {
+                                WaitHandle.WaitAll(autoResets);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+
+                        Console.WriteLine("Total ticks: " + ticks);
+                        Thread.Sleep(5000);
+                    }
+                    while (true);
+                }
+            }
+        }
 
         static void MultiThreading4()
         {

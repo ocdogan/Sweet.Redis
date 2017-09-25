@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        protected const int ConnectionSpinStepTimeoutMillisecs = 20;
+        protected const int ConnectionSpinStepTimeoutMillisecs = 2;
 
         #endregion Constants
 
