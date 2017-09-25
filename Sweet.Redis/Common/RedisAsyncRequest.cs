@@ -126,7 +126,9 @@ namespace Sweet.Redis
 
         public abstract void Cancel();
 
-        public abstract void Process(IRedisConnection connection);
+        public abstract void Process(IRedisConnection connection, int timeoutMilliseconds = -1);
+
+        public abstract bool Expire(int timeoutMilliseconds = -1);
 
         #endregion Methods
     }

@@ -174,7 +174,7 @@ namespace Sweet.Redis
             }
         }
 
-        private void Completed(Thread thread)
+        private void ProcessCompleted(Thread thread)
         {
             if (thread == m_Thread)
             {
@@ -183,7 +183,9 @@ namespace Sweet.Redis
         }
 
         private static void OnReleaseSocket(IRedisConnection conn, RedisSocket socket)
-        { }
+        {
+            socket.DisposeSocket();
+        }
 
         private static void ProcessQueue(ProcessParameters parameters)
         {
@@ -196,6 +198,8 @@ namespace Sweet.Redis
                 using (var connection = new RedisDbConnection(Guid.NewGuid().ToString("N"),
                         parameters.Settings, null, OnReleaseSocket, -1, null, false))
                 {
+                    var queueTimeoutMs = queue.TimeoutMilliseconds;
+
                     while (processor.Processing && !queue.Disposed)
                     {
                         RedisAsyncRequest request = null;
@@ -225,11 +229,17 @@ namespace Sweet.Redis
                                     request.Cancel();
                                 else
                                 {
-                                    if (command.DbIndex > -1 &&
-                                        command.DbIndex != connection.DbIndex)
-                                        connection.Select(command.DbIndex);
+                                    if (queueTimeoutMs > -1 &&
+                                        (DateTime.UtcNow - request.CreationTime).TotalMilliseconds >= queueTimeoutMs)
+                                        request.Expire(queueTimeoutMs);
+                                    else
+                                    {
+                                        if (command.DbIndex > -1 &&
+                                            command.DbIndex != connection.DbIndex)
+                                            connection.Select(command.DbIndex);
 
-                                    request.Process(connection);
+                                        request.Process(connection);
+                                    }
                                 }
                             }
                         }
@@ -250,7 +260,7 @@ namespace Sweet.Redis
             { }
             finally
             {
-                processor.Completed(parameters.Me);
+                processor.ProcessCompleted(parameters.Me);
             }
         }
 

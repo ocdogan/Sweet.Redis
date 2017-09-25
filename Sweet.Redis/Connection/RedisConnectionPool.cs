@@ -362,6 +362,7 @@ namespace Sweet.Redis
                         var node = store.First;
                         while (node != null)
                         {
+                            var nextNode = node.Next;
                             try
                             {
                                 member = node.Value;
@@ -380,7 +381,7 @@ namespace Sweet.Redis
                             { }
                             finally
                             {
-                                node = node.Next;
+                                node = nextNode;
                             }
                         }
                     }
@@ -457,6 +458,7 @@ namespace Sweet.Redis
                         var node = store.First;
                         while (node != null)
                         {
+                            var nextNode = node.Next;
                             try
                             {
                                 var member = node.Value;
@@ -472,7 +474,7 @@ namespace Sweet.Redis
                             { }
                             finally
                             {
-                                node = node.Next;
+                                node = nextNode;
                             }
                         }
                     }

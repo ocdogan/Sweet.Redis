@@ -110,6 +110,11 @@ namespace Sweet.Redis
             get { return m_TimeoutMilliseconds; }
         }
 
+        public static bool TimeoutCheckEnabled
+        {
+            get { return Interlocked.Read(ref s_TimeoutTimerState) != RedisConstants.Zero; }
+        }
+
         #endregion Properties
 
         #region Methods
@@ -126,6 +131,7 @@ namespace Sweet.Redis
                     var node = store.First;
                     while (node != null)
                     {
+                        var nextNode = node.Next;
                         try
                         {
                             store.Remove(node);
@@ -135,7 +141,7 @@ namespace Sweet.Redis
                         { }
                         finally
                         {
-                            node = node.Next;
+                            node = nextNode;
                         }
                     }
                 }
@@ -192,6 +198,7 @@ namespace Sweet.Redis
                         var node = store.First;
                         while (node != null)
                         {
+                            var nextNode = node.Next;
                             try
                             {
                                 member = node.Value;
@@ -214,7 +221,7 @@ namespace Sweet.Redis
                             { }
                             finally
                             {
-                                node = node.Next;
+                                node = nextNode;
                             }
                         }
                     }
@@ -257,7 +264,7 @@ namespace Sweet.Redis
                 {
                     if (!s_Queues.Contains(queue))
                         s_Queues.Add(queue);
-                    StartTimeoutTimer();
+                    StartTimeoutTicker();
                 }
             }
         }
@@ -287,7 +294,7 @@ namespace Sweet.Redis
             }
         }
 
-        private static void StartTimeoutTimer()
+        private static void StartTimeoutTicker()
         {
             if (Interlocked.CompareExchange(ref s_TimeoutTimerState, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
@@ -300,7 +307,7 @@ namespace Sweet.Redis
 
                         try
                         {
-                            if (Interlocked.Read(ref s_TimeoutTimerState) == RedisConstants.Zero)
+                            if (!TimeoutCheckEnabled)
                                 return;
 
                             RedisAsyncRequestQ[] queues = null;
@@ -310,34 +317,36 @@ namespace Sweet.Redis
                                     queues = s_Queues.ToArray();
                             }
 
-                            if (queues != null && queues.Length > 0 &&
-                               Interlocked.Read(ref s_TimeoutTimerState) == RedisConstants.One)
+                            if (queues != null && queues.Length > 0 && TimeoutCheckEnabled)
                             {
                                 foreach (var queue in queues)
                                 {
                                     try
                                     {
-                                        if (Interlocked.Read(ref s_TimeoutTimerState) != RedisConstants.One)
+                                        if (!TimeoutCheckEnabled)
                                             break;
 
                                         if (!queue.Disposed)
                                         {
-                                            var queueTimeout = queue.TimeoutMilliseconds;
-                                            lock (queue.SyncObj)
+                                            var queueTimeoutMs = queue.TimeoutMilliseconds;
+                                            if (queueTimeoutMs > -1)
                                             {
-                                                if (CheckRequestTimeout(queue.m_QTail, queueTimeout))
-                                                    queue.m_QTail = null;
-
-                                                var store = queue.m_AsyncRequestQ;
-                                                if (store != null)
+                                                lock (queue.SyncObj)
                                                 {
-                                                    var node = store.First;
-                                                    while (node != null && !queue.Disposed &&
-                                                          Interlocked.Read(ref s_TimeoutTimerState) == RedisConstants.One)
+                                                    if (CheckRequestTimeout(queue.m_QTail, queueTimeoutMs))
+                                                        queue.m_QTail = null;
+
+                                                    var store = queue.m_AsyncRequestQ;
+                                                    if (store != null)
                                                     {
-                                                        if (CheckRequestTimeout(node.Value, queueTimeout))
-                                                            store.Remove(node);
-                                                        node = node.Next;
+                                                        var node = store.First;
+                                                        while (node != null && !queue.Disposed && TimeoutCheckEnabled)
+                                                        {
+                                                            var nextNode = node.Next;
+                                                            if (CheckRequestTimeout(node.Value, queueTimeoutMs))
+                                                                store.Remove(node);
+                                                            node = nextNode;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -368,17 +377,12 @@ namespace Sweet.Redis
             }
         }
 
-        private static bool CheckRequestTimeout(RedisAsyncRequest request, int queueTimeout)
+        private static bool CheckRequestTimeout(RedisAsyncRequest request, int timeoutMilliseconds)
         {
             try
             {
-                if (request != null &&
-                    !(request.Disposed || request.IsCompleted) &&
-                    (DateTime.UtcNow - request.CreationTime).TotalMilliseconds >= queueTimeout)
-                {
-                    request.Cancel();
-                    return true;
-                }
+                if (timeoutMilliseconds > -1 && request != null && !request.Disposed)
+                    return request.Expire(timeoutMilliseconds);
             }
             catch (Exception)
             { }

@@ -32,6 +32,12 @@ namespace Sweet.Redis
 {
     internal class RedisAsyncRequest<T> : RedisAsyncRequest
     {
+        #region Constants
+
+        private const int MaxTimeout = 60 * 1000;
+
+        #endregion Constants
+
         #region .Ctors
 
         public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
@@ -92,7 +98,33 @@ namespace Sweet.Redis
             }
         }
 
-        public override void Process(IRedisConnection connection)
+        public override bool Expire(int timeoutMilliseconds = -1)
+        {
+            ValidateNotDisposed();
+
+            if (timeoutMilliseconds > -1)
+            {
+                var tcs = CompletionSource;
+                if (tcs != null)
+                {
+                    var task = tcs.Task;
+                    if (task != null)
+                    {
+                        timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
+
+                        if (!task.IsCompleted && 
+                            (DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
+                        {
+                            tcs.TrySetException(new RedisException("Request Timeout"));
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public override void Process(IRedisConnection connection, int timeoutMilliseconds = -1)
         {
             ValidateNotDisposed();
 
@@ -105,6 +137,16 @@ namespace Sweet.Redis
                     if (task != null &&
                         !(task.IsCompleted || task.IsFaulted || task.IsCanceled))
                     {
+                        if (timeoutMilliseconds > -1)
+                        {
+                            timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
+                            if ((DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
+                            {
+                                tcs.TrySetException(new RedisException("Request Timeout"));
+                                return;
+                            }
+                        }
+
                         var command = Command;
                         if (command == null || connection == null || connection.Disposed)
                             tcs.TrySetCanceled();
