@@ -55,6 +55,7 @@
     <Compile Include="Common\RedisNullableDouble.cs" />
     <Compile Include="Common\RedisNullableInt.cs" />
     <Compile Include="Common\RedisNullVal.cs" />
+    <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoid.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\RedisVoidVal.cs" />

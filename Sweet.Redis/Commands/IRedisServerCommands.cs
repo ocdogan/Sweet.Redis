@@ -180,12 +180,20 @@ namespace Sweet.Redis
         RedisBool FlushDbAsync();
 
         RedisMultiString Info(string section);
+        
         RedisDate LastSave();
         RedisBool Save();
+
         RedisVoid ShutDown();
         RedisVoid ShutDownSave();
+
+        RedisResult<RedisSlowLogInfo[]> SlowLogGet(int count);
+        RedisInt SlowLogLen();
+        RedisBool SlowLogReset();
+
         RedisBool SlaveOf(string host, int port);
         RedisBool SlaveOfNoOne();
+        
         RedisDate Time();
     }
 }

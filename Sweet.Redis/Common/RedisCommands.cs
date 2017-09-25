@@ -189,6 +189,10 @@ namespace Sweet.Redis
         public static readonly byte[] Sync = "SYNC".ToBytes();
         public static readonly byte[] Time = "TIME".ToBytes();
 
+        // SlowLog command options
+        public static readonly byte[] Len = "LEN".ToBytes();
+        public static readonly byte[] Reset = "REST".ToBytes();
+
         // Client command options
         public static readonly byte[] GetName = "GETNAME".ToBytes();
         public static readonly byte[] Kill = "KILL".ToBytes();

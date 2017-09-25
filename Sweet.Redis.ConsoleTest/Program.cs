@@ -36,14 +36,59 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading1();
             // MultiThreading2();
             // MultiThreading3();
-            MultiThreading4();
+            // MultiThreading4();
 
             // MonitorTest1();
             // MonitorTest2();
             // MonitorTest3();
 
             // Geo1();
+
+            SlowLog1();
         }
+
+        #region SlowLog
+
+        static void SlowLog1()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            var lenResult = db.Server.SlowLogLen();
+
+                            Console.WriteLine("SLOWLOG LEN");
+                            Console.WriteLine(lenResult);
+
+                            if (lenResult > 0)
+                            {
+                                var getResult = db.Server.SlowLogGet(lenResult);
+
+                                Console.WriteLine("SLOWLOG GET " + lenResult);
+                                Console.WriteLine(getResult);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        #endregion SlowLog
 
         #region Geo
 

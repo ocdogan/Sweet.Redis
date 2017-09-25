@@ -299,6 +299,24 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.SlaveOf, RedisConstants.OK, RedisCommands.NoOne);
         }
 
+        public RedisResult<RedisSlowLogInfo[]> SlowLogGet(int count)
+        {
+            var response = ExpectArray(RedisCommands.SlowLog, RedisCommands.Get, count.ToBytes());
+            if (response != null)
+                return new RedisResult<RedisSlowLogInfo[]>(RedisSlowLogInfo.ToSlowLogInfo(response.Value));
+            return new RedisResult<RedisSlowLogInfo[]>(null);
+        }
+
+        public RedisInt SlowLogLen()
+        {
+            return ExpectInteger(RedisCommands.SlowLog, RedisCommands.Len);
+        }
+
+        public RedisBool SlowLogReset()
+        {
+            return ExpectSimpleString(RedisCommands.SlowLog, RedisConstants.OK, RedisCommands.Reset);
+        }
+
         public RedisDate Time()
         {
             var parts = ExpectMultiDataStrings(RedisCommands.Time);
