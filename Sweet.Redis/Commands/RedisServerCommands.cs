@@ -54,34 +54,34 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.Client, RedisCommands.GetName);
         }
 
-        public RedisInt ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true)
+        public RedisInt ClientKill(RedisParam? ip = null, int port = -1, RedisParam? clientId = null, RedisParam? type = null, bool skipMe = true)
         {
             ValidateNotDisposed();
 
             var parameters = new byte[0].Join(RedisCommands.Kill);
 
-            if (!String.IsNullOrEmpty(ip))
+            if (ip.HasValue && !ip.Value.IsEmpty)
             {
                 parameters = parameters
                     .Join(RedisCommands.Addr)
-                    .Join(ip.ToBytes());
+                    .Join(ip.Value);
 
                 if (port > -1)
                     parameters = parameters.Join(port.ToBytes());
             }
 
-            if (!String.IsNullOrEmpty(clientId))
+            if (clientId.HasValue && !clientId.Value.IsEmpty)
             {
                 parameters = parameters
                     .Join(RedisCommands.Id)
-                    .Join(clientId.ToBytes());
+                    .Join(clientId);
             }
 
-            if (!String.IsNullOrEmpty(type))
+            if (type.HasValue && !type.Value.IsEmpty)
             {
                 parameters = parameters
                     .Join(RedisCommands.Type)
-                    .Join(type.ToBytes());
+                    .Join(type);
             }
 
             if (!skipMe)
@@ -164,17 +164,17 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.Reply, RedisCommands.Skip);
         }
 
-        public RedisBool ClientSetName(string connectionName)
+        public RedisBool ClientSetName(RedisParam connectionName)
         {
-            if (connectionName == null)
+            if (connectionName.IsNull)
                 throw new ArgumentNullException("connectionName");
 
             return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.SetName, connectionName.ToBytes());
         }
 
-        public RedisResult<IDictionary<string, string>> ConfigGet(string parameter)
+        public RedisResult<IDictionary<string, string>> ConfigGet(RedisParam parameter)
         {
-            if (parameter == null)
+            if (parameter.IsNull)
                 throw new ArgumentNullException("parameter");
 
             var lines = ExpectMultiDataStrings(RedisCommands.Config, RedisCommands.Get, parameter.ToBytes());
@@ -206,21 +206,20 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.Rewrite);
         }
 
-        public RedisBool ConfigSet(string parameter, string value)
+        public RedisBool ConfigSet(RedisParam parameter, RedisParam value)
         {
-            if (parameter == null)
+            if (parameter.IsNull)
                 throw new ArgumentNullException("parameter");
 
-            if (value == null)
+            if (value.IsNull)
                 throw new ArgumentNullException("value");
 
             ValidateNotDisposed();
 
-            var bytes = value.ToBytes();
-            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+            if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.Set, parameter.ToBytes(), bytes);
+            return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.Set, parameter, value);
         }
 
         public RedisInt DbSize()
@@ -248,12 +247,12 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.FlushDb, RedisConstants.OK, RedisCommands.Async);
         }
 
-        public RedisMultiString Info(string section)
+        public RedisMultiString Info(RedisParam section)
         {
-            if (section == null)
+            if (section.IsNull)
                 throw new ArgumentNullException("section");
 
-            return ExpectMultiDataStrings(RedisCommands.Info, section.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.Info, section);
         }
 
         public RedisDate LastSave()
@@ -283,15 +282,15 @@ namespace Sweet.Redis
             return new RedisVoid();
         }
 
-        public RedisBool SlaveOf(string host, int port)
+        public RedisBool SlaveOf(RedisParam host, int port)
         {
-            if (host == null)
+            if (host.IsNull)
                 throw new ArgumentNullException("host");
 
             if (port < 0 || port > ushort.MaxValue)
                 throw new ArgumentException("Invalid port number");
 
-            return ExpectSimpleString(RedisCommands.SlaveOf, RedisConstants.OK, host.ToBytes(), port.ToBytes());
+            return ExpectSimpleString(RedisCommands.SlaveOf, RedisConstants.OK, host, port.ToBytes());
         }
 
         public RedisBool SlaveOfNoOne()

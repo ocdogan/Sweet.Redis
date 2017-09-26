@@ -38,85 +38,60 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private RedisRaw Eval(byte[] cmd, string source, params RedisKeyValue<string, string>[] args)
+        private RedisRaw Eval(byte[] cmd, RedisParam source, params RedisKeyValue<RedisParam, RedisParam>[] args)
         {
             var argsLength = args.Length;
             if (argsLength == 0)
-                return ExpectArray(cmd, source.ToBytes(), RedisConstants.ZeroBytes);
+                return ExpectArray(cmd, source, RedisConstants.ZeroBytes);
 
             var parameters = new byte[2 * (1 + argsLength)][];
 
-            parameters[0] = source.ToBytes();
+            parameters[0] = source.Data;
             parameters[1] = argsLength.ToBytes();
 
             for (int i = 0, paramsIndex = 2; i < argsLength; i++, paramsIndex++)
             {
-                parameters[paramsIndex] = args[i].Key.ToBytes();
-                parameters[argsLength + paramsIndex] = args[i].Value.ToBytes();
+                parameters[paramsIndex] = args[i].Key.Data;
+                parameters[argsLength + paramsIndex] = args[i].Value.Data;
             }
 
             return ExpectArray(cmd, parameters);
         }
 
-        private RedisRaw Eval(byte[] cmd, string source, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRaw Eval(RedisParam script, params RedisKeyValue<RedisParam, RedisParam>[] args)
         {
-            var argsLength = args.Length;
-            if (argsLength == 0)
-                return ExpectArray(cmd, source.ToBytes(), RedisConstants.ZeroBytes);
-
-            var parameters = new byte[2 * (1 + argsLength)][];
-
-            parameters[0] = source.ToBytes();
-            parameters[1] = argsLength.ToBytes();
-
-            for (int i = 0, paramsIndex = 2; i < argsLength; i++, paramsIndex++)
-            {
-                parameters[paramsIndex] = args[i].Key.ToBytes();
-                parameters[argsLength + paramsIndex] = args[i].Value.ToBytes();
-            }
-
-            return ExpectArray(cmd, parameters);
-        }
-
-        public RedisRaw Eval(string script, params RedisKeyValue<string, byte[]>[] args)
-        {
-            if (String.IsNullOrEmpty(script))
+            if (script.IsEmpty)
                 throw new ArgumentNullException("script");
 
             return Eval(RedisCommands.Eval, script, args);
         }
 
-        public RedisRaw EvalString(string script, params RedisKeyValue<string, string>[] args)
+        public RedisRaw EvalSHA(RedisParam sha1, params RedisKeyValue<RedisParam, RedisParam>[] args)
         {
-            if (String.IsNullOrEmpty(script))
-                throw new ArgumentNullException("script");
-
-            return Eval(RedisCommands.Eval, script, args);
-        }
-
-        public RedisRaw EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args)
-        {
-            if (String.IsNullOrEmpty(sha1))
+            if (sha1.IsEmpty)
                 throw new ArgumentNullException("sha1");
 
             return Eval(RedisCommands.EvalSha, sha1, args);
         }
 
-        public RedisRaw EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args)
+        public RedisRaw EvalSHA(ref RedisParam sha1, RedisParam script, params RedisKeyValue<RedisParam, RedisParam>[] args)
         {
-            if (String.IsNullOrEmpty(sha1))
+            if (sha1.IsEmpty)
                 throw new ArgumentNullException("sha1");
 
-            if (String.IsNullOrWhiteSpace(script))
+            if (script.IsEmpty)
                 return Eval(RedisCommands.EvalSha, sha1, args);
 
             var response = ScriptExists(sha1);
             var exists = (response != null && response.Length > 0) ? response[0] == RedisConstants.One : false;
 
             if (!exists)
-                sha1 = ScriptLoad(script);
+            {
+                var sha1S = ScriptLoad(script);
+                sha1 = new RedisParam(sha1S);
+            }
 
-            if (String.IsNullOrEmpty(sha1))
+            if (sha1.IsEmpty)
                 return null;
 
             try
@@ -129,56 +104,15 @@ namespace Sweet.Redis
                 if (!String.IsNullOrEmpty(msg) &&
                     msg.StartsWith("NOSCRIPT", StringComparison.OrdinalIgnoreCase))
                 {
-                    sha1 = ScriptLoad(script);
-                    if (!String.IsNullOrEmpty(sha1))
+                    var sha1S = ScriptLoad(script);
+                    sha1 = new RedisParam(sha1S);
+
+                    if (!sha1.IsEmpty)
                         return Eval(RedisCommands.EvalSha, sha1, args);
                 }
                 throw;
             }
-        }
-
-        public RedisRaw EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args)
-        {
-            if (String.IsNullOrEmpty(sha1))
-                throw new ArgumentNullException("sha1");
-
-            return Eval(RedisCommands.EvalSha, sha1, args);
-        }
-
-        public RedisRaw EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args)
-        {
-            if (String.IsNullOrEmpty(sha1))
-                throw new ArgumentNullException("sha1");
-
-            if (String.IsNullOrWhiteSpace(script))
-                return Eval(RedisCommands.EvalSha, sha1, args);
-
-            var response = ScriptExists(sha1);
-            var exists = (response != null && response.Length > 0) ? response[0] == RedisConstants.One : false;
-
-            if (!exists)
-                sha1 = ScriptLoad(script);
-
-            if (String.IsNullOrEmpty(sha1))
-                return null;
-
-            try
-            {
-                return Eval(RedisCommands.EvalSha, sha1, args);
-            }
-            catch (RedisException e)
-            {
-                var msg = e.Message;
-                if (!String.IsNullOrEmpty(msg) &&
-                    msg.StartsWith("NOSCRIPT", StringComparison.OrdinalIgnoreCase))
-                {
-                    sha1 = ScriptLoad(script);
-                    if (!String.IsNullOrEmpty(sha1))
-                        return Eval(RedisCommands.EvalSha, sha1, args);
-                }
-                throw;
-            }
-        }
+        }        
 
         public RedisBool ScriptDebugNo()
         {
@@ -195,21 +129,21 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.Yes);
         }
 
-        public RedisMultiInt ScriptExists(string sha1, params string[] sha1s)
+        public RedisMultiInt ScriptExists(RedisParam sha1, params RedisParam[] sha1s)
         {
-            if (String.IsNullOrEmpty(sha1))
+            if (sha1.IsEmpty)
                 throw new ArgumentNullException("sha1");
 
             RedisRaw response = null;
             if (sha1s.Length == 0)
-                response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1.ToBytes());
+                response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1);
             else
             {
                 var parameters = RedisCommands.Exists
-                                              .Join(sha1.ToBytes())
+                                              .Join(sha1)
                                               .Join(sha1s);
 
-                response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1.ToBytes());
+                response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1);
             }
 
             var resultLength = sha1.Length + 1;
@@ -254,12 +188,12 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.Script, RedisCommands.Kill);
         }
 
-        public RedisString ScriptLoad(string script)
+        public RedisString ScriptLoad(RedisParam script)
         {
-            if (String.IsNullOrEmpty(script))
+            if (script.IsEmpty)
                 throw new ArgumentNullException("script");
 
-            return ExpectBulkString(RedisCommands.Script, RedisCommands.Load, script.ToBytes());
+            return ExpectBulkString(RedisCommands.Script, RedisCommands.Load, script);
         }
 
         #endregion Methods

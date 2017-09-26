@@ -111,181 +111,156 @@ namespace Sweet.Redis
     */
     public interface IRedisSortedSetsCommands
     {
-        RedisDouble ZAdd(string key, int score, string member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
-                    bool changed = false, bool increment = false, params RedisKeyValue<int, string>[] scoresAndMembers);
-        RedisDouble ZAdd(string key, int score, byte[] member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
-                    bool changed = false, bool increment = false, params RedisKeyValue<int, byte[]>[] scoresAndMembers);
-        RedisDouble ZAdd(string key, long score, string member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
-                    bool changed = false, bool increment = false, params RedisKeyValue<long, string>[] scoresAndMembers);
-        RedisDouble ZAdd(string key, long score, byte[] member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
-                    bool changed = false, bool increment = false, params RedisKeyValue<long, byte[]>[] scoresAndMembers);
-        RedisDouble ZAdd(string key, double score, string member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
-                    bool changed = false, bool increment = false, params RedisKeyValue<double, string>[] scoresAndMembers);
-        RedisDouble ZAdd(string key, double score, byte[] member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
-                    bool changed = false, bool increment = false, params RedisKeyValue<double, byte[]>[] scoresAndMembers);
+        RedisDouble ZAdd(RedisParam key, int score, RedisParam member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
+                    bool changed = false, bool increment = false, params RedisKeyValue<int, RedisParam>[] scoresAndMembers);
+        RedisDouble ZAdd(RedisParam key, long score, RedisParam member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
+                    bool changed = false, bool increment = false, params RedisKeyValue<long, RedisParam>[] scoresAndMembers);
+        RedisDouble ZAdd(RedisParam key, double score, RedisParam member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
+                    bool changed = false, bool increment = false, params RedisKeyValue<double, RedisParam>[] scoresAndMembers);
 
-        RedisInt ZCard(string key);
+        RedisInt ZCard(RedisParam key);
 
-        RedisInt ZCount(string key, int min, int max);
-        RedisInt ZCount(string key, long min, long max);
-        RedisInt ZCount(string key, double min, double max);
+        RedisInt ZCount(RedisParam key, double min, double max);
+        RedisInt ZCount(RedisParam key, int min, int max);
+        RedisInt ZCount(RedisParam key, long min, long max);
+        RedisInt ZCount(RedisParam key, RedisParam min, RedisParam max);
 
-        RedisDouble ZIncrBy(string key, double increment, string member);
-        RedisDouble ZIncrBy(string key, double increment, byte[] member);
-        RedisDouble ZIncrBy(string key, int increment, string member);
-        RedisDouble ZIncrBy(string key, int increment, byte[] member);
-        RedisDouble ZIncrBy(string key, long increment, string member);
-        RedisDouble ZIncrBy(string key, long increment, byte[] member);
+        RedisDouble ZIncrBy(RedisParam key, double increment, RedisParam member);
+        RedisDouble ZIncrBy(RedisParam key, int increment, RedisParam member);
+        RedisDouble ZIncrBy(RedisParam key, long increment, RedisParam member);
 
-        RedisInt ZInterStore(string destination, int numkeys, string key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
-                        params RedisKeyValue<string, int>[] keysAndWeight);
-        RedisInt ZInterStore(string destination, int numkeys, string key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
-                        params RedisKeyValue<string, long>[] keysAndWeight);
-        RedisInt ZInterStore(string destination, int numkeys, string key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
-                        params RedisKeyValue<string, double>[] keysAndWeight);
+        RedisInt ZInterStore(RedisParam destination, int numkeys, RedisParam key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
+                        params RedisKeyValue<RedisParam, int>[] keysAndWeight);
+        RedisInt ZInterStore(RedisParam destination, int numkeys, RedisParam key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
+                        params RedisKeyValue<RedisParam, long>[] keysAndWeight);
+        RedisInt ZInterStore(RedisParam destination, int numkeys, RedisParam key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
+                        params RedisKeyValue<RedisParam, double>[] keysAndWeight);
 
-        RedisInt ZLexCount(string key, int min, int max);
-        RedisInt ZLexCount(string key, long min, long max);
-        RedisInt ZLexCount(string key, double min, double max);
+        RedisInt ZLexCount(RedisParam key, double min, double max);
+        RedisInt ZLexCount(RedisParam key, int min, int max);
+        RedisInt ZLexCount(RedisParam key, long min, long max);
+        RedisInt ZLexCount(RedisParam key, RedisParam min, RedisParam max);
 
-        RedisMultiBytes ZRange(string key, double start, double stop);
-        RedisMultiBytes ZRange(string key, int start, int stop);
-        RedisMultiBytes ZRange(string key, long start, long stop);
-        RedisMultiBytes ZRange(string key, string start, string stop);
-        RedisMultiBytes ZRange(string key, byte[] start, byte[] stop);
-        RedisMultiString ZRangeString(string key, double start, double stop);
-        RedisMultiString ZRangeString(string key, int start, int stop);
-        RedisMultiString ZRangeString(string key, long start, long stop);
-        RedisMultiString ZRangeString(string key, string start, string stop);
-        RedisMultiString ZRangeString(string key, byte[] start, byte[] stop);
+        RedisMultiBytes ZRange(RedisParam key, double start, double stop);
+        RedisMultiBytes ZRange(RedisParam key, int start, int stop);
+        RedisMultiBytes ZRange(RedisParam key, long start, long stop);
+        RedisMultiBytes ZRange(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(string key, double start, double stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(string key, int start, int stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(string key, long start, long stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(string key, string start, string stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(string key, byte[] start, byte[] stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(string key, double start, double stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(string key, int start, int stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(string key, long start, long stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(string key, string start, string stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(string key, byte[] start, byte[] stop);
+        RedisMultiString ZRangeString(RedisParam key, double start, double stop);
+        RedisMultiString ZRangeString(RedisParam key, int start, int stop);
+        RedisMultiString ZRangeString(RedisParam key, long start, long stop);
+        RedisMultiString ZRangeString(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisMultiBytes ZRangeByLex(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByLex(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByLex(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByLex(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByLex(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByLexString(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByLexString(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByLexString(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByLexString(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByLexString(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByLex(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByLex(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByLex(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByLex(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisMultiBytes ZRangeByScore(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByScore(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByScore(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByScore(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRangeByScore(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByScoreString(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByScoreString(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByScoreString(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByScoreString(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisMultiString ZRangeByScoreString(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByLexString(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByLexString(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByLexString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByLexString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByScore(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByScore(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByScore(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRangeByScore(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
+        
+        RedisMultiString ZRangeByScoreString(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByScoreString(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByScoreString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisMultiString ZRangeByScoreString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisNullableInt ZRank(string key, string member);
-        RedisNullableInt ZRank(string key, byte[] member);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(RedisParam key, double start, double stop);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(RedisParam key, int start, int stop);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(RedisParam key, long start, long stop);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisInt ZRem(string key, string member, params string[] members);
-        RedisInt ZRem(string key, byte[] member, params byte[][] members);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(RedisParam key, double start, double stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(RedisParam key, int start, int stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(RedisParam key, long start, long stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeWithScoresString(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisInt ZRemRangeByLex(string key, double min, double max);
-        RedisInt ZRemRangeByLex(string key, int min, int max);
-        RedisInt ZRemRangeByLex(string key, long min, long max);
-        RedisInt ZRemRangeByLex(string key, string min, string max);
-        RedisInt ZRemRangeByLex(string key, byte[] min, byte[] max);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisInt ZRemRangeByRank(string key, double start, double stop);
-        RedisInt ZRemRangeByRank(string key, int start, int stop);
-        RedisInt ZRemRangeByRank(string key, long start, long stop);
-        RedisInt ZRemRangeByRank(string key, string start, string stop);
-        RedisInt ZRemRangeByRank(string key, byte[] start, byte[] stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisInt ZRemRangeByScore(string key, double min, double max);
-        RedisInt ZRemRangeByScore(string key, int min, int max);
-        RedisInt ZRemRangeByScore(string key, long min, long max);
-        RedisInt ZRemRangeByScore(string key, string min, string max);
-        RedisInt ZRemRangeByScore(string key, byte[] min, byte[] max);
+        RedisNullableInt ZRank(RedisParam key, RedisParam member);
 
-        RedisMultiBytes ZRevRange(string key, double start, double stop);
-        RedisMultiBytes ZRevRange(string key, int start, int stop);
-        RedisMultiBytes ZRevRange(string key, long start, long stop);
-        RedisMultiBytes ZRevRange(string key, string start, string stop);
-        RedisMultiBytes ZRevRange(string key, byte[] start, byte[] stop);
-        RedisMultiString ZRevRangeString(string key, double start, double stop);
-        RedisMultiString ZRevRangeString(string key, int start, int stop);
-        RedisMultiString ZRevRangeString(string key, long start, long stop);
-        RedisMultiString ZRevRangeString(string key, string start, string stop);
-        RedisMultiString ZRevRangeString(string key, byte[] start, byte[] stop);
+        RedisInt ZRem(RedisParam key, RedisParam member, params RedisParam[] members);
 
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(string key, double start, double stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(string key, int start, int stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(string key, long start, long stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(string key, string start, string stop);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(string key, byte[] start, byte[] stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(string key, double start, double stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(string key, int start, int stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(string key, long start, long stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(string key, string start, string stop);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(string key, byte[] start, byte[] stop);
+        RedisInt ZRemRangeByLex(RedisParam key, double min, double max);
+        RedisInt ZRemRangeByLex(RedisParam key, int min, int max);
+        RedisInt ZRemRangeByLex(RedisParam key, long min, long max);
+        RedisInt ZRemRangeByLex(RedisParam key, RedisParam min, RedisParam max);
 
-        RedisMultiBytes ZRevRangeByScore(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRevRangeByScore(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRevRangeByScore(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRevRangeByScore(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisMultiBytes ZRevRangeByScore(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
-        RedisMultiString ZRevRangeByScoreString(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisMultiString ZRevRangeByScoreString(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisMultiString ZRevRangeByScoreString(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisMultiString ZRevRangeByScoreString(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisMultiString ZRevRangeByScoreString(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
+        RedisInt ZRemRangeByRank(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(string key, double start, double stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(string key, int start, int stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(string key, long start, long stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(string key, string start, string stop, int? offset = null, int? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(string key, byte[] start, byte[] stop, int? offset = null, int? count = null);
+        RedisInt ZRemRangeByScore(RedisParam key, double min, double max);
+        RedisInt ZRemRangeByScore(RedisParam key, int min, int max);
+        RedisInt ZRemRangeByScore(RedisParam key, long min, long max);
+        RedisInt ZRemRangeByScore(RedisParam key, RedisParam min, RedisParam max);
 
-        RedisNullableInt ZRevRank(string key, string member);
-        RedisNullableInt ZRevRank(string key, byte[] member);
+        RedisMultiBytes ZRevRange(RedisParam key, double start, double stop);
+        RedisMultiBytes ZRevRange(RedisParam key, int start, int stop);
+        RedisMultiBytes ZRevRange(RedisParam key, long start, long stop);
+        RedisMultiBytes ZRevRange(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisMultiBytes ZScan(string key, int cursor, string matchPattern = null, long? count = null);
-        RedisMultiString ZScanString(string key, int cursor, string matchPattern = null, long? count = null);
-        RedisKeyValue<byte[], byte[]>[] ZScanKeyValue(string key, int cursor, string matchPattern = null, long? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZScanKeyValueString(string key, int cursor, string matchPattern = null, long? count = null);
+        RedisMultiString ZRevRangeString(RedisParam key, double start, double stop);
+        RedisMultiString ZRevRangeString(RedisParam key, int start, int stop);
+        RedisMultiString ZRevRangeString(RedisParam key, long start, long stop);
+        RedisMultiString ZRevRangeString(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisDouble ZScore(string key, string member);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(RedisParam key, double start, double stop);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(RedisParam key, int start, int stop);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(RedisParam key, long start, long stop);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisInt ZUnionStore(string destination, int numkeys, string key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
-                    params RedisKeyValue<string, int>[] keysAndWeight);
-        RedisInt ZUnionStore(string destination, int numkeys, string key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
-                        params RedisKeyValue<string, long>[] keysAndWeight);
-        RedisInt ZUnionStore(string destination, int numkeys, string key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
-                        params RedisKeyValue<string, double>[] keysAndWeight);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(RedisParam key, double start, double stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(RedisParam key, int start, int stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(RedisParam key, long start, long stop);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeWithScoresString(RedisParam key, RedisParam start, RedisParam stop);
+
+        RedisMultiBytes ZRevRangeByScore(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRevRangeByScore(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRevRangeByScore(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisMultiBytes ZRevRangeByScore(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
+
+        RedisMultiString ZRevRangeByScoreString(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisMultiString ZRevRangeByScoreString(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisMultiString ZRevRangeByScoreString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisMultiString ZRevRangeByScoreString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
+
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
+
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(RedisParam key, double start, double stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(RedisParam key, int start, int stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
+
+        RedisNullableInt ZRevRank(RedisParam key, RedisParam member);
+
+        RedisMultiBytes ZScan(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
+        RedisMultiString ZScanString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
+        RedisKeyValue<byte[], byte[]>[] ZScanKeyValue(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
+        RedisResult<RedisKeyValue<string, double>[]> ZScanKeyValueString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
+
+        RedisDouble ZScore(RedisParam key, RedisParam member);
+
+        RedisInt ZUnionStore(RedisParam destination, int numkeys, RedisParam key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
+                    params RedisKeyValue<RedisParam, int>[] keysAndWeight);
+        RedisInt ZUnionStore(RedisParam destination, int numkeys, RedisParam key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
+                        params RedisKeyValue<RedisParam, long>[] keysAndWeight);
+        RedisInt ZUnionStore(RedisParam destination, int numkeys, RedisParam key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
+                        params RedisKeyValue<RedisParam, double>[] keysAndWeight);
     }
 }

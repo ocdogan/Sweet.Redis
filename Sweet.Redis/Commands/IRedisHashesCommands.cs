@@ -90,56 +90,47 @@ namespace Sweet.Redis
      */
     public interface IRedisHashesCommands
     {
-        RedisInt HDel(string key, byte[] field, params byte[][] fields);
-        RedisInt HDel(string key, string field, params string[] fields);
+        RedisInt HDel(RedisParam key, RedisParam field, params RedisParam[] fields);
 
-        RedisBool HExists(string key, byte[] field);
-        RedisBool HExists(string key, string field);
+        RedisBool HExists(RedisParam key, RedisParam field);
 
-        RedisBytes HGet(string key, byte[] field);
-        RedisBytes HGet(string key, string field);
+        RedisBytes HGet(RedisParam key, RedisParam field);
 
-        RedisMultiBytes HGetAll(string key);
+        RedisMultiBytes HGetAll(RedisParam key);
+        RedisMultiString HGetAllString(RedisParam key);
 
-        RedisResult<Hashtable> HGetAllHashtable(string key);
-        RedisResult<Dictionary<string, string>> HGetAllDictionary(string key);
+        RedisResult<Hashtable> HGetAllHashtable(RedisParam key);
+        RedisResult<Dictionary<string, string>> HGetAllDictionary(RedisParam key);
 
-        RedisString HGetString(string key, string field);
+        RedisString HGetString(RedisParam key, RedisParam field);
 
-        RedisInt HIncrBy(string key, byte[] field, int increment);
-        RedisInt HIncrBy(string key, byte[] field, long increment);
-        RedisDouble HIncrByFloat(string key, byte[] field, double increment);
+        RedisInt HIncrBy(RedisParam key, RedisParam field, int increment);
+        RedisInt HIncrBy(RedisParam key, RedisParam field, long increment);
+        RedisDouble HIncrByFloat(RedisParam key, RedisParam field, double increment);
 
-        RedisMultiBytes HKeys(string key);
-        RedisMultiString HKeyStrings(string key);
+        RedisMultiBytes HKeys(RedisParam key);
+        RedisMultiString HKeyStrings(RedisParam key);
 
-        RedisInt HLen(string key);
+        RedisInt HLen(RedisParam key);
 
-        RedisMultiBytes HMGet(string key, byte[] field, params byte[][] fields);
-        RedisMultiBytes HMGet(string key, string field, params string[] fields);
-        RedisMultiString HMGetStrings(string key, string field, params string[] fields);
+        RedisMultiBytes HMGet(RedisParam key, RedisParam field, params RedisParam[] fields);
+        RedisMultiString HMGetStrings(RedisParam key, RedisParam field, params RedisParam[] fields);
 
-        RedisBool HMSet(string key, byte[] field, byte[] value, byte[][] fields = null, byte[][] values = null);
-        RedisBool HMSet(string key, string field, byte[] value, string[] fields = null, byte[][] values = null);
-        RedisBool HMSet(string key, string field, string value, string[] fields = null, string[] values = null);
-        RedisBool HMSet(string key, Hashtable values);
-        RedisBool HMSet(string key, Dictionary<string, string> values);
+        RedisBool HMSet(RedisParam key, RedisParam field, RedisParam value, RedisParam[] fields = null, RedisParam[] values = null);
+        RedisBool HMSet(RedisParam key, Hashtable values);
+        RedisBool HMSet(RedisParam key, IDictionary<string, string> values);
+        RedisBool HMSet(RedisParam key, IDictionary<RedisParam, RedisParam> values);
 
-        RedisMultiBytes HScan(string key, int count = 10, string match = null);
-        RedisMultiString HScanString(string key, int count = 10, string match = null);
+        RedisMultiBytes HScan(RedisParam key, int count = 10, RedisParam? match = null);
+        RedisMultiString HScanString(RedisParam key, int count = 10, RedisParam? match = null);
 
-        RedisBool HSet(string key, byte[] field, byte[] value);
-        RedisBool HSet(string key, string field, byte[] value);
-        RedisBool HSet(string key, string field, string value);
+        RedisBool HSet(RedisParam key, RedisParam field, RedisParam value);
 
-        RedisBool HSetNx(string key, byte[] field, byte[] value);
-        RedisBool HSetNx(string key, string field, byte[] value);
-        RedisBool HSetNx(string key, string field, string value);
+        RedisBool HSetNx(RedisParam key, RedisParam field, RedisParam value);
 
-        RedisInt HStrLen(string key, byte[] field);
-        RedisInt HStrLen(string key, string field);
+        RedisInt HStrLen(RedisParam key, RedisParam field);
 
-        RedisMultiBytes HVals(string key);
-        RedisMultiString HValStrings(string key);
+        RedisMultiBytes HVals(RedisParam key);
+        RedisMultiString HValStrings(RedisParam key);
     }
 }

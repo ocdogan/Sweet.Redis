@@ -48,10 +48,10 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("member");
 
             if (members.Length == 0)
-                return ExpectInteger(RedisCommands.GeoAdd, key.ToBytes(), member.Longitude.ToBytes(),
+                return ExpectInteger(RedisCommands.GeoAdd, key, member.Longitude.ToBytes(),
                                 member.Latitude.ToBytes(), member.Name.ToBytes());
 
-            var parameters = key.ToBytes()
+            var parameters = key
                                 .Join(member.Longitude.ToBytes())
                                 .Join(member.Latitude.ToBytes())
                                 .Join(member.Name.ToBytes());
@@ -112,12 +112,12 @@ namespace Sweet.Redis
             if (members.Length == 0)
                 return ExpectMultiDataBytes(RedisCommands.GeoHash, key, member);
 
-            var parameters = key.ToBytes().Join(member.ToBytes());
+            var parameters = key.Join(member);
 
             foreach (var m in members)
             {
                 if (!m.IsEmpty)
-                    parameters = parameters.Join(m.ToBytes());
+                    parameters = parameters.Join(m);
             }
 
             return ExpectMultiDataBytes(RedisCommands.GeoHash, parameters);
@@ -132,7 +132,7 @@ namespace Sweet.Redis
             if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
-            var parameters = key.ToBytes().Join(member);
+            var parameters = key.Join(member);
             foreach (var m in members)
             {
                 if (!m.IsEmpty)
@@ -173,7 +173,7 @@ namespace Sweet.Redis
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
-            var parameters = key.ToBytes()
+            var parameters = key
                                 .Join(position.Longitude.ToBytes())
                                 .Join(position.Latitude.ToBytes())
                                 .Join(radius.ToBytes())
@@ -216,8 +216,8 @@ namespace Sweet.Redis
             if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
-            var parameters = key.ToBytes()
-                                .Join(member.ToBytes())
+            var parameters = key
+                                .Join(member)
                                 .Join(radius.ToBytes())
                                 .Join(ToBytes(unit));
 

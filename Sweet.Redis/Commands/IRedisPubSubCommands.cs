@@ -53,10 +53,9 @@ namespace Sweet.Redis
 	*/
     public interface IRedisPubSubCommands
     {
-        RedisInt Publish(string channel, string message);
-        RedisInt Publish(string channel, byte[] message);
-        RedisMultiString PubSubChannels(string pattern = null);
-        RedisResult<RedisKeyValue<string, long>[]> PubSubNumerOfSubscribers(params string[] channels);
+        RedisInt Publish(RedisParam channel, RedisParam message);
+        RedisMultiString PubSubChannels(RedisParam? pattern = null);
+        RedisResult<RedisKeyValue<string, long>[]> PubSubNumerOfSubscribers(params RedisParam[] channels);
         RedisInt PubSubNumerOfSubscriptionsToPatterns();
     }
 }

@@ -38,357 +38,283 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt SAdd(string key, byte[] member, params byte[][] members)
+        public RedisInt SAdd(RedisParam key, RedisParam member, params RedisParam[] members)
         {
             ValidateNotDisposed();
             ValidateKeyAndValue(key, member, valueName: "member");
 
             if (members.Length > 0)
             {
-                var parameters = key.ToBytes()
+                var parameters = key
                                     .Join(member)
                                     .Join(members);
 
                 return ExpectInteger(RedisCommands.SAdd, parameters);
             }
-            return ExpectInteger(RedisCommands.SAdd, key.ToBytes(), member);
+            return ExpectInteger(RedisCommands.SAdd, key, member);
         }
 
-        public RedisInt SAdd(string key, string member, params string[] members)
+        public RedisInt SCard(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            ValidateNotDisposed();
-
-            if (members.Length > 0)
-            {
-                var parameters = key.ToBytes()
-                                    .Join(member.ToBytes())
-                                    .Join(members.ToBytesArray());
-
-                return ExpectInteger(RedisCommands.SAdd, parameters);
-            }
-            return ExpectInteger(RedisCommands.SAdd, key.ToBytes(), member.ToBytes());
+            return ExpectInteger(RedisCommands.SCard, key);
         }
 
-        public RedisInt SCard(string key)
+        public RedisMultiBytes SDiff(RedisParam fromKey, params RedisParam[] keys)
         {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            return ExpectInteger(RedisCommands.SCard, key.ToBytes());
-        }
-
-        public RedisMultiBytes SDiff(string fromKey, params string[] keys)
-        {
-            if (fromKey == null)
+            if (fromKey.IsNull)
                 throw new ArgumentNullException("fromKey");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = fromKey.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = fromKey.Join(keys);
                 return ExpectMultiDataBytes(RedisCommands.SDiff, parameters);
             }
-            return ExpectMultiDataBytes(RedisCommands.SDiff, fromKey.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.SDiff, fromKey);
         }
 
-        public RedisInt SDiffStore(string toKey, string fromKey, params string[] keys)
+        public RedisInt SDiffStore(RedisParam toKey, RedisParam fromKey, params RedisParam[] keys)
         {
-            if (toKey == null)
+            if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");
 
-            if (fromKey == null)
+            if (fromKey.IsNull)
                 throw new ArgumentNullException("fromKey");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = toKey.ToBytes()
-                                      .Join(fromKey.ToBytes())
-                                      .Join(keys.ToBytesArray());
+                var parameters = toKey
+                                      .Join(fromKey)
+                                      .Join(keys);
 
                 return ExpectInteger(RedisCommands.SDiffStore, parameters);
             }
-            return ExpectInteger(RedisCommands.SDiffStore, toKey.ToBytes(), fromKey.ToBytes());
+            return ExpectInteger(RedisCommands.SDiffStore, toKey, fromKey);
         }
 
-        public RedisMultiString SDiffString(string fromKey, params string[] keys)
+        public RedisMultiString SDiffString(RedisParam fromKey, params RedisParam[] keys)
         {
-            if (fromKey == null)
+            if (fromKey.IsNull)
                 throw new ArgumentNullException("fromKey");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = fromKey.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = fromKey.Join(keys);
                 return ExpectMultiDataStrings(RedisCommands.SDiff, parameters);
             }
-            return ExpectMultiDataStrings(RedisCommands.SDiff, fromKey.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.SDiff, fromKey);
         }
 
-        public RedisMultiBytes SInter(string key, params string[] keys)
+        public RedisMultiBytes SInter(RedisParam key, params RedisParam[] keys)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = key.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = key.Join(keys);
                 return ExpectMultiDataBytes(RedisCommands.SInter, parameters);
             }
-            return ExpectMultiDataBytes(RedisCommands.SDiff, key.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.SDiff, key);
         }
 
-        public RedisInt SInterStore(string toKey, params string[] keys)
+        public RedisInt SInterStore(RedisParam toKey, params RedisParam[] keys)
         {
-            if (toKey == null)
+            if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = toKey.ToBytes()
-                                      .Join(keys.ToBytesArray());
-
+                var parameters = toKey.Join(keys);
                 return ExpectInteger(RedisCommands.SInterStore, parameters);
             }
-            return ExpectInteger(RedisCommands.SInterStore, toKey.ToBytes());
+            return ExpectInteger(RedisCommands.SInterStore, toKey);
         }
 
-        public RedisMultiString SInterStrings(string key, params string[] keys)
+        public RedisMultiString SInterStrings(RedisParam key, params RedisParam[] keys)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = key.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = key.Join(keys);
                 return ExpectMultiDataStrings(RedisCommands.SInter, parameters);
             }
-            return ExpectMultiDataStrings(RedisCommands.SDiff, key.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.SDiff, key);
         }
 
-        public RedisBool SIsMember(string key, byte[] member)
+        public RedisBool SIsMember(RedisParam key, RedisParam member)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectGreaterThanZero(RedisCommands.SIsMember, key.ToBytes(), member);
+            return ExpectGreaterThanZero(RedisCommands.SIsMember, key, member);
         }
 
-        public RedisBool SIsMember(string key, string member)
+        public RedisMultiBytes SMembers(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectGreaterThanZero(RedisCommands.SIsMember, key.ToBytes(), member.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.SMembers, key);
         }
 
-        public RedisMultiBytes SMembers(string key)
+        public RedisMultiString SMemberStrings(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.SMembers, key.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.SMembers, key);
         }
 
-        public RedisMultiString SMemberStrings(string key)
+        public RedisBool SMove(RedisParam fromKey, RedisParam toKey, RedisParam member)
         {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            return ExpectMultiDataStrings(RedisCommands.SMembers, key.ToBytes());
-        }
-
-        public RedisBool SMove(string fromKey, string toKey, byte[] member)
-        {
-            if (fromKey == null)
+            if (fromKey.IsNull)
                 throw new ArgumentNullException("fromKey");
 
-            if (toKey == null)
+            if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");
 
-            return ExpectGreaterThanZero(RedisCommands.SMove, fromKey.ToBytes(), toKey.ToBytes(), member);
+            return ExpectGreaterThanZero(RedisCommands.SMove, fromKey, toKey, member);
         }
 
-        public RedisBool SMove(string fromKey, string toKey, string member)
+        public RedisBytes SPop(RedisParam key)
         {
-            if (fromKey == null)
-                throw new ArgumentNullException("fromKey");
-
-            if (toKey == null)
-                throw new ArgumentNullException("toKey");
-
-            return ExpectGreaterThanZero(RedisCommands.SMove, fromKey.ToBytes(), toKey.ToBytes(), member.ToBytes());
-        }
-
-        public RedisBytes SPop(string key)
-        {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectBulkStringBytes(RedisCommands.SPop, key.ToBytes());
+            return ExpectBulkStringBytes(RedisCommands.SPop, key);
         }
 
-        public RedisString SPopString(string key)
+        public RedisString SPopString(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectBulkString(RedisCommands.SPop, key.ToBytes());
+            return ExpectBulkString(RedisCommands.SPop, key);
         }
 
-        public RedisBytes SRandMember(string key)
+        public RedisBytes SRandMember(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectBulkStringBytes(RedisCommands.SRandMember, key.ToBytes());
+            return ExpectBulkStringBytes(RedisCommands.SRandMember, key);
         }
 
-        public RedisMultiBytes SRandMember(string key, int count)
+        public RedisMultiBytes SRandMember(RedisParam key, int count)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.SRandMember, key.ToBytes(), count.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.SRandMember, key, count.ToBytes());
         }
 
-        public RedisString SRandMemberString(string key)
+        public RedisString SRandMemberString(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectBulkString(RedisCommands.SRandMember, key.ToBytes());
+            return ExpectBulkString(RedisCommands.SRandMember, key);
         }
 
-        public RedisMultiString SRandMemberString(string key, int count)
+        public RedisMultiString SRandMemberString(RedisParam key, int count)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.SRandMember, key.ToBytes(), count.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.SRandMember, key, count.ToBytes());
         }
 
-        public RedisInt SRem(string key, byte[] member, params byte[][] members)
+        public RedisInt SRem(RedisParam key, RedisParam member, params RedisParam[] members)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (member == null)
+            if (member.IsNull)
                 throw new ArgumentNullException("member");
 
             ValidateNotDisposed();
 
             if (members.Length > 0)
             {
-                var parameters = key.ToBytes()
-                                      .Join(member.ToBytes())
+                var parameters = key
+                                      .Join(member)
                                       .Join(members);
 
                 return ExpectInteger(RedisCommands.SRem, parameters);
             }
-            return ExpectInteger(RedisCommands.SRem, key.ToBytes(), member);
+            return ExpectInteger(RedisCommands.SRem, key, member);
         }
 
-        public RedisInt SRem(string key, string member, params string[] members)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (member == null)
-                throw new ArgumentNullException("member");
-
-            ValidateNotDisposed();
-
-            if (members.Length > 0)
-            {
-                var parameters = key.ToBytes()
-                                    .Join(member.ToBytes())
-                                    .Join(members.ToBytesArray());
-
-                return ExpectInteger(RedisCommands.SRem, parameters);
-            }
-            return ExpectInteger(RedisCommands.SRem, key.ToBytes(), member.ToBytes());
-        }
-
-        public RedisMultiBytes SScan(string key, int count = 10, string match = null)
+        public RedisMultiBytes SScan(RedisParam key, int count = 10, RedisParam? match = null)
         {
             throw new NotImplementedException();
         }
 
-        public RedisMultiString SScanString(string key, int count = 10, string match = null)
+        public RedisMultiString SScanString(RedisParam key, int count = 10, RedisParam? match = null)
         {
             throw new NotImplementedException();
         }
 
-        public RedisMultiBytes SUnion(string key, params string[] keys)
+        public RedisMultiBytes SUnion(RedisParam key, params RedisParam[] keys)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = key.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = key.Join(keys);
                 return ExpectMultiDataBytes(RedisCommands.SUnion, parameters);
             }
-            return ExpectMultiDataBytes(RedisCommands.SUnion, key.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.SUnion, key);
         }
 
-        public RedisInt SUnionStore(string toKey, params string[] keys)
+        public RedisInt SUnionStore(RedisParam toKey, params RedisParam[] keys)
         {
-            if (toKey == null)
+            if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = toKey.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = toKey.Join(keys);
                 return ExpectInteger(RedisCommands.SUnionStore, parameters);
             }
-            return ExpectInteger(RedisCommands.SUnionStore, toKey.ToBytes());
+            return ExpectInteger(RedisCommands.SUnionStore, toKey);
         }
 
-        public RedisMultiString SUnionStrings(string key, params string[] keys)
+        public RedisMultiString SUnionStrings(RedisParam key, params RedisParam[] keys)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
 
             if (keys.Length > 0)
             {
-                var parameters = key.ToBytes()
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = key.Join(keys);
                 return ExpectMultiDataStrings(RedisCommands.SUnion, parameters);
             }
-            return ExpectMultiDataStrings(RedisCommands.SUnion, key.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.SUnion, key);
         }
 
         #endregion Methods

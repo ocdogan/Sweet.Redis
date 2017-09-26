@@ -55,20 +55,17 @@ namespace Sweet.Redis
      */
     public interface IRedisScriptingCommands
     {
-        RedisRaw Eval(string script, params RedisKeyValue<string, byte[]>[] args);
-        RedisRaw EvalString(string script, params RedisKeyValue<string, string>[] args);
+        RedisRaw Eval(RedisParam script, params RedisKeyValue<RedisParam, RedisParam>[] args);
 
-        RedisRaw EvalSHA(string sha1, params RedisKeyValue<string, byte[]>[] args);
-        RedisRaw EvalSHA(ref string sha1, string script, params RedisKeyValue<string, byte[]>[] args);
-        RedisRaw EvalSHAString(string sha1, params RedisKeyValue<string, string>[] args);
-        RedisRaw EvalSHAString(ref string sha1, string script, params RedisKeyValue<string, string>[] args);
+        RedisRaw EvalSHA(RedisParam sha1, params RedisKeyValue<RedisParam, RedisParam>[] args);
+        RedisRaw EvalSHA(ref RedisParam sha1, RedisParam script, params RedisKeyValue<RedisParam, RedisParam>[] args);
 
         RedisBool ScriptDebugYes();
         RedisBool ScriptDebugSync();
         RedisBool ScriptDebugNo();
-        RedisMultiInt ScriptExists(string sha1, params string[] sha1s);
+        RedisMultiInt ScriptExists(RedisParam sha1, params RedisParam[] sha1s);
         RedisBool ScriptFush();
         RedisBool ScriptKill();
-        RedisString ScriptLoad(string script);
+        RedisString ScriptLoad(RedisParam script);
     }
 }

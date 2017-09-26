@@ -39,8 +39,8 @@ namespace Sweet.Redis
      */
     public interface IRedisHyperLogLogCommands
     {
-        RedisBool PfAdd(string key, string element, params string[] elements);
-        RedisInt PfCount(string key, params string[] keys);
-        RedisBool PfMerge(string destKey, string sourceKey, params string[] sourceKeys);
+        RedisBool PfAdd(RedisParam key, RedisParam element, params RedisParam[] elements);
+        RedisInt PfCount(RedisParam key, params RedisParam[] keys);
+        RedisBool PfMerge(RedisParam destKey, RedisParam sourceKey, params RedisParam[] sourceKeys);
     }
 }

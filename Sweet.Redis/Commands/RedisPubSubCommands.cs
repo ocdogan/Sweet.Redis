@@ -38,33 +38,22 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt Publish(string channel, string message)
+        public RedisInt Publish(RedisParam channel, RedisParam message)
         {
-            if (channel == null)
+            if (channel.IsNull)
                 throw new ArgumentNullException("channel");
 
-            if (message == null)
+            if (message.IsNull)
                 throw new ArgumentNullException("message");
 
-            return ExpectInteger(RedisCommands.Publish, channel.ToBytes(), message.ToBytes());
+            return ExpectInteger(RedisCommands.Publish, channel, message);
         }
 
-        public RedisInt Publish(string channel, byte[] message)
-        {
-            if (channel == null)
-                throw new ArgumentNullException("channel");
-
-            if (message == null)
-                throw new ArgumentNullException("message");
-
-            return ExpectInteger(RedisCommands.Publish, channel.ToBytes(), message);
-        }
-
-        public RedisMultiString PubSubChannels(string pattern = null)
+        public RedisMultiString PubSubChannels(RedisParam? pattern = null)
         {
             RedisRaw response;
-            if (!String.IsNullOrEmpty(pattern))
-                response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels, pattern.ToBytes());
+            if (pattern != null && !pattern.Value.IsEmpty)
+                response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels, pattern);
             else
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels);
 
@@ -99,7 +88,7 @@ namespace Sweet.Redis
             return new string[0];
         }
 
-        public RedisResult<RedisKeyValue<string, long>[]> PubSubNumerOfSubscribers(params string[] channels)
+        public RedisResult<RedisKeyValue<string, long>[]> PubSubNumerOfSubscribers(params RedisParam[] channels)
         {
             RedisRaw response;
             if (channels.Length > 0)

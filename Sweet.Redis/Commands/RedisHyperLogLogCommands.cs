@@ -38,12 +38,12 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisBool PfAdd(string key, string element, params string[] elements)
+        public RedisBool PfAdd(RedisParam key, RedisParam element, params RedisParam[] elements)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (element == null)
+            if (element.IsNull)
                 throw new ArgumentNullException("element");
 
             ValidateNotDisposed();
@@ -51,16 +51,15 @@ namespace Sweet.Redis
             var length = elements.Length;
             if (length > 0)
             {
-                var parameters = key.ToBytes().Join(element.ToBytes()).Join(elements);
-
+                var parameters = key.Join(element).Join(elements);
                 return ExpectOne(RedisCommands.PfAdd, parameters);
             }
-            return ExpectOne(RedisCommands.PfAdd, key.ToBytes(), element.ToBytes());
+            return ExpectOne(RedisCommands.PfAdd, key, element);
         }
 
-        public RedisInt PfCount(string key, params string[] keys)
+        public RedisInt PfCount(RedisParam key, params RedisParam[] keys)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
@@ -68,19 +67,18 @@ namespace Sweet.Redis
             var length = keys.Length;
             if (length > 0)
             {
-                var parameters = key.ToBytes().Join(keys);
-
+                var parameters = key.Join(keys);
                 return ExpectInteger(RedisCommands.PfAdd, parameters);
             }
-            return ExpectInteger(RedisCommands.PfAdd, key.ToBytes());
+            return ExpectInteger(RedisCommands.PfAdd, key);
         }
 
-        public RedisBool PfMerge(string destKey, string sourceKey, params string[] sourceKeys)
+        public RedisBool PfMerge(RedisParam destKey, RedisParam sourceKey, params RedisParam[] sourceKeys)
         {
-            if (destKey == null)
+            if (destKey.IsNull)
                 throw new ArgumentNullException("destKey");
 
-            if (sourceKey == null)
+            if (sourceKey.IsNull)
                 throw new ArgumentNullException("sourceKey");
 
             ValidateNotDisposed();
@@ -88,11 +86,10 @@ namespace Sweet.Redis
             var length = sourceKeys.Length;
             if (length > 0)
             {
-                var parameters = destKey.ToBytes().Join(sourceKey.ToBytes()).Join(sourceKeys);
-
+                var parameters = destKey.Join(sourceKey).Join(sourceKeys);
                 return ExpectOK(RedisCommands.Quit, parameters);
             }
-            return ExpectOK(RedisCommands.Quit, destKey.ToBytes(), sourceKey.ToBytes());
+            return ExpectOK(RedisCommands.Quit, destKey, sourceKey);
         }
 
         #endregion Methods

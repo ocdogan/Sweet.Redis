@@ -95,47 +95,43 @@ namespace Sweet.Redis
      */
     public interface IRedisListsCommands
     {
-        RedisMultiBytes BLPop(string key, int timeout);
-        RedisMultiBytes BRPop(string key, int timeout);
+        RedisMultiBytes BLPop(RedisParam key, int timeout);
+        RedisMultiString BLPopString(RedisParam key, int timeout);
+        RedisMultiBytes BRPop(RedisParam key, int timeout);
+        RedisMultiString BRPopString(RedisParam key, int timeout);
 
-        RedisBytes BRPopLPush(string source, string destination);
-        RedisString BRPopLPushString(string source, string destination);
+        RedisBytes BRPopLPush(RedisParam source, RedisParam destination);
+        RedisString BRPopLPushString(RedisParam source, RedisParam destination);
 
-        RedisBytes LIndex(string key, int index);
-        RedisString LIndexString(string key, int index);
+        RedisBytes LIndex(RedisParam key, int index);
+        RedisString LIndexString(RedisParam key, int index);
 
-        RedisBool LInsert(string key, bool insertBefore, byte[] pivot, byte[] value);
+        RedisBool LInsert(RedisParam key, bool insertBefore, RedisParam pivot, RedisParam value);
 
-        RedisInt LLen(string key);
+        RedisInt LLen(RedisParam key);
 
-        RedisBytes LPop(string key);
-        RedisString LPopString(string key);
+        RedisBytes LPop(RedisParam key);
+        RedisString LPopString(RedisParam key);
 
-        RedisInt LPush(string key, byte[] value);
-        RedisInt LPush(string key, string value);
-        RedisInt LPushX(string key, byte[] value);
-        RedisInt LPushX(string key, string value);
+        RedisInt LPush(RedisParam key, RedisParam value);
+        RedisInt LPushX(RedisParam key, RedisParam value);
 
-        RedisMultiBytes LRange(string key, int start, int end);
-        RedisMultiString LRangeString(string key, int start, int end);
+        RedisMultiBytes LRange(RedisParam key, int start, int end);
+        RedisMultiString LRangeString(RedisParam key, int start, int end);
 
-        RedisInt LRem(string key, int count, byte[] value);
-        RedisInt LRem(string key, int count, string value);
+        RedisInt LRem(RedisParam key, int count, RedisParam value);
 
-        RedisBool LSet(string key, int index, byte[] value);
-        RedisBool LSet(string key, int index, string value);
+        RedisBool LSet(RedisParam key, int index, RedisParam value);
 
-        RedisBool LTrim(string key, int start, int end);
+        RedisBool LTrim(RedisParam key, int start, int end);
 
-        RedisBytes RPop(string key);
-        RedisBytes RPopLPush(string source, string destination);
-        RedisString RPopLPushString(string source, string destination);
-        RedisString RPopString(string key);
+        RedisBytes RPop(RedisParam key);
+        RedisBytes RPopLPush(RedisParam source, RedisParam destination);
+        RedisString RPopLPushString(RedisParam source, RedisParam destination);
+        RedisString RPopString(RedisParam key);
 
-        RedisInt RPush(string key, byte[][] values);
-        RedisInt RPush(string key, string[] values);
-        RedisInt RPushX(string key, byte[] value);
-        RedisInt RPushX(string key, string value);
+        RedisInt RPush(RedisParam key, RedisParam[] values);
+        RedisInt RPushX(RedisParam key, RedisParam value);
     }
 
 }

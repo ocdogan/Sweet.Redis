@@ -159,6 +159,11 @@ namespace Sweet.Redis
             get { return m_Data == null || m_Data.Length == 0; }
         }
 
+        public int Length
+        {
+            get { return m_Data != null ? m_Data.Length : 0; }
+        }
+
         #endregion Properties
 
         #region Methods

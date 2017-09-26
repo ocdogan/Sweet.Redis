@@ -123,49 +123,49 @@ namespace Sweet.Redis
      */
     public interface IRedisKeysCommands
     {
-        RedisInt Del(string key, params string[] keys);
+        RedisInt Del(RedisParam key, params RedisParam[] keys);
 
-        RedisBytes Dump(string key);
+        RedisBytes Dump(RedisParam key);
 
-        RedisBool Exists(string key);
-        RedisBool Expire(string key, int seconds);
-        RedisBool ExpireAt(string key, int timestamp);
+        RedisBool Exists(RedisParam key);
+        RedisBool Expire(RedisParam key, int seconds);
+        RedisBool ExpireAt(RedisParam key, int timestamp);
 
-        RedisMultiString Keys(string pattern);
+        RedisMultiString Keys(RedisParam pattern);
 
-        RedisBool Migrate(string host, int port, string key, int destinationDb,
-                     long timeoutMs, bool copy, bool replace, params string[] keys);
-        RedisBool Move(string key, int db);
+        RedisBool Migrate(RedisParam host, int port, RedisParam key, int destinationDb,
+                     long timeoutMs, bool copy, bool replace, params RedisParam[] keys);
+        RedisBool Move(RedisParam key, int db);
 
-        RedisInt ObjectRefCount(string key);
-        RedisBytes ObjectEncoding(string key);
-        RedisString ObjectEncodingString(string key);
-        RedisInt ObjectIdleTime(string key);
+        RedisInt ObjectRefCount(RedisParam key);
+        RedisBytes ObjectEncoding(RedisParam key);
+        RedisString ObjectEncodingString(RedisParam key);
+        RedisInt ObjectIdleTime(RedisParam key);
 
-        RedisBool Persist(string key);
+        RedisBool Persist(RedisParam key);
 
-        RedisBool PExpire(string key, long milliseconds);
-        RedisBool PExpireAt(string key, long millisecondsTimestamp);
-        RedisInt PTtl(string key);
+        RedisBool PExpire(RedisParam key, long milliseconds);
+        RedisBool PExpireAt(RedisParam key, long millisecondsTimestamp);
+        RedisInt PTtl(RedisParam key);
 
         RedisString RandomKey();
 
-        RedisBool Rename(string key, string newKey);
-        RedisBool RenameNx(string key, string newKey);
+        RedisBool Rename(RedisParam key, RedisParam newKey);
+        RedisBool RenameNx(RedisParam key, RedisParam newKey);
 
-        RedisBool Restore(string key, long ttl, byte[] value);
+        RedisBool Restore(RedisParam key, long ttl, RedisParam value);
 
-        RedisMultiBytes Scan(int count = 10, string match = null);
-        RedisMultiString ScanString(int count = 10, string match = null);
+        RedisMultiBytes Scan(int count = 10, RedisParam? match = null);
+        RedisMultiString ScanString(int count = 10, RedisParam? match = null);
 
-        RedisMultiBytes Sort(string key, bool descending, bool alpha = false,
-                      int start = -1, int end = -1, string by = null, string get = null);
+        RedisMultiBytes Sort(RedisParam key, bool descending, bool alpha = false,
+                      int start = -1, int end = -1, RedisParam? by = null, RedisParam? get = null);
 
-        RedisInt Touch(string key, params string[] keys);
+        RedisInt Touch(RedisParam key, params RedisParam[] keys);
 
-        RedisInt Ttl(string key);
+        RedisInt Ttl(RedisParam key);
 
-        RedisString Type(string key);
+        RedisString Type(RedisParam key);
 
         RedisInt Wait(int numberOfSlaves, int timeout);
     }

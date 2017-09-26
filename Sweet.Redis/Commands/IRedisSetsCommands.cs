@@ -87,44 +87,40 @@ namespace Sweet.Redis
      */
     public interface IRedisSetsCommands
     {
-        RedisInt SAdd(string key, byte[] member, params byte[][] members);
-        RedisInt SAdd(string key, string member, params string[] members);
+        RedisInt SAdd(RedisParam key, RedisParam member, params RedisParam[] members);
 
-        RedisInt SCard(string key);
+        RedisInt SCard(RedisParam key);
 
-        RedisMultiBytes SDiff(string fromKey, params string[] keys);
-        RedisInt SDiffStore(string toKey, string fromKey, params string[] keys);
-        RedisMultiString SDiffString(string fromKey, params string[] keys);
+        RedisMultiBytes SDiff(RedisParam fromKey, params RedisParam[] keys);
+        RedisInt SDiffStore(RedisParam toKey, RedisParam fromKey, params RedisParam[] keys);
+        RedisMultiString SDiffString(RedisParam fromKey, params RedisParam[] keys);
 
-        RedisMultiBytes SInter(string key, params string[] keys);
-        RedisInt SInterStore(string toKey, params string[] keys);
-        RedisMultiString SInterStrings(string key, params string[] keys);
+        RedisMultiBytes SInter(RedisParam key, params RedisParam[] keys);
+        RedisInt SInterStore(RedisParam toKey, params RedisParam[] keys);
+        RedisMultiString SInterStrings(RedisParam key, params RedisParam[] keys);
 
-        RedisBool SIsMember(string key, byte[] member);
-        RedisBool SIsMember(string key, string member);
+        RedisBool SIsMember(RedisParam key, RedisParam member);
 
-        RedisMultiBytes SMembers(string key);
-        RedisMultiString SMemberStrings(string key);
+        RedisMultiBytes SMembers(RedisParam key);
+        RedisMultiString SMemberStrings(RedisParam key);
 
-        RedisBool SMove(string fromKey, string toKey, byte[] member);
-        RedisBool SMove(string fromKey, string toKey, string member);
+        RedisBool SMove(RedisParam fromKey, RedisParam toKey, RedisParam member);
 
-        RedisBytes SPop(string key);
-        RedisString SPopString(string key);
+        RedisBytes SPop(RedisParam key);
+        RedisString SPopString(RedisParam key);
 
-        RedisBytes SRandMember(string key);
-        RedisMultiBytes SRandMember(string key, int count);
-        RedisString SRandMemberString(string key);
-        RedisMultiString SRandMemberString(string key, int count);
+        RedisBytes SRandMember(RedisParam key);
+        RedisMultiBytes SRandMember(RedisParam key, int count);
+        RedisString SRandMemberString(RedisParam key);
+        RedisMultiString SRandMemberString(RedisParam key, int count);
 
-        RedisInt SRem(string key, byte[] member, params byte[][] members);
-        RedisInt SRem(string key, string member, params string[] members);
+        RedisInt SRem(RedisParam key, RedisParam member, params RedisParam[] members);
 
-        RedisMultiBytes SScan(string key, int count = 10, string match = null);
-        RedisMultiString SScanString(string key, int count = 10, string match = null);
+        RedisMultiBytes SScan(RedisParam key, int count = 10, RedisParam? match = null);
+        RedisMultiString SScanString(RedisParam key, int count = 10, RedisParam? match = null);
 
-        RedisMultiBytes SUnion(string key, params string[] keys);
-        RedisInt SUnionStore(string intoKey, params string[] keys);
-        RedisMultiString SUnionStrings(string key, params string[] keys);
+        RedisMultiBytes SUnion(RedisParam key, params RedisParam[] keys);
+        RedisInt SUnionStore(RedisParam intoKey, params RedisParam[] keys);
+        RedisMultiString SUnionStrings(RedisParam key, params RedisParam[] keys);
     }
 }

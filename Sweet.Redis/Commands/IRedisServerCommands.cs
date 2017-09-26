@@ -158,19 +158,19 @@ namespace Sweet.Redis
         RedisBool BGSave();
 
         RedisString ClientGetName();
-        RedisInt ClientKill(string ip = null, int port = -1, string clientId = null, string type = null, bool skipMe = true);
+        RedisInt ClientKill(RedisParam? ip = null, int port = -1, RedisParam? clientId = null, RedisParam? type = null, bool skipMe = true);
         RedisResult<RedisClientInfo[]> ClientList();
         RedisResult<IDictionary<string, string>[]> ClientListDictionary();
         RedisBool ClientPause(int timeout);
         RedisBool ClientReplyOn();
         RedisBool ClientReplyOff();
         RedisBool ClientReplySkip();
-        RedisBool ClientSetName(string connectionName);
+        RedisBool ClientSetName(RedisParam connectionName);
 
-        RedisResult<IDictionary<string, string>> ConfigGet(string parameter);
+        RedisResult<IDictionary<string, string>> ConfigGet(RedisParam parameter);
         RedisBool ConfigResetStat();
         RedisBool ConfigRewrite();
-        RedisBool ConfigSet(string parameter, string value);
+        RedisBool ConfigSet(RedisParam parameter, RedisParam value);
 
         RedisInt DbSize();
 
@@ -179,7 +179,7 @@ namespace Sweet.Redis
         RedisBool FlushDb();
         RedisBool FlushDbAsync();
 
-        RedisMultiString Info(string section);
+        RedisMultiString Info(RedisParam section);
         
         RedisDate LastSave();
         RedisBool Save();
@@ -191,7 +191,7 @@ namespace Sweet.Redis
         RedisInt SlowLogLen();
         RedisBool SlowLogReset();
 
-        RedisBool SlaveOf(string host, int port);
+        RedisBool SlaveOf(RedisParam host, int port);
         RedisBool SlaveOfNoOne();
         
         RedisDate Time();

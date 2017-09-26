@@ -40,106 +40,71 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt HDel(string key, byte[] field, params byte[][] fields)
+        public RedisInt HDel(RedisParam key, RedisParam field, params RedisParam[] fields)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
             ValidateNotDisposed();
 
             if (fields.Length > 0)
             {
-                var parameters = key.ToBytes()
+                var parameters = key
                                     .Join(field)
                                     .Join(fields);
 
                 return ExpectInteger(RedisCommands.HDel, parameters);
             }
-            return ExpectInteger(RedisCommands.HDel, key.ToBytes(), field);
+            return ExpectInteger(RedisCommands.HDel, key, field);
         }
 
-        public RedisInt HDel(string key, string field, params string[] fields)
+        public RedisBool HExists(RedisParam key, RedisParam field)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            ValidateNotDisposed();
-
-            if (fields.Length > 0)
-            {
-                var parameters = key.ToBytes()
-                                    .Join(field.ToBytes())
-                                    .Join(fields.ToBytesArray());
-
-                return ExpectInteger(RedisCommands.HDel, parameters);
-            }
-            return ExpectInteger(RedisCommands.HDel, key.ToBytes(), field.ToBytes());
+            return ExpectGreaterThanZero(RedisCommands.HExists, key, field);
         }
 
-        public RedisBool HExists(string key, byte[] field)
+        public RedisBytes HGet(RedisParam key, RedisParam field)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectGreaterThanZero(RedisCommands.HExists, key.ToBytes(), field);
+            return ExpectBulkStringBytes(RedisCommands.HGet, key, field);
         }
 
-        public RedisBool HExists(string key, string field)
+        public RedisMultiBytes HGetAll(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            return ExpectGreaterThanZero(RedisCommands.HExists, key.ToBytes(), field.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.HGetAll, key);
         }
 
-        public RedisBytes HGet(string key, byte[] field)
+        public RedisMultiString HGetAllString(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            return ExpectBulkStringBytes(RedisCommands.HGet, key.ToBytes(), field);
+            return ExpectMultiDataStrings(RedisCommands.HGetAll, key);
         }
 
-        public RedisBytes HGet(string key, string field)
+        public RedisResult<Dictionary<string, string>> HGetAllDictionary(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            return ExpectBulkStringBytes(RedisCommands.HGet, key.ToBytes(), field.ToBytes());
-        }
-
-        public RedisMultiBytes HGetAll(string key)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            return ExpectMultiDataBytes(RedisCommands.HGetAll, key.ToBytes());
-        }
-
-        public RedisResult<Dictionary<string, string>> HGetAllDictionary(string key)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            var result = ExpectMultiDataStrings(RedisCommands.HGetAll, key.ToBytes());
+            var result = ExpectMultiDataStrings(RedisCommands.HGetAll, key);
             if (result != null)
             {
                 var length = result.Length;
@@ -153,12 +118,12 @@ namespace Sweet.Redis
             return new RedisResult<Dictionary<string, string>>(null);
         }
 
-        public RedisResult<Hashtable> HGetAllHashtable(string key)
+        public RedisResult<Hashtable> HGetAllHashtable(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            var result = ExpectMultiDataStrings(RedisCommands.HGetAll, key.ToBytes());
+            var result = ExpectMultiDataStrings(RedisCommands.HGetAll, key);
             if (result != null)
             {
                 var length = result.Length;
@@ -172,148 +137,127 @@ namespace Sweet.Redis
             return new RedisResult<Hashtable>(null);
         }
 
-        public RedisString HGetString(string key, string field)
+        public RedisString HGetString(RedisParam key, RedisParam field)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectBulkString(RedisCommands.HGet, key.ToBytes(), field.ToBytes());
+            return ExpectBulkString(RedisCommands.HGet, key, field.ToBytes());
         }
 
-        public RedisInt HIncrBy(string key, byte[] field, int increment)
+        public RedisInt HIncrBy(RedisParam key, RedisParam field, int increment)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectInteger(RedisCommands.HIncrBy, key.ToBytes(), field, increment.ToBytes());
+            return ExpectInteger(RedisCommands.HIncrBy, key, field, increment.ToBytes());
         }
 
-        public RedisInt HIncrBy(string key, byte[] field, long increment)
+        public RedisInt HIncrBy(RedisParam key, RedisParam field, long increment)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectInteger(RedisCommands.HIncrBy, key.ToBytes(), field, increment.ToBytes());
+            return ExpectInteger(RedisCommands.HIncrBy, key, field, increment.ToBytes());
         }
 
-        public RedisDouble HIncrByFloat(string key, byte[] field, double increment)
+        public RedisDouble HIncrByFloat(RedisParam key, RedisParam field, double increment)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectDouble(RedisCommands.HIncrByFloat, key.ToBytes(), field, increment.ToBytes());
+            return ExpectDouble(RedisCommands.HIncrByFloat, key, field, increment.ToBytes());
         }
 
-        public RedisMultiBytes HKeys(string key)
+        public RedisMultiBytes HKeys(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.HKeys, key.ToBytes());
+            return ExpectMultiDataBytes(RedisCommands.HKeys, key);
         }
 
-        public RedisMultiString HKeyStrings(string key)
+        public RedisMultiString HKeyStrings(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.HKeys, key.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.HKeys, key);
         }
 
-        public RedisInt HLen(string key)
+        public RedisInt HLen(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.HLen, key.ToBytes());
+            return ExpectInteger(RedisCommands.HLen, key);
         }
 
-        public RedisMultiBytes HMGet(string key, byte[] field, params byte[][] fields)
+        public RedisMultiBytes HMGet(RedisParam key, RedisParam field, params RedisParam[] fields)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
             ValidateNotDisposed();
 
             if (fields != null && fields.Length > 0)
             {
-                var parameters = key.ToBytes()
+                var parameters = key
                                     .Join(field)
                                     .Join(fields);
 
                 return ExpectMultiDataBytes(RedisCommands.HMGet, parameters);
             }
-            return ExpectMultiDataBytes(RedisCommands.HMGet, key.ToBytes(), field);
+            return ExpectMultiDataBytes(RedisCommands.HMGet, key, field);
         }
 
-        public RedisMultiBytes HMGet(string key, string field, params string[] fields)
+        public RedisMultiString HMGetStrings(RedisParam key, RedisParam field, params RedisParam[] fields)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            ValidateNotDisposed();
-
-            if (fields != null && fields.Length > 0)
-            {
-                var parameters = key.ToBytes()
-                                    .Join(field.ToBytes())
-                                    .Join(fields.ToBytesArray());
-
-                return ExpectMultiDataBytes(RedisCommands.HMGet, parameters);
-            }
-            return ExpectMultiDataBytes(RedisCommands.HMGet, key.ToBytes(), field.ToBytes());
-        }
-
-        public RedisMultiString HMGetStrings(string key, string field, params string[] fields)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
             ValidateNotDisposed();
 
             if (fields.Length > 0)
             {
-                var parameters = key.ToBytes()
-                                    .Join(field.ToBytes())
-                                    .Join(fields.ToBytesArray());
+                var parameters = key
+                                    .Join(field)
+                                    .Join(fields);
 
                 return ExpectMultiDataStrings(RedisCommands.HMGet, parameters);
             }
-            return ExpectMultiDataStrings(RedisCommands.HMGet, key.ToBytes(), field.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.HMGet, key, field.ToBytes());
         }
 
-        public RedisBool HMSet(string key, byte[] field, byte[] value, byte[][] fields = null, byte[][] values = null)
+        public RedisBool HMSet(RedisParam key, RedisParam field, RedisParam value, RedisParam[] fields = null, RedisParam[] values = null)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
             ValidateNotDisposed();
 
-            if (value != null && value.Length > RedisConstants.MaxValueLength)
+            if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
             if (fields.Length > 0)
@@ -321,76 +265,19 @@ namespace Sweet.Redis
                 if (values == null || values.Length != fields.Length)
                     throw new ArgumentException("Field and values length does not match", "field");
 
-                var parameters = key.ToBytes()
+                var parameters = key
                                     .Join(field)
                                     .Join(value)
                                     .Join(fields.Merge(values));
 
                 return ExpectOK(RedisCommands.HMSet, parameters);
             }
-            return ExpectOK(RedisCommands.HMSet, key.ToBytes(), field, value);
+            return ExpectOK(RedisCommands.HMSet, key, field, value);
         }
 
-        public RedisBool HMSet(string key, string field, byte[] value, string[] fields = null, byte[][] values = null)
+        public RedisBool HMSet(RedisParam key, Hashtable values)
         {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            ValidateNotDisposed();
-
-            if (value != null && value.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("value is limited to 1GB", "value");
-
-            if (fields.Length > 0)
-            {
-                if (values == null || values.Length != fields.Length)
-                    throw new ArgumentException("Field and values length does not match", "field");
-
-                var parameters = key.ToBytes()
-                                    .Join(field.ToBytes())
-                                    .Join(value)
-                                    .Join(fields.Merge(values));
-
-                return ExpectOK(RedisCommands.HMSet, parameters);
-            }
-            return ExpectOK(RedisCommands.HMSet, key.ToBytes(), field.ToBytes(), value);
-        }
-
-        public RedisBool HMSet(string key, string field, string value, string[] fields = null, string[] values = null)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            ValidateNotDisposed();
-
-            var bytes = value.ToBytes();
-            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("value is limited to 1GB", "value");
-
-            if (fields.Length > 0)
-            {
-                if (values == null || values.Length != fields.Length)
-                    throw new ArgumentException("Field and values length does not match", "field");
-
-                var parameters = key.ToBytes()
-                                    .Join(field.ToBytes())
-                                    .Join(bytes)
-                                    .Join(fields.Merge(values));
-
-                return ExpectOK(RedisCommands.HMSet, parameters);
-            }
-            return ExpectOK(RedisCommands.HMSet, key.ToBytes(), field.ToBytes(), bytes);
-        }
-
-        public RedisBool HMSet(string key, Hashtable values)
-        {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             if (values == null || values.Count == 0)
@@ -399,7 +286,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             var parameters = new byte[1 + (2 * values.Count)][];
-            parameters[0] = key.ToBytes();
+            parameters[0] = key;
 
             var i = 1;
             foreach (DictionaryEntry de in values)
@@ -410,9 +297,9 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, parameters);
         }
 
-        public RedisBool HMSet(string key, Dictionary<string, string> values)
+        public RedisBool HMSet(RedisParam key, IDictionary<string, string> values)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             if (values == null || values.Count == 0)
@@ -421,7 +308,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             var parameters = new byte[1 + (2 * values.Count)][];
-            parameters[0] = key.ToBytes();
+            parameters[0] = key;
 
             var i = 1;
             foreach (var kvp in values)
@@ -432,146 +319,93 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.HMSet, parameters);
         }
 
-        public RedisMultiBytes HScan(string key, int count = 10, string match = null)
+        public RedisBool HMSet(RedisParam key, IDictionary<RedisParam, RedisParam> values)
+        {
+            if (key.IsNull)
+                throw new ArgumentNullException("key");
+
+            if (values == null || values.Count == 0)
+                throw new ArgumentNullException("values");
+
+            ValidateNotDisposed();
+
+            var parameters = new byte[1 + (2 * values.Count)][];
+            parameters[0] = key;
+
+            var i = 1;
+            foreach (var kvp in values)
+            {
+                parameters[i++] = kvp.Key;
+                parameters[i++] = kvp.Value;
+            }
+            return ExpectOK(RedisCommands.HMSet, parameters);
+        }
+
+        public RedisMultiBytes HScan(RedisParam key, int count = 10, RedisParam? match = null)
         {
             throw new NotImplementedException();
         }
 
-        public RedisMultiString HScanString(string key, int count = 10, string match = null)
+        public RedisMultiString HScanString(RedisParam key, int count = 10, RedisParam? match = null)
         {
             throw new NotImplementedException();
         }
 
-        public RedisBool HSet(string key, byte[] field, byte[] value)
+        public RedisBool HSet(RedisParam key, RedisParam field, RedisParam value)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            if (value != null && value.Length > RedisConstants.MaxValueLength)
+            if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            return ExpectGreaterThanZero(RedisCommands.HSet, key.ToBytes(), field, value);
+            return ExpectGreaterThanZero(RedisCommands.HSet, key, field, value);
         }
 
-        public RedisBool HSet(string key, string field, byte[] value)
+        public RedisBool HSetNx(RedisParam key, RedisParam field, RedisParam value)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            if (value != null && value.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("value is limited to 1GB", "value");
-
-            return ExpectGreaterThanZero(RedisCommands.HSet, key.ToBytes(), field.ToBytes(), value);
-        }
-
-        public RedisBool HSet(string key, string field, string value)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
             ValidateNotDisposed();
 
-            var bytes = value.ToBytes();
-            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
+            if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            return ExpectGreaterThanZero(RedisCommands.HSet, key.ToBytes(), field.ToBytes(), bytes);
+            return ExpectGreaterThanZero(RedisCommands.HSetNx, key, field, value);
         }
 
-        public RedisBool HSetNx(string key, byte[] field, byte[] value)
+        public RedisInt HStrLen(RedisParam key, RedisParam field)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
+            if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            ValidateNotDisposed();
-
-            if (value != null && value.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("value is limited to 1GB", "value");
-
-            return ExpectGreaterThanZero(RedisCommands.HSetNx, key.ToBytes(), field, value);
+            return ExpectInteger(RedisCommands.HStrLen, key, field);
         }
 
-        public RedisBool HSetNx(string key, string field, byte[] value)
+        public RedisMultiBytes HVals(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            ValidateNotDisposed();
-
-            if (value != null && value.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("value is limited to 1GB", "value");
-
-            return ExpectGreaterThanZero(RedisCommands.HSetNx, key.ToBytes(), field.ToBytes(), value);
+            return ExpectMultiDataBytes(RedisCommands.HVals, key);
         }
 
-        public RedisBool HSetNx(string key, string field, string value)
+        public RedisMultiString HValStrings(RedisParam key)
         {
-            if (key == null)
+            if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            ValidateNotDisposed();
-
-            var bytes = value.ToBytes();
-            if (bytes != null && bytes.Length > RedisConstants.MaxValueLength)
-                throw new ArgumentException("value is limited to 1GB", "value");
-
-            return ExpectGreaterThanZero(RedisCommands.HSetNx, key.ToBytes(), field.ToBytes(), bytes);
-        }
-
-        public RedisInt HStrLen(string key, byte[] field)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            return ExpectInteger(RedisCommands.HStrLen, key.ToBytes(), field);
-        }
-
-        public RedisInt HStrLen(string key, string field)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            if (field == null || field.Length == 0)
-                throw new ArgumentNullException("field");
-
-            return ExpectInteger(RedisCommands.HStrLen, key.ToBytes(), field.ToBytes());
-        }
-
-        public RedisMultiBytes HVals(string key)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            return ExpectMultiDataBytes(RedisCommands.HVals, key.ToBytes());
-        }
-
-        public RedisMultiString HValStrings(string key)
-        {
-            if (key == null)
-                throw new ArgumentNullException("key");
-
-            return ExpectMultiDataStrings(RedisCommands.HVals, key.ToBytes());
+            return ExpectMultiDataStrings(RedisCommands.HVals, key);
         }
 
         #endregion Methods
