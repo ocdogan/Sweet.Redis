@@ -51,20 +51,17 @@ namespace Sweet.Redis
     */
     public interface IRedisGeoCommands
     {
-        RedisInt GeoAdd(string key, RedisGeospatialItem member, params RedisGeospatialItem[] members);
-        RedisNullableDouble GeoDistance(byte[] key, byte[] member1, byte[] member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default);
-        RedisNullableDouble GeoDistanceString(string key, string member1, string member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default);
-        RedisMultiBytes GeoHash(byte[] key, byte[] member, params byte[][] members);
-        RedisMultiString GeoHashString(string key, string member, params string[] members);
-        RedisResult<RedisGeoPosition[]> GeoPosition(byte[] key, byte[] member, params byte[][] members);
-        RedisResult<RedisGeoPosition[]> GeoPositionString(string key, string member, params string[] members);
-        RedisResult<RedisGeoRadiusResult[]> GeoRadius(string key, RedisGeoPosition position, double radius,
+        RedisInt GeoAdd(RedisParam key, RedisGeospatialItem member, params RedisGeospatialItem[] members);
+        RedisNullableDouble GeoDistance(RedisParam key, RedisParam member1, RedisParam member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default);
+        RedisMultiBytes GeoHash(RedisParam key, RedisParam member, params RedisParam[] members);
+        RedisResult<RedisGeoPosition[]> GeoPosition(RedisParam key, RedisParam member, params RedisParam[] members);
+        RedisResult<RedisGeoRadiusResult[]> GeoRadius(RedisParam key, RedisGeoPosition position, double radius,
                        RedisGeoDistanceUnit unit, bool withCoord = false, bool withDist = false, bool withHash = false,
-                       int count = -1, RedisSortDirection sort = RedisSortDirection.Default, string storeKey = null,
-                       string storeDistance = null);
-        RedisResult<RedisGeoRadiusResult[]> GeoRadiusByMember(string key, string member, double radius,
+                       int count = -1, RedisSortDirection sort = RedisSortDirection.Default, RedisParam? storeKey = null,
+                       RedisParam? storeDistanceKey = null);
+        RedisResult<RedisGeoRadiusResult[]> GeoRadiusByMember(RedisParam key, RedisParam member, double radius,
                        RedisGeoDistanceUnit unit, bool withCoord = false, bool withDist = false, bool withHash = false,
-                       int count = -1, RedisSortDirection sort = RedisSortDirection.Default, string storeKey = null,
-                       string storeDistance = null);
+                       int count = -1, RedisSortDirection sort = RedisSortDirection.Default, RedisParam? storeKey = null,
+                       RedisParam? storeDistanceKey = null);
     }
 }

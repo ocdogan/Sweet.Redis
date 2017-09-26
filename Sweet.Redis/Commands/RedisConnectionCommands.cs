@@ -38,32 +38,32 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisBool Auth(string password)
+        public RedisBool Auth(RedisParam password)
         {
-            if (password == null)
+            if (password.IsEmpty)
                 throw new ArgumentNullException("password");
 
-            return ExpectOK(RedisCommands.Auth, password.ToBytes());
+            return ExpectOK(RedisCommands.Auth, password);
         }
 
-        public RedisString Echo(string msg)
+        public RedisString Echo(RedisParam msg)
         {
-            if (msg == null)
+            if (msg.IsNull)
                 throw new ArgumentNullException("msg");
 
-            return ExpectBulkString(RedisCommands.Echo, msg.ToBytes());
+            return ExpectBulkString(RedisCommands.Echo, msg);
         }
 
         public RedisString Ping()
         {
-            return Ping(null);
+            return ExpectSimpleString(RedisCommands.Ping);
         }
 
-        public RedisString Ping(string msg)
+        public RedisString Ping(RedisParam msg)
         {
-            if (String.IsNullOrEmpty(msg))
+            if (msg.IsEmpty)
                 return ExpectSimpleString(RedisCommands.Ping);
-            return ExpectBulkString(RedisCommands.Ping, msg.ToBytes());
+            return ExpectBulkString(RedisCommands.Ping, msg);
         }
 
         public RedisBool Quit()

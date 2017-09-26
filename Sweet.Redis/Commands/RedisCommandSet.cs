@@ -89,6 +89,30 @@ namespace Sweet.Redis
                 throw new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName);
         }
 
+        protected static void ValidateKeyAndValue(RedisParam key, byte[] value, string keyName = null, string valueName = null)
+        {
+            if (key.IsEmpty)
+                throw new ArgumentNullException(String.IsNullOrEmpty(keyName) ? "key" : keyName);
+
+            if (value == null)
+                throw new ArgumentNullException(String.IsNullOrEmpty(valueName) ? "value" : valueName);
+
+            if (value.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName);
+        }
+
+        protected static void ValidateKeyAndValue(RedisParam key, RedisParam value, string keyName = null, string valueName = null)
+        {
+            if (key.IsEmpty)
+                throw new ArgumentNullException(String.IsNullOrEmpty(keyName) ? "key" : keyName);
+
+            if (value.IsNull)
+                throw new ArgumentNullException(String.IsNullOrEmpty(valueName) ? "value" : valueName);
+
+            if (value.Data.Length > RedisConstants.MaxValueLength)
+                throw new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName);
+        }
+
         protected RedisRaw ExpectArray(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();

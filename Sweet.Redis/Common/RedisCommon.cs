@@ -250,14 +250,16 @@ namespace Sweet.Redis
                 var tc = Type.GetTypeCode(obj.GetType());
                 switch (tc)
                 {
+                    case TypeCode.Object:
+                        if (obj is RedisParam)
+                            return ((RedisParam)obj).Data;
+                        return Encoding.UTF8.GetBytes(obj.ToString());
                     case TypeCode.String:
                         return Encoding.UTF8.GetBytes((string)obj);
                     case TypeCode.Int32:
                         return Encoding.UTF8.GetBytes(((int)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Int64:
                         return Encoding.UTF8.GetBytes(((long)obj).ToString(RedisConstants.InvariantCulture));
-                    case TypeCode.Object:
-                        return Encoding.UTF8.GetBytes(obj.ToString());
                     case TypeCode.Decimal:
                         return Encoding.UTF8.GetBytes(((decimal)obj).ToString(RedisConstants.InvariantCulture));
                     case TypeCode.Double:
@@ -415,6 +417,95 @@ namespace Sweet.Redis
             for (var i = 0; i < keysLength; i++)
                 result[i] = keys[i].ToBytes();
 
+            return result;
+        }
+
+        internal static byte[][] ConvertToByteArray(this RedisParam[] keys)
+        {
+            if (keys == null)
+                throw new ArgumentNullException("keys");
+
+            var keysLength = keys.Length;
+            if (keysLength == 0)
+                throw new ArgumentNullException("keys");
+
+            var result = new byte[keysLength][];
+
+            for (var i = 0; i < keysLength; i++)
+                result[i] = keys[i].ToBytes();
+
+            return result;
+        }
+
+        internal static byte[][] Merge(this RedisParam[] keys, RedisParam[] values)
+        {
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (keysLength != valuesLength)
+                throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
+
+            var result = new byte[2 * keysLength][];
+
+            for (int i = 0, index = 0; i < keysLength; i++)
+            {
+                result[index++] = keys[i].Data;
+                result[index++] = values[i].Data;
+            }
+            return result;
+        }
+
+        internal static byte[][] Merge(this byte[][] keys, RedisParam[] values)
+        {
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (keysLength != valuesLength)
+                throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
+
+            var result = new byte[2 * keysLength][];
+
+            for (int i = 0, index = 0; i < keysLength; i++)
+            {
+                result[index++] = keys[i];
+                result[index++] = values[i].Data;
+            }
+            return result;
+        }
+
+        internal static byte[][] Merge(this RedisParam[] keys, byte[][] values)
+        {
+            var keysLength = (keys != null) ? keys.Length : -1;
+            var valuesLength = (values != null) ? values.Length : -1;
+
+            if (keysLength != valuesLength)
+                throw new ArgumentException("keys length is not equal to values length", "keys");
+
+            if (keysLength < 0)
+                return null;
+
+            if (keysLength == 0)
+                return new byte[0][];
+
+            var result = new byte[2 * keysLength][];
+
+            for (int i = 0, index = 0; i < keysLength; i++)
+            {
+                result[index++] = keys[i].Data;
+                result[index++] = values[i];
+            }
             return result;
         }
 

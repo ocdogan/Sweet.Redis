@@ -30,7 +30,7 @@ namespace Sweet.Redis
     since: 2.0.0
 
     BITCOUNT key [start end]
-    summary: Count set bits in a string
+    summary: Count set bits in a RedisParam
     since: 2.6.0
 
     BITFIELD key [GET type offset] [SET type offset value] [INCRBY type offset increment] [OVERFLOW WRAP|SAT|FAIL]
@@ -42,7 +42,7 @@ namespace Sweet.Redis
     since: 2.6.0
 
     BITPOS key bit [start] [end]
-    summary: Find first bit set or clear in a string
+    summary: Find first bit set or clear in a RedisParam
     since: 2.8.7
 
     DECR key
@@ -58,15 +58,15 @@ namespace Sweet.Redis
     since: 1.0.0
 
     GETBIT key offset
-    summary: Returns the bit value at offset in the string value stored at key
+    summary: Returns the bit value at offset in the RedisParam value stored at key
     since: 2.2.0
 
     GETRANGE key start end
-    summary: Get a substring of the string stored at a key
+    summary: Get a substring of the RedisParam stored at a key
     since: 2.4.0
 
     GETSET key value
-    summary: Set the string value of a key and return its old value
+    summary: Set the RedisParam value of a key and return its old value
     since: 1.0.0
 
     INCR key
@@ -98,11 +98,11 @@ namespace Sweet.Redis
     since: 2.6.0
 
     SET key value [EX seconds] [PX milliseconds] [NX|XX]
-    summary: Set the string value of a key
+    summary: Set the RedisParam value of a key
     since: 1.0.0
 
     SETBIT key offset value
-    summary: Sets or clears the bit at offset in the string value stored at key
+    summary: Sets or clears the bit at offset in the RedisParam value stored at key
     since: 2.2.0
 
     SETEX key seconds value
@@ -114,7 +114,7 @@ namespace Sweet.Redis
     since: 1.0.0
 
     SETRANGE key offset value
-    summary: Overwrite part of a string at key starting at the specified offset
+    summary: Overwrite part of a RedisParam at key starting at the specified offset
     since: 2.2.0
 
     STRLEN key
@@ -123,48 +123,42 @@ namespace Sweet.Redis
      */
     public interface IRedisStringsCommands
     {
-        RedisInt Append(string key, byte[] value);
+        RedisInt Append(RedisParam key, RedisParam value);
 
-        RedisInt BitCount(string key);
-        RedisInt BitCount(string key, int start, int end);
+        RedisInt BitCount(RedisParam key);
+        RedisInt BitCount(RedisParam key, int start, int end);
 
-        RedisInt Decr(string key);
-        RedisInt DecrBy(string key, int count);
-        RedisInt DecrBy(string key, long count);
+        RedisInt Decr(RedisParam key);
+        RedisInt DecrBy(RedisParam key, int count);
+        RedisInt DecrBy(RedisParam key, long count);
 
-        RedisBytes Get(string key);
-        RedisInt GetBit(string key, int offset);
-        RedisBytes GetRange(string key, int start, int end);
-        RedisString GetRangeString(string key, int start, int end);
-        RedisBytes GetSet(string key, byte[] value);
-        RedisString GetSet(string key, string value);
-        RedisString GetString(string key);
+        RedisBytes Get(RedisParam key);
+        RedisString GetString(RedisParam key);
+        RedisInt GetBit(RedisParam key, int offset);
+        RedisBytes GetRange(RedisParam key, int start, int end);
+        RedisString GetRangeString(RedisParam key, int start, int end);
+        RedisBytes GetSet(RedisParam key, RedisParam value);
+        RedisString GetSetString(RedisParam key, RedisParam value);
 
-        RedisInt Incr(string key);
-        RedisInt IncrBy(string key, int count);
-        RedisInt IncrBy(string key, long count);
-        RedisDouble IncrByFloat(string key, double increment);
+        RedisInt Incr(RedisParam key);
+        RedisInt IncrBy(RedisParam key, int count);
+        RedisInt IncrBy(RedisParam key, long count);
+        RedisDouble IncrByFloat(RedisParam key, double increment);
 
-        RedisMultiBytes MGet(params byte[][] keys);
-        RedisMultiString MGet(params string[] keys);
+        RedisMultiBytes MGet(params RedisParam[] keys);
+        RedisMultiString MGetString(params RedisParam[] keys);
 
-        RedisBool MSet(byte[][] keys, byte[][] values);
-        RedisBool MSet(string[] keys, string[] values);
-        RedisBool MSetNx(byte[][] keys, byte[][] values);
-        RedisBool MSetNx(string[] keys, string[] values);
-        RedisBool PSetEx(string key, long milliseconds, byte[] value);
+        RedisBool MSet(RedisParam[] keys, RedisParam[] values);
+        RedisBool MSetNx(RedisParam[] keys, RedisParam[] values);
+        RedisBool PSetEx(RedisParam key, long milliseconds, RedisParam value);
 
-        RedisBool Set(string key, byte[] value);
-        RedisBool Set(string key, byte[] value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
-        RedisBool Set(string key, string value);
-        RedisBool Set(string key, string value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
-        RedisInt SetBit(string key, int offset, int value);
-        RedisBool SetEx(string key, int seconds, byte[] value);
-        RedisBool SetEx(string key, int seconds, string value);
-        RedisBool SetNx(string key, byte[] value);
-        RedisBool SetNx(string key, string value);
-        RedisInt SetRange(string key, int offset, byte[] value);
+        RedisBool Set(RedisParam key, RedisParam value);
+        RedisBool Set(RedisParam key, RedisParam value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
+        RedisInt SetBit(RedisParam key, int offset, int value);
+        RedisBool SetEx(RedisParam key, int seconds, RedisParam value);
+        RedisBool SetNx(RedisParam key, RedisParam value);
+        RedisInt SetRange(RedisParam key, int offset, RedisParam value);
 
-        RedisInt StrLen(string key);
+        RedisInt StrLen(RedisParam key);
     }
 }

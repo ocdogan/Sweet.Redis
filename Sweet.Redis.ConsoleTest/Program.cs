@@ -33,11 +33,11 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest11();
             // PubSubTest12();
 
-            // MultiThreading1();
+            MultiThreading1();
             // MultiThreading2();
             // MultiThreading3();
             // MultiThreading4();
-            MultiThreading5();
+            // MultiThreading5();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -654,9 +654,9 @@ namespace Sweet.Redis.ConsoleTest
         static void MultiThreading1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 10)))
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
             {
-                const int ThreadCount = 30;
+                const int ThreadCount = 50;
 
                 var loopIndex = 0;
                 List<Thread> thList = null;
@@ -703,10 +703,10 @@ namespace Sweet.Redis.ConsoleTest
 
                                         var sw = new Stopwatch();
 
-                                        for (var j = 0; j < 1000; j++)
+                                        for (var j = 0; j < 100; j++)
                                         {
                                             sw.Restart();
-                                            var result = rdb.Connection.Ping();
+                                            var result = rdb.Connection.Ping("Hello");
                                             sw.Stop();
 
                                             Console.WriteLine(@this.Name + ": Ping, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " + result);

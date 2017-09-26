@@ -39,9 +39,9 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt GeoAdd(string key, RedisGeospatialItem member, params RedisGeospatialItem[] members)
+        public RedisInt GeoAdd(RedisParam key, RedisGeospatialItem member, params RedisGeospatialItem[] members)
         {
-            if (key == null || key.Length == 0)
+            if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
             if (member.IsEmpty)
@@ -67,38 +67,21 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.GeoAdd, parameters);
         }
 
-        public RedisNullableDouble GeoDistance(byte[] key, byte[] member1, byte[] member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default)
+        public RedisNullableDouble GeoDistance(RedisParam key, RedisParam member1, RedisParam member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default)
         {
-            if (key == null || key.Length == 0)
+            if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
-            if (member1 == null || member1.Length == 0)
+            if (member1.IsEmpty)
                 throw new ArgumentNullException("member1");
 
-            if (member2 == null || member2.Length == 0)
+            if (member2.IsEmpty)
                 throw new ArgumentNullException("member2");
 
             if (unit == RedisGeoDistanceUnit.Default)
                 return ExpectNullableDouble(RedisCommands.GeoDist, key, member1, member2);
 
             return ExpectNullableDouble(RedisCommands.GeoDist, key, member1, member2, ToBytes(unit));
-        }
-
-        public RedisNullableDouble GeoDistanceString(string key, string member1, string member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default)
-        {
-            if (key == null || key.Length == 0)
-                throw new ArgumentNullException("key");
-
-            if (member1 == null || member1.Length == 0)
-                throw new ArgumentNullException("member1");
-
-            if (member2 == null || member2.Length == 0)
-                throw new ArgumentNullException("member2");
-
-            if (unit == RedisGeoDistanceUnit.Default)
-                return ExpectNullableDouble(RedisCommands.GeoDist, key.ToBytes(), member1.ToBytes(), member2.ToBytes());
-
-            return ExpectNullableDouble(RedisCommands.GeoDist, key.ToBytes(), member1.ToBytes(), member2.ToBytes(), ToBytes(unit));
         }
 
         private static byte[] ToBytes(RedisGeoDistanceUnit unit)
@@ -118,81 +101,42 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisMultiBytes GeoHash(byte[] key, byte[] member, params byte[][] members)
+        public RedisMultiBytes GeoHash(RedisParam key, RedisParam member, params RedisParam[] members)
         {
-            if (key == null || key.Length == 0)
+            if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
-            if (member == null || member.Length == 0)
+            if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
             if (members.Length == 0)
                 return ExpectMultiDataBytes(RedisCommands.GeoHash, key, member);
 
-            var parameters = key.Join(member);
+            var parameters = key.ToBytes().Join(member.ToBytes());
 
             foreach (var m in members)
             {
-                if (m != null && m.Length > 0)
-                    parameters = parameters.Join(m);
+                if (!m.IsEmpty)
+                    parameters = parameters.Join(m.ToBytes());
             }
 
             return ExpectMultiDataBytes(RedisCommands.GeoHash, parameters);
         }
 
-        public RedisMultiString GeoHashString(string key, string member, params string[] members)
+
+        public RedisResult<RedisGeoPosition[]> GeoPosition(RedisParam key, RedisParam member, params RedisParam[] members)
         {
-            if (key == null || key.Length == 0)
+            if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
-            if (member == null || member.Length == 0)
+            if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
-            if (members.Length == 0)
-                return ExpectMultiDataStrings(RedisCommands.GeoHash, key.ToBytes(), member.ToBytes());
-
-            var parameters = key.ToBytes().Join(member.ToBytes());
-
+            var parameters = key.ToBytes().Join(member);
             foreach (var m in members)
             {
-                if (m != null && m.Length > 0)
-                    parameters = parameters.Join(m.ToBytes());
-            }
-
-            return ExpectMultiDataStrings(RedisCommands.GeoHash, parameters);
-        }
-
-        public RedisResult<RedisGeoPosition[]> GeoPosition(byte[] key, byte[] member, params byte[][] members)
-        {
-            if (key == null || key.Length == 0)
-                throw new ArgumentNullException("key");
-
-            if (member == null || member.Length == 0)
-                throw new ArgumentNullException("member");
-
-            var parameters = key.Join(member);
-            foreach (var m in members)
-            {
-                if (m != null && m.Length > 0)
+                if (!m.IsEmpty)
                     parameters = parameters.Join(m);
-            }
-
-            return ToGeoPosition(ExpectArray(RedisCommands.GeoPos, parameters));
-        }
-
-        public RedisResult<RedisGeoPosition[]> GeoPositionString(string key, string member, params string[] members)
-        {
-            if (key == null || key.Length == 0)
-                throw new ArgumentNullException("key");
-
-            if (member == null || member.Length == 0)
-                throw new ArgumentNullException("member");
-
-            var parameters = key.ToBytes().Join(member.ToBytes());
-            foreach (var m in members)
-            {
-                if (m != null && m.Length > 0)
-                    parameters = parameters.Join(m.ToBytes());
             }
 
             return ToGeoPosition(ExpectArray(RedisCommands.GeoPos, parameters));
@@ -221,12 +165,12 @@ namespace Sweet.Redis
             return new RedisResult<RedisGeoPosition[]>(result);
         }
 
-        public RedisResult<RedisGeoRadiusResult[]> GeoRadius(string key, RedisGeoPosition position, double radius,
+        public RedisResult<RedisGeoRadiusResult[]> GeoRadius(RedisParam key, RedisGeoPosition position, double radius,
                 RedisGeoDistanceUnit unit, bool withCoord = false, bool withDist = false, bool withHash = false,
-                int count = -1, RedisSortDirection sort = RedisSortDirection.Default, string storeKey = null,
-                string storeDistance = null)
+                int count = -1, RedisSortDirection sort = RedisSortDirection.Default, RedisParam? storeKey = null,
+                RedisParam? storeDistanceKey = null)
         {
-            if (key == null || key.Length == 0)
+            if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
             var parameters = key.ToBytes()
@@ -252,24 +196,24 @@ namespace Sweet.Redis
             else if (sort == RedisSortDirection.Descending)
                 parameters = parameters.Join(RedisCommands.Descending);
 
-            if (!String.IsNullOrEmpty(storeKey))
+            if (storeKey.HasValue && !storeKey.Value.IsEmpty)
                 parameters = parameters.Join(RedisCommands.Store).Join(storeKey.ToBytes());
 
-            if (!String.IsNullOrEmpty(storeDistance))
-                parameters = parameters.Join(RedisCommands.StoreDist).Join(storeDistance.ToBytes());
+            if (storeDistanceKey.HasValue && !storeDistanceKey.Value.IsEmpty)
+                parameters = parameters.Join(RedisCommands.StoreDist).Join(storeDistanceKey.ToBytes());
 
             return ToGeoRadiusArray(ExpectArray(RedisCommands.GeoRadius, parameters));
         }
 
-        public RedisResult<RedisGeoRadiusResult[]> GeoRadiusByMember(string key, string member, double radius,
+        public RedisResult<RedisGeoRadiusResult[]> GeoRadiusByMember(RedisParam key, RedisParam member, double radius,
                 RedisGeoDistanceUnit unit, bool withCoord = false, bool withDist = false, bool withHash = false,
-                int count = -1, RedisSortDirection sort = RedisSortDirection.Default, string storeKey = null,
-                string storeDistance = null)
+                int count = -1, RedisSortDirection sort = RedisSortDirection.Default, RedisParam? storeKey = null,
+                RedisParam? storeDistanceKey = null)
         {
-            if (key == null || key.Length == 0)
+            if (key.IsEmpty)
                 throw new ArgumentNullException("key");
 
-            if (member == null || member.Length == 0)
+            if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
             var parameters = key.ToBytes()
@@ -294,11 +238,11 @@ namespace Sweet.Redis
             else if (sort == RedisSortDirection.Descending)
                 parameters = parameters.Join(RedisCommands.Descending);
 
-            if (!String.IsNullOrEmpty(storeKey))
+            if (storeKey.HasValue && !storeKey.Value.IsEmpty)
                 parameters = parameters.Join(RedisCommands.Store).Join(storeKey.ToBytes());
 
-            if (!String.IsNullOrEmpty(storeDistance))
-                parameters = parameters.Join(RedisCommands.StoreDist).Join(storeDistance.ToBytes());
+            if (storeDistanceKey.HasValue && !storeDistanceKey.Value.IsEmpty)
+                parameters = parameters.Join(RedisCommands.StoreDist).Join(storeDistanceKey.ToBytes());
 
             return ToGeoRadiusArray(ExpectArray(RedisCommands.GeoRadiusByMember, parameters));
         }
