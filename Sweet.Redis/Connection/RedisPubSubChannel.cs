@@ -255,12 +255,12 @@ namespace Sweet.Redis
             }
         }
 
-        public void PSubscribe(Action<RedisPubSubMessage> callback, string pattern, params string[] patterns)
+        public void PSubscribe(Action<RedisPubSubMessage> callback, RedisParam pattern, params RedisParam[] patterns)
         {
             if (callback == null)
                 throw new ArgumentNullException("callback");
 
-            if (pattern == null)
+            if (pattern.IsEmpty)
                 throw new ArgumentNullException("pattern");
 
             ValidateNotDisposed();
@@ -277,19 +277,22 @@ namespace Sweet.Redis
                     {
                         if (!subscriptions.Exists(pattern))
                         {
-                            newItems.Add(pattern.ToBytes());
+                            newItems.Add(pattern.Data);
                             pendingSubscriptions.Register(pattern, callback);
                         }
                     }
 
                     foreach (var ptrn in patterns)
                     {
-                        lock (m_PSubscriptionLock)
+                        if (!ptrn.IsEmpty)
                         {
-                            if (!subscriptions.Exists(ptrn, callback))
+                            lock (m_PSubscriptionLock)
                             {
-                                newItems.Add(ptrn.ToBytes());
-                                pendingSubscriptions.Register(ptrn, callback);
+                                if (!subscriptions.Exists(ptrn, callback))
+                                {
+                                    newItems.Add(ptrn.Data);
+                                    pendingSubscriptions.Register(ptrn, callback);
+                                }
                             }
                         }
                     }
@@ -315,7 +318,7 @@ namespace Sweet.Redis
             action.InvokeAsync();
         }
 
-        public void PUnsubscribe(params string[] patterns)
+        public void PUnsubscribe(params RedisParam[] patterns)
         {
             if (patterns.Length == 0)
                 SendAsync(RedisCommands.PUnsubscribe);
@@ -323,12 +326,12 @@ namespace Sweet.Redis
                 SendAsync(RedisCommands.PUnsubscribe, patterns.ToBytesArray());
         }
 
-        public void Subscribe(Action<RedisPubSubMessage> callback, string channel, params string[] channels)
+        public void Subscribe(Action<RedisPubSubMessage> callback, RedisParam channel, params RedisParam[] channels)
         {
             if (callback == null)
                 throw new ArgumentNullException("callback");
 
-            if (channel == null)
+            if (channel.IsEmpty)
                 throw new ArgumentNullException("pattern");
 
             ValidateNotDisposed();
@@ -345,20 +348,23 @@ namespace Sweet.Redis
                     {
                         if (!subscriptions.Exists(channel))
                         {
-                            newItems.Add(channel.ToBytes());
+                            newItems.Add(channel.Data);
                             pendingSubscriptions.Register(channel, callback);
                         }
                     }
 
                     foreach (var chnl in channels)
                     {
-                        lock (m_SubscriptionLock)
+                        if (!chnl.IsEmpty)
                         {
-
-                            if (!subscriptions.Exists(chnl, callback))
+                            lock (m_SubscriptionLock)
                             {
-                                newItems.Add(chnl.ToBytes());
-                                pendingSubscriptions.Register(chnl, callback);
+
+                                if (!subscriptions.Exists(chnl, callback))
+                                {
+                                    newItems.Add(chnl.Data);
+                                    pendingSubscriptions.Register(chnl, callback);
+                                }
                             }
                         }
                     }
@@ -386,7 +392,7 @@ namespace Sweet.Redis
             }
         }
 
-        public void UnregisterPSubscription(string channel, Action<RedisPubSubMessage> callback)
+        public void UnregisterPSubscription(RedisParam channel, Action<RedisPubSubMessage> callback)
         {
             lock (m_PSubscriptionLock)
             {
@@ -404,7 +410,7 @@ namespace Sweet.Redis
             }
         }
 
-        public void UnregisterSubscription(string channel, Action<RedisPubSubMessage> callback)
+        public void UnregisterSubscription(RedisParam channel, Action<RedisPubSubMessage> callback)
         {
             lock (m_SubscriptionLock)
             {
