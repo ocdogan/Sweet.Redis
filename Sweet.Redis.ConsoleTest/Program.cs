@@ -113,27 +113,27 @@ namespace Sweet.Redis.ConsoleTest
                             Console.WriteLine("GEOADD Sicily 13.361389 38.115556 \"Palermo\" 15.087269 37.502669 \"Catania\"");
                             Console.WriteLine(addResult);
 
-                            var distResult = db.Geo.GeoDistanceString("Sicily", "Palermo", "Catania");
+                            var distResult = db.Geo.GeoDistance("Sicily", "Palermo", "Catania");
                             Console.WriteLine("GEODIST Sicily Palermo Catania");
                             Console.WriteLine(distResult);
 
-                            distResult = db.Geo.GeoDistanceString("Sicily", "Palermo", "Catania", RedisGeoDistanceUnit.Kilometers);
+                            distResult = db.Geo.GeoDistance("Sicily", "Palermo", "Catania", RedisGeoDistanceUnit.Kilometers);
                             Console.WriteLine("GEODIST Sicily Palermo Catania km");
                             Console.WriteLine(distResult);
 
-                            distResult = db.Geo.GeoDistanceString("Sicily", "Palermo", "Catania", RedisGeoDistanceUnit.Miles);
+                            distResult = db.Geo.GeoDistance("Sicily", "Palermo", "Catania", RedisGeoDistanceUnit.Miles);
                             Console.WriteLine("GEODIST Sicily Palermo Catania mi");
                             Console.WriteLine(distResult);
 
-                            distResult = db.Geo.GeoDistanceString("Sicily", "Foo", "Bar");
+                            distResult = db.Geo.GeoDistance("Sicily", "Foo", "Bar");
                             Console.WriteLine("GEODIST Sicily Foo Bar");
                             Console.WriteLine(distResult);
 
-                            var hashResult = db.Geo.GeoHashString("Sicily", "Palermo", "Catania");
+                            var hashResult = db.Geo.GeoHash("Sicily", "Palermo", "Catania");
                             Console.WriteLine("GEOHASH Sicily Palermo Catania");
                             Console.WriteLine(hashResult);
 
-                            var posResult = db.Geo.GeoPositionString("Sicily", "Palermo", "Catania", "NonExisting");
+                            var posResult = db.Geo.GeoPosition("Sicily", "Palermo", "Catania", "NonExisting");
                             Console.WriteLine("GEOPOS Sicily Palermo Catania NonExisting");
                             Console.WriteLine(posResult);
 
@@ -1342,9 +1342,9 @@ namespace Sweet.Redis.ConsoleTest
                         Console.Clear();
                         try
                         {
-                            var result = db.Scripting.EvalString(script,
-                                                                 new RedisKeyValue<string, string>("key1", "first"),
-                                                                 new RedisKeyValue<string, string>("key2", "second"));
+                            var result = db.Scripting.Eval(script,
+                                                                 new RedisKeyValue<RedisParam, RedisParam>("key1", "first"),
+                                                                 new RedisKeyValue<RedisParam, RedisParam>("key2", "second"));
                             Console.WriteLine((result == null) ? "(nil)" : result.ToString());
                         }
                         catch (Exception e)
@@ -1375,7 +1375,7 @@ namespace Sweet.Redis.ConsoleTest
                         Console.Clear();
                         try
                         {
-                            var result = db.Scripting.EvalSHA(sha1);
+                            var result = db.Scripting.EvalSHA(sha1.Value);
                             Console.WriteLine((result == null) ? "(nil)" : result.ToString());
                         }
                         catch (Exception e)
@@ -1406,9 +1406,9 @@ namespace Sweet.Redis.ConsoleTest
                         Console.Clear();
                         try
                         {
-                            var result = db.Scripting.EvalSHAString(sha1,
-                                                                 new RedisKeyValue<string, string>("key1", "first"),
-                                                                 new RedisKeyValue<string, string>("key2", "second"));
+                            var result = db.Scripting.EvalSHA(sha1.Value,
+                                                                 new RedisKeyValue<RedisParam, RedisParam>("key1", "first"),
+                                                                 new RedisKeyValue<RedisParam, RedisParam>("key2", "second"));
                             Console.WriteLine((result == null) ? "(nil)" : result.ToString());
                         }
                         catch (Exception e)
