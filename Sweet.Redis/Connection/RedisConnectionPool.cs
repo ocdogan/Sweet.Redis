@@ -496,7 +496,17 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("command");
 
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<IRedisResponse>(command, RedisCommandExpect.Response, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.Execute(connection, throwException);
             }
@@ -508,7 +518,17 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("command");
 
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisRaw>(command, RedisCommandExpect.Array, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectArray(connection, throwException);
             }
@@ -517,7 +537,17 @@ namespace Sweet.Redis
         internal RedisString ExpectBulkString(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisString>(command, RedisCommandExpect.BulkString, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectBulkString(connection, throwException);
             }
@@ -545,7 +575,17 @@ namespace Sweet.Redis
         internal RedisDouble ExpectDouble(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisDouble>(command, RedisCommandExpect.Double, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectDouble(connection, throwException);
             }
@@ -554,7 +594,17 @@ namespace Sweet.Redis
         internal RedisBool ExpectGreaterThanZero(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.GreaterThanZero, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
             }
@@ -563,7 +613,17 @@ namespace Sweet.Redis
         internal RedisInt ExpectInteger(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisInt>(command, RedisCommandExpect.Integer, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectInteger(connection, throwException);
             }
@@ -572,7 +632,17 @@ namespace Sweet.Redis
         internal RedisMultiBytes ExpectMultiDataBytes(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisMultiBytes>(command, RedisCommandExpect.MultiDataBytes, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectMultiDataBytes(connection, throwException);
             }
@@ -581,7 +651,17 @@ namespace Sweet.Redis
         internal RedisMultiString ExpectMultiDataStrings(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisMultiString>(command, RedisCommandExpect.MultiDataStrings, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectMultiDataStrings(connection, throwException);
             }
@@ -590,7 +670,17 @@ namespace Sweet.Redis
         internal RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableDouble>(command, RedisCommandExpect.NullableDouble, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectNullableDouble(connection, throwException);
             }
@@ -599,7 +689,17 @@ namespace Sweet.Redis
         internal RedisNullableInt ExpectNullableInteger(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableInt>(command, RedisCommandExpect.NullableInteger, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectNullableInteger(connection, throwException);
             }
@@ -607,13 +707,37 @@ namespace Sweet.Redis
 
         internal RedisBool ExpectOK(RedisCommand command, bool throwException = true)
         {
-            return ExpectSimpleString(command, "OK");
+            ValidateNotDisposed();
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, "OK");
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
+            {
+                return command.ExpectSimpleString(connection, "OK", throwException);
+            }
         }
 
         internal RedisBool ExpectOne(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.One, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectInteger(connection, throwException) == RedisConstants.One;
             }
@@ -622,7 +746,17 @@ namespace Sweet.Redis
         internal RedisBool ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, expectedResult);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectSimpleString(connection, expectedResult, throwException);
             }
@@ -631,7 +765,17 @@ namespace Sweet.Redis
         internal RedisString ExpectSimpleString(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisString>(command, RedisCommandExpect.SimpleString, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectSimpleString(connection, throwException);
             }
@@ -640,7 +784,17 @@ namespace Sweet.Redis
         internal RedisBool ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, null);
+                StartToProcessQ();
+
+                return (asyncRequest.Task.Result == expectedResult);
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
             }
@@ -649,7 +803,17 @@ namespace Sweet.Redis
         internal RedisBytes ExpectSimpleStringBytes(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
-            using (var connection = Connect(command.DbIndex))
+
+            var connection = Connect(command.DbIndex);
+            if (connection == null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, null);
+                StartToProcessQ();
+
+                return asyncRequest.Task.Result;
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
             {
                 return command.ExpectSimpleStringBytes(connection, throwException);
             }
