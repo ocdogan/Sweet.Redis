@@ -33,11 +33,13 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest11();
             // PubSubTest12();
 
-            MultiThreading1();
-            // MultiThreading2();
+            // MultiThreading1();
+            // MultiThreading2a();
+            MultiThreading2b();
             // MultiThreading3();
             // MultiThreading4();
             // MultiThreading5();
+            // MultiThreading6();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -179,46 +181,58 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Multi-Threading
 
+        static void MultiThreading6()
+        {
+            MultiThreadingBase(2, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("tiny_text"); });
+        }
+
         static void MultiThreading5()
         {
-            MultiThreadingBase(1, 50, 100, "small_text", new string('x', 1000), false, 5,
-                               (rdb) => { return rdb.Strings.Get("small_text"); });
+            MultiThreadingBase(2, 1, 50, 100, "small_text", new string('x', 1000), false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading4()
         {
-            MultiThreadingBase(1, 50, 100, "small_text", new string('x', 1000), true, 5,
-                               (rdb) => { return rdb.Strings.Get("small_text"); });
+            MultiThreadingBase(2, 1, 50, 100, "small_text", new string('x', 1000), true, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading3()
         {
-            MultiThreadingBase(10, 50, 100, "small_text", new string('x', 1000), true, 5,
-                               (rdb) => { return rdb.Strings.Get("small_text"); });
+            MultiThreadingBase(2, 10, 50, 100, "small_text", new string('x', 1000), true, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
-        static void MultiThreading2()
+        static void MultiThreading2a()
         {
-            MultiThreadingBase(10, 50, 100, "large_text", new string('x', 100000), true, 5,
-                               (rdb) => { return rdb.Strings.Get("small_text"); });
+            MultiThreadingBase(2, 10, 50, 100, "large_text", new string('x', 100000), false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
+        }
+
+        static void MultiThreading2b()
+        {
+            MultiThreadingBase(2, 1, 50, 100, "large_text", new string('x', 100000), false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
         }
 
         static void MultiThreading1()
         {
             var tinyText = new string('x', 10);
 
-            MultiThreadingBase(1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb) => { return Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value); });
+            MultiThreadingBase(2, 1, 50, 100, "tiny_text", tinyText, true, 5,
+                               (rdb, dbIndex) => { return Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value); });
         }
 
-        static void MultiThreadingBase(int maxCount, int threadCount, int loopCount,
+        static void MultiThreadingBase(int dbIndex, int maxCount, int threadCount, int loopCount,
                                        string testKey, string testText, bool requireKeyPress,
-                                       int sleepSecs, Func<IRedisDb, byte[]> proc)
+                                       int sleepSecs, Func<IRedisDb, int, byte[]> proc)
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount)))
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount))) // LOCAL
             {
-                using (var db = pool.GetDb())
+                using (var db = pool.GetDb(dbIndex))
                 {
                     db.Strings.Set(testKey, testText);
                     db.Strings.Get(testKey);
@@ -272,10 +286,11 @@ namespace Sweet.Redis.ConsoleTest
                                         for (var j = 0; j < loopCount; j++)
                                         {
                                             sw.Restart();
-                                            var data = proc(rdb);
+                                            var data = proc(rdb, dbIndex);
                                             sw.Stop();
 
-                                            Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " + (data != null && data.Length == testText.Length ? "OK" : "FAILED"));
+                                            Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " + 
+                                                (data != null && data.Length == testText.Length ? "OK" : "FAILED"));
 
                                             lock (ticksLock)
                                             {

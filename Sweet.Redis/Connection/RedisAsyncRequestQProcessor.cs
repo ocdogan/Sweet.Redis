@@ -136,7 +136,10 @@ namespace Sweet.Redis
                 {
                     StopCurrent();
 
-                    var thread = new Thread((p) => { ProcessQueue((ProcessParameters)p); });
+                    var thread = new Thread((p) => 
+                    {
+                        ProcessQueue((ProcessParameters)p);
+                    });
                     thread.IsBackground = true;
 
                     Interlocked.Exchange(ref m_Thread, thread);

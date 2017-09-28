@@ -135,9 +135,11 @@ namespace Sweet.Redis
             var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.WaitTimeout / spinStepTimeoutMs),
                 spinStepTimeoutMs, connectionTimeout, connectionTimeout);
 
+            var limiterWait = (settings.MaxCount < 2) ? 0 : retryInfo.SpinStepTimeoutMs;
+
             while (retryInfo.RemainingTime > 0)
             {
-                var signaled = m_ConnectionLimiter.Wait(retryInfo.SpinStepTimeoutMs);
+                var signaled = m_ConnectionLimiter.Wait(limiterWait);
                 if (signaled)
                     return NewConnection(DequeueSocket(db), db, true);
 

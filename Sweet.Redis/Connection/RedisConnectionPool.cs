@@ -292,7 +292,7 @@ namespace Sweet.Redis
 
         protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         {
-            var asyncRetryCount = ((Settings.MaxCount % 10) / 2) - 1;
+            var asyncRetryCount = 0; // ((Settings.MaxCount % 10) / 2) - 1;
             if (e.CurrentRetryCount > asyncRetryCount)
             {
                 e.ThrowError = false;
