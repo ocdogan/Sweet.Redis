@@ -29,7 +29,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisConnectionPool : RedisConnectionProvider
+    public class RedisConnectionPool : RedisConnectionProvider, IRedisConnectionPool
     {
         #region RedisConnectionPoolMember
 
@@ -292,8 +292,7 @@ namespace Sweet.Redis
 
         protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         {
-            var asyncRetryCount = 0; // ((Settings.MaxCount % 10) / 2) - 1;
-            if (e.CurrentRetryCount > asyncRetryCount)
+            if (e.CurrentRetryCount > 0)
             {
                 e.ThrowError = false;
                 e.ContinueToSpin = false;

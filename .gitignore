@@ -19,3 +19,5 @@
 *.manifest
 
 *.rar
+*.config
+*Temporary*.cs
