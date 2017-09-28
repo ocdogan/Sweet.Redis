@@ -35,11 +35,12 @@ namespace Sweet.Redis.ConsoleTest
 
             // MultiThreading1();
             // MultiThreading2a();
-            MultiThreading2b();
+            // MultiThreading2b();
             // MultiThreading3();
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
+            MultiThreading7();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -181,6 +182,12 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Multi-Threading
 
+        static void MultiThreading7()
+        {
+            MultiThreadingBase(2, 1, 50, 100, "medium_text", new string('x', 5000), true, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
+        }
+
         static void MultiThreading6()
         {
             MultiThreadingBase(2, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
@@ -230,6 +237,7 @@ namespace Sweet.Redis.ConsoleTest
                                        int sleepSecs, Func<IRedisDb, int, byte[]> proc)
         {
             using (var pool = new RedisConnectionPool("My redis pool",
+                    // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount))) // LOCAL
             {
                 using (var db = pool.GetDb(dbIndex))
@@ -240,10 +248,14 @@ namespace Sweet.Redis.ConsoleTest
 
                 var loopIndex = 0;
                 List<Thread> thList = null;
+
+                var totalSw = new Stopwatch();
                 using (var db = pool.GetDb())
                 {
                     do
                     {
+                        totalSw.Reset();
+
                         var ticks = 0L;
                         Console.Clear();
 
@@ -309,6 +321,8 @@ namespace Sweet.Redis.ConsoleTest
                                 thList.Add(th);
                             }
 
+                            totalSw.Restart();
+
                             var autoResets = new AutoResetEvent[thList.Count];
                             try
                             {
@@ -325,6 +339,7 @@ namespace Sweet.Redis.ConsoleTest
                             finally
                             {
                                 WaitHandle.WaitAll(autoResets);
+                                totalSw.Stop();
                             }
                         }
                         catch (Exception e)
@@ -334,7 +349,8 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
 
-                        Console.WriteLine("Total ticks: " + ticks);
+                        Console.WriteLine("Sum of inner ticks: " + ticks);
+                        Console.WriteLine("Total ticks:        " + totalSw.ElapsedTicks);
 
                         if (requireKeyPress)
                             Console.WriteLine("Press any key to continue, ESC to escape ...");
