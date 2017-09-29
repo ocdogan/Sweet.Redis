@@ -55,6 +55,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private int m_ReceiveTimeout;
         private RedisSettings m_Settings;
 
         protected long m_ReadState;
@@ -75,6 +76,8 @@ namespace Sweet.Redis
             m_Settings = settings;
             m_BufferSize = Math.Min(MaxBufferSize, Math.Max(DefaultBufferSize, Math.Max(0, bufferSize)));
             m_Buffer = new byte[m_BufferSize];
+
+            CaclulateReceiveTimeout();
         }
 
         #endregion .Ctors
@@ -307,6 +310,15 @@ namespace Sweet.Redis
             return true;
         }
 
+        private void CaclulateReceiveTimeout()
+        {
+            var receiveTimeout = GetLoopedReceiveTimeout();
+            if (receiveTimeout < 0)
+                receiveTimeout = RedisConstants.DefaultReceiveTimeout;
+
+            m_ReceiveTimeout = receiveTimeout;
+        }
+
         protected virtual int GetLoopedReceiveTimeout()
         {
             var result = m_Settings != null ?
@@ -325,21 +337,23 @@ namespace Sweet.Redis
             {
                 try
                 {
-                    var receiveSize = BufferSize - m_WritePosition;
-                    if (receiveSize < 1)
+                    var availableLength = BufferSize - m_WritePosition;
+                    if (availableLength < 1)
                     {
                         Interlocked.Exchange(ref m_WritePosition, Beginning);
                         Interlocked.Exchange(ref m_ReadPosition, Beginning);
-                        receiveSize = BufferSize;
+                        availableLength = BufferSize;
                     }
 
                     if (length > 0)
-                        receiveSize = Math.Min(length, receiveSize);
+                        length = Math.Max(length, socket.Available);
+
+                    var receiveSize = (length < 0) ? availableLength : Math.Min(length, availableLength);
 
                     var timeout = false;
                     var received = false;
 
-                    double receiveTimeout = GetLoopedReceiveTimeout();
+                    double receiveTimeout = m_ReceiveTimeout;
                     var infiniteTimeout = (long)receiveTimeout == Timeout.Infinite;
 
                     var readStatus = SocketError.Success;
@@ -491,12 +505,14 @@ namespace Sweet.Redis
         {
             line = null;
 
+            byte b;
             var startPos = m_ReadPosition;
             var stopPos = m_WritePosition;
 
             for (; m_ReadPosition < stopPos; IncrementReadPosition())
             {
-                switch (m_Buffer[m_ReadPosition])
+                b = m_Buffer[m_ReadPosition];
+                switch (b)
                 {
                     case (byte)'\r':
                         currState = CRLFState.CR;

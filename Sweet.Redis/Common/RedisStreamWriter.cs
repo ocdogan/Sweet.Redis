@@ -137,7 +137,6 @@ namespace Sweet.Redis
 
         public void Write(byte val)
         {
-            ValidateNotDisposed();
             m_Stream.Write(new byte[] { val }, 0, 1);
         }
 

@@ -184,43 +184,43 @@ namespace Sweet.Redis.ConsoleTest
 
         static void MultiThreading7()
         {
-            MultiThreadingBase(2, 1, 50, 100, "medium_text", new string('x', 5000), true, 5,
+            MultiThreadingBase(12, 2, 1, 5000, "medium_text", new string('x', 5000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
         }
 
         static void MultiThreading6()
         {
-            MultiThreadingBase(2, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
+            MultiThreadingBase(12, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("tiny_text"); });
         }
 
         static void MultiThreading5()
         {
-            MultiThreadingBase(2, 1, 50, 100, "small_text", new string('x', 1000), false, 5,
+            MultiThreadingBase(12, 1, 50, 100, "small_text", new string('x', 1000), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading4()
         {
-            MultiThreadingBase(2, 1, 50, 100, "small_text", new string('x', 1000), true, 5,
+            MultiThreadingBase(12, 1, 50, 100, "small_text", new string('x', 1000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading3()
         {
-            MultiThreadingBase(2, 10, 50, 100, "small_text", new string('x', 1000), true, 5,
+            MultiThreadingBase(12, 10, 50, 100, "small_text", new string('x', 1000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading2a()
         {
-            MultiThreadingBase(2, 10, 50, 100, "large_text", new string('x', 100000), false, 5,
+            MultiThreadingBase(12, 10, 50, 100, "large_text", new string('x', 100000), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
         }
 
         static void MultiThreading2b()
         {
-            MultiThreadingBase(2, 1, 50, 100, "large_text", new string('x', 100000), false, 5,
+            MultiThreadingBase(12, 1, 50, 100, "large_text", new string('x', 100000), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
         }
 
@@ -228,7 +228,7 @@ namespace Sweet.Redis.ConsoleTest
         {
             var tinyText = new string('x', 10);
 
-            MultiThreadingBase(2, 1, 50, 100, "tiny_text", tinyText, true, 5,
+            MultiThreadingBase(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
                                (rdb, dbIndex) => { return Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value); });
         }
 
@@ -237,8 +237,8 @@ namespace Sweet.Redis.ConsoleTest
                                        int sleepSecs, Func<IRedisDb, int, byte[]> proc)
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount))) // LOCAL
+                     // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
+                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount, useAsyncCompleter: false))) // LOCAL
             {
                 using (var db = pool.GetDb(dbIndex))
                 {
@@ -301,7 +301,7 @@ namespace Sweet.Redis.ConsoleTest
                                             var data = proc(rdb, dbIndex);
                                             sw.Stop();
 
-                                            Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " + 
+                                            Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
                                                 (data != null && data.Length == testText.Length ? "OK" : "FAILED"));
 
                                             lock (ticksLock)

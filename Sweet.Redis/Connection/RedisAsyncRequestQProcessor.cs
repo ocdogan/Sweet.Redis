@@ -136,7 +136,7 @@ namespace Sweet.Redis
                 {
                     StopCurrent();
 
-                    var thread = new Thread((p) => 
+                    var thread = new Thread((p) =>
                     {
                         ProcessQueue((ProcessParameters)p);
                     });
@@ -201,6 +201,7 @@ namespace Sweet.Redis
                 using (var connection = new RedisDbConnection(Guid.NewGuid().ToString("N"),
                         parameters.Settings, null, OnReleaseSocket, -1, null, false))
                 {
+                    var idleSpinCount = 0;
                     var queueTimeoutMs = queue.TimeoutMilliseconds;
 
                     while (processor.Processing && !queue.Disposed)
@@ -219,10 +220,13 @@ namespace Sweet.Redis
                                 else if ((DateTime.UtcNow - idleStart).TotalMilliseconds >= IdleTimout)
                                     break;
 
-                                Thread.Sleep(1);
+                                idleSpinCount = Math.Max(100, ++idleSpinCount);
+
+                                Thread.Sleep(idleSpinCount < 100 ? 0 : 1);
                                 continue;
                             }
 
+                            idleSpinCount = 0;
                             idleStart = DateTime.MinValue;
 
                             if (!request.IsCompleted)

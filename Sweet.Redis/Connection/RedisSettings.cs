@@ -36,15 +36,18 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisSettings(string host = "127.0.0.1", int port = RedisConstants.DefaultPort,
-            string password = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+        public RedisSettings(string host = RedisConstants.IP4LocalHost, int port = RedisConstants.DefaultPort,
+            string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
-            int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0)
+            int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
+            bool useAsyncCompleter = true)
         {
             Host = host;
             Port = port;
             Password = password;
+            ClientName = clientName;
+            UseAsyncCompleter = useAsyncCompleter;
             ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
             IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
             MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
@@ -55,10 +58,11 @@ namespace Sweet.Redis
             WriteBufferSize = Math.Max(0, writeBufferSize);
         }
 
-        # endregion .Ctors
+        #endregion .Ctors
 
-        # region Properties
+        #region Properties
 
+        public string ClientName { get; private set; }
         public int ConnectionTimeout { get; private set; }
         public string Host { get; private set; }
         public int IdleTimeout { get; private set; }
@@ -68,6 +72,7 @@ namespace Sweet.Redis
         public int ReadBufferSize { get; private set; }
         public int ReceiveTimeout { get; private set; }
         public int SendTimeout { get; private set; }
+        public bool UseAsyncCompleter { get; private set; }
         public int WaitTimeout { get; private set; }
         public int WriteBufferSize { get; private set; }
 

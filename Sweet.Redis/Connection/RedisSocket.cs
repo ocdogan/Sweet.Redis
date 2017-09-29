@@ -50,7 +50,7 @@ namespace Sweet.Redis
         private Action<RedisSocket> m_OnConnect;
         private Action<RedisSocket> m_OnDisconnect;
 
-        private NetworkStream m_ReadStream;
+        private NetworkStream m_RealStream;
         private BufferedStream m_WriteStream;
 
         #endregion Field Members
@@ -88,7 +88,7 @@ namespace Sweet.Redis
         {
             var onDisconnect = Interlocked.Exchange(ref m_OnDisconnect, null);
 
-            var rs = Interlocked.Exchange(ref m_ReadStream, null);
+            var rs = Interlocked.Exchange(ref m_RealStream, null);
             if (rs != null)
                 rs.Dispose();
 
@@ -404,7 +404,7 @@ namespace Sweet.Redis
         #endregion Static Methods
 
         #region Methods
- 
+
         #region Redis Based Methods
 
         internal void SetAuthenticated(bool value)
@@ -749,27 +749,27 @@ namespace Sweet.Redis
             return m_Socket.EndSendTo(asyncResult);
         }
 
-        public Stream GetReadStream()
+        public Stream GetRealStream()
         {
             ValidateNotDisposed();
 
-            var rs = m_ReadStream;
+            var rs = m_RealStream;
             if (rs == null)
             {
                 rs = new NetworkStream(m_Socket, false);
-                Interlocked.Exchange(ref m_ReadStream, rs);
+                Interlocked.Exchange(ref m_RealStream, rs);
             }
             return rs;
         }
 
-        public Stream GetWriteStream()
+        public Stream GetBufferedStream()
         {
             ValidateNotDisposed();
 
             var ws = m_WriteStream;
             if (ws == null)
             {
-                ws = new BufferedStream(GetReadStream(), 1024);
+                ws = new BufferedStream(GetRealStream(), 1024);
                 Interlocked.Exchange(ref m_WriteStream, ws);
             }
             return ws;

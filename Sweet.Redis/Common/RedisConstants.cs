@@ -50,6 +50,9 @@ namespace Sweet.Redis
 
         #region Constants
 
+        public const int DefaultPort = 6379;
+        public const string IP4LocalHost = "127.0.0.1";
+
         public const long Zero = 0L;
         public const long One = 1L;
         public const long MinusOne = -1L;
@@ -64,10 +67,8 @@ namespace Sweet.Redis
 
         public const int ConnectionPurgePeriod = 1000; // milliseconds
 
-        public const int MinDbIndex = -1; 
+        public const int MinDbIndex = -1;
         public const int MaxDbIndex = 16;
-
-        public const int DefaultPort = 6379;
 
         public const int DefaultConnectionTimeout = 10000;
         public const int MinConnectionTimeout = 100;

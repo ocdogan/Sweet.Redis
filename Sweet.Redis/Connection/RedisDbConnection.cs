@@ -79,21 +79,9 @@ namespace Sweet.Redis
         protected override void OnConnect(RedisSocket socket)
         {
             base.OnConnect(socket);
-            if (socket.IsConnected())
-            {
-                var pwd = (Settings ?? RedisSettings.Default).Password;
-                if (!String.IsNullOrEmpty(pwd))
-                {
-                    if (Auth(pwd))
-                        socket.SetAuthenticated(true);
-                }
-
-                if (m_DbIndex > RedisConstants.MinDbIndex)
-                {
-                    if (SelectInternal(m_DbIndex, true))
-                        socket.SetDb(m_DbIndex);
-                }
-            }
+            if (m_DbIndex > RedisConstants.MinDbIndex &&
+               socket.IsConnected() && SelectInternal(m_DbIndex, true))
+                socket.SetDb(m_DbIndex);
         }
 
         public void Select(int dbIndex)

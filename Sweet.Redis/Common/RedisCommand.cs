@@ -562,7 +562,7 @@ namespace Sweet.Redis
             if (socket == null)
                 throw new ArgumentNullException("socket");
 
-            WriteTo(socket.GetWriteStream());
+            WriteTo(socket.GetBufferedStream());
         }
 
         public Task WriteToAsync(Stream stream)
@@ -594,7 +594,7 @@ namespace Sweet.Redis
                 if (stream != null)
                     WriteTo(stream);
             };
-            return action.InvokeAsync(socket.GetWriteStream());
+            return action.InvokeAsync(socket.GetBufferedStream());
         }
 
         private void WriteTo(IRedisWriter writer)

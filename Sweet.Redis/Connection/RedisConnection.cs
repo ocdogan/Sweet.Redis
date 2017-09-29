@@ -59,7 +59,7 @@ namespace Sweet.Redis
             Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, new RedisSettings(), onCreateSocket, onReleaseSocket, socket, connectImmediately)
+            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         { }
 
         internal RedisConnection(string name, RedisSettings settings,
@@ -187,6 +187,18 @@ namespace Sweet.Redis
             }
         }
 
+        protected bool SetClientName(string clientName)
+        {
+            if (clientName == null)
+                throw new ArgumentNullException("password");
+
+            ValidateNotDisposed();
+            using (var cmd = new RedisCommand(-1, RedisCommands.Client, RedisCommands.SetName, clientName.ToBytes()))
+            {
+                return cmd.ExpectSimpleString(this, RedisConstants.OK, true);
+            }
+        }
+
         public virtual IRedisResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
@@ -231,7 +243,19 @@ namespace Sweet.Redis
         }
 
         protected virtual void OnConnect(RedisSocket socket)
-        { }
+        {
+            if (socket.IsConnected())
+            {
+                var settings = (Settings ?? RedisSettings.Default);
+
+                if (!String.IsNullOrEmpty(settings.Password) &&
+                    Auth(settings.Password))
+                    socket.SetAuthenticated(true);
+
+                if (!String.IsNullOrEmpty(settings.ClientName))
+                    SetClientName(settings.ClientName);
+            }
+        }
 
         protected virtual RedisSocket NewSocket()
         {
