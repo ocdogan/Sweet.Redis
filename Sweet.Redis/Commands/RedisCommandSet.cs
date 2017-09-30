@@ -116,97 +116,103 @@ namespace Sweet.Redis
         protected RedisRaw ExpectArray(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectArray(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectArray(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisString ExpectBulkString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectBulkString(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectBulkString(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisBytes ExpectBulkStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectBulkStringBytes(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectBulkStringBytes(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisDouble ExpectDouble(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectDouble(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectDouble(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisBool ExpectGreaterThanZero(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectGreaterThanZero(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectGreaterThanZero(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisInt ExpectInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectInteger(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectInteger(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisMultiBytes ExpectMultiDataBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectMultiDataBytes(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectMultiDataBytes(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisMultiString ExpectMultiDataStrings(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectMultiDataStrings(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectMultiDataStrings(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
+        }
+
+        protected RedisVoid ExpectNothing(byte[] cmd, params byte[][] parameters)
+        {
+            ValidateNotDisposed();
+            return Db.Pool.ExpectNothing(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendNotReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisNullableDouble ExpectNullableDouble(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectNullableDouble(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectNullableDouble(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisNullableInt ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectNullableInteger(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectNullableInteger(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisBool ExpectOK(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectOK(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectOK(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisBool ExpectOne(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectOne(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectOne(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisBool ExpectSimpleString(byte[] cmd, string expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectSimpleString(new RedisCommand(Db.DbIndex, cmd, parameters), expectedResult, Db.ThrowOnError);
+            return Db.Pool.ExpectSimpleString(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), expectedResult, Db.ThrowOnError);
         }
 
         protected RedisString ExpectSimpleString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectSimpleString(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectSimpleString(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         protected RedisBool ExpectSimpleStringBytes(byte[] cmd, byte[] expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectSimpleStringBytes(new RedisCommand(Db.DbIndex, cmd, parameters), expectedResult, Db.ThrowOnError);
+            return Db.Pool.ExpectSimpleStringBytes(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), expectedResult, Db.ThrowOnError);
         }
 
         protected RedisBytes ExpectSimpleStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Db.Pool.ExpectSimpleStringBytes(new RedisCommand(Db.DbIndex, cmd, parameters), Db.ThrowOnError);
+            return Db.Pool.ExpectSimpleStringBytes(new RedisCommand(Db.DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), Db.ThrowOnError);
         }
 
         #endregion Methods

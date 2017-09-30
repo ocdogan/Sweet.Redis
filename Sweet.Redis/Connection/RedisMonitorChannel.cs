@@ -157,9 +157,9 @@ namespace Sweet.Redis
             var monitorMsg = RedisMonitorMessage.ToMonitorMessage(response);
             if (!monitorMsg.IsEmpty)
             {
-                 var subscriptions = m_Subscriptions;
-                 if (subscriptions != null)
-                     subscriptions.Invoke(monitorMsg);
+                var subscriptions = m_Subscriptions;
+                if (subscriptions != null)
+                    subscriptions.Invoke(monitorMsg);
             }
         }
 
@@ -170,7 +170,7 @@ namespace Sweet.Redis
                 var connection = Connect();
                 if (connection != null && connection.Connected)
                 {
-                    var pubSubCmd = new RedisCommand(0, cmd, parameters);
+                    var pubSubCmd = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
                     connection.SendAsync(pubSubCmd)
                         .ContinueWith(t => pubSubCmd.Dispose());
                 }

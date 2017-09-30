@@ -31,6 +31,12 @@ namespace Sweet.Redis
 {
     public class RedisResponse : RedisDisposable, IRedisResponse
     {
+        #region Static Members
+
+        public static readonly RedisVoidResponse Void = new RedisVoidResponse();
+
+        #endregion Static Members
+
         #region Field Members
 
         private long m_HasData;

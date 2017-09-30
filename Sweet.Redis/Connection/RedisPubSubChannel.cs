@@ -310,7 +310,7 @@ namespace Sweet.Redis
                 var connection = Connect();
                 if (connection != null && connection.Connected)
                 {
-                    var pubSubCmd = new RedisCommand(0, cmd, parameters);
+                    var pubSubCmd = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
                     connection.SendAsync(pubSubCmd)
                         .ContinueWith(t => pubSubCmd.Dispose());
                 }

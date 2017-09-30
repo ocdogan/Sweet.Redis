@@ -169,7 +169,7 @@ namespace Sweet.Redis
                     Error = e;
                 }
             }
-            return RedisVoidResponse.Void;
+            return RedisResponse.Void;
         }
 
         protected virtual void OnResponse(IRedisResponse response)

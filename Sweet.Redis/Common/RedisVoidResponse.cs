@@ -27,17 +27,11 @@ using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
-    internal class RedisVoidResponse : IRedisResponse, IDisposable
+    public class RedisVoidResponse : IRedisResponse, IDisposable
     {
-        #region Static Members
-
-        public static readonly RedisVoidResponse Void = new RedisVoidResponse();
-
-        #endregion Static Members
-
         #region .Ctors
 
-        protected RedisVoidResponse()
+        internal RedisVoidResponse()
         { }
 
         #endregion .Ctors
@@ -85,6 +79,40 @@ namespace Sweet.Redis
             return null;
         }
 
+        #region Overrides
+
+        public override bool Equals(object obj)
+        {
+            return (obj is RedisVoidResponse) ||
+                (obj is IRedisResponse && ((IRedisResponse)obj).IsVoid);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return String.Empty;
+        }
+
+        #endregion Overrides
+
         #endregion Methods
+
+        #region Operator Overloads
+
+        public static bool operator ==(RedisVoidResponse a, RedisVoidResponse b)
+        {
+            return (ReferenceEquals(a, null) && ReferenceEquals(b, null));
+        }
+
+        public static bool operator !=(RedisVoidResponse a, RedisVoidResponse b)
+        {
+            return !(a == b);
+        }
+
+        #endregion Operator Overloads
     }
 }

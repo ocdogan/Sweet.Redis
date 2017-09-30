@@ -30,8 +30,12 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        internal RedisVoid()
-        { }
+        internal RedisVoid(bool completed = true)
+        {
+            if (completed)
+                SetCompleted();
+
+        }
 
         #endregion .Ctors
 

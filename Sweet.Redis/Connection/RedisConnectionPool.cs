@@ -708,6 +708,29 @@ namespace Sweet.Redis
             }
         }
 
+        internal RedisVoid ExpectNothing(RedisCommand command, bool throwException = true)
+        {
+            ValidateNotDisposed();
+
+            IRedisConnection connection = null;
+            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            {
+                connection = Connect(command.DbIndex);
+                if (connection == null)
+                {
+                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisVoid>(command, RedisCommandExpect.NullableDouble, null);
+                    StartToProcessQ();
+
+                    return asyncRequest.Task.Result;
+                }
+            }
+
+            using (connection = (connection ?? Connect(command.DbIndex)))
+            {
+                return command.ExpectNothing(connection, throwException);
+            }
+        }
+
         internal RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();

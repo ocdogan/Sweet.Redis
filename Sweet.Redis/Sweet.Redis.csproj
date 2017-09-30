@@ -75,7 +75,6 @@
     <Compile Include="Connection\RedisContinuousReader.cs" />
     <Compile Include="Connection\RedisMonitorChannel.cs" />
     <Compile Include="Connection\RedisMonitorMessage.cs" />
-    <Compile Include="Connection\RedisResponseReader_v1.cs" />
     <Compile Include="Connection\RedisSingleResponseReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Buffers\RedisChunkBuffer.cs" />
@@ -166,6 +165,7 @@
     <Compile Include="Common\RedisClientInfo.cs" />
     <Compile Include="Common\RedisClientInfoFlag.cs" />
     <Compile Include="Commands\RedisGeoCommands.cs" />
+    <Compile Include="Common\RedisCommandType.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

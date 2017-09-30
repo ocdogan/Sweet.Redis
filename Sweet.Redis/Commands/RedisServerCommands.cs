@@ -272,13 +272,13 @@ namespace Sweet.Redis
 
         public RedisVoid ShutDown()
         {
-            ExpectSimpleString(RedisCommands.ShutDown);
+            ExpectNothing(RedisCommands.ShutDown);
             return new RedisVoid();
         }
 
         public RedisVoid ShutDownSave()
         {
-            ExpectSimpleString(RedisCommands.ShutDown, RedisCommands.Async);
+            ExpectNothing(RedisCommands.ShutDown, RedisCommands.Async);
             return new RedisVoid();
         }
 

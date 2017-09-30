@@ -167,7 +167,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             if (db > RedisConstants.MinDbIndex && db <= RedisConstants.MaxDbIndex)
             {
-                using (var cmd = new RedisCommand(db, RedisCommands.Select, db.ToBytes()))
+                using (var cmd = new RedisCommand(db, RedisCommands.Select, RedisCommandType.SendAndReceive, db.ToBytes()))
                 {
                     return cmd.ExpectSimpleString(this, RedisConstants.OK, throwException);
                 }
@@ -181,7 +181,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("password");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(-1, RedisCommands.Auth, password.ToBytes()))
+            using (var cmd = new RedisCommand(-1, RedisCommands.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
             {
                 return cmd.ExpectSimpleString(this, RedisConstants.OK, true);
             }
@@ -190,10 +190,10 @@ namespace Sweet.Redis
         protected bool SetClientName(string clientName)
         {
             if (clientName == null)
-                throw new ArgumentNullException("password");
+                throw new ArgumentNullException("clientName");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(-1, RedisCommands.Client, RedisCommands.SetName, clientName.ToBytes()))
+            using (var cmd = new RedisCommand(-1, RedisCommands.Client, RedisCommandType.SendAndReceive, RedisCommands.SetName, clientName.ToBytes()))
             {
                 return cmd.ExpectSimpleString(this, RedisConstants.OK, true);
             }

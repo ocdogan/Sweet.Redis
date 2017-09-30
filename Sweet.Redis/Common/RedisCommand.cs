@@ -37,19 +37,22 @@ namespace Sweet.Redis
         private int m_DbIndex;
         private byte[] m_Command;
         private byte[][] m_Arguments;
+        private RedisCommandType m_CommandType;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisCommand(int db, byte[] command, params byte[][] args)
+        public RedisCommand(int db, byte[] command, RedisCommandType commandType = RedisCommandType.SendAndReceive,
+                            params byte[][] args)
         {
             if (command == null)
                 throw new ArgumentNullException("command");
 
-            m_DbIndex = db;
-            m_Command = command;
             m_Arguments = args;
+            m_Command = command;
+            m_CommandType = commandType;
+            m_DbIndex = db;
         }
 
         #endregion .Ctors
@@ -65,11 +68,13 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public int DbIndex { get { return m_DbIndex; } }
+        public byte[][] Arguments { get { return m_Arguments; } }
 
         public byte[] Command { get { return m_Command; } }
 
-        public byte[][] Arguments { get { return m_Arguments; } }
+        public RedisCommandType CommandType { get { return m_CommandType; } }
+
+        public int DbIndex { get { return m_DbIndex; } }
 
         #endregion Properties
 
@@ -119,6 +124,12 @@ namespace Sweet.Redis
                 return false;
 
             return false;
+        }
+
+        public RedisVoid ExpectNothing(IRedisConnection connection, bool throwException = true)
+        {
+            ExecuteInternal(connection, throwException, true);
+            return new RedisVoid(true);
         }
 
         public RedisBytes ExpectSimpleStringBytes(IRedisConnection connection, bool throwException = true)
@@ -504,7 +515,7 @@ namespace Sweet.Redis
             return ExecuteInternal(connection, throwException);
         }
 
-        private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true)
+        private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true, bool sendNotReceive = false)
         {
             if (connection == null)
             {
@@ -513,11 +524,17 @@ namespace Sweet.Redis
                 return null;
             }
 
-            var response = connection.SendReceive(this);
-            if (response == null && throwException)
-                throw new RedisException("Corrupted redis response data");
-            HandleError(response);
+            IRedisResponse response = RedisResponse.Void;
+            if (sendNotReceive || !m_CommandType.HasFlag(RedisCommandType.SendAndReceive))
+                connection.Send(this);
+            else
+            {
+                response = connection.SendReceive(this);
 
+                if (response == null && throwException)
+                    throw new RedisException("Corrupted redis response data");
+                HandleError(response);
+            }
             return response;
         }
 

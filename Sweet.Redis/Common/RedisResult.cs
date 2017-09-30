@@ -154,6 +154,11 @@ namespace Sweet.Redis
                 throw new RedisException("Result is not completed");
         }
 
+        internal void SetCompleted()
+        {
+            m_Status = RedisResultStatus.Completed;
+        }
+
         #region Overrides
 
         public override bool Equals(object obj)
