@@ -80,7 +80,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        #region Execution Methods
+        #region IRedisConnection Execution Methods
 
         public RedisBool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
         {
@@ -203,7 +203,323 @@ namespace Sweet.Redis
             }
         }
 
-        private static long? ForNullableInteger(IRedisResponse response, bool throwException)
+        public RedisDouble ExpectDouble(IRedisConnection connection, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(connection, throwException))
+            {
+                return ForDouble(response, throwException);
+            }
+        }
+
+        public RedisNullableDouble ExpectNullableDouble(IRedisConnection connection, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(connection, throwException))
+            {
+                return ForNullableDouble(response, throwException);
+            }
+        }
+
+        public RedisRaw ExpectArray(IRedisConnection connection, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(connection, throwException))
+            {
+                if (response == null)
+                {
+                    if (throwException)
+                        throw new RedisException("No data returned");
+                    return null;
+                }
+                return new RedisRaw(RedisRawObj.ToObject(response));
+            }
+        }
+
+        public RedisMultiString ExpectMultiDataStrings(IRedisConnection connection, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(connection, throwException))
+            {
+                return ForMutiDataStrings(response, throwException);
+            }
+        }
+
+        public RedisMultiBytes ExpectMultiDataBytes(IRedisConnection connection, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(connection, throwException))
+            {
+                return ForMultiDataBytes(response, throwException);
+            }
+        }
+
+        public IRedisResponse Execute(IRedisConnection connection, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            return ExecuteInternal(connection, throwException);
+        }
+
+        private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true, bool sendNotReceive = false)
+        {
+            if (connection == null)
+            {
+                if (throwException)
+                    throw new ArgumentNullException("connection");
+                return null;
+            }
+
+            IRedisResponse response = RedisResponse.Void;
+            if (sendNotReceive || !m_CommandType.HasFlag(RedisCommandType.SendAndReceive))
+                connection.Send(this);
+            else
+            {
+                response = connection.SendReceive(this);
+
+                if (response == null && throwException)
+                    throw new RedisException("Corrupted redis response data");
+                HandleError(response);
+            }
+            return response;
+        }
+
+        #endregion IRedisConnection Execution Methods
+
+        #region RedisSocket Execution Methods
+
+        public RedisBool ExpectSimpleString(RedisSocket socket, RedisSettings settings, string expectedResult, bool throwException = true)
+        {
+            var result = ExpectSimpleStringInternal(socket, settings, throwException);
+            if (!String.IsNullOrEmpty(result))
+            {
+                if (!String.IsNullOrEmpty(expectedResult))
+                    return result.Equals(expectedResult, StringComparison.OrdinalIgnoreCase);
+
+                if (result.StartsWith("-", StringComparison.Ordinal))
+                    return false;
+
+                return true;
+            }
+            return false;
+        }
+
+        public RedisString ExpectSimpleString(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            return ExpectSimpleStringInternal(socket, settings, throwException);
+        }
+
+        private string ExpectSimpleStringInternal(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            var bytes = ExpectSimpleStringBytes(socket, settings, throwException);
+            if (bytes == null)
+                return null;
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        public RedisBool ExpectSimpleStringBytes(RedisSocket socket, RedisSettings settings, byte[] expectedResult, bool throwException = true)
+        {
+            var result = ExpectSimpleStringBytesInternal(socket, settings, throwException);
+            if (result == null)
+                return expectedResult == null;
+
+            if (expectedResult != null)
+                return result == expectedResult;
+
+            if (result.Length > 0 && result[0] == (byte)'-')
+                return false;
+
+            return false;
+        }
+
+        public RedisVoid ExpectNothing(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            ExecuteInternal(socket, settings, throwException, true);
+            return new RedisVoid(true);
+        }
+
+        public RedisBytes ExpectSimpleStringBytes(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            return ExpectSimpleStringBytesInternal(socket, settings, throwException);
+        }
+
+        private byte[] ExpectSimpleStringBytesInternal(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                if (response == null)
+                {
+                    if (throwException)
+                        throw new RedisException("No data returned");
+                    return null;
+                }
+
+                if (response.Type != RedisRawObjType.SimpleString)
+                {
+                    if (throwException)
+                        throw new RedisException("Invalid data returned");
+                    return null;
+                }
+                return response.ReleaseData();
+            }
+        }
+
+        public RedisString ExpectBulkString(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            var bytes = ExpectBulkStringBytes(socket, settings, throwException);
+            if (bytes == null)
+                return null;
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        public RedisBytes ExpectBulkStringBytes(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                if (response == null)
+                {
+                    if (throwException)
+                        throw new RedisException("No data returned");
+                    return null;
+                }
+
+                if (response.Type != RedisRawObjType.BulkString)
+                {
+                    if (throwException)
+                        throw new RedisException("Invalid data returned");
+                    return null;
+                }
+                return response.ReleaseData();
+            }
+        }
+
+        public RedisInt ExpectInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            var result = ExpectNullableInteger(socket, settings, throwException);
+            if (result == null)
+                return long.MinValue;
+            return result.Value;
+        }
+
+        public RedisNullableInt ExpectNullableInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                return ForNullableInteger(response, throwException);
+            }
+        }
+
+        public RedisDouble ExpectDouble(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                return ForDouble(response, throwException);
+            }
+        }
+
+        public RedisNullableDouble ExpectNullableDouble(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                return ForNullableDouble(response, throwException);
+            }
+        }
+
+        public RedisRaw ExpectArray(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                if (response == null)
+                {
+                    if (throwException)
+                        throw new RedisException("No data returned");
+                    return null;
+                }
+                return new RedisRaw(RedisRawObj.ToObject(response));
+            }
+        }
+
+        public RedisMultiString ExpectMultiDataStrings(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                return ForMutiDataStrings(response, throwException);
+            }
+        }
+
+        public RedisMultiBytes ExpectMultiDataBytes(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            using (var response = ExecuteInternal(socket, settings, throwException))
+            {
+                return ForMultiDataBytes(response, throwException);
+            }
+        }
+
+        public IRedisResponse Execute(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        {
+            ValidateNotDisposed();
+            return ExecuteInternal(socket, settings, throwException);
+        }
+
+        private IRedisResponse ExecuteInternal(RedisSocket socket, RedisSettings settings, bool throwException = true, bool sendNotReceive = false)
+        {
+            if (socket == null)
+            {
+                if (throwException)
+                    throw new ArgumentNullException("socket");
+                return null;
+            }
+
+            IRedisResponse response = RedisResponse.Void;
+            if (sendNotReceive || !m_CommandType.HasFlag(RedisCommandType.SendAndReceive))
+                WriteTo(socket);
+            else
+            {
+                WriteTo(socket);
+                using (var reader = new RedisSingleResponseReader(settings))
+                    response = reader.Execute(socket);
+
+                if (response == null && throwException)
+                    throw new RedisException("Corrupted redis response data");
+                HandleError(response);
+            }
+            return response;
+        }
+
+        #endregion RedisSocket Execution Methods
+
+        #region Common Execution Methods
+
+        protected static double ForDouble(IRedisResponse response, bool throwException)
+        {
+            if (response == null)
+            {
+                if (throwException)
+                    throw new RedisException("No data returned");
+                return double.MinValue;
+            }
+
+            if (response.Type == RedisRawObjType.Array ||
+                response.Type == RedisRawObjType.Undefined)
+            {
+                if (throwException)
+                    throw new RedisException("Invalid data returned");
+                return double.MinValue;
+            }
+
+            var data = response.Data;
+            if (data == null || data.Length == 0)
+            {
+                if (throwException)
+                    throw new RedisException("No data returned");
+                return double.MinValue;
+            }
+
+            double result;
+            if (double.TryParse(Encoding.UTF8.GetString(data), out result))
+                return result;
+
+            if (throwException)
+                throw new RedisException("Not a double result");
+
+            return double.MinValue;
+        }
+
+        protected static long? ForNullableInteger(IRedisResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -240,58 +556,8 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisDouble ExpectDouble(IRedisConnection connection, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(connection, throwException))
-            {
-                return ForDouble(response, throwException);
-            }
-        }
 
-        public RedisNullableDouble ExpectNullableDouble(IRedisConnection connection, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(connection, throwException))
-            {
-                return ForNullableDouble(response, throwException);
-            }
-        }
-
-        private static double ForDouble(IRedisResponse response, bool throwException)
-        {
-            if (response == null)
-            {
-                if (throwException)
-                    throw new RedisException("No data returned");
-                return double.MinValue;
-            }
-
-            if (response.Type == RedisRawObjType.Array ||
-                response.Type == RedisRawObjType.Undefined)
-            {
-                if (throwException)
-                    throw new RedisException("Invalid data returned");
-                return double.MinValue;
-            }
-
-            var data = response.Data;
-            if (data == null || data.Length == 0)
-            {
-                if (throwException)
-                    throw new RedisException("No data returned");
-                return double.MinValue;
-            }
-
-            double result;
-            if (double.TryParse(Encoding.UTF8.GetString(data), out result))
-                return result;
-
-            if (throwException)
-                throw new RedisException("Not a double result");
-
-            return double.MinValue;
-        }
-
-        private static double? ForNullableDouble(IRedisResponse response, bool throwException)
+        protected static double? ForNullableDouble(IRedisResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -332,29 +598,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisRaw ExpectArray(IRedisConnection connection, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(connection, throwException))
-            {
-                if (response == null)
-                {
-                    if (throwException)
-                        throw new RedisException("No data returned");
-                    return null;
-                }
-                return new RedisRaw(RedisRawObj.ToObject(response));
-            }
-        }
-
-        public RedisMultiString ExpectMultiDataStrings(IRedisConnection connection, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(connection, throwException))
-            {
-                return ForMutiDataStrings(response, throwException);
-            }
-        }
-
-        private static string[] ForMutiDataStrings(IRedisResponse response, bool throwException)
+        protected static string[] ForMutiDataStrings(IRedisResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -428,15 +672,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisMultiBytes ExpectMultiDataBytes(IRedisConnection connection, bool throwException = true)
-        {
-            using (var response = ExecuteInternal(connection, throwException))
-            {
-                return ForMultiDataBytes(response, throwException);
-            }
-        }
-
-        private static byte[][] ForMultiDataBytes(IRedisResponse response, bool throwException)
+        protected static byte[][] ForMultiDataBytes(IRedisResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -509,36 +745,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public IRedisResponse Execute(IRedisConnection connection, bool throwException = true)
-        {
-            ValidateNotDisposed();
-            return ExecuteInternal(connection, throwException);
-        }
-
-        private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true, bool sendNotReceive = false)
-        {
-            if (connection == null)
-            {
-                if (throwException)
-                    throw new ArgumentNullException("connection");
-                return null;
-            }
-
-            IRedisResponse response = RedisResponse.Void;
-            if (sendNotReceive || !m_CommandType.HasFlag(RedisCommandType.SendAndReceive))
-                connection.Send(this);
-            else
-            {
-                response = connection.SendReceive(this);
-
-                if (response == null && throwException)
-                    throw new RedisException("Corrupted redis response data");
-                HandleError(response);
-            }
-            return response;
-        }
-
-        private static void HandleError(IRedisResponse response)
+        protected static void HandleError(IRedisResponse response)
         {
             if (response != null)
             {
@@ -555,7 +762,7 @@ namespace Sweet.Redis
             }
         }
 
-        #endregion Execution Methods
+        #endregion Common Execution Methods
 
         #region WriteTo Methods
 

@@ -73,7 +73,7 @@ namespace Sweet.Redis
 
         protected RedisResponseReader(RedisSettings settings, int bufferSize = -1)
         {
-            m_Settings = settings;
+            m_Settings = settings ?? RedisSettings.Default;
             m_BufferSize = Math.Min(MaxBufferSize, Math.Max(DefaultBufferSize, Math.Max(0, bufferSize)));
             m_Buffer = new byte[m_BufferSize];
 
