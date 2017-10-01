@@ -168,6 +168,7 @@
     <Compile Include="Common\RedisUpdateOption.cs" />
     <Compile Include="Common\RedisServerInfo.cs" />
     <Compile Include="Common\RedisServerInfoSection.cs" />
+    <Compile Include="Connection\RedisSocketWriter.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
