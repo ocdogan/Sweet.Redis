@@ -58,8 +58,12 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             var stream = Interlocked.Exchange(ref m_Stream, null);
-            if (m_OwnsStream && stream != null)
-                stream.Dispose();
+            if (stream != null)
+            {
+                stream.Flush();
+                if (m_OwnsStream)
+                    stream.Dispose();
+            }
         }
 
         #endregion Destructors

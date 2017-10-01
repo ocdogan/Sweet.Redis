@@ -55,10 +55,11 @@ namespace Sweet.Redis
 
         public RedisDb(RedisConnectionPool pool, int db, bool throwOnError = true)
         {
+            m_DbIndex = Math.Min(Math.Max(db, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+
             m_Id = Guid.NewGuid();
             m_Pool = pool;
 
-            m_DbIndex = db;
             ThrowOnError = throwOnError;
         }
 

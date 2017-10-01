@@ -570,7 +570,6 @@ namespace Sweet.Redis
             using (var writer = new RedisStreamWriter(stream, true))
             {
                 WriteTo(writer);
-                stream.Flush();
             }
         }
 
@@ -595,7 +594,6 @@ namespace Sweet.Redis
                 using (var writer = new RedisStreamWriter(stream, true))
                 {
                     WriteTo(writer);
-                    stream.Flush();
                 }
             };
             return action.InvokeAsync();
@@ -614,7 +612,7 @@ namespace Sweet.Redis
             return action.InvokeAsync(socket.GetBufferedStream());
         }
 
-        private void WriteTo(IRedisWriter writer)
+        protected virtual void WriteTo(IRedisWriter writer)
         {
             var argsLength = m_Arguments != null ? m_Arguments.Length : 0;
 
@@ -656,6 +654,74 @@ namespace Sweet.Redis
         }
 
         #endregion WriteTo Methods
+
+        #region Overriden Methods
+
+        public override string ToString()
+        {
+            var sBuilder = new StringBuilder();
+
+            sBuilder.Append("[DbIndex=");
+            sBuilder.Append(DbIndex);
+            sBuilder.Append(", Command=");
+            sBuilder.Append(Command != null ? Encoding.UTF8.GetString(Command) : "(nil)");
+            sBuilder.Append(", Arguments=");
+
+            var args = Arguments;
+            if (args == null)
+                sBuilder.Append("(nil)]");
+            else
+            {
+                var length = args.Length;
+                if (length == 0)
+                    sBuilder.Append("(empty)]");
+                else
+                {
+                    var itemLen = 0;
+                    for (var i = 0; i < length; i++)
+                    {
+                        var item = args[i];
+                        if (i > 0)
+                            sBuilder.Append(", ");
+
+                        if (args == null)
+                        {
+                            itemLen += 5;
+                            sBuilder.Append("(nil)");
+                        }
+                        else if (item.Length == 0)
+                        {
+                            itemLen += 7;
+                            sBuilder.Append("(empty)");
+                        }
+                        else
+                        {
+                            var data = Encoding.UTF8.GetString(item);
+
+                            var len = 1000 - itemLen;
+                            if (len >= data.Length)
+                                sBuilder.Append(data);
+                            else
+                            {
+                                if (len > 0)
+                                    sBuilder.Append(data.Substring(len));
+                                sBuilder.Append("...");
+                            }
+
+                            itemLen += data.Length;
+                        }
+
+                        if (itemLen >= 1000)
+                            break;
+                    }
+
+                    sBuilder.Append(']');
+                }
+            }
+            return sBuilder.ToString();
+        }
+
+        #endregion Overriden Methods
 
         #endregion Methods
     }

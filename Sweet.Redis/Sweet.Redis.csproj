@@ -116,7 +116,6 @@
     <Compile Include="Connection\IRedisCommand.cs" />
     <Compile Include="Common\RedisStreamWriter.cs" />
     <Compile Include="Common\IRedisWriter.cs" />
-    <Compile Include="Commands\RedisUpdateOption.cs" />
     <Compile Include="Commands\IRedisSortedSetsCommands.cs" />
     <Compile Include="Common\RedisKeyValue.cs" />
     <Compile Include="Commands\RedisSortedSetsCommands.cs" />
@@ -166,6 +165,9 @@
     <Compile Include="Common\RedisClientInfoFlag.cs" />
     <Compile Include="Commands\RedisGeoCommands.cs" />
     <Compile Include="Common\RedisCommandType.cs" />
+    <Compile Include="Common\RedisUpdateOption.cs" />
+    <Compile Include="Common\RedisServerInfo.cs" />
+    <Compile Include="Common\RedisServerInfoSection.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

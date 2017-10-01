@@ -40,7 +40,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
-            MultiThreading7();
+            // MultiThreading7();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -49,7 +49,41 @@ namespace Sweet.Redis.ConsoleTest
             // Geo1();
 
             // SlowLog1();
+
+            Info1();
         }
+
+        #region Info
+
+        static void Info1()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            var infoResult = db.Server.Info();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        #endregion Info
 
         #region SlowLog
 

@@ -162,7 +162,7 @@ namespace Sweet.Redis
             return m_Socket;
         }
 
-        protected bool SelectInternal(int db, bool throwException)
+        protected bool SelectInternal(RedisSocket socket, int db, bool throwException)
         {
             ValidateNotDisposed();
             if (db > RedisConstants.MinDbIndex && db <= RedisConstants.MaxDbIndex)
@@ -175,7 +175,7 @@ namespace Sweet.Redis
             return true;
         }
 
-        protected bool Auth(string password)
+        protected bool Auth(RedisSocket socket, string password)
         {
             if (password == null)
                 throw new ArgumentNullException("password");
@@ -187,7 +187,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected bool SetClientName(string clientName)
+        protected bool SetClientName(RedisSocket socket, string clientName)
         {
             if (clientName == null)
                 throw new ArgumentNullException("clientName");
@@ -249,11 +249,11 @@ namespace Sweet.Redis
                 var settings = (Settings ?? RedisSettings.Default);
 
                 if (!String.IsNullOrEmpty(settings.Password) &&
-                    Auth(settings.Password))
+                    Auth(socket, settings.Password))
                     socket.SetAuthenticated(true);
 
                 if (!String.IsNullOrEmpty(settings.ClientName))
-                    SetClientName(settings.ClientName);
+                    SetClientName(socket, settings.ClientName);
             }
         }
 

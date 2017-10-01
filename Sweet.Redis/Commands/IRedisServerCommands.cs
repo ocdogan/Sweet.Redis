@@ -179,8 +179,8 @@ namespace Sweet.Redis
         RedisBool FlushDb();
         RedisBool FlushDbAsync();
 
-        RedisMultiString Info(RedisParam section);
-        
+        RedisResult<RedisServerInfo> Info(RedisParam? section = null);
+
         RedisDate LastSave();
         RedisBool Save();
 
@@ -193,7 +193,7 @@ namespace Sweet.Redis
 
         RedisBool SlaveOf(RedisParam host, int port);
         RedisBool SlaveOfNoOne();
-        
+
         RedisDate Time();
     }
 }

@@ -247,12 +247,16 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.FlushDb, RedisConstants.OK, RedisCommands.Async);
         }
 
-        public RedisMultiString Info(RedisParam section)
+        public RedisResult<RedisServerInfo> Info(RedisParam? section = null)
         {
-            if (section.IsNull)
-                throw new ArgumentNullException("section");
+            string lines;
+            if (!section.HasValue || section.Value.IsNull)
+                lines = ExpectBulkString(RedisCommands.Info);
+            else
+                lines = ExpectBulkString(RedisCommands.Info, section);
 
-            return ExpectMultiDataStrings(RedisCommands.Info, section);
+            var info = RedisServerInfo.Parse(lines);
+            return new RedisResult<RedisServerInfo>(info);
         }
 
         public RedisDate LastSave()

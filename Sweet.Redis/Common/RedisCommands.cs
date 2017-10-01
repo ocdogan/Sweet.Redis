@@ -191,7 +191,7 @@ namespace Sweet.Redis
 
         // SlowLog command options
         public static readonly byte[] Len = "LEN".ToBytes();
-        public static readonly byte[] Reset = "REST".ToBytes();
+        public static readonly byte[] Reset = "RESET".ToBytes();
 
         // Client command options
         public static readonly byte[] GetName = "GETNAME".ToBytes();
@@ -303,9 +303,9 @@ namespace Sweet.Redis
         public static readonly byte[] GeoRadiusByMember = "GEORADIUSBYMEMBER".ToBytes();
 
         // Geo commands options
-        public static readonly byte[] Meters = "m".ToBytes();
-        public static readonly byte[] Kilometers = "km".ToBytes();
         public static readonly byte[] Feet = "ft".ToBytes();
+        public static readonly byte[] Kilometers = "km".ToBytes();
+        public static readonly byte[] Meters = "m".ToBytes();
         public static readonly byte[] Miles = "mi".ToBytes();
         public static readonly byte[] WithCoord = "WITHCOORD".ToBytes();
         public static readonly byte[] WithDist = "WITHDIST".ToBytes();
@@ -313,5 +313,47 @@ namespace Sweet.Redis
         public static readonly byte[] Ascending = "ASC".ToBytes();
         public static readonly byte[] Store = "STORE".ToBytes();
         public static readonly byte[] StoreDist = "STOREDIST".ToBytes();
+
+        // Sentinel commands
+        public readonly static byte[] Sentinel = "SENTINEL".ToBytes();
+        public readonly static byte[] SentinelCheckQuorum = "ckquorum".ToBytes();
+        public readonly static byte[] SentinelFailover = "failover".ToBytes();
+        public readonly static byte[] SentinelFlushConfig = "flushconfig".ToBytes();
+        public readonly static byte[] SentinelGetMasterAddrByName = "get-master-addr-by-name".ToBytes();
+        public readonly static byte[] SentinelMaster = "master".ToBytes();
+        public readonly static byte[] SentinelMasters = "masters".ToBytes();
+        public readonly static byte[] SentinelMonitor = "MONITOR".ToBytes();
+        public readonly static byte[] SentinelRemove = "REMOVE".ToBytes();
+        public readonly static byte[] SentinelReset = "reset".ToBytes();
+        public readonly static byte[] Sentinels = "sentinels".ToBytes();
+        public readonly static byte[] SentinelSet = "SET".ToBytes();
+        public readonly static byte[] SentinelSlaves = "slaves".ToBytes();
+
+        // Sentinel message channels
+        public readonly static byte[] SentinelChanelResetMaster = "+reset-master".ToBytes();
+        public readonly static byte[] SentinelChanelSlave = "+slave".ToBytes();
+        public readonly static byte[] SentinelChanelFailoverStateReconfSlaves = "+failover-state-reconf-slaves".ToBytes();
+        public readonly static byte[] SentinelChanelFailoverDetected = "+failover-detected".ToBytes();
+        public readonly static byte[] SentinelChanelSlaveReconfSent = "+slave-reconf-sent".ToBytes();
+        public readonly static byte[] SentinelChanelSlaveReconfInprog = "+slave-reconf-inprog".ToBytes();
+        public readonly static byte[] SentinelChanelSlaveReconfDone = "+slave-reconf-done".ToBytes();
+        public readonly static byte[] SentinelChanelDupSentinel = "-dup-sentinel".ToBytes();
+        public readonly static byte[] SentinelChanelSentinel = "+sentinel".ToBytes();
+        public readonly static byte[] SentinelChanelSDownEntered = "+sdown".ToBytes();
+        public readonly static byte[] SentinelChanelSDownExited = "-sdown".ToBytes();
+        public readonly static byte[] SentinelChanelODownEntered = "+odown".ToBytes();
+        public readonly static byte[] SentinelChanelODownExited = "-odown".ToBytes();
+        public readonly static byte[] SentinelChanelNewEpoch = "+new-epoch".ToBytes();
+        public readonly static byte[] SentinelChanelTryFailover = "+try-failover".ToBytes();
+        public readonly static byte[] SentinelChanelElectedLeader = "+elected-leader".ToBytes();
+        public readonly static byte[] SentinelChanelFailoverStateSelectSlave = "+failover-state-select-slave".ToBytes();
+        public readonly static byte[] SentinelChanelNoGoodSlave = "no-good-slave".ToBytes();
+        public readonly static byte[] SentinelChanelSelectedSlave = "selected-slave".ToBytes();
+        public readonly static byte[] SentinelChanelFailoverStateSendSlaveofNoOne = "failover-state-send-slaveof-noone".ToBytes();
+        public readonly static byte[] SentinelChanelFailoverEntForTimeout = "failover-end-for-timeout".ToBytes();
+        public readonly static byte[] SentinelChanelFailoverEnd = "failover-end".ToBytes();
+        public readonly static byte[] SentinelChanelSwitchMaster = "switch-master".ToBytes();
+        public readonly static byte[] SentinelChanelTiltEntered = "+tilt".ToBytes();
+        public readonly static byte[] SentinelChanelTiltExited = "-tilt".ToBytes();
     }
 }

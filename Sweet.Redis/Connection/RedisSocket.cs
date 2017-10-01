@@ -51,7 +51,7 @@ namespace Sweet.Redis
         private Action<RedisSocket> m_OnDisconnect;
 
         private NetworkStream m_RealStream;
-        private BufferedStream m_WriteStream;
+        private BufferedStream m_BufferedStream;
 
         #endregion Field Members
 
@@ -92,7 +92,7 @@ namespace Sweet.Redis
             if (rs != null)
                 rs.Dispose();
 
-            var ws = Interlocked.Exchange(ref m_WriteStream, null);
+            var ws = Interlocked.Exchange(ref m_BufferedStream, null);
             if (ws != null)
                 ws.Dispose();
 
@@ -766,11 +766,11 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var ws = m_WriteStream;
+            var ws = m_BufferedStream;
             if (ws == null)
             {
                 ws = new BufferedStream(GetRealStream(), 1024);
-                Interlocked.Exchange(ref m_WriteStream, ws);
+                Interlocked.Exchange(ref m_BufferedStream, ws);
             }
             return ws;
         }

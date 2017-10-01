@@ -22,6 +22,7 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace Sweet.Redis
@@ -31,7 +32,7 @@ namespace Sweet.Redis
         #region Static Members
 
         public static readonly byte[] EmptyBytes = new byte[0];
-        public static readonly byte[] LineEnd = "\r\n".ToBytes();
+        public static readonly byte[] LineEnd = CRLF.ToBytes();
 
         public static readonly byte[] NullBulkString = "$-1".ToBytes();
         public static readonly byte[] EmptyBulkString = "$0".ToBytes();
@@ -46,9 +47,44 @@ namespace Sweet.Redis
 
         public static readonly string OK = "OK";
 
+        // Commands that do not require DB
+        public static readonly Dictionary<byte[], bool> CommandsNotRequireDB = new Dictionary<byte[], bool> {
+            { "AUTH".ToBytes(), true },
+            { "BGREWRITEAOF".ToBytes(), true },
+            { "BGSAVE".ToBytes(), true },
+            { "CLIENT".ToBytes(), true },
+            { "CLUSTER".ToBytes(), true },
+            { "SETNAME".ToBytes(), true },
+            { "CONFIG".ToBytes(), true },
+            { "DISCARD".ToBytes(), true },
+            { "ECHO".ToBytes(), true },
+            { "EXEC".ToBytes(), true },
+            { "FLUSHALL".ToBytes(), true },
+            { "INFO".ToBytes(), true },
+            { "LASTSAVE".ToBytes(), true },
+            { "MONITOR".ToBytes(), true },
+            { "MULTI".ToBytes(), true },
+            { "PING".ToBytes(), true },
+            { "PSUBSCRIBE".ToBytes(), true },
+            { "PUBLISH".ToBytes(), true },
+            { "PUNSUBSCRIBE".ToBytes(), true },
+            { "QUIT".ToBytes(), true },
+            { "SAVE".ToBytes(), true },
+            { "SCRIPT".ToBytes(), true },
+            { "SENTINEL".ToBytes(), true },
+            { "SLAVEOF".ToBytes(), true },
+            { "SLOWLOG".ToBytes(), true },
+            { "SUBSCRIBE".ToBytes(), true },
+            { "TIME".ToBytes(), true },
+            { "UNSUBSCRIBE".ToBytes(), true },
+            { "UNWATCH".ToBytes(), true }
+        };
+
         #endregion Static Members
 
         #region Constants
+
+        public static readonly string CRLF = "\r\n";
 
         public const int DefaultPort = 6379;
         public const string IP4LocalHost = "127.0.0.1";

@@ -53,9 +53,11 @@ namespace Sweet.Redis
         internal RedisDbConnection(string name, RedisSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
             int dbIndex, RedisSocket socket = null, bool connectImmediately = false)
-            : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
+            : base(name, settings, onCreateSocket, onReleaseSocket, socket, false)
         {
             m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+            if (connectImmediately)
+                ConnectInternal();
         }
 
         #endregion .Ctors
@@ -80,7 +82,7 @@ namespace Sweet.Redis
         {
             base.OnConnect(socket);
             if (m_DbIndex > RedisConstants.MinDbIndex &&
-               socket.IsConnected() && SelectInternal(m_DbIndex, true))
+               socket.IsConnected() && SelectInternal(socket, m_DbIndex, true))
                 socket.SetDb(m_DbIndex);
         }
 
@@ -93,7 +95,7 @@ namespace Sweet.Redis
                 if (socket != null)
                 {
                     if (dbIndex != RedisConstants.MinDbIndex)
-                        SelectInternal(m_DbIndex, true);
+                        SelectInternal(null, m_DbIndex, true);
                     socket.SetDb(m_DbIndex);
                 }
                 Interlocked.Exchange(ref m_DbIndex, dbIndex);
