@@ -162,19 +162,6 @@ namespace Sweet.Redis
             return m_Socket;
         }
 
-        protected bool SelectInternal(RedisSocket socket, int db, bool throwException)
-        {
-            ValidateNotDisposed();
-            if (db > RedisConstants.MinDbIndex && db <= RedisConstants.MaxDbIndex)
-            {
-                using (var cmd = new RedisCommand(db, RedisCommands.Select, RedisCommandType.SendAndReceive, db.ToBytes()))
-                {
-                    return cmd.ExpectSimpleString(socket, Settings, RedisConstants.OK, throwException);
-                }
-            }
-            return true;
-        }
-
         protected bool Auth(RedisSocket socket, string password)
         {
             if (password == null)
