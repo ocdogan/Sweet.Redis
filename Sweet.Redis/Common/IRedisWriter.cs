@@ -28,21 +28,21 @@ namespace Sweet.Redis
 {
     public interface IRedisWriter
     {
-        void Write(char val);
-        void Write(short val);
-        void Write(int val);
-        void Write(long val);
-        void Write(ushort val);
-        void Write(uint val);
-        void Write(ulong val);
-        void Write(decimal val);
-        void Write(double val);
-        void Write(float val);
-        void Write(DateTime val);
-        void Write(TimeSpan val);
-        void Write(byte val);
-        void Write(string val);
-        void Write(byte[] data);
-        void Write(byte[] data, int index, int length);
+        int Write(char val);
+        int Write(short val);
+        int Write(int val);
+        int Write(long val);
+        int Write(ushort val);
+        int Write(uint val);
+        int Write(ulong val);
+        int Write(decimal val);
+        int Write(double val);
+        int Write(float val);
+        int Write(DateTime val);
+        int Write(TimeSpan val);
+        int Write(byte val);
+        int Write(string val);
+        int Write(byte[] data);
+        int Write(byte[] data, int index, int length);
     }
 }

@@ -94,67 +94,67 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public void Write(char val)
+        public int Write(char val)
         {
-            Write(Encoding.UTF8.GetBytes(new char[] { val }));
+            return Write(Encoding.UTF8.GetBytes(new char[] { val }));
         }
 
-        public void Write(short val)
+        public int Write(short val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(int val)
+        public int Write(int val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(long val)
+        public int Write(long val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(ushort val)
+        public int Write(ushort val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(uint val)
+        public int Write(uint val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(ulong val)
+        public int Write(ulong val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(decimal val)
+        public int Write(decimal val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(double val)
+        public int Write(double val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(float val)
+        public int Write(float val)
         {
-            Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(DateTime val)
+        public int Write(DateTime val)
         {
-            Write(Encoding.UTF8.GetBytes(val.Ticks.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.Ticks.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(TimeSpan val)
+        public int Write(TimeSpan val)
         {
-            Write(Encoding.UTF8.GetBytes(val.Ticks.ToString(RedisConstants.InvariantCulture)));
+            return Write(Encoding.UTF8.GetBytes(val.Ticks.ToString(RedisConstants.InvariantCulture)));
         }
 
-        public void Write(byte val)
+        public int Write(byte val)
         {
             int currPosition;
             var chunk = GetOutChunk(out currPosition);
@@ -163,27 +163,31 @@ namespace Sweet.Redis
 
             Interlocked.Add(ref m_Length, One);
             Interlocked.Add(ref m_Position, One);
+
+            return 1;
         }
 
-        public void Write(string val)
+        public int Write(string val)
         {
             if (!String.IsNullOrEmpty(val))
-                Write(Encoding.UTF8.GetBytes(val));
+                return Write(Encoding.UTF8.GetBytes(val));
+            return 0;
         }
 
-        public void Write(byte[] data)
+        public int Write(byte[] data)
         {
             if (data != null)
             {
                 var dataLength = data.Length;
                 if (dataLength == 1)
-                    Write(data[0]);
-                else if (dataLength > 0)
-                    Write(data, 0, data.Length);
+                    return Write(data[0]);
+                if (dataLength > 0)
+                    return Write(data, 0, data.Length);
             }
+            return 0;
         }
 
-        public void Write(byte[] data, int index, int length)
+        public int Write(byte[] data, int index, int length)
         {
             if (index < 0)
                 throw new ArgumentException("Index value is out of bounds", "index");
@@ -216,8 +220,11 @@ namespace Sweet.Redis
                         if (length > 0)
                             chunk = GetOutChunk(out currPosition);
                     }
+
+                    return dataLength;
                 }
             }
+            return 0;
         }
 
         protected List<byte[]> GetChunks()
