@@ -37,7 +37,7 @@ namespace Sweet.Redis
         public static readonly byte[] NullBulkString = "$-1".ToBytes();
         public static readonly byte[] EmptyBulkString = "$0".ToBytes();
 
-        public static readonly int CRLFLength = "\r\n".Length;
+        public static readonly int CRLFLength = CRLF.Length;
 
         public static readonly CultureInfo InvariantCulture = CultureInfo.InvariantCulture;
 
