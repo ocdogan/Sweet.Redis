@@ -84,7 +84,7 @@ namespace Sweet.Redis
 
         #region Constants
 
-        public static readonly string CRLF = "\r\n";
+        public const string CRLF = "\r\n";
 
         public const int DefaultPort = 6379;
         public const string IP4LocalHost = "127.0.0.1";
