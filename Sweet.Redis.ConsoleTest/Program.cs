@@ -40,7 +40,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
-            // MultiThreading7();
+            MultiThreading7();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -50,7 +50,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // SlowLog1();
 
-            Info1();
+            // Info1();
         }
 
         #region Info
@@ -297,15 +297,20 @@ namespace Sweet.Redis.ConsoleTest
             {
                 using (var db = pool.GetDb(dbIndex))
                 {
-                    db.Strings.Set(testKey, testText);
-                    db.Strings.Get(testKey);
+                    var b = db.Strings.Set(testKey, testText);
+                    if (!b)
+                        throw new Exception("can not set");
+
+                    var g = db.Strings.Get(testKey);
+                    if (g == null || g.Value == null || g.Value.Length != (testText ?? "").Length)
+                        throw new Exception("can not get");
                 }
 
                 var loopIndex = 0;
                 List<Thread> thList = null;
 
                 var totalSw = new Stopwatch();
-                using (var db = pool.GetDb())
+                using (var db = pool.GetDb(dbIndex))
                 {
                     do
                     {
@@ -357,7 +362,7 @@ namespace Sweet.Redis.ConsoleTest
                                             sw.Stop();
 
                                             Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                                (data != null && data.Length == testText.Length ? "OK" : "FAILED"));
+                                                (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
 
                                             lock (ticksLock)
                                             {
