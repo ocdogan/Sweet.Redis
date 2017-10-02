@@ -69,6 +69,27 @@ namespace Sweet.Redis.ConsoleTest
                             Console.Clear();
 
                             var infoResult = db.Server.Info();
+                            
+                            if (infoResult == null || infoResult.Value == null)
+                                Console.WriteLine("(nil)");
+                            else
+                            {
+                                var info = infoResult.Value;
+
+                                foreach (var kv1 in info)
+                                {
+                                    Console.WriteLine("# " + kv1.Key);
+
+                                    var section = kv1.Value;
+                                    if (section != null)
+                                    {
+                                        foreach (var kv2 in section)
+                                            Console.WriteLine(kv2.Key + ":" + kv2.Value);
+                                    }
+
+                                    Console.WriteLine();
+                                }
+                            }
                         }
                         catch (Exception e)
                         {

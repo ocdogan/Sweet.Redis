@@ -59,6 +59,16 @@
     <Compile Include="Common\RedisNullableInt.cs" />
     <Compile Include="Common\RedisNullVal.cs" />
     <Compile Include="Common\RedisParam.cs" />
+    <Compile Include="Common\RedisServerInfoClientsSection.cs" />
+    <Compile Include="Common\RedisServerInfoClusterSection.cs" />
+    <Compile Include="Common\RedisServerInfoCpuSection.cs" />
+    <Compile Include="Common\RedisServerInfoKeyspaceSection.cs" />
+    <Compile Include="Common\RedisServerInfoMemorySection.cs" />
+    <Compile Include="Common\RedisServerInfoPersistenceSection.cs" />
+    <Compile Include="Common\RedisServerInfoSentinelSection.cs" />
+    <Compile Include="Common\RedisServerInfoServerSection.cs" />
+    <Compile Include="Common\RedisServerInfoStatsSection.cs" />
+    <Compile Include="Common\RedisServerInfoReplicationSection.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoid.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />

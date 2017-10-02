@@ -162,16 +162,143 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisServerInfo()
-        {
-        }
+        { }
 
         #endregion .Ctors
 
+        #region Properties
+
+        public RedisServerInfoClientsSection Clients 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("clients", out section))
+                    return section as RedisServerInfoClientsSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoClusterSection Cluster 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("cluster", out section))
+                    return section as RedisServerInfoClusterSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoCpuSection Cpu 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("cpu", out section))
+                    return section as RedisServerInfoCpuSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoKeyspaceSection Keyspace 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("keyspace", out section))
+                    return section as RedisServerInfoKeyspaceSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoMemorySection Memory 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("memory", out section))
+                    return section as RedisServerInfoMemorySection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoPersistenceSection Persistence 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("persistence", out section))
+                    return section as RedisServerInfoPersistenceSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoSentinelSection Sentinel 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("sentinel", out section))
+                    return section as RedisServerInfoSentinelSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoServerSection Server 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("server", out section))
+                    return section as RedisServerInfoServerSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoStatsSection Stats 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("stats", out section))
+                    return section as RedisServerInfoStatsSection;
+                return null;
+            }
+        }
+
+        public RedisServerInfoReplicationSection Replication 
+        { 
+            get 
+            { 
+                RedisServerInfoSection section;
+                if (TryGetValue("replication", out section))
+                    return section as RedisServerInfoReplicationSection;
+                return null;
+            }
+        }
+
+        #endregion Properties
+
         #region Methods
+
+        public RedisServerInfoSection Get(string sectionName)
+        {
+            if (!String.IsNullOrEmpty(sectionName))
+            {
+                RedisServerInfoSection result;
+                TryGetValue(sectionName, out result);
+
+                return result;
+            }
+            return null;
+        }
+        
+        #region Static Methods
 
         public static RedisServerInfo Parse(string info)
         {
-            if (String.IsNullOrEmpty(info))
+            if (!String.IsNullOrEmpty(info))
             {
                 var lines = info.Split(new[] { RedisConstants.CRLF }, StringSplitOptions.RemoveEmptyEntries);
                 if (lines != null)
@@ -186,7 +313,9 @@ namespace Sweet.Redis
                             var line = (lines[i] ?? String.Empty).TrimStart();
                             if (line[0] == '#')
                             {
-                                var section = ParseSection(line.TrimStart('#').Trim(), lines, ref i);
+                                i++;
+
+                                var section = RedisServerInfoSection.ParseSection(line.TrimStart('#').Trim(), lines, ref i);
                                 if (section != null)
                                     result[section.SectionName] = section;
                             }
@@ -198,41 +327,8 @@ namespace Sweet.Redis
             }
             return null;
         }
-
-        private static RedisServerInfoSection ParseSection(string sectionName, string[] lines, ref int index)
-        {
-            var result = new RedisServerInfoSection(sectionName);
-
-            var length = lines.Length;
-            for (; index < length; index++)
-            {
-                var line = (lines[index] ?? String.Empty).TrimStart();
-                if (!String.IsNullOrEmpty(line))
-                {
-                    if (line[0] == '#')
-                    {
-                        index--;
-                        return result;
-                    }
-
-                    int pos = line.IndexOf(':');
-                    if (pos == -1)
-                        result[line.TrimEnd()] = null;
-                    else
-                    {
-                        var name = (line.Substring(0, pos) ?? String.Empty).TrimEnd();
-                        if (pos == line.Length - 1)
-                            result[name] = null;
-                        else
-                        {
-                            var value = (line.Substring(pos + 1, line.Length - pos - 1) ?? String.Empty).TrimEnd();
-                            result[name] = value;
-                        }
-                    }
-                }
-            }
-            return result;
-        }
+        
+        #endregion Static Methods
 
         #endregion Methods
     }
