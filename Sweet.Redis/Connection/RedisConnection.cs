@@ -282,18 +282,39 @@ namespace Sweet.Redis
                     socket.ConnectAsync(ipAddress, m_Settings.Port)
                         .ContinueWith(ca =>
                         {
-                            if (ca.IsCompleted)
+                            if (ca.IsFaulted)
+                            {
+                                SetState((long)RedisConnectionState.Failed);
+
+                                var exception = ca.Exception as Exception;
+                                while (exception != null)
+                                {
+                                    if (exception is SocketException)
+                                        break;
+                                    exception = exception.InnerException;
+                                }
+
+                                if (exception is SocketException)
+                                    SetLastError(((SocketException)exception).ErrorCode);
+                            }
+                            else if (ca.IsCompleted)
                             {
                                 SetState((long)RedisConnectionState.Connected);
 
                                 var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
-                                if (prevSocket != socket)
+                                if (prevSocket != null && prevSocket != socket)
                                     prevSocket.DisposeSocket();
                             }
                         }).Wait();
 
                     if (socket.IsConnected())
                         OnConnect(socket);
+
+                    if (!socket.IsConnected())
+                    {
+                        socket.DisposeSocket();
+                        socket = null;
+                    }
                 }
             }
             catch (Exception)
