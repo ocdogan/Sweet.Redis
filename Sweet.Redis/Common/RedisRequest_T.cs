@@ -36,10 +36,11 @@ namespace Sweet.Redis
 
         private enum RequestState : long
         {
-            Started = 0L,
-            Completed = 1L,
-            Canceled = 2L,
-            Failed = 3L
+            Waiting = 0L,
+            Started = 1L,
+            Completed = 2L,
+            Canceled = 3L,
+            Failed = 4L
         }
 
         #endregion RequestState
@@ -60,8 +61,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisRequest(RedisCommand command, RedisCommandExpect expectation, string okFor)
-            : base(command, expectation, okFor, null)
+        public RedisRequest(RedisCommand command, RedisCommandExpect expectation, string okIf)
+            : base(command, expectation, okIf, null)
         { }
 
         #endregion .Ctors
@@ -75,12 +76,21 @@ namespace Sweet.Redis
 
         public override bool IsCompleted
         {
-            get { return Interlocked.Read(ref m_State) != (long)RequestState.Started; }
+            get 
+            { 
+                var state = (RequestState)Interlocked.Read(ref m_State);
+                return !(state == RequestState.Waiting || state == RequestState.Started);
+            }
         }
 
         public override bool IsFaulted
         {
             get { return Interlocked.Read(ref m_State) == (long)RequestState.Failed; }
+        }
+
+        public override bool IsStarted
+        {
+            get { return Interlocked.Read(ref m_State) == (long)RequestState.Started; }
         }
 
         public RedisResult<T> Result
@@ -106,7 +116,9 @@ namespace Sweet.Redis
         public override void Cancel()
         {
             ValidateNotDisposed();
-            Interlocked.CompareExchange(ref m_State, (long)RequestState.Canceled, (long)RequestState.Started);
+
+            if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Canceled, (long)RequestState.Waiting) != (long)RequestState.Waiting)
+                Interlocked.CompareExchange(ref m_State, (long)RequestState.Canceled, (long)RequestState.Started);
         }
 
         public override void SetException(Exception exception)
@@ -126,8 +138,8 @@ namespace Sweet.Redis
 
             try
             {
-                if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Completed, (long)RequestState.Started) ==
-                    (long)RequestState.Started)
+                if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Started, (long)RequestState.Waiting) ==
+                    (long)RequestState.Waiting)
                 {
                     var command = Command;
                     if (command == null || connection == null || connection.Disposed)
@@ -141,100 +153,118 @@ namespace Sweet.Redis
                             case RedisCommandExpect.Response:
                                 {
                                     var expectation = command.Execute(connection);
-                                    (result as RedisResult<IRedisResponse>).TrySetResult(expectation);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisResult<IRedisResponse>).TrySetResult(expectation);
                                 }
                                 break;
                             case RedisCommandExpect.Array:
                                 {
                                     var expectation = command.ExpectArray(connection);
-                                    (result as RedisRaw).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisRaw).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.BulkString:
                                 {
                                     var expectation = command.ExpectBulkString(connection);
-                                    (result as RedisString).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisString).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.BulkStringBytes:
                                 {
                                     var expectation = command.ExpectBulkStringBytes(connection);
-                                    (result as RedisBytes).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisBytes).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.Double:
                                 {
                                     var expectation = command.ExpectDouble(connection);
-                                    (result as RedisDouble).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisDouble).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.GreaterThanZero:
                                 {
                                     var expectation = command.ExpectInteger(connection);
-                                    (result as RedisBool).TrySetResult(expectation.Value > RedisConstants.Zero);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisBool).TrySetResult(expectation.Value > RedisConstants.Zero);
                                 }
                                 break;
                             case RedisCommandExpect.Integer:
                                 {
                                     var expectation = command.ExpectInteger(connection);
-                                    (result as RedisInt).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisInt).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.MultiDataBytes:
                                 {
                                     var expectation = command.ExpectMultiDataBytes(connection);
-                                    (result as RedisMultiBytes).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisMultiBytes).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.MultiDataStrings:
                                 {
                                     var expectation = command.ExpectMultiDataStrings(connection);
-                                    (result as RedisMultiString).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisMultiString).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.Nothing:
                                 {
                                     var expectation = command.ExpectNothing(connection);
-                                    (result as RedisVoid).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisVoid).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.NullableDouble:
                                 {
                                     var expectation = command.ExpectNullableDouble(connection);
-                                    (result as RedisNullableDouble).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisNullableDouble).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.NullableInteger:
                                 {
                                     var expectation = command.ExpectNullableInteger(connection);
-                                    (result as RedisNullableInt).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisNullableInt).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.OK:
                                 {
                                     var expectation = command.ExpectSimpleString(connection, RedisConstants.OK);
-                                    (result as RedisBool).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisBool).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.One:
                                 {
                                     var expectation = command.ExpectInteger(connection);
-                                    (result as RedisBool).TrySetResult(expectation.Value == RedisConstants.One);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisBool).TrySetResult(expectation.Value == RedisConstants.One);
                                 }
                                 break;
                             case RedisCommandExpect.SimpleString:
                                 {
                                     var expectation = command.ExpectSimpleString(connection);
-                                    (result as RedisString).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisString).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.SimpleStringBytes:
                                 {
                                     var expectation = command.ExpectSimpleStringBytes(connection);
-                                    (result as RedisBytes).TrySetResult(expectation.Value);
+                                    if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
+                                        (result as RedisBytes).TrySetResult(expectation.Value);
                                 }
                                 break;
                         }
+
+                        Interlocked.CompareExchange(ref m_State, (long)RequestState.Completed, (long)RequestState.Started);
                     }
                 }
             }

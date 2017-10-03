@@ -92,11 +92,13 @@ namespace Sweet.Redis
             get { return m_CreationTime; }
         }
 
+        public abstract bool IsCanceled { get; }
+
         public abstract bool IsCompleted { get; }
 
         public abstract bool IsFaulted { get; }
 
-        public abstract bool IsCanceled { get; }
+        public abstract bool IsStarted { get; }
 
         public object StateObject
         {

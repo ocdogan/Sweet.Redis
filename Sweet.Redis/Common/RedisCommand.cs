@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Sweet.Redis
@@ -38,6 +39,8 @@ namespace Sweet.Redis
         private byte[] m_Command;
         private byte[][] m_Arguments;
         private RedisCommandType m_CommandType;
+
+        private long m_IsUpdater = RedisConstants.MinusOne;
 
         #endregion Field Members
 
@@ -75,6 +78,22 @@ namespace Sweet.Redis
         public RedisCommandType CommandType { get { return m_CommandType; } }
 
         public int DbIndex { get { return m_DbIndex; } }
+
+        public bool IsUpdater
+        {
+            get
+            {
+                var updater = Interlocked.Read(ref m_IsUpdater);
+                if (updater == RedisConstants.MinusOne)
+                {
+                    Interlocked.Exchange(ref m_IsUpdater,
+                        RedisConstants.CommandsThatUpdate.ContainsKey(m_Command) ?
+                        RedisConstants.One :
+                        RedisConstants.Zero);
+                }
+                return updater == RedisConstants.One;
+            }
+        }
 
         #endregion Properties
 

@@ -29,6 +29,8 @@ namespace Sweet.Redis
 {
     public interface IRedisCommand : IRedisDisposable
     {
+        bool IsUpdater { get; }
+
         void WriteTo(Stream stream);
         void WriteTo(RedisSocket socket);
 

@@ -64,7 +64,7 @@ namespace Sweet.Redis
                     var task = tcs.Task;
                     return (task != null) && task.IsCanceled;
                 }
-                return true;
+                return false;
             }
         }
 
@@ -92,7 +92,29 @@ namespace Sweet.Redis
                     var task = tcs.Task;
                     return (task != null) && task.IsFaulted;
                 }
-                return true;
+                return false;
+            }
+        }
+
+        public override bool IsStarted
+        {
+            get
+            {
+                var tcs = (TaskCompletionSource<T>)StateObject;
+                if (tcs != null)
+                {
+                    var task = tcs.Task;
+                    if (task != null)
+                    {
+                        var status = task.Status;
+                        return (status == TaskStatus.Created || 
+                            status == TaskStatus.Running || 
+                            status == TaskStatus.WaitingForActivation ||
+                            status == TaskStatus.WaitingForChildrenToComplete ||
+                            status == TaskStatus.WaitingToRun);
+                    }
+                }
+                return false;
             }
         }
 

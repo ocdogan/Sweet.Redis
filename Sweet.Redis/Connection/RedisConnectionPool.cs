@@ -244,6 +244,11 @@ namespace Sweet.Redis
             }
         }
 
+        public IRedisTransaction BeginTransaction(int db = 0)
+        {
+            return new RedisTransaction(this, db);
+        }
+
         public IRedisDb GetDb(int db = 0)
         {
             return new RedisDb(this, db);
