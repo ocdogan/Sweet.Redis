@@ -27,75 +27,15 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisDisposable : IRedisDisposable
+    public class RedisDisposable : RedisInternalDisposable, IRedisDisposable
     {
-        #region Field Members
-
-        private long m_Disposed;
-
-        #endregion Field Members
-
         #region Destructors
 
-        ~RedisDisposable()
+        public new void Dispose()
         {
-            Dispose(false);
+            base.Dispose();
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            var alreadyDisposed = SetDisposed();
-            try
-            {
-                OnBeforeDispose(disposing, alreadyDisposed);
-            }
-            finally
-            {
-                if (!alreadyDisposed)
-                {
-                    if (disposing)
-                        GC.SuppressFinalize(this);
-
-                    OnDispose(disposing);
-                }
-            }
-        }
-
-        protected virtual void OnBeforeDispose(bool disposing, bool alreadyDisposed)
-        { }
-
-        protected virtual void OnDispose(bool disposing)
-        { }
 
         #endregion Destructors
-
-        #region Properties
-
-        public bool Disposed
-        {
-            get { return Interlocked.Read(ref m_Disposed) != 0; }
-        }
-
-        #endregion Properties
-
-        #region Methods
-
-        protected virtual bool SetDisposed()
-        {
-            return Interlocked.Exchange(ref m_Disposed, RedisConstants.True) != RedisConstants.False;
-        }
-
-        public virtual void ValidateNotDisposed()
-        {
-            if (Disposed)
-                throw new RedisException(GetType().Name + " is disposed");
-        }
-
-        #endregion Methods
     }
 }

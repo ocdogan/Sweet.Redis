@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisMonitorChannel
+    public class RedisMonitorChannel : RedisInternalDisposable
     {
         #region RedisMonitorSubscriptions
 
@@ -63,7 +63,6 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private long m_Disposed;
         private RedisConnectionPool m_Pool;
         private RedisContinuousConnectionProvider m_ConnectionProvider;
 
@@ -84,24 +83,8 @@ namespace Sweet.Redis
 
         #region Destructors
 
-        ~RedisMonitorChannel()
+        protected override void OnDispose(bool disposing)
         {
-            Dispose(false);
-        }
-
-        internal void Dispose()
-        {
-            Dispose(true);
-        }
-
-        private void Dispose(bool disposing)
-        {
-            if (SetDisposed())
-                return;
-
-            if (disposing)
-                GC.SuppressFinalize(this);
-
             Interlocked.Exchange(ref m_Pool, null);
 
             var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
@@ -111,27 +94,7 @@ namespace Sweet.Redis
 
         #endregion Destructors
 
-        #region Properties
-
-        internal bool Disposed
-        {
-            get { return Interlocked.Read(ref m_Disposed) != 0; }
-        }
-
-        #endregion Properties
-
         #region Methods
-
-        private bool SetDisposed()
-        {
-            return Interlocked.Exchange(ref m_Disposed, RedisConstants.True) != RedisConstants.False;
-        }
-
-        private void ValidateNotDisposed()
-        {
-            if (Disposed)
-                throw new RedisException(GetType().Name + " is disposed");
-        }
 
         private IRedisConnection Connect()
         {

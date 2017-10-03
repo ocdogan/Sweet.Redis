@@ -54,6 +54,20 @@ namespace Sweet.Redis
             get { return (TaskCompletionSource<T>)StateObject; }
         }
 
+        public override bool IsCanceled
+        {
+            get
+            {
+                var tcs = (TaskCompletionSource<T>)StateObject;
+                if (tcs != null)
+                {
+                    var task = tcs.Task;
+                    return (task != null) && task.IsCanceled;
+                }
+                return true;
+            }
+        }
+
         public override bool IsCompleted
         {
             get
@@ -63,6 +77,20 @@ namespace Sweet.Redis
                 {
                     var task = tcs.Task;
                     return (task == null) || task.IsCompleted || task.IsCanceled || task.IsFaulted;
+                }
+                return true;
+            }
+        }
+
+        public override bool IsFaulted
+        {
+            get
+            {
+                var tcs = (TaskCompletionSource<T>)StateObject;
+                if (tcs != null)
+                {
+                    var task = tcs.Task;
+                    return (task != null) && task.IsFaulted;
                 }
                 return true;
             }
@@ -91,9 +119,27 @@ namespace Sweet.Redis
             if (tcs != null)
             {
                 var task = tcs.Task;
-                if (task != null && !task.IsCompleted)
+                if (task != null && !(task.IsCompleted || task.IsFaulted))
                 {
                     tcs.TrySetCanceled();
+                }
+            }
+        }
+
+        public override void SetException(Exception exception)
+        {
+            if (exception != null)
+            {
+                ValidateNotDisposed();
+
+                var tcs = CompletionSource;
+                if (tcs != null)
+                {
+                    var task = tcs.Task;
+                    if (task != null && !(task.IsCompleted || task.IsCanceled))
+                    {
+                        tcs.TrySetException(exception);
+                    }
                 }
             }
         }
@@ -122,6 +168,11 @@ namespace Sweet.Redis
                 }
             }
             return false;
+        }
+
+        public override void Process(IRedisConnection connection)
+        {
+            Process(connection, -1);
         }
 
         public override void Process(IRedisConnection connection, int timeoutMilliseconds = -1)
@@ -206,6 +257,12 @@ namespace Sweet.Redis
                                     {
                                         var result = command.ExpectMultiDataStrings(connection);
                                         (tcs as TaskCompletionSource<RedisMultiString>).TrySetResult(result);
+                                    }
+                                    break;
+                                case RedisCommandExpect.Nothing:
+                                    {
+                                        var result = command.ExpectNothing(connection);
+                                        (tcs as TaskCompletionSource<RedisVoid>).TrySetResult(result);
                                     }
                                     break;
                                 case RedisCommandExpect.NullableDouble:

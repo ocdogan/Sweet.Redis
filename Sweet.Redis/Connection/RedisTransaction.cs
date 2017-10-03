@@ -25,27 +25,27 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal abstract class RedisAsyncRequest : RedisRequest
+    internal class RedisTransaction : RedisDb, IRedisTransaction
     {
         #region .Ctors
 
-        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
-                                 string okIf, object stateObject)
-            : base(command, expectation, okIf, stateObject)
+        public RedisTransaction(RedisConnectionPool pool, int db, bool throwOnError = true)
+            : base(pool, db, throwOnError)
         { }
 
         #endregion .Ctors
 
         #region Methods
 
-        public abstract void Process(IRedisConnection connection, int timeoutMilliseconds = -1);
-
-        public abstract bool Expire(int timeoutMilliseconds = -1);
+        public bool Execute()
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion Methods
     }

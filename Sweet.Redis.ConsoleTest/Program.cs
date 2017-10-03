@@ -51,7 +51,40 @@ namespace Sweet.Redis.ConsoleTest
             // SlowLog1();
 
             // Info1();
+
+            // Shutdown();
         }
+
+        #region Shutdown
+
+        static void Shutdown()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+                            db.Server.ShutDown();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        #endregion Shutdown
 
         #region Info
 

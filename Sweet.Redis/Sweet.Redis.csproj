@@ -52,6 +52,7 @@
     <Compile Include="Common\RedisAsyncRequest_T.cs" />
     <Compile Include="Common\RedisCommandExpect.cs" />
     <Compile Include="Common\RedisDate.cs" />
+    <Compile Include="Common\RedisInternalDisposable.cs" />
     <Compile Include="Common\RedisMultiInt.cs" />
     <Compile Include="Common\RedisMultiString.cs" />
     <Compile Include="Common\RedisNull.cs" />
@@ -59,6 +60,8 @@
     <Compile Include="Common\RedisNullableInt.cs" />
     <Compile Include="Common\RedisNullVal.cs" />
     <Compile Include="Common\RedisParam.cs" />
+    <Compile Include="Common\RedisRequest.cs" />
+    <Compile Include="Common\RedisRequest_T.cs" />
     <Compile Include="Common\RedisServerInfoClientsSection.cs" />
     <Compile Include="Common\RedisServerInfoClusterSection.cs" />
     <Compile Include="Common\RedisServerInfoCpuSection.cs" />
@@ -73,7 +76,9 @@
     <Compile Include="Common\RedisVoid.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\RedisVoidVal.cs" />
+    <Compile Include="Connection\IRedisCommandSet.cs" />
     <Compile Include="Connection\IRedisConnectionPool.cs" />
+    <Compile Include="Connection\IRedisTransaction.cs" />
     <Compile Include="Connection\RedisActionBag.cs" />
     <Compile Include="Connection\RedisAsyncRequestQ.cs" />
     <Compile Include="Connection\RedisAsyncStateWrapper.cs" />
@@ -86,6 +91,7 @@
     <Compile Include="Connection\RedisMonitorChannel.cs" />
     <Compile Include="Connection\RedisMonitorMessage.cs" />
     <Compile Include="Connection\RedisSingleResponseReader.cs" />
+    <Compile Include="Connection\RedisTransaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Buffers\RedisChunkBuffer.cs" />
     <Compile Include="Buffers\RedisByteBuffer.cs" />

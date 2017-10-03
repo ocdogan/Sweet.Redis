@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisServerCommands(IRedisDb db)
+        public RedisServerCommands(RedisDb db)
             : base(db)
         { }
 

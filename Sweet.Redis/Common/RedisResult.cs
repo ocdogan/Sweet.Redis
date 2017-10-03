@@ -159,6 +159,12 @@ namespace Sweet.Redis
             m_Status = RedisResultStatus.Completed;
         }
 
+        internal void TrySetResult(TValue value)
+        {
+            m_Value = value;
+            m_Status = RedisResultStatus.Completed;
+        }
+
         #region Overrides
 
         public override bool Equals(object obj)

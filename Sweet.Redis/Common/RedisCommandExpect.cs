@@ -35,6 +35,7 @@ namespace Sweet.Redis
         Integer,
         MultiDataBytes,
         MultiDataStrings,
+        Nothing,
         NullableDouble,
         NullableInteger,
         OK,

@@ -30,7 +30,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisHyperLogLogCommands(IRedisDb db)
+        public RedisHyperLogLogCommands(RedisDb db)
             : base(db)
         { }
 

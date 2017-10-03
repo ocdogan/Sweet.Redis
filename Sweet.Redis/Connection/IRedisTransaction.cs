@@ -23,30 +23,11 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal abstract class RedisAsyncRequest : RedisRequest
+    public interface IRedisTransaction : IRedisDisposable
     {
-        #region .Ctors
-
-        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
-                                 string okIf, object stateObject)
-            : base(command, expectation, okIf, stateObject)
-        { }
-
-        #endregion .Ctors
-
-        #region Methods
-
-        public abstract void Process(IRedisConnection connection, int timeoutMilliseconds = -1);
-
-        public abstract bool Expire(int timeoutMilliseconds = -1);
-
-        #endregion Methods
+        bool Execute();
     }
 }
