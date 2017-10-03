@@ -22,344 +22,39 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading;
-
 namespace Sweet.Redis
 {
-    public class RedisResponse : RedisDisposable, IRedisResponse
+    public class RedisResponse : RedisResult<RedisRawResponse>
     {
-        #region Static Members
-
-        public static readonly RedisVoidResponse Void = new RedisVoidResponse();
-
-        #endregion Static Members
-
-        #region Field Members
-
-        private long m_HasData;
-        private byte[] m_Data;
-        private long m_Ready;
-        private int m_TypeByte = -1;
-        private RedisRawObjType? m_Type;
-        private long m_Length = int.MinValue;
-        private IRedisResponse m_Parent;
-        private IList<IRedisResponse> m_List;
-        private IList<IRedisResponse> m_ReadOnlyList;
-
-        #endregion Field Members
-
         #region .Ctors
 
-        public RedisResponse(IRedisResponse parent = null, RedisRawObjType type = RedisRawObjType.Undefined)
-        {
-            m_Parent = parent;
-            if (type != RedisRawObjType.Undefined)
-                SetType(type);
-        }
+        internal RedisResponse()
+        { }
+
+        internal RedisResponse(RedisRawResponse value)
+            : base(value)
+        { }
 
         #endregion .Ctors
 
-        #region Destructors
-
-        protected override void OnDispose(bool disposing)
-        {
-            Interlocked.Exchange(ref m_Parent, null);
-            ClearInternal();
-        }
-
-        #endregion Destructors
-
         #region Properties
 
-        public int ChildCount
-        {
-            get
-            {
-                if (!m_Type.HasValue || m_Type != RedisRawObjType.Array)
-                    return -1;
-
-                var list = m_List;
-                return (list != null) ? list.Count : 0;
-            }
-        }
-
-        public byte[] Data
-        {
-            get { return m_Data; }
-        }
-
-        public bool HasChild
-        {
-            get
-            {
-                if (m_Type != RedisRawObjType.Array)
-                    return false;
-
-                var list = m_List;
-                return (list != null) && list.Count > 0;
-            }
-        }
-
-        public bool HasData
-        {
-            get
-            {
-                if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
-                    return true;
-
-                if (!m_Type.HasValue || m_Type == RedisRawObjType.Array)
-                    return false;
-
-                var data = m_Data;
-                var result = (data != null) && data.Length > 0;
-                if (result)
-                    Interlocked.Exchange(ref m_HasData, RedisConstants.True);
-
-                return result;
-            }
-        }
-
-        public bool IsVoid
-        {
-            get { return false; }
-        }
-
-        public IList<IRedisResponse> Items
-        {
-            get { return m_ReadOnlyList; }
-        }
-
-        public int Length
-        {
-            get { return (int)Interlocked.Read(ref m_Length); }
-        }
-
-        public IRedisResponse Parent
-        {
-            get { return m_Parent; }
-        }
-
-        public bool Ready
-        {
-            get { return Interlocked.Read(ref m_Ready) != RedisConstants.False; }
-        }
-
-        public RedisRawObjType Type
-        {
-            get { return m_Type.HasValue ? m_Type.Value : RedisRawObjType.Undefined; }
-        }
-
-        public int TypeByte
-        {
-            get { return m_TypeByte; }
-        }
+        public override RedisResultType Type { get { return RedisResultType.Raw; } }
 
         #endregion Properties
 
-        #region Methods
+        #region Conversion Methods
 
-        internal void SetData(byte[] value)
+        public static implicit operator RedisResponse(RedisRawResponse value)  // implicit RedisRawResponse to RedisResponse conversion operator
         {
-            m_Data = value;
-            Interlocked.Exchange(ref m_HasData, RedisConstants.True);
-
-            if (m_Type.HasValue && m_Type != RedisRawObjType.Array)
-                SetReady(true);
+            return new RedisResponse(value);
         }
 
-        internal void SetLength(int value)
+        public static implicit operator RedisRawResponse(RedisResponse value)  // implicit RedisResponse to RedisRawResponse conversion operator
         {
-            value = Math.Max(-1, value);
-            Interlocked.Exchange(ref m_Length, value);
-
-            if (m_Type == RedisRawObjType.Array)
-            {
-                InitializeList(value);
-                if (value < 1)
-                    SetReady(true);
-                else
-                {
-                    var items = m_ReadOnlyList;
-                    SetReady(items.Count == value);
-                }
-            }
+            return value.Value;
         }
 
-        internal void SetParent(IRedisResponse value)
-        {
-            var parent = Interlocked.Exchange(ref m_Parent, value);
-            if (parent != null && value != parent)
-            {
-                var response = parent as RedisResponse;
-                if (response != null)
-                    response.Remove(this);
-            }
-        }
-
-        internal void SetReady(bool value)
-        {
-            Interlocked.Exchange(ref m_Ready, value ? RedisConstants.True : RedisConstants.False);
-        }
-
-        internal void SetType(RedisRawObjType value)
-        {
-            if (!m_Type.HasValue)
-            {
-                m_Type = value;
-                m_TypeByte = value.ResponseTypeByte();
-
-                if (value == RedisRawObjType.Array)
-                    NewArrayList();
-
-                if (Interlocked.Read(ref m_HasData) == RedisConstants.True)
-                    SetReady(true);
-            }
-        }
-
-        internal void SetTypeByte(int value)
-        {
-            if (m_TypeByte < 0 && value > -1 && value < 256)
-            {
-                m_TypeByte = value;
-                SetType(((byte)value).ResponseType());
-            }
-        }
-
-        public byte[] ReleaseData()
-        {
-            var data = Interlocked.Exchange(ref m_Data, null);
-            if (m_Type != RedisRawObjType.Array)
-                SetReady(Length > -1);
-            return data;
-        }
-
-        internal void Add(IRedisResponse item)
-        {
-            ValidateNotDisposed();
-
-            if (m_Type != RedisRawObjType.Array)
-                throw new ArgumentException("Can not add item to " + Type.ToString("F") + " type", "item");
-
-            if (item == null)
-                throw new ArgumentNullException("item");
-
-            if (item == this)
-                throw new ArgumentException("Circular reference", "item");
-
-            var response = item as RedisResponse;
-            if (response != null)
-                response.SetParent(this);
-
-            var list = GetArrayList();
-            list.Add(item);
-
-            SetReady(list.Count >= Length);
-        }
-
-        internal void Remove(IRedisResponse item)
-        {
-            ValidateNotDisposed();
-
-            if (m_Type != RedisRawObjType.Array)
-                throw new ArgumentException("Can not add/remove item to/from " + Type.ToString("F") + " type", "item");
-
-            if (item == null)
-                throw new ArgumentNullException("item");
-
-            if (item == this)
-                throw new ArgumentException("Circular reference", "item");
-
-            if (item.Parent != this)
-                throw new ArgumentException("Item does not belong to this response", "item");
-
-            var response = item as RedisResponse;
-            if (response != null)
-                response.SetParent(null);
-
-            var list = GetArrayList();
-            list.Remove(item);
-
-            SetReady(list.Count >= Length);
-        }
-
-        protected void ClearInternal()
-        {
-            Interlocked.Exchange(ref m_Data, null);
-            if (m_Type != RedisRawObjType.Array)
-                SetReady(Length > -1);
-
-            var arrayItems = Interlocked.Exchange(ref m_List, null);
-            if (arrayItems != null)
-            {
-                Interlocked.Exchange(ref m_ReadOnlyList, null);
-                foreach (var item in arrayItems)
-                    item.Dispose();
-                arrayItems.Clear();
-            }
-
-            if (m_Type == RedisRawObjType.Array)
-                SetReady(Length == -1);
-        }
-
-        public void Clear()
-        {
-            ValidateNotDisposed();
-            ClearInternal();
-        }
-
-        private void InitializeList(int value)
-        {
-            if (value < 1)
-            {
-                var list = (value < 0) ? null : new List<IRedisResponse>();
-
-                var oldList = Interlocked.Exchange(ref m_List, list);
-                Interlocked.Exchange(ref m_ReadOnlyList, list == null ? null : new ReadOnlyCollection<IRedisResponse>(list));
-
-                if (oldList != null)
-                {
-                    for (var i = oldList.Count - 1; i > -1; i--)
-                    {
-                        var response = oldList[i];
-                        response.Dispose();
-                    }
-                    oldList.Clear();
-                }
-            }
-            else
-            {
-                var list = GetArrayList();
-
-                var count = 0;
-                while ((count = list.Count) > value)
-                {
-                    var response = list[count - 1];
-                    list.RemoveAt(count - 1);
-                    response.Dispose();
-                }
-            }
-        }
-
-        private IList<IRedisResponse> GetArrayList()
-        {
-            return m_List ?? NewArrayList();
-        }
-
-        private IList<IRedisResponse> NewArrayList()
-        {
-            ValidateNotDisposed();
-
-            var list = (m_Type == RedisRawObjType.Array) ? new List<IRedisResponse>() : null;
-
-            Interlocked.Exchange(ref m_List, list);
-            Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisResponse>(list));
-
-            return list;
-        }
-
-        #endregion Methods
+        #endregion Conversion Methods
     }
 }

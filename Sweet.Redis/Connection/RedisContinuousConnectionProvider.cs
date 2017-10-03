@@ -32,17 +32,17 @@ namespace Sweet.Redis
         #region Field Members
 
         private IRedisConnection m_Connection;
-        private Action<IRedisResponse> m_OnReceiveResponse;
+        private Action<IRedisRawResponse> m_OnReceiveResponse;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisContinuousConnectionProvider(string name, Action<IRedisResponse> onReceiveResponse)
+        public RedisContinuousConnectionProvider(string name, Action<IRedisRawResponse> onReceiveResponse)
             : this(name, RedisSettings.Default, onReceiveResponse)
         { }
 
-        public RedisContinuousConnectionProvider(string name, RedisSettings settings, Action<IRedisResponse> onReceiveResponse)
+        public RedisContinuousConnectionProvider(string name, RedisSettings settings, Action<IRedisRawResponse> onReceiveResponse)
             : base(name, settings)
         {
             m_OnReceiveResponse = onReceiveResponse;
@@ -81,7 +81,7 @@ namespace Sweet.Redis
                 true);
         }
 
-        protected virtual void ResponseReceived(IRedisResponse response)
+        protected virtual void ResponseReceived(IRedisRawResponse response)
         {
             if (!Disposed)
             {

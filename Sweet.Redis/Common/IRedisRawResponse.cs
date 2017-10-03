@@ -23,19 +23,25 @@
 #endregion License
 
 using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
-    public class RedisDisposable : RedisInternalDisposable, IRedisDisposable
+    public interface IRedisRawResponse : IDisposable
     {
-        #region Destructors
+        int ChildCount { get; }
+        byte[] Data { get; }
+        bool HasChild { get; }
+        bool HasData { get; }
+        bool IsVoid { get; }
+        IList<IRedisRawResponse> Items { get; }
+        int Length { get; }
+        IRedisRawResponse Parent { get; }
+        bool Ready { get; }
+        RedisRawObjType Type { get; }
+        int TypeByte { get; }
 
-        public virtual new void Dispose()
-        {
-            base.Dispose();
-        }
-
-        #endregion Destructors
+        void Clear();
+        byte[] ReleaseData();
     }
 }

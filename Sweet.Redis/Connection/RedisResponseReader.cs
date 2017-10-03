@@ -147,7 +147,7 @@ namespace Sweet.Redis
             return Interlocked.Exchange(ref m_ReadState, RedisConstants.Zero) == RedisConstants.One;
         }
 
-        protected virtual IRedisResponse ReadResponse(RedisSocket socket)
+        protected virtual RedisRawResponse ReadResponse(RedisSocket socket)
         {
             if (socket == null)
                 throw new ArgumentNullException("socket");
@@ -169,13 +169,13 @@ namespace Sweet.Redis
                     Error = e;
                 }
             }
-            return RedisResponse.Void;
+            return RedisVoidResponse.Void;
         }
 
-        protected virtual void OnResponse(IRedisResponse response)
+        protected virtual void OnResponse(IRedisRawResponse response)
         { }
 
-        protected RedisResponse ProcessResponse(RedisSocket socket)
+        protected RedisRawResponse ProcessResponse(RedisSocket socket)
         {
             var b = ReadByte(socket);
             if (b < 0)
@@ -186,7 +186,7 @@ namespace Sweet.Redis
                 throw new RedisException("Unexpected byte for redis response type");
             }
 
-            var item = new RedisResponse();
+            var item = new RedisRawResponse();
 
             item.SetTypeByte(b);
             if (item.Type == RedisRawObjType.Undefined)
@@ -273,11 +273,11 @@ namespace Sweet.Redis
             return item;
         }
 
-        protected static void SetReady(RedisResponse child)
+        protected static void SetReady(RedisRawResponse child)
         {
             child.SetReady(true);
 
-            var parent = child.Parent as RedisResponse;
+            var parent = child.Parent as RedisRawResponse;
             if (parent != null)
             {
                 var count = parent.ChildCount;

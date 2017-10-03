@@ -107,8 +107,8 @@ namespace Sweet.Redis
                     if (task != null)
                     {
                         var status = task.Status;
-                        return (status == TaskStatus.Created || 
-                            status == TaskStatus.Running || 
+                        return (status == TaskStatus.Created ||
+                            status == TaskStatus.Running ||
                             status == TaskStatus.WaitingForActivation ||
                             status == TaskStatus.WaitingForChildrenToComplete ||
                             status == TaskStatus.WaitingToRun);
@@ -180,7 +180,7 @@ namespace Sweet.Redis
                     {
                         timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
 
-                        if (!task.IsCompleted && 
+                        if (!task.IsCompleted &&
                             (DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
                         {
                             tcs.TrySetException(new RedisException("Request Timeout"));
@@ -230,7 +230,7 @@ namespace Sweet.Redis
                                 case RedisCommandExpect.Response:
                                     {
                                         var result = command.Execute(connection);
-                                        (tcs as TaskCompletionSource<IRedisResponse>).TrySetResult(result);
+                                        (tcs as TaskCompletionSource<RedisResult<RedisRawResponse>>).TrySetResult(result);
                                     }
                                     break;
                                 case RedisCommandExpect.Array:

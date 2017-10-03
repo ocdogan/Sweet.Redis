@@ -39,17 +39,17 @@ namespace Sweet.Redis
         private RedisConnection m_Connection;
         private RedisContinuousReader m_Reader;
 
-        private Action<IRedisResponse> m_OnReceive;
+        private Action<IRedisRawResponse> m_OnReceive;
 
         private long m_ProcessingReceivedQ;
-        private ConcurrentQueue<IRedisResponse> m_ReceivedResponseQ = new ConcurrentQueue<IRedisResponse>();
+        private ConcurrentQueue<IRedisRawResponse> m_ReceivedResponseQ = new ConcurrentQueue<IRedisRawResponse>();
 
         #endregion Field Members
 
         #region .Ctors
 
         public RedisContinuousReaderCtx(RedisContinuousReader reader, RedisConnection connection,
-                   RedisSocket socket, Action<IRedisResponse> onReceive)
+                   RedisSocket socket, Action<IRedisRawResponse> onReceive)
             : base(connection.Settings, 16 * 1024)
         {
             Reader = reader;
@@ -86,7 +86,7 @@ namespace Sweet.Redis
                 { }
             }
 
-            IRedisResponse temp;
+            IRedisRawResponse temp;
             while (m_ReceivedResponseQ.TryDequeue(out temp)) { }
         }
 
@@ -168,7 +168,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected override void OnResponse(IRedisResponse response)
+        protected override void OnResponse(IRedisRawResponse response)
         {
             if (response != null && Receiving)
             {
@@ -181,7 +181,7 @@ namespace Sweet.Redis
                     {
                         try
                         {
-                            IRedisResponse qItem;
+                            IRedisRawResponse qItem;
                             while (m_ReceivedResponseQ.TryDequeue(out qItem))
                             {
                                 try

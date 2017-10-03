@@ -115,7 +115,7 @@ namespace Sweet.Redis
             return true;
         }
 
-        public override IRedisResponse SendReceive(byte[] data)
+        public override RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
 
@@ -129,7 +129,7 @@ namespace Sweet.Redis
             }
 
             var task = socket.SendAsync(data, 0, data.Length)
-                .ContinueWith<IRedisResponse>((ret) =>
+                .ContinueWith<RedisRawResponse>((ret) =>
                 {
                     if (ret.IsCompleted && ret.Result > 0)
                         using (var reader = new RedisSingleResponseReader(Settings))
@@ -139,7 +139,7 @@ namespace Sweet.Redis
             return task.Result;
         }
 
-        public override IRedisResponse SendReceive(IRedisCommand cmd)
+        public override RedisRawResponse SendReceive(IRedisCommand cmd)
         {
             if (cmd == null)
                 throw new ArgumentNullException("cmd");

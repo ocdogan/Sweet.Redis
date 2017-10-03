@@ -23,14 +23,14 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
+using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
     internal class RedisRequest<T> : RedisRequest
+        where T : RedisResult
     {
         #region RequestState
 
@@ -51,11 +51,17 @@ namespace Sweet.Redis
 
         #endregion Constants
 
+        #region Static Members
+
+        private static ConstructorInfo s_Ctor;
+
+        #endregion Static Members
+
         #region Field Members
 
+        private T m_Result;
         private long m_State;
         private Exception m_Exception;
-        private RedisResult<T> m_Result;
 
         #endregion Field Members
 
@@ -76,8 +82,8 @@ namespace Sweet.Redis
 
         public override bool IsCompleted
         {
-            get 
-            { 
+            get
+            {
                 var state = (RequestState)Interlocked.Read(ref m_State);
                 return !(state == RequestState.Waiting || state == RequestState.Started);
             }
@@ -93,7 +99,7 @@ namespace Sweet.Redis
             get { return Interlocked.Read(ref m_State) == (long)RequestState.Started; }
         }
 
-        public RedisResult<T> Result
+        public T Result
         {
             get { return CreateResult(); }
         }
@@ -102,12 +108,21 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private RedisResult<T> CreateResult()
+        private T CreateResult()
         {
             var result = m_Result;
             if (result == null)
             {
-                result = new RedisResult<T>();
+                var ctor = s_Ctor;
+                if (ctor == null)
+                {
+                    s_Ctor = typeof(T).GetConstructor(BindingFlags.Public |
+                                                      BindingFlags.NonPublic |
+                                                      BindingFlags.Instance, null, Type.EmptyTypes, null);
+                    ctor = s_Ctor;
+                }
+
+                result = (T)ctor.Invoke(null);
                 m_Result = result;
             }
             return result;
@@ -154,7 +169,7 @@ namespace Sweet.Redis
                                 {
                                     var expectation = command.Execute(connection);
                                     if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
-                                        (result as RedisResult<IRedisResponse>).TrySetResult(expectation);
+                                        (result as RedisResult<IRedisRawResponse>).TrySetResult(expectation);
                                 }
                                 break;
                             case RedisCommandExpect.Array:

@@ -59,13 +59,13 @@ namespace Sweet.Redis
 
             var rObj = obj as RedisNullableInt;
             if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_Value == m_Value);
+                return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
             return false;
         }
 
         public override int GetHashCode()
         {
-            var value = m_Value;
+            var value = m_RawData;
             if (ReferenceEquals(value, null))
                 return base.GetHashCode();
             return value.GetHashCode();
@@ -73,7 +73,7 @@ namespace Sweet.Redis
 
         public override string ToString()
         {
-            var value = m_Value;
+            var value = (long?)m_RawData;
             if (value == null)
                 return "(nil)";
 
@@ -141,7 +141,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return (a.m_Status == b.m_Status) && (a.m_Value == b.m_Value);
+            return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
         }
 
         public static bool operator !=(RedisNullableInt a, RedisNullableInt b)

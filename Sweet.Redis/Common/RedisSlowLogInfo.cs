@@ -173,7 +173,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public static RedisSlowLogInfo[] ToSlowLogInfo(IRedisResponse response)
+        public static RedisSlowLogInfo[] ToSlowLogInfo(IRedisRawResponse response)
         {
             if (response != null &&
                 response.Type == RedisRawObjType.Array)
@@ -247,7 +247,7 @@ namespace Sweet.Redis
             return false;
         }
  
-        private static bool TryParseInteger(IRedisResponse response, out long value)
+        private static bool TryParseInteger(IRedisRawResponse response, out long value)
         {
             value = RedisConstants.Zero;
 
@@ -265,7 +265,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        private static string[] ParseCommandInfo(IRedisResponse response)
+        private static string[] ParseCommandInfo(IRedisRawResponse response)
         {
             if (response != null &&
                 response.Type == RedisRawObjType.Array)
@@ -327,7 +327,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static string ParseBulkString(IRedisResponse response)
+        private static string ParseBulkString(IRedisRawResponse response)
         {
             if (response != null &&
                 response.Type == RedisRawObjType.BulkString)

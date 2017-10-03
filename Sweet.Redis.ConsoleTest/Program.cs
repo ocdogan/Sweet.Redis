@@ -40,7 +40,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
-            MultiThreading7();
+            // MultiThreading7();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -53,7 +53,45 @@ namespace Sweet.Redis.ConsoleTest
             // Info1();
 
             // Shutdown();
+
+            Transaction1();
         }
+
+        #region Transaction
+
+        static void Transaction1()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var transaction = pool.BeginTransaction())
+                {
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            var result1 = transaction.Connection.Ping(1);
+                            var result2 = transaction.Connection.Ping(2);
+                            var result3 = transaction.Connection.Ping(3);
+                            var result4 = transaction.Connection.Ping(4);
+                            var result5 = transaction.Connection.Ping(5);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        #endregion Transaction
 
         #region Shutdown
 
@@ -102,7 +140,7 @@ namespace Sweet.Redis.ConsoleTest
                             Console.Clear();
 
                             var infoResult = db.Server.Info();
-                            
+
                             if (infoResult == null || infoResult.Value == null)
                                 Console.WriteLine("(nil)");
                             else

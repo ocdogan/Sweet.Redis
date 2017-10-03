@@ -27,8 +27,14 @@ using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
-    public class RedisVoidResponse : IRedisResponse, IDisposable
+    public class RedisVoidResponse : RedisRawResponse, IDisposable
     {
+        #region Static Members
+
+        public static readonly RedisVoidResponse Void = new RedisVoidResponse();
+
+        #endregion Static Members
+
         #region .Ctors
 
         internal RedisVoidResponse()
@@ -38,43 +44,46 @@ namespace Sweet.Redis
 
         #region Destructors
 
-        public void Dispose()
+        public override void Dispose()
+        { }
+
+        protected override void OnDispose(bool disposing)
         { }
 
         #endregion Destructors
 
         #region Properties
 
-        public virtual int ChildCount { get { return 0; } }
+        public override int ChildCount { get { return 0; } }
 
-        public virtual byte[] Data { get { return null; } }
+        public override byte[] Data { get { return null; } }
 
-        public virtual bool HasChild { get { return false; } }
+        public override bool HasChild { get { return false; } }
 
-        public virtual bool HasData { get { return false; } }
+        public override bool HasData { get { return false; } }
 
-        public virtual bool IsVoid { get { return true; } }
+        public override bool IsVoid { get { return true; } }
 
-        public virtual IList<IRedisResponse> Items { get { return null; } }
+        public override IList<IRedisRawResponse> Items { get { return null; } }
 
-        public virtual int Length { get { return 0; } }
+        public override int Length { get { return 0; } }
 
-        public virtual IRedisResponse Parent { get { return null; } }
+        public override IRedisRawResponse Parent { get { return null; } }
 
-        public virtual bool Ready { get { return true; } }
+        public override bool Ready { get { return true; } }
 
-        public virtual RedisRawObjType Type { get { return RedisRawObjType.Undefined; } }
+        public override RedisRawObjType Type { get { return RedisRawObjType.Undefined; } }
 
-        public virtual int TypeByte { get { return -1; } }
+        public override int TypeByte { get { return -1; } }
 
         #endregion Properties
 
         #region Methods
 
-        public virtual void Clear()
+        public override void Clear()
         { }
 
-        public virtual byte[] ReleaseData()
+        public override byte[] ReleaseData()
         {
             return null;
         }
@@ -84,7 +93,7 @@ namespace Sweet.Redis
         public override bool Equals(object obj)
         {
             return (obj is RedisVoidResponse) ||
-                (obj is IRedisResponse && ((IRedisResponse)obj).IsVoid);
+                (obj is IRedisRawResponse && ((IRedisRawResponse)obj).IsVoid);
         }
 
         public override int GetHashCode()

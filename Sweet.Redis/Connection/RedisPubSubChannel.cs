@@ -138,7 +138,7 @@ namespace Sweet.Redis
             return RedisPubSubMessage.Empty;
         }
 
-        private void ResponseReceived(IRedisResponse response)
+        private void ResponseReceived(IRedisRawResponse response)
         {
             var pubSubResp = RedisPubSubResponse.ToPubSubResponse(response);
             if (!pubSubResp.IsEmpty)

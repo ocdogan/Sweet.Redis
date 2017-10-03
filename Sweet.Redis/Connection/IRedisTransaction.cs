@@ -26,7 +26,7 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisTransaction : IRedisDisposable
+    public interface IRedisTransaction : IRedisDb, IRedisDisposable
     {
         bool Execute();
         RedisTransactionState Status { get; }

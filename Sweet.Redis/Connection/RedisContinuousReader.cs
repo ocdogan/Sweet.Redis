@@ -79,7 +79,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public void BeginReceive(Action<RedisContinuousReader> onComplete, Action<IRedisResponse> onReceive)
+        public void BeginReceive(Action<RedisContinuousReader> onComplete, Action<IRedisRawResponse> onReceive)
         {
             ValidateNotDisposed();
 

@@ -56,7 +56,7 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_State, (long)RedisTransactionState.Disposed);
 
             base.OnDispose(disposing);
-            Interlocked.Exchange(ref m_RequestQ, null);           
+            Interlocked.Exchange(ref m_RequestQ, null);
         }
 
         #endregion Destructors
@@ -95,7 +95,7 @@ namespace Sweet.Redis
 
         protected internal override T Expect<T>(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
         {
-            var state = (RedisTransactionState)Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Ready, 
+            var state = (RedisTransactionState)Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Ready,
                 (long)RedisTransactionState.Empty);
 
             if (state == RedisTransactionState.Executing)
@@ -109,7 +109,7 @@ namespace Sweet.Redis
             queue.Enqueue(request);
 
             var result = request.Result;
-            return (result != null ? result.Value : default(T));
+            return !ReferenceEquals(result, null) ? (T)(object)result : default(T);
         }
 
         #endregion Execution Methods

@@ -117,7 +117,7 @@
     <Compile Include="Common\RedisException.cs" />
     <Compile Include="Buffers\RedisFixedBuffer.cs" />
     <Compile Include="Common\IRedisDisposable.cs" />
-    <Compile Include="Common\IRedisResponse.cs" />
+    <Compile Include="Common\IRedisRawResponse.cs" />
     <Compile Include="Common\RedisRawObj.cs" />
     <Compile Include="Common\RedisRawObjType.cs" />
     <Compile Include="Common\RedisResponse.cs" />
@@ -186,6 +186,7 @@
     <Compile Include="Common\RedisServerInfo.cs" />
     <Compile Include="Common\RedisServerInfoSection.cs" />
     <Compile Include="Connection\RedisSocketWriter.cs" />
+    <Compile Include="Common\RedisRawResponse.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

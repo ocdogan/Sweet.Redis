@@ -40,20 +40,20 @@ namespace Sweet.Redis
         private long m_ReceiveState;
         private RedisContinuousReader m_Reader;
 
-        private Action<IRedisResponse> m_OnReceiveResponse;
+        private Action<IRedisRawResponse> m_OnReceiveResponse;
 
         #endregion Field Members
 
         #region .Ctors
 
-        internal RedisContinuousReaderConnection(string name, Action<IRedisResponse> onReceiveResponse,
+        internal RedisContinuousReaderConnection(string name, Action<IRedisRawResponse> onReceiveResponse,
             Action<RedisConnection, RedisSocket> onReleaseSocket, Action<RedisConnection, RedisSocket> onCreateSocket,
             bool connectImmediately = false)
             : this(name, RedisSettings.Default, onReceiveResponse, onCreateSocket, onReleaseSocket, connectImmediately)
         { }
 
         internal RedisContinuousReaderConnection(string name, RedisSettings settings,
-            Action<IRedisResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onCreateSocket,
+            Action<IRedisRawResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket,
             bool connectImmediately = true)
             : base(name, settings, onCreateSocket, onReleaseSocket, null, connectImmediately)
@@ -90,13 +90,13 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public override IRedisResponse SendReceive(byte[] data)
+        public override RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
             throw new NotImplementedException("SendAndReceive is not supported by continuous reader connections. Use Send method for sending data.");
         }
 
-        public override IRedisResponse SendReceive(IRedisCommand cmd)
+        public override RedisRawResponse SendReceive(IRedisCommand cmd)
         {
             ValidateNotDisposed();
             throw new NotImplementedException("SendAndReceive is not supported by continuous reader connections. Use Send method for sending command.");

@@ -268,13 +268,13 @@ namespace Sweet.Redis
             }
         }
 
-        public IRedisResponse Execute(IRedisConnection connection, bool throwException = true)
+        public RedisResponse Execute(IRedisConnection connection, bool throwException = true)
         {
             ValidateNotDisposed();
-            return ExecuteInternal(connection, throwException);
+            return new RedisResponse(ExecuteInternal(connection, throwException));
         }
 
-        private IRedisResponse ExecuteInternal(IRedisConnection connection, bool throwException = true, bool sendNotReceive = false)
+        private RedisRawResponse ExecuteInternal(IRedisConnection connection, bool throwException = true, bool sendNotReceive = false)
         {
             if (connection == null)
             {
@@ -283,7 +283,7 @@ namespace Sweet.Redis
                 return null;
             }
 
-            IRedisResponse response = RedisResponse.Void;
+            RedisRawResponse response = RedisVoidResponse.Void;
             if (sendNotReceive || !m_CommandType.HasFlag(RedisCommandType.SendAndReceive))
                 connection.Send(this);
             else
@@ -468,13 +468,13 @@ namespace Sweet.Redis
             }
         }
 
-        public IRedisResponse Execute(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public IRedisRawResponse Execute(RedisSocket socket, RedisSettings settings, bool throwException = true)
         {
             ValidateNotDisposed();
             return ExecuteInternal(socket, settings, throwException);
         }
 
-        private IRedisResponse ExecuteInternal(RedisSocket socket, RedisSettings settings, bool throwException = true, bool sendNotReceive = false)
+        private RedisRawResponse ExecuteInternal(RedisSocket socket, RedisSettings settings, bool throwException = true, bool sendNotReceive = false)
         {
             if (socket == null)
             {
@@ -483,7 +483,7 @@ namespace Sweet.Redis
                 return null;
             }
 
-            IRedisResponse response = RedisResponse.Void;
+            RedisRawResponse response = RedisVoidResponse.Void;
             if (sendNotReceive || !m_CommandType.HasFlag(RedisCommandType.SendAndReceive))
                 WriteTo(socket);
             else
@@ -503,7 +503,7 @@ namespace Sweet.Redis
 
         #region Common Execution Methods
 
-        protected static double ForDouble(IRedisResponse response, bool throwException)
+        protected static double ForDouble(IRedisRawResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -538,7 +538,7 @@ namespace Sweet.Redis
             return double.MinValue;
         }
 
-        protected static long? ForNullableInteger(IRedisResponse response, bool throwException)
+        protected static long? ForNullableInteger(IRedisRawResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -576,7 +576,7 @@ namespace Sweet.Redis
         }
 
 
-        protected static double? ForNullableDouble(IRedisResponse response, bool throwException)
+        protected static double? ForNullableDouble(IRedisRawResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -617,7 +617,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected static string[] ForMutiDataStrings(IRedisResponse response, bool throwException)
+        protected static string[] ForMutiDataStrings(IRedisRawResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -691,7 +691,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected static byte[][] ForMultiDataBytes(IRedisResponse response, bool throwException)
+        protected static byte[][] ForMultiDataBytes(IRedisRawResponse response, bool throwException)
         {
             if (response == null)
             {
@@ -764,7 +764,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected static void HandleError(IRedisResponse response)
+        protected static void HandleError(IRedisRawResponse response)
         {
             if (response != null)
             {

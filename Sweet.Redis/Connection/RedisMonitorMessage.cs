@@ -71,7 +71,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public static RedisMonitorMessage ToMonitorMessage(IRedisResponse response)
+        public static RedisMonitorMessage ToMonitorMessage(IRedisRawResponse response)
         {
             if (response != null &&
                 response.Type == RedisRawObjType.SimpleString)

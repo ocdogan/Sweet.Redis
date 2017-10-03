@@ -84,7 +84,7 @@ namespace Sweet.Redis
             return sBuilder.ToString();
         }
 
-        public static RedisRawObj ToObject(IRedisResponse response)
+        public static RedisRawObj ToObject(IRedisRawResponse response)
         {
             if (response == null)
                 return null;

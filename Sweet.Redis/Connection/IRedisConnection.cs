@@ -45,8 +45,8 @@ namespace Sweet.Redis
         Task SendAsync(byte[] data);
         Task SendAsync(IRedisCommand cmd);
 
-        IRedisResponse SendReceive(byte[] data);
-        IRedisResponse SendReceive(IRedisCommand cmd);
+        RedisRawResponse SendReceive(byte[] data);
+        RedisRawResponse SendReceive(IRedisCommand cmd);
     }
 }
 

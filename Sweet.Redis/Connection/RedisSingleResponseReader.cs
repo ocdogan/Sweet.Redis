@@ -36,7 +36,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public IRedisResponse Execute(RedisSocket socket)
+        public RedisRawResponse Execute(RedisSocket socket)
         {
             if (socket.IsConnected() && base.BeginReading())
             {

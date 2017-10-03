@@ -40,31 +40,20 @@ namespace Sweet.Redis
         { }
     }
 
-    public class RedisResult<TValue, KItem>
+    public class RedisResult<TValue, KItem> : RedisResult
     {
-        #region Field Members
-
-        protected TValue m_Value;
-        protected RedisResultStatus m_Status = RedisResultStatus.Pending;
-
-        #endregion Field Members
-
         #region .Ctors
 
         internal RedisResult()
         { }
 
         internal RedisResult(TValue value)
-        {
-            m_Value = value;
-            m_Status = RedisResultStatus.Completed;
-        }
+            : base(value)
+        { }
 
         internal RedisResult(TValue value, RedisResultStatus status)
-        {
-            m_Value = value;
-            m_Status = status;
-        }
+            : base(value, status)
+        { }
 
         #endregion .Ctors
 
@@ -77,7 +66,7 @@ namespace Sweet.Redis
                 ValidateCompleted();
 
                 var val = Value;
-                if (val != null)
+                if (!Object.Equals(val, null))
                 {
                     var list = val as IList<KItem>;
                     if (list != null)
@@ -102,6 +91,110 @@ namespace Sweet.Redis
             }
         }
 
+        public virtual TValue Value
+        {
+            get
+            {
+                ValidateCompleted();
+                return (TValue)m_RawData;
+            }
+            internal set
+            {
+                m_RawData = value;
+                IsCompleted = true;
+            }
+        }
+
+        #endregion Properties
+
+        #region Methods
+
+        protected internal override void TrySetResult(object value)
+        {
+            if (!(value is TValue))
+                throw new RedisException("Value is not in expected type");
+            base.TrySetResult(value);
+        }
+
+        #region Overrides
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        #endregion Overrides
+
+        #endregion Methods
+
+        #region Operator Overloads
+
+        public static bool operator ==(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)
+        {
+            if (ReferenceEquals(a, null))
+            {
+                if (ReferenceEquals(b, null))
+                    return true;
+
+                var raw = b.m_RawData;
+                return ReferenceEquals(raw, null) || Object.Equals(raw, null);
+            }
+
+            if (ReferenceEquals(b, null))
+            {
+                var raw = a.m_RawData;
+                return ReferenceEquals(raw, null) || Object.Equals(raw, null);
+            }
+
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return (a.Status == b.Status) && Object.Equals(a.m_RawData, b.m_RawData);
+        }
+
+        public static bool operator !=(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)
+        {
+            return !(a == b);
+        }
+
+        #endregion Operator Overloads
+    }
+
+    public class RedisResult
+    {
+        #region Field Members
+
+        protected object m_RawData;
+        protected RedisResultStatus m_Status = RedisResultStatus.Pending;
+
+        #endregion Field Members
+
+        #region .Ctors
+
+        internal RedisResult()
+        { }
+
+        internal RedisResult(object value)
+        {
+            m_RawData = value;
+            m_Status = RedisResultStatus.Completed;
+        }
+
+        internal RedisResult(object value, RedisResultStatus status)
+        {
+            m_RawData = value;
+            m_Status = status;
+        }
+
+        #endregion .Ctors
+
+        #region Properties
+
         public bool IsCompleted
         {
             get { return m_Status == RedisResultStatus.Completed; }
@@ -120,8 +213,6 @@ namespace Sweet.Redis
             }
         }
 
-        public object RawData { get { return Value; } }
-
         public virtual RedisResultType Type { get { return RedisResultType.Custom; } }
 
         public RedisResultStatus Status
@@ -130,16 +221,15 @@ namespace Sweet.Redis
             internal set { m_Status = value; }
         }
 
-        public virtual TValue Value
+        protected virtual object RawData
         {
             get
             {
-                ValidateCompleted();
-                return m_Value;
+                return m_RawData;
             }
-            internal set
+            set
             {
-                m_Value = value;
+                m_RawData = value;
                 IsCompleted = true;
             }
         }
@@ -159,9 +249,9 @@ namespace Sweet.Redis
             m_Status = RedisResultStatus.Completed;
         }
 
-        internal void TrySetResult(TValue value)
+        protected internal virtual void TrySetResult(object value)
         {
-            m_Value = value;
+            m_RawData = value;
             m_Status = RedisResultStatus.Completed;
         }
 
@@ -171,19 +261,23 @@ namespace Sweet.Redis
         {
             if (ReferenceEquals(obj, null))
             {
-                var value = m_Value;
+                var value = m_RawData;
                 return ReferenceEquals(value, null) || (value == null);
             }
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            return Object.Equals(Value, obj);
+            if (obj is RedisResult &&
+               Object.Equals(m_RawData, ((RedisResult)obj).m_RawData))
+                return true;
+
+            return Object.Equals(m_RawData, obj);
         }
 
         public override int GetHashCode()
         {
-            var value = m_Value;
+            var value = m_RawData;
             if (ReferenceEquals(value, null))
                 return base.GetHashCode();
             return value.GetHashCode();
@@ -194,7 +288,7 @@ namespace Sweet.Redis
             if (!IsCompleted)
                 return "(nil) - [Not completed]";
 
-            var value = m_Value;
+            var value = m_RawData;
             if (ReferenceEquals(value, null))
                 return "(nil)";
 
@@ -230,30 +324,30 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
-        public static bool operator ==(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)
+        public static bool operator ==(RedisResult a, RedisResult b)
         {
             if (ReferenceEquals(a, null))
             {
                 if (ReferenceEquals(b, null))
                     return true;
 
-                var val = b.m_Value;
-                return ReferenceEquals(val, null) || Object.Equals(val, null);
+                var raw = b.m_RawData;
+                return ReferenceEquals(raw, null) || Object.Equals(raw, null);
             }
 
             if (ReferenceEquals(b, null))
             {
-                var val = a.m_Value;
-                return ReferenceEquals(val, null) || Object.Equals(val, null);
+                var raw = a.m_RawData;
+                return ReferenceEquals(raw, null) || Object.Equals(raw, null);
             }
 
             if (ReferenceEquals(a, b))
                 return true;
 
-            return (a.Status == b.Status) && Object.Equals(a.Value, b.Value);
+            return (a.Status == b.Status) && Object.Equals(a.m_RawData, b.m_RawData);
         }
 
-        public static bool operator !=(RedisResult<TValue, KItem> a, RedisResult<TValue, KItem> b)
+        public static bool operator !=(RedisResult a, RedisResult b)
         {
             return !(a == b);
         }

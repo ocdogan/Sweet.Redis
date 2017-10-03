@@ -186,13 +186,13 @@ namespace Sweet.Redis
             }
         }
 
-        public virtual IRedisResponse SendReceive(byte[] data)
+        public virtual RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
             throw new NotImplementedException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
         }
 
-        public virtual IRedisResponse SendReceive(IRedisCommand cmd)
+        public virtual RedisRawResponse SendReceive(IRedisCommand cmd)
         {
             ValidateNotDisposed();
             throw new NotImplementedException("SendAndReceive is not supported by base connection. Use Send method for sending command.");

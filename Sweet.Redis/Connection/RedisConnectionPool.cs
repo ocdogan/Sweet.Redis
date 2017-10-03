@@ -500,7 +500,7 @@ namespace Sweet.Redis
 
         #region Command Execution
 
-        internal IRedisResponse Execute(RedisCommand command, bool throwException = true)
+        internal RedisResponse Execute(RedisCommand command, bool throwException = true)
         {
             if (command == null)
                 throw new ArgumentNullException("command");
@@ -513,7 +513,7 @@ namespace Sweet.Redis
                 connection = Connect(command.DbIndex);
                 if (connection == null)
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<IRedisResponse>(command, RedisCommandExpect.Response, null);
+                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisResponse>(command, RedisCommandExpect.Response, null);
                     StartToProcessQ();
 
                     return asyncRequest.Task.Result;

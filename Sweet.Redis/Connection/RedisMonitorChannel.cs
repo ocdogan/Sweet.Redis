@@ -115,7 +115,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private void ResponseReceived(IRedisResponse response)
+        private void ResponseReceived(IRedisRawResponse response)
         {
             var monitorMsg = RedisMonitorMessage.ToMonitorMessage(response);
             if (!monitorMsg.IsEmpty)
