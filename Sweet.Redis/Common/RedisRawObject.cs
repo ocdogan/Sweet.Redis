@@ -101,9 +101,11 @@ namespace Sweet.Redis
                 switch (type)
                 {
                     case RedisRawObjectType.SimpleString:
-                    case RedisRawObjectType.BulkString:
                     case RedisRawObjectType.Error:
                         data = Encoding.UTF8.GetString(bytes);
+                        break;
+                    case RedisRawObjectType.BulkString:
+                        data = bytes;
                         break;
                     case RedisRawObjectType.Integer:
                         if (bytes.Length == 0)

@@ -83,138 +83,258 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Executing,
                 (long)RedisTransactionState.Ready) == (long)RedisTransactionState.Ready)
             {
-                var completed = true;
+                var innerState = RedisTransactionState.Initiated;
                 try
                 {
                     var requests = Interlocked.Exchange(ref m_RequestList, null);
-                    if (requests != null)
+                    if (requests == null)
                     {
-                        var requestCount = requests.Count;
-                        if (requestCount > 0)
+                        innerState = RedisTransactionState.Ready;
+                        return false;
+                    }
+
+                    var requestCount = requests.Count;
+                    if (requestCount == 0)
+                    {
+                        innerState = RedisTransactionState.Ready;
+                        return false;
+                    }
+
+                    using (var connection = Pool.Connect(DbIndex))
+                    {
+                        if (connection == null)
                         {
-                            using (var connection = Pool.Connect(DbIndex))
-                            {
-                                if (connection == null)
-                                {
-                                    completed = false;
-                                    Cancel(requests);
-                                }
-                                else
-                                {
-                                    var socket = connection.Connect();
-                                    if (!socket.IsConnected())
-                                    {
-                                        completed = false;
-                                        Cancel(requests);
-                                    }
-                                    else
-                                    {
-                                        var settings = connection.Settings;
+                            innerState = RedisTransactionState.Failed;
+                            Cancel(requests);
+                            return false;
+                        }
 
-                                        for (var i = 0; i < requestCount; i++)
-                                        {
-                                            try
-                                            {
-                                                var request = requests[i];
+                        var socket = connection.Connect();
+                        if (!socket.IsConnected())
+                        {
+                            innerState = RedisTransactionState.Failed;
+                            Cancel(requests);
+                            return false;
+                        }
 
-                                                request.Process(socket, settings);
-                                                if (!request.IsStarted)
-                                                {
-                                                    completed = false;
-                                                    Cancel(requests, i);
-                                                    break;
-                                                }
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                completed = false;
+                        var settings = connection.Settings;
 
-                                                for (var j = 0; j < requestCount; j++)
-                                                {
-                                                    try
-                                                    {
-                                                        requests[j].SetException(e);
-                                                    }
-                                                    catch (Exception)
-                                                    { }
-                                                }
+                        var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
+                        var multiResult = multiCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
 
-                                                var discard = new RedisCommand(DbIndex, RedisCommands.Discard);
-                                                discard.ExpectSimpleString(socket, settings, RedisConstants.OK);
+                        if (!multiResult)
+                        {
+                            innerState = RedisTransactionState.Failed;
+                            Cancel(requests);
 
-                                                throw;
-                                            }
-                                        }
+                            return false;
+                        }
 
-                                        if (completed)
-                                        {
-                                            var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
+                        innerState = RedisTransactionState.Executing;
+                        if (!Process(requests, socket, settings))
+                        {
+                            innerState = RedisTransactionState.Failed;
+                            return false;
+                        }
 
-                                            var execResult = exec.ExpectArray(socket, settings);
-
-                                            var itemCount = 0;
-                                            IList<RedisRawObject> items = null;
-
-                                            if (execResult != null)
-                                            {
-                                                var raw = execResult.Value;
-                                                if (raw != null)
-                                                {
-                                                    items = raw.Items;
-                                                    if (items != null)
-                                                        itemCount = items.Count;
-                                                }
-                                            }
-
-                                            requestCount--;
-                                            for (var i = 0; i < requestCount; i++)
-                                            {
-                                                try
-                                                {
-                                                    var request = requests[i + 1];
-                                                    if (request != null)
-                                                    {
-                                                        if (i >= itemCount)
-                                                            request.Cancel();
-                                                        else
-                                                        {
-                                                            var child = items[i];
-                                                            if (child == null)
-                                                                request.Cancel();
-                                                            else
-                                                                request.SetResult(child.Data);
-                                                        }
-                                                    }
-                                                }
-                                                catch (Exception e)
-                                                {
-                                                    for (var j = 0; j < requestCount; j++)
-                                                    {
-                                                        try
-                                                        {
-                                                            requests[j].SetException(e);
-                                                        }
-                                                        catch (Exception)
-                                                        { }
-                                                    }
-                                                    throw;
-                                                }
-                                            }
-                                        }
-
-                                        return completed;
-                                    }
-                                }
-                            }
+                        if (Exec(requests, socket, settings))
+                        {
+                            innerState = RedisTransactionState.Ready;
+                            return true;
                         }
                     }
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_State, completed ? (long)RedisTransactionState.Ready : (long)RedisTransactionState.Failed);
+                    Interlocked.Exchange(ref m_State, innerState == RedisTransactionState.Ready ?
+                                         (long)RedisTransactionState.Ready :
+                                         (long)RedisTransactionState.Failed);
                 }
             }
             return false;
+        }
+
+        private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        {
+            if (requests != null)
+            {
+                var requestCount = requests.Count;
+                for (var i = 0; i < requestCount; i++)
+                {
+                    try
+                    {
+                        var request = requests[i];
+                        request.Process(socket, settings);
+
+                        if (!request.IsStarted)
+                        {
+                            Discard(requests, socket, settings);
+                            return false;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Discard(requests, socket, settings, e);
+                        throw;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private bool Exec(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        {
+            if (requests != null)
+            {
+                var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
+                var execResult = exec.ExpectArray(socket, settings);
+
+                var itemCount = 0;
+                IList<RedisRawObject> items = null;
+
+                if (execResult != null)
+                {
+                    var raw = execResult.Value;
+                    if (raw != null)
+                    {
+                        items = raw.Items;
+                        if (items != null)
+                            itemCount = items.Count;
+                    }
+                }
+
+                var requestCount = requests.Count;
+                if (itemCount != requestCount)
+                {
+                    Cancel(requests);
+                    return false;
+                }
+
+                for (var i = 0; i < requestCount; i++)
+                {
+                    try
+                    {
+                        var request = requests[i];
+                        if (ReferenceEquals(request, null))
+                            continue;
+
+                        if (i >= itemCount)
+                        {
+                            request.Cancel();
+                            continue;
+                        }
+
+                        var child = items[i];
+                        if (ReferenceEquals(child, null))
+                        {
+                            request.Cancel();
+                            continue;
+                        }
+
+                        var data = child.Data;
+                        switch (request.Expectation)
+                        {
+                            case RedisCommandExpect.BulkString:
+                                {
+                                    var str = ReferenceEquals(data, null) ? null :
+                                        (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
+
+                                    request.SetResult(str);
+                                }
+                                break;
+                            case RedisCommandExpect.BulkStringBytes:
+                                {
+                                    data = ReferenceEquals(data, null) ? null :
+                                        (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
+
+                                    request.SetResult(data);
+                                }
+                                break;
+                            case RedisCommandExpect.SimpleString:
+                                {
+                                    var str = ReferenceEquals(data, null) ? null :
+                                        (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
+
+                                    if (String.IsNullOrEmpty(request.OKIf))
+                                        request.SetResult(str);
+                                    else
+                                        request.SetResult(String.Equals(request.OKIf, str));
+                                }
+                                break;
+                            case RedisCommandExpect.SimpleStringBytes:
+                                {
+                                    data = ReferenceEquals(data, null) ? null :
+                                        (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
+
+                                    if (String.IsNullOrEmpty(request.OKIf))
+                                        request.SetResult(data);
+                                    else
+                                        request.SetResult(Encoding.UTF8.GetBytes(request.OKIf).Equals(data));
+                                }
+                                break;
+                            case RedisCommandExpect.OK:
+                                request.SetResult(RedisConstants.OK.Equals(data));
+                                break;
+                            case RedisCommandExpect.One:
+                                request.SetResult(RedisConstants.One.Equals(data));
+                                break;
+                            case RedisCommandExpect.GreaterThanZero:
+                                request.SetResult(RedisConstants.Zero.CompareTo(data) == -1);
+                                break;
+                            case RedisCommandExpect.Nothing:
+                                request.SetResult(RedisVoidVal.Value);
+                                break;
+                            default:
+                                request.SetResult(data);
+                                break;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        for (var j = 0; j < requestCount; j++)
+                        {
+                            try
+                            {
+                                requests[j].SetException(e);
+                            }
+                            catch (Exception)
+                            { }
+                        }
+                        throw;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private void Discard(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, Exception exception = null)
+        {
+            try
+            {
+                if (requests != null)
+                {
+                    var requestCount = requests.Count;
+                    for (var j = 0; j < requestCount; j++)
+                    {
+                        try
+                        {
+                            if (exception == null)
+                                requests[j].Cancel();
+                            else
+                                requests[j].SetException(exception);
+                        }
+                        catch (Exception)
+                        { }
+                    }
+                }
+            }
+            finally
+            {
+                var discardCommand = new RedisCommand(DbIndex, RedisCommands.Discard);
+                discardCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
+            }
         }
 
         private static void Cancel(IList<RedisRequest> requests, int start = 0)
@@ -240,12 +360,7 @@ namespace Sweet.Redis
 
             var requests = m_RequestList;
             if (requests == null)
-            {
                 requests = m_RequestList = new List<RedisRequest>();
-
-                var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
-                requests.Add(new RedisTransactionalRequest<RedisBool>(multiCommand, RedisCommandExpect.OK));
-            }
 
             var request = new RedisTransactionalRequest<T>(command, expectation, okIf);
             requests.Add(request);

@@ -154,119 +154,82 @@ namespace Sweet.Redis
                     var result = CreateResult();
                     if (ReferenceEquals(value, null))
                     {
-                        result = CreateResult();
                         result.TrySetResult(null);
                         return;
                     }
 
                     if (value is RedisResult)
+                        value = ((RedisResult)value).RawData;
+
+                    switch (Expectation)
                     {
-                        var expectedValue = ((RedisResult)value).RawData;
-                        switch (Expectation)
-                        {
-                            case RedisCommandExpect.Response:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.Array:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.BulkString:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.BulkStringBytes:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.Double:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.GreaterThanZero:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.Integer:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.MultiDataBytes:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.MultiDataStrings:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.Nothing:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.NullableDouble:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.NullableInteger:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.OK:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.One:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.SimpleString:
-                                result.TrySetResult(expectedValue);
-                                break;
-                            case RedisCommandExpect.SimpleStringBytes:
-                                result.TrySetResult(expectedValue);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        switch (Expectation)
-                        {
-                            case RedisCommandExpect.Response:
+                        case RedisCommandExpect.Response:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.Array:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.BulkString:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.BulkStringBytes:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.Double:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.GreaterThanZero:
+                            if (value is bool)
+                                result.TrySetResult((bool)value);
+                            else if (value is long)
+                                result.TrySetResult(RedisConstants.Zero < (long)value);
+                            else if (value is int)
+                                result.TrySetResult(RedisConstants.Zero < (int)value);
+                            else
+                                result.TrySetResult(RedisConstants.Zero.CompareTo(value) == -1);
+                            break;
+                        case RedisCommandExpect.Integer:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.MultiDataBytes:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.MultiDataStrings:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.Nothing:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.NullableDouble:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.NullableInteger:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.OK:
+                            if (value is bool)
                                 result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.Array:
+                            else if (value is string)
+                                result.TrySetResult(RedisConstants.OK == (string)value);
+                            else
+                                result.TrySetResult(Object.Equals(RedisConstants.OK, value));
+                            break;
+                        case RedisCommandExpect.One:
+                            if (value is bool)
                                 result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.BulkString:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.BulkStringBytes:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.Double:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.GreaterThanZero:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.Integer:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.MultiDataBytes:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.MultiDataStrings:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.Nothing:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.NullableDouble:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.NullableInteger:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.OK:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.One:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.SimpleString:
-                                result.TrySetResult(value);
-                                break;
-                            case RedisCommandExpect.SimpleStringBytes:
-                                result.TrySetResult(value);
-                                break;
-                        }
+                            else if (value is long)
+                                result.TrySetResult(RedisConstants.One == (long)value);
+                            else if (value is int)
+                                result.TrySetResult(RedisConstants.One == (int)value);
+                            else
+                                result.TrySetResult(Object.Equals(RedisConstants.One, value));
+                            break;
+                        case RedisCommandExpect.SimpleString:
+                            result.TrySetResult(value);
+                            break;
+                        case RedisCommandExpect.SimpleStringBytes:
+                            result.TrySetResult(value);
+                            break;
                     }
                 }
                 catch (Exception e)

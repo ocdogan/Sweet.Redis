@@ -41,6 +41,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading5();
             // MultiThreading6();
             // MultiThreading7();
+            MultiThreading8();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -54,7 +55,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // Shutdown();
 
-            Transaction1();
+            // Transaction1();
         }
 
         #region Transaction
@@ -347,6 +348,19 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Multi-Threading
 
+        static void MultiThreading8()
+        {
+            var mediumText = new string('x', 5000);
+            var mediumBytes = Encoding.UTF8.GetBytes(mediumText);
+
+            MultiThreadingBase(12, 2, 10, 50, "medium_text", mediumText, true, 5,
+                               (rdb, dbIndex) =>
+            {
+                rdb.Strings.Get("medium_text");
+                return mediumBytes;
+            }, true);
+        }
+
         static void MultiThreading7()
         {
             MultiThreadingBase(12, 2, 1, 5000, "medium_text", new string('x', 5000), true, 5,
@@ -399,69 +413,81 @@ namespace Sweet.Redis.ConsoleTest
 
         static void MultiThreadingBase(int dbIndex, int maxCount, int threadCount, int loopCount,
                                        string testKey, string testText, bool requireKeyPress,
-                                       int sleepSecs, Func<IRedisDb, int, byte[]> proc)
+                                       int sleepSecs, Func<IRedisDb, int, byte[]> proc, bool transactional = false)
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                      // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
                      new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount, useAsyncCompleter: false))) // LOCAL
             {
-                using (var db = pool.GetDb(dbIndex))
+                using (var db = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
                 {
                     var b = db.Strings.Set(testKey, testText);
-                    if (!b)
+                    if (!transactional && !b)
                         throw new Exception("can not set");
 
                     var g = db.Strings.Get(testKey);
-                    if (g == null || g.Value == null || g.Value.Length != (testText ?? "").Length)
+                    if (!transactional && (g == null || g.Value == null || g.Value.Length != (testText ?? "").Length))
                         throw new Exception("can not get");
+
+                    if (transactional)
+                    {
+                        if (!((IRedisTransaction)db).Execute())
+                            throw new Exception("can not execute");
+
+                        if (!b)
+                            throw new Exception("can not set");
+
+                        if (g == null || g.Value == null || g.Value.Length != (testText ?? "").Length)
+                            throw new Exception("can not get");
+                    }
                 }
 
                 var loopIndex = 0;
                 List<Thread> thList = null;
 
                 var totalSw = new Stopwatch();
-                using (var db = pool.GetDb(dbIndex))
+
+                do
                 {
-                    do
+                    totalSw.Reset();
+
+                    var ticks = 0L;
+                    Console.Clear();
+
+                    var oldThList = thList;
+                    if (oldThList != null)
                     {
-                        totalSw.Reset();
-
-                        var ticks = 0L;
-                        Console.Clear();
-
-                        var oldThList = thList;
-                        if (oldThList != null)
+                        for (var i = 0; i < oldThList.Count; i++)
                         {
-                            for (var i = 0; i < oldThList.Count; i++)
+                            var th = oldThList[i];
+                            try
                             {
-                                var th = oldThList[i];
-                                try
-                                {
-                                    if (th.IsAlive)
-                                        th.Interrupt();
-                                }
-                                catch (Exception)
-                                { }
+                                if (th.IsAlive)
+                                    th.Interrupt();
                             }
+                            catch (Exception)
+                            { }
                         }
+                    }
 
-                        thList = new List<Thread>(threadCount);
-                        try
+                    thList = new List<Thread>(threadCount);
+                    try
+                    {
+                        loopIndex = 0;
+                        var ticksLock = new object();
+
+                        for (var i = 0; i < threadCount; i++)
                         {
-                            loopIndex = 0;
-                            var ticksLock = new object();
-
-                            for (var i = 0; i < threadCount; i++)
+                            var th = new Thread((obj) =>
                             {
-                                var th = new Thread((obj) =>
-                                {
-                                    var tupple = (Tuple<Thread, IRedisDb, AutoResetEvent>)obj;
+                                var tupple = (Tuple<Thread, AutoResetEvent>)obj;
 
-                                    var autoReset = tupple.Item3;
+                                var autoReset = tupple.Item2;
+                                using (var rdb = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
+                                {
                                     try
                                     {
                                         var @this = tupple.Item1;
-                                        var rdb = tupple.Item2;
 
                                         var sw = new Stopwatch();
 
@@ -482,53 +508,55 @@ namespace Sweet.Redis.ConsoleTest
                                     }
                                     finally
                                     {
+                                        if (transactional)
+                                            ((IRedisTransaction)rdb).Execute();
                                         autoReset.Set();
                                     }
-                                });
-
-                                th.Name = loopIndex++.ToString("D2") + "." + i.ToString("D2");
-                                th.IsBackground = true;
-                                thList.Add(th);
-                            }
-
-                            totalSw.Restart();
-
-                            var autoResets = new AutoResetEvent[thList.Count];
-                            try
-                            {
-                                for (var i = 0; i < thList.Count; i++)
-                                {
-                                    var th = thList[i];
-
-                                    var autoReset = new AutoResetEvent(false);
-                                    autoResets[i] = autoReset;
-
-                                    th.Start(new Tuple<Thread, IRedisDb, AutoResetEvent>(th, db, autoReset));
                                 }
-                            }
-                            finally
-                            {
-                                WaitHandle.WaitAll(autoResets);
-                                totalSw.Stop();
-                            }
+                            });
+
+                            th.Name = loopIndex++.ToString("D2") + "." + i.ToString("D2");
+                            th.IsBackground = true;
+                            thList.Add(th);
                         }
-                        catch (Exception e)
+
+                        totalSw.Restart();
+
+                        var autoResets = new AutoResetEvent[thList.Count];
+                        try
                         {
-                            Console.WriteLine(e);
+                            for (var i = 0; i < thList.Count; i++)
+                            {
+                                var th = thList[i];
+
+                                var autoReset = new AutoResetEvent(false);
+                                autoResets[i] = autoReset;
+
+                                th.Start(new Tuple<Thread, AutoResetEvent>(th, autoReset));
+                            }
                         }
-
-                        Console.WriteLine();
-
-                        Console.WriteLine("Sum of inner ticks: " + ticks);
-                        Console.WriteLine("Total ticks:        " + totalSw.ElapsedTicks);
-
-                        if (requireKeyPress)
-                            Console.WriteLine("Press any key to continue, ESC to escape ...");
-                        else
-                            Thread.Sleep(sleepSecs * 1000);
+                        finally
+                        {
+                            WaitHandle.WaitAll(autoResets);
+                            totalSw.Stop();
+                        }
                     }
-                    while (!requireKeyPress || Console.ReadKey(true).Key != ConsoleKey.Escape);
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+
+                    Console.WriteLine("Sum of inner ticks: " + ticks);
+                    Console.WriteLine("Total ticks:        " + totalSw.ElapsedTicks);
+
+                    if (requireKeyPress)
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    else
+                        Thread.Sleep(sleepSecs * 1000);
                 }
+                while (!requireKeyPress || Console.ReadKey(true).Key != ConsoleKey.Escape);
             }
         }
 
