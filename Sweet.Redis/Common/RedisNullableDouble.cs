@@ -121,7 +121,7 @@ namespace Sweet.Redis
             return new RedisNullableDouble(value);
         }
 
-        public static implicit operator RedisNullableDouble(RedisInt value)  // implicit RedisInt to RedisNullableDouble conversion operator
+        public static implicit operator RedisNullableDouble(RedisInteger value)  // implicit RedisInt to RedisNullableDouble conversion operator
         {
             return new RedisNullableDouble(value);
         }

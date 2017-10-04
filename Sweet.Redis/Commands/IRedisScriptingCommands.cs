@@ -63,7 +63,7 @@ namespace Sweet.Redis
         RedisBool ScriptDebugYes();
         RedisBool ScriptDebugSync();
         RedisBool ScriptDebugNo();
-        RedisMultiInt ScriptExists(RedisParam sha1, params RedisParam[] sha1s);
+        RedisMultiInteger ScriptExists(RedisParam sha1, params RedisParam[] sha1s);
         RedisBool ScriptFush();
         RedisBool ScriptKill();
         RedisString ScriptLoad(RedisParam script);

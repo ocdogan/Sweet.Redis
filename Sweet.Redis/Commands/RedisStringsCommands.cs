@@ -39,14 +39,14 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt Append(RedisParam key, RedisParam value)
+        public RedisInteger Append(RedisParam key, RedisParam value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.Append, key, value);
         }
 
-        public RedisInt BitCount(RedisParam key)
+        public RedisInteger BitCount(RedisParam key)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -54,7 +54,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.BitCount, key);
         }
 
-        public RedisInt BitCount(RedisParam key, int start, int end)
+        public RedisInteger BitCount(RedisParam key, int start, int end)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -62,7 +62,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.BitCount, key, start.ToBytes(), end.ToBytes());
         }
 
-        public RedisInt Decr(RedisParam key)
+        public RedisInteger Decr(RedisParam key)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -70,7 +70,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.Decr, key);
         }
 
-        public RedisInt DecrBy(RedisParam key, int count)
+        public RedisInteger DecrBy(RedisParam key, int count)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -78,7 +78,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.DecrBy, key, count.ToBytes());
         }
 
-        public RedisInt DecrBy(RedisParam key, long count)
+        public RedisInteger DecrBy(RedisParam key, long count)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -94,7 +94,7 @@ namespace Sweet.Redis
             return ExpectBulkStringBytes(RedisCommands.Get, key);
         }
 
-        public RedisInt GetBit(RedisParam key, int offset)
+        public RedisInteger GetBit(RedisParam key, int offset)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -138,7 +138,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.Get, key);
         }
 
-        public RedisInt Incr(RedisParam key)
+        public RedisInteger Incr(RedisParam key)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -146,7 +146,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.Incr, key);
         }
 
-        public RedisInt IncrBy(RedisParam key, int count)
+        public RedisInteger IncrBy(RedisParam key, int count)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -154,7 +154,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.IncrBy, key, count.ToBytes());
         }
 
-        public RedisInt IncrBy(RedisParam key, long count)
+        public RedisInteger IncrBy(RedisParam key, long count)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -216,7 +216,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.Set, key, value);
         }
 
-        public RedisInt SetBit(RedisParam key, int offset, int value)
+        public RedisInteger SetBit(RedisParam key, int offset, int value)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");
@@ -248,14 +248,14 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.SetNx, key, value);
         }
 
-        public RedisInt SetRange(RedisParam key, int offset, RedisParam value)
+        public RedisInteger SetRange(RedisParam key, int offset, RedisParam value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.SetRange, key, offset.ToBytes(), value);
         }
 
-        public RedisInt StrLen(RedisParam key)
+        public RedisInteger StrLen(RedisParam key)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");

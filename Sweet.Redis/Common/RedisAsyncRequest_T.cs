@@ -266,7 +266,7 @@ namespace Sweet.Redis
                                 case RedisCommandExpect.Integer:
                                     {
                                         var result = command.ExpectInteger(connection);
-                                        (tcs as TaskCompletionSource<RedisInt>).TrySetResult(result);
+                                        (tcs as TaskCompletionSource<RedisInteger>).TrySetResult(result);
                                     }
                                     break;
                                 case RedisCommandExpect.MultiDataBytes:

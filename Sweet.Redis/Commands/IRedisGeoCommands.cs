@@ -51,7 +51,7 @@ namespace Sweet.Redis
     */
     public interface IRedisGeoCommands
     {
-        RedisInt GeoAdd(RedisParam key, RedisGeospatialItem member, params RedisGeospatialItem[] members);
+        RedisInteger GeoAdd(RedisParam key, RedisGeospatialItem member, params RedisGeospatialItem[] members);
         RedisNullableDouble GeoDistance(RedisParam key, RedisParam member1, RedisParam member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default);
         RedisMultiBytes GeoHash(RedisParam key, RedisParam member, params RedisParam[] members);
         RedisResult<RedisGeoPosition[]> GeoPosition(RedisParam key, RedisParam member, params RedisParam[] members);

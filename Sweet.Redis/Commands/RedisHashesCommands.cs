@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt HDel(RedisParam key, RedisParam field, params RedisParam[] fields)
+        public RedisInteger HDel(RedisParam key, RedisParam field, params RedisParam[] fields)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -148,7 +148,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.HGet, key, field.ToBytes());
         }
 
-        public RedisInt HIncrBy(RedisParam key, RedisParam field, int increment)
+        public RedisInteger HIncrBy(RedisParam key, RedisParam field, int increment)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -159,7 +159,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.HIncrBy, key, field, increment.ToBytes());
         }
 
-        public RedisInt HIncrBy(RedisParam key, RedisParam field, long increment)
+        public RedisInteger HIncrBy(RedisParam key, RedisParam field, long increment)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -197,7 +197,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.HKeys, key);
         }
 
-        public RedisInt HLen(RedisParam key)
+        public RedisInteger HLen(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -381,7 +381,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.HSetNx, key, field, value);
         }
 
-        public RedisInt HStrLen(RedisParam key, RedisParam field)
+        public RedisInteger HStrLen(RedisParam key, RedisParam field)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");

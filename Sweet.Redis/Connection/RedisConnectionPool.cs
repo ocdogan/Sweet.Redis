@@ -644,7 +644,7 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisInt ExpectInteger(RedisCommand command, bool throwException = true)
+        internal RedisInteger ExpectInteger(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
 
@@ -654,7 +654,7 @@ namespace Sweet.Redis
                 connection = Connect(command.DbIndex);
                 if (connection == null)
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisInt>(command, RedisCommandExpect.Integer, null);
+                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisInteger>(command, RedisCommandExpect.Integer, null);
                     StartToProcessQ();
 
                     return asyncRequest.Task.Result;

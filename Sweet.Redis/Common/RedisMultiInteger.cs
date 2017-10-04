@@ -27,14 +27,14 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    public class RedisMultiInt : RedisResult<long[], long>
+    public class RedisMultiInteger : RedisResult<long[], long>
     {
         #region .Ctors
 
-        internal RedisMultiInt()
+        internal RedisMultiInteger()
         { }
 
-        internal RedisMultiInt(long[] value)
+        internal RedisMultiInteger(long[] value)
             : base(value)
         { }
 
@@ -84,7 +84,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisMultiInt;
+            var rObj = obj as RedisMultiInteger;
             if (!ReferenceEquals(rObj, null))
                 return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
             return false;
@@ -132,17 +132,17 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisMultiInt(long[] value)  // implicit long[] to RedisMultiInt conversion operator
+        public static implicit operator RedisMultiInteger(long[] value)  // implicit long[] to RedisMultiInt conversion operator
         {
-            return new RedisMultiInt(value);
+            return new RedisMultiInteger(value);
         }
 
-        public static implicit operator long[] (RedisMultiInt value)  // implicit RedisMultiInt to long[] conversion operator
+        public static implicit operator long[] (RedisMultiInteger value)  // implicit RedisMultiInt to long[] conversion operator
         {
             return value.Value;
         }
 
-        public static implicit operator RedisMultiInt(int[] value)  // implicit int[] to RedisMultiInt conversion operator
+        public static implicit operator RedisMultiInteger(int[] value)  // implicit int[] to RedisMultiInt conversion operator
         {
             long[] longs = null;
             if (value != null)
@@ -153,10 +153,10 @@ namespace Sweet.Redis
                 if (length > 0)
                     Buffer.BlockCopy(value, 0, longs, 0, length);
             }
-            return new RedisMultiInt(longs);
+            return new RedisMultiInteger(longs);
         }
 
-        public static implicit operator int[] (RedisMultiInt value)  // implicit RedisMultiInt to int[] conversion operator
+        public static implicit operator int[] (RedisMultiInteger value)  // implicit RedisMultiInt to int[] conversion operator
         {
             var longs = value.Value;
             if (longs != null)
@@ -174,7 +174,7 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
-        public static bool operator ==(RedisMultiInt a, RedisMultiInt b)
+        public static bool operator ==(RedisMultiInteger a, RedisMultiInteger b)
         {
             if (ReferenceEquals(a, null))
                 return ReferenceEquals(b, null);
@@ -188,7 +188,7 @@ namespace Sweet.Redis
             return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
         }
 
-        public static bool operator !=(RedisMultiInt a, RedisMultiInt b)
+        public static bool operator !=(RedisMultiInteger a, RedisMultiInteger b)
         {
             return !(a == b);
         }

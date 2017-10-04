@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt Publish(RedisParam channel, RedisParam message)
+        public RedisInteger Publish(RedisParam channel, RedisParam message)
         {
             if (channel.IsNull)
                 throw new ArgumentNullException("channel");
@@ -137,7 +137,7 @@ namespace Sweet.Redis
             return new RedisResult<RedisKeyValue<string, long>[]>(new RedisKeyValue<string, long>[0]);
         }
 
-        public RedisInt PubSubNumerOfSubscriptionsToPatterns()
+        public RedisInteger PubSubNumerOfSubscriptionsToPatterns()
         {
             return ExpectInteger(RedisCommands.PubSub, RedisCommands.NumPat);
         }

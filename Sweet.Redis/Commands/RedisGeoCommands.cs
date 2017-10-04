@@ -39,7 +39,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt GeoAdd(RedisParam key, RedisGeospatialItem member, params RedisGeospatialItem[] members)
+        public RedisInteger GeoAdd(RedisParam key, RedisGeospatialItem member, params RedisGeospatialItem[] members)
         {
             if (key.IsEmpty)
                 throw new ArgumentNullException("key");

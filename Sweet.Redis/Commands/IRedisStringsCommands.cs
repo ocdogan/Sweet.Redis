@@ -123,26 +123,26 @@ namespace Sweet.Redis
      */
     public interface IRedisStringsCommands
     {
-        RedisInt Append(RedisParam key, RedisParam value);
+        RedisInteger Append(RedisParam key, RedisParam value);
 
-        RedisInt BitCount(RedisParam key);
-        RedisInt BitCount(RedisParam key, int start, int end);
+        RedisInteger BitCount(RedisParam key);
+        RedisInteger BitCount(RedisParam key, int start, int end);
 
-        RedisInt Decr(RedisParam key);
-        RedisInt DecrBy(RedisParam key, int count);
-        RedisInt DecrBy(RedisParam key, long count);
+        RedisInteger Decr(RedisParam key);
+        RedisInteger DecrBy(RedisParam key, int count);
+        RedisInteger DecrBy(RedisParam key, long count);
 
         RedisBytes Get(RedisParam key);
         RedisString GetString(RedisParam key);
-        RedisInt GetBit(RedisParam key, int offset);
+        RedisInteger GetBit(RedisParam key, int offset);
         RedisBytes GetRange(RedisParam key, int start, int end);
         RedisString GetRangeString(RedisParam key, int start, int end);
         RedisBytes GetSet(RedisParam key, RedisParam value);
         RedisString GetSetString(RedisParam key, RedisParam value);
 
-        RedisInt Incr(RedisParam key);
-        RedisInt IncrBy(RedisParam key, int count);
-        RedisInt IncrBy(RedisParam key, long count);
+        RedisInteger Incr(RedisParam key);
+        RedisInteger IncrBy(RedisParam key, int count);
+        RedisInteger IncrBy(RedisParam key, long count);
         RedisDouble IncrByFloat(RedisParam key, double increment);
 
         RedisMultiBytes MGet(params RedisParam[] keys);
@@ -154,11 +154,11 @@ namespace Sweet.Redis
 
         RedisBool Set(RedisParam key, RedisParam value);
         RedisBool Set(RedisParam key, RedisParam value, int expirySeconds, long expiryMilliseconds = RedisConstants.Zero);
-        RedisInt SetBit(RedisParam key, int offset, int value);
+        RedisInteger SetBit(RedisParam key, int offset, int value);
         RedisBool SetEx(RedisParam key, int seconds, RedisParam value);
         RedisBool SetNx(RedisParam key, RedisParam value);
-        RedisInt SetRange(RedisParam key, int offset, RedisParam value);
+        RedisInteger SetRange(RedisParam key, int offset, RedisParam value);
 
-        RedisInt StrLen(RedisParam key);
+        RedisInteger StrLen(RedisParam key);
     }
 }

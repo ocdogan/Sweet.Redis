@@ -118,28 +118,28 @@ namespace Sweet.Redis
         RedisDouble ZAdd(RedisParam key, double score, RedisParam member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
                     bool changed = false, bool increment = false, params RedisKeyValue<double, RedisParam>[] scoresAndMembers);
 
-        RedisInt ZCard(RedisParam key);
+        RedisInteger ZCard(RedisParam key);
 
-        RedisInt ZCount(RedisParam key, double min, double max);
-        RedisInt ZCount(RedisParam key, int min, int max);
-        RedisInt ZCount(RedisParam key, long min, long max);
-        RedisInt ZCount(RedisParam key, RedisParam min, RedisParam max);
+        RedisInteger ZCount(RedisParam key, double min, double max);
+        RedisInteger ZCount(RedisParam key, int min, int max);
+        RedisInteger ZCount(RedisParam key, long min, long max);
+        RedisInteger ZCount(RedisParam key, RedisParam min, RedisParam max);
 
         RedisDouble ZIncrBy(RedisParam key, double increment, RedisParam member);
         RedisDouble ZIncrBy(RedisParam key, int increment, RedisParam member);
         RedisDouble ZIncrBy(RedisParam key, long increment, RedisParam member);
 
-        RedisInt ZInterStore(RedisParam destination, int numkeys, RedisParam key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
+        RedisInteger ZInterStore(RedisParam destination, int numkeys, RedisParam key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
                         params RedisKeyValue<RedisParam, int>[] keysAndWeight);
-        RedisInt ZInterStore(RedisParam destination, int numkeys, RedisParam key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
+        RedisInteger ZInterStore(RedisParam destination, int numkeys, RedisParam key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
                         params RedisKeyValue<RedisParam, long>[] keysAndWeight);
-        RedisInt ZInterStore(RedisParam destination, int numkeys, RedisParam key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
+        RedisInteger ZInterStore(RedisParam destination, int numkeys, RedisParam key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
                         params RedisKeyValue<RedisParam, double>[] keysAndWeight);
 
-        RedisInt ZLexCount(RedisParam key, double min, double max);
-        RedisInt ZLexCount(RedisParam key, int min, int max);
-        RedisInt ZLexCount(RedisParam key, long min, long max);
-        RedisInt ZLexCount(RedisParam key, RedisParam min, RedisParam max);
+        RedisInteger ZLexCount(RedisParam key, double min, double max);
+        RedisInteger ZLexCount(RedisParam key, int min, int max);
+        RedisInteger ZLexCount(RedisParam key, long min, long max);
+        RedisInteger ZLexCount(RedisParam key, RedisParam min, RedisParam max);
 
         RedisMultiBytes ZRange(RedisParam key, double start, double stop);
         RedisMultiBytes ZRange(RedisParam key, int start, int stop);
@@ -193,19 +193,19 @@ namespace Sweet.Redis
 
         RedisNullableInt ZRank(RedisParam key, RedisParam member);
 
-        RedisInt ZRem(RedisParam key, RedisParam member, params RedisParam[] members);
+        RedisInteger ZRem(RedisParam key, RedisParam member, params RedisParam[] members);
 
-        RedisInt ZRemRangeByLex(RedisParam key, double min, double max);
-        RedisInt ZRemRangeByLex(RedisParam key, int min, int max);
-        RedisInt ZRemRangeByLex(RedisParam key, long min, long max);
-        RedisInt ZRemRangeByLex(RedisParam key, RedisParam min, RedisParam max);
+        RedisInteger ZRemRangeByLex(RedisParam key, double min, double max);
+        RedisInteger ZRemRangeByLex(RedisParam key, int min, int max);
+        RedisInteger ZRemRangeByLex(RedisParam key, long min, long max);
+        RedisInteger ZRemRangeByLex(RedisParam key, RedisParam min, RedisParam max);
 
-        RedisInt ZRemRangeByRank(RedisParam key, RedisParam start, RedisParam stop);
+        RedisInteger ZRemRangeByRank(RedisParam key, RedisParam start, RedisParam stop);
 
-        RedisInt ZRemRangeByScore(RedisParam key, double min, double max);
-        RedisInt ZRemRangeByScore(RedisParam key, int min, int max);
-        RedisInt ZRemRangeByScore(RedisParam key, long min, long max);
-        RedisInt ZRemRangeByScore(RedisParam key, RedisParam min, RedisParam max);
+        RedisInteger ZRemRangeByScore(RedisParam key, double min, double max);
+        RedisInteger ZRemRangeByScore(RedisParam key, int min, int max);
+        RedisInteger ZRemRangeByScore(RedisParam key, long min, long max);
+        RedisInteger ZRemRangeByScore(RedisParam key, RedisParam min, RedisParam max);
 
         RedisMultiBytes ZRevRange(RedisParam key, double start, double stop);
         RedisMultiBytes ZRevRange(RedisParam key, int start, int stop);
@@ -256,11 +256,11 @@ namespace Sweet.Redis
 
         RedisDouble ZScore(RedisParam key, RedisParam member);
 
-        RedisInt ZUnionStore(RedisParam destination, int numkeys, RedisParam key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
+        RedisInteger ZUnionStore(RedisParam destination, int numkeys, RedisParam key, int weight, RedisAggregate aggregate = RedisAggregate.Default,
                     params RedisKeyValue<RedisParam, int>[] keysAndWeight);
-        RedisInt ZUnionStore(RedisParam destination, int numkeys, RedisParam key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
+        RedisInteger ZUnionStore(RedisParam destination, int numkeys, RedisParam key, long weight, RedisAggregate aggregate = RedisAggregate.Default,
                         params RedisKeyValue<RedisParam, long>[] keysAndWeight);
-        RedisInt ZUnionStore(RedisParam destination, int numkeys, RedisParam key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
+        RedisInteger ZUnionStore(RedisParam destination, int numkeys, RedisParam key, double weight, RedisAggregate aggregate = RedisAggregate.Default,
                         params RedisKeyValue<RedisParam, double>[] keysAndWeight);
     }
 }

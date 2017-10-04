@@ -49,7 +49,7 @@ namespace Sweet.Redis
         #region Destructors
 
         protected override void OnDispose(bool disposing)
-        { 
+        {
             Interlocked.Exchange(ref m_Db, null);
         }
 
@@ -149,7 +149,7 @@ namespace Sweet.Redis
             return m_Db.ExpectGreaterThanZero(cmd, parameters);
         }
 
-        protected RedisInt ExpectInteger(byte[] cmd, params byte[][] parameters)
+        protected RedisInteger ExpectInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             return m_Db.ExpectInteger(cmd, parameters);

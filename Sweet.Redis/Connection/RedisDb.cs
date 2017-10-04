@@ -277,10 +277,10 @@ namespace Sweet.Redis
             return Expect<RedisBool>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.GreaterThanZero);
         }
 
-        protected internal virtual RedisInt ExpectInteger(byte[] cmd, params byte[][] parameters)
+        protected internal virtual RedisInteger ExpectInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Expect<RedisInt>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.Integer);
+            return Expect<RedisInteger>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.Integer);
         }
 
         protected internal virtual RedisMultiBytes ExpectMultiDataBytes(byte[] cmd, params byte[][] parameters)

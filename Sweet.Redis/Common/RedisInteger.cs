@@ -24,14 +24,14 @@
 
 namespace Sweet.Redis
 {
-    public class RedisInt : RedisResult<long>
+    public class RedisInteger : RedisResult<long>
     {
         #region .Ctors
 
-        internal RedisInt()
+        internal RedisInteger()
         { }
 
-        internal RedisInt(long value)
+        internal RedisInteger(long value)
             : base(value)
         { }
 
@@ -55,7 +55,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisInt;
+            var rObj = obj as RedisInteger;
             if (!ReferenceEquals(rObj, null))
                 return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
             return false;
@@ -84,37 +84,37 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisInt(long value)  // implicit long to RedisInt conversion operator
+        public static implicit operator RedisInteger(long value)  // implicit long to RedisInt conversion operator
         {
-            return new RedisInt(value);
+            return new RedisInteger(value);
         }
 
-        public static implicit operator RedisInt(int value)  // implicit int to RedisInt conversion operator
+        public static implicit operator RedisInteger(int value)  // implicit int to RedisInt conversion operator
         {
-            return new RedisInt(value);
+            return new RedisInteger(value);
         }
 
-        public static implicit operator RedisInt(double value)  // implicit double to RedisInt conversion operator
+        public static implicit operator RedisInteger(double value)  // implicit double to RedisInt conversion operator
         {
-            return new RedisInt((long)value);
+            return new RedisInteger((long)value);
         }
 
-        public static implicit operator RedisInt(RedisDouble value)  // implicit RedisDouble to RedisInt conversion operator
+        public static implicit operator RedisInteger(RedisDouble value)  // implicit RedisDouble to RedisInt conversion operator
         {
-            return new RedisInt((long)value.Value);
+            return new RedisInteger((long)value.Value);
         }
 
-        public static implicit operator long(RedisInt value)  // implicit RedisInt to long conversion operator
+        public static implicit operator long(RedisInteger value)  // implicit RedisInt to long conversion operator
         {
             return value.Value;
         }
 
-        public static implicit operator int(RedisInt value)  // implicit RedisInt to int conversion operator
+        public static implicit operator int(RedisInteger value)  // implicit RedisInt to int conversion operator
         {
             return (int)value.Value;
         }
 
-        public static implicit operator double(RedisInt value)  // implicit RedisInt to double conversion operator
+        public static implicit operator double(RedisInteger value)  // implicit RedisInt to double conversion operator
         {
             return value.Value;
         }
@@ -123,7 +123,7 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
-        public static bool operator ==(RedisInt a, RedisInt b)
+        public static bool operator ==(RedisInteger a, RedisInteger b)
         {
             if (ReferenceEquals(a, null))
                 return ReferenceEquals(b, null);
@@ -137,7 +137,7 @@ namespace Sweet.Redis
             return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
         }
 
-        public static bool operator !=(RedisInt a, RedisInt b)
+        public static bool operator !=(RedisInteger a, RedisInteger b)
         {
             return !(a == b);
         }

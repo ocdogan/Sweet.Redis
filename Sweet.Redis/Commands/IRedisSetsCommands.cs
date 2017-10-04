@@ -87,16 +87,16 @@ namespace Sweet.Redis
      */
     public interface IRedisSetsCommands
     {
-        RedisInt SAdd(RedisParam key, RedisParam member, params RedisParam[] members);
+        RedisInteger SAdd(RedisParam key, RedisParam member, params RedisParam[] members);
 
-        RedisInt SCard(RedisParam key);
+        RedisInteger SCard(RedisParam key);
 
         RedisMultiBytes SDiff(RedisParam fromKey, params RedisParam[] keys);
-        RedisInt SDiffStore(RedisParam toKey, RedisParam fromKey, params RedisParam[] keys);
+        RedisInteger SDiffStore(RedisParam toKey, RedisParam fromKey, params RedisParam[] keys);
         RedisMultiString SDiffString(RedisParam fromKey, params RedisParam[] keys);
 
         RedisMultiBytes SInter(RedisParam key, params RedisParam[] keys);
-        RedisInt SInterStore(RedisParam toKey, params RedisParam[] keys);
+        RedisInteger SInterStore(RedisParam toKey, params RedisParam[] keys);
         RedisMultiString SInterStrings(RedisParam key, params RedisParam[] keys);
 
         RedisBool SIsMember(RedisParam key, RedisParam member);
@@ -114,13 +114,13 @@ namespace Sweet.Redis
         RedisString SRandMemberString(RedisParam key);
         RedisMultiString SRandMemberString(RedisParam key, int count);
 
-        RedisInt SRem(RedisParam key, RedisParam member, params RedisParam[] members);
+        RedisInteger SRem(RedisParam key, RedisParam member, params RedisParam[] members);
 
         RedisMultiBytes SScan(RedisParam key, int count = 10, RedisParam? match = null);
         RedisMultiString SScanString(RedisParam key, int count = 10, RedisParam? match = null);
 
         RedisMultiBytes SUnion(RedisParam key, params RedisParam[] keys);
-        RedisInt SUnionStore(RedisParam intoKey, params RedisParam[] keys);
+        RedisInteger SUnionStore(RedisParam intoKey, params RedisParam[] keys);
         RedisMultiString SUnionStrings(RedisParam key, params RedisParam[] keys);
     }
 }

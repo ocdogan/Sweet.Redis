@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt SAdd(RedisParam key, RedisParam member, params RedisParam[] members)
+        public RedisInteger SAdd(RedisParam key, RedisParam member, params RedisParam[] members)
         {
             ValidateNotDisposed();
             ValidateKeyAndValue(key, member, valueName: "member");
@@ -54,7 +54,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.SAdd, key, member);
         }
 
-        public RedisInt SCard(RedisParam key)
+        public RedisInteger SCard(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -77,7 +77,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SDiff, fromKey);
         }
 
-        public RedisInt SDiffStore(RedisParam toKey, RedisParam fromKey, params RedisParam[] keys)
+        public RedisInteger SDiffStore(RedisParam toKey, RedisParam fromKey, params RedisParam[] keys)
         {
             if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");
@@ -128,7 +128,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SDiff, key);
         }
 
-        public RedisInt SInterStore(RedisParam toKey, params RedisParam[] keys)
+        public RedisInteger SInterStore(RedisParam toKey, params RedisParam[] keys)
         {
             if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");
@@ -241,7 +241,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.SRandMember, key, count.ToBytes());
         }
 
-        public RedisInt SRem(RedisParam key, RedisParam member, params RedisParam[] members)
+        public RedisInteger SRem(RedisParam key, RedisParam member, params RedisParam[] members)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -287,7 +287,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.SUnion, key);
         }
 
-        public RedisInt SUnionStore(RedisParam toKey, params RedisParam[] keys)
+        public RedisInteger SUnionStore(RedisParam toKey, params RedisParam[] keys)
         {
             if (toKey.IsNull)
                 throw new ArgumentNullException("toKey");

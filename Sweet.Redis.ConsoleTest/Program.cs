@@ -40,7 +40,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
-            // MultiThreading7();
+            MultiThreading7();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -54,7 +54,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // Shutdown();
 
-            Transaction1();
+            // Transaction1();
         }
 
         #region Transaction

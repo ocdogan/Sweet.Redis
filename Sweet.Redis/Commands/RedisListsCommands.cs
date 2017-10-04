@@ -117,7 +117,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.LInsert, key, prePost, pivot, value);
         }
 
-        public RedisInt LLen(RedisParam key)
+        public RedisInteger LLen(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -141,14 +141,14 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.LPop, key);
         }
 
-        public RedisInt LPush(RedisParam key, RedisParam value)
+        public RedisInteger LPush(RedisParam key, RedisParam value)
         {
             ValidateKeyAndValue(key, value);
 
             return ExpectInteger(RedisCommands.LPush, key, value);
         }
 
-        public RedisInt LPushX(RedisParam key, RedisParam value)
+        public RedisInteger LPushX(RedisParam key, RedisParam value)
         {
             ValidateKeyAndValue(key, value);
 
@@ -171,7 +171,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommands.LRange, key, start.ToBytes(), end.ToBytes());
         }
 
-        public RedisInt LRem(RedisParam key, int count, RedisParam value)
+        public RedisInteger LRem(RedisParam key, int count, RedisParam value)
         {
             ValidateKeyAndValue(key, value);
 
@@ -228,7 +228,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.RPop, key);
         }
 
-        public RedisInt RPush(RedisParam key, RedisParam[] values)
+        public RedisInteger RPush(RedisParam key, RedisParam[] values)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -239,7 +239,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.RPush, key.Join(values));
         }
 
-        public RedisInt RPushX(RedisParam key, RedisParam value)
+        public RedisInteger RPushX(RedisParam key, RedisParam value)
         {
             ValidateKeyAndValue(key, value);
 

@@ -158,7 +158,7 @@ namespace Sweet.Redis
         RedisBool BGSave();
 
         RedisString ClientGetName();
-        RedisInt ClientKill(RedisParam? ip = null, int port = -1, RedisParam? clientId = null, RedisParam? type = null, bool skipMe = true);
+        RedisInteger ClientKill(RedisParam? ip = null, int port = -1, RedisParam? clientId = null, RedisParam? type = null, bool skipMe = true);
         RedisResult<RedisClientInfo[]> ClientList();
         RedisResult<IDictionary<string, string>[]> ClientListDictionary();
         RedisBool ClientPause(int timeout);
@@ -172,7 +172,7 @@ namespace Sweet.Redis
         RedisBool ConfigRewrite();
         RedisBool ConfigSet(RedisParam parameter, RedisParam value);
 
-        RedisInt DbSize();
+        RedisInteger DbSize();
 
         RedisBool FlushAll();
         RedisBool FlushAllAsync();
@@ -188,7 +188,7 @@ namespace Sweet.Redis
         RedisVoid ShutDownSave();
 
         RedisResult<RedisSlowLogInfo[]> SlowLogGet(int count);
-        RedisInt SlowLogLen();
+        RedisInteger SlowLogLen();
         RedisBool SlowLogReset();
 
         RedisBool SlaveOf(RedisParam host, int port);

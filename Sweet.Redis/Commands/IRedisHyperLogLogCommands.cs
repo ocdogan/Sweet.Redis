@@ -40,7 +40,7 @@ namespace Sweet.Redis
     public interface IRedisHyperLogLogCommands
     {
         RedisBool PfAdd(RedisParam key, RedisParam element, params RedisParam[] elements);
-        RedisInt PfCount(RedisParam key, params RedisParam[] keys);
+        RedisInteger PfCount(RedisParam key, params RedisParam[] keys);
         RedisBool PfMerge(RedisParam destKey, RedisParam sourceKey, params RedisParam[] sourceKeys);
     }
 }

@@ -90,7 +90,7 @@ namespace Sweet.Redis
      */
     public interface IRedisHashesCommands
     {
-        RedisInt HDel(RedisParam key, RedisParam field, params RedisParam[] fields);
+        RedisInteger HDel(RedisParam key, RedisParam field, params RedisParam[] fields);
 
         RedisBool HExists(RedisParam key, RedisParam field);
 
@@ -104,14 +104,14 @@ namespace Sweet.Redis
 
         RedisString HGetString(RedisParam key, RedisParam field);
 
-        RedisInt HIncrBy(RedisParam key, RedisParam field, int increment);
-        RedisInt HIncrBy(RedisParam key, RedisParam field, long increment);
+        RedisInteger HIncrBy(RedisParam key, RedisParam field, int increment);
+        RedisInteger HIncrBy(RedisParam key, RedisParam field, long increment);
         RedisDouble HIncrByFloat(RedisParam key, RedisParam field, double increment);
 
         RedisMultiBytes HKeys(RedisParam key);
         RedisMultiString HKeyStrings(RedisParam key);
 
-        RedisInt HLen(RedisParam key);
+        RedisInteger HLen(RedisParam key);
 
         RedisMultiBytes HMGet(RedisParam key, RedisParam field, params RedisParam[] fields);
         RedisMultiString HMGetStrings(RedisParam key, RedisParam field, params RedisParam[] fields);
@@ -128,7 +128,7 @@ namespace Sweet.Redis
 
         RedisBool HSetNx(RedisParam key, RedisParam field, RedisParam value);
 
-        RedisInt HStrLen(RedisParam key, RedisParam field);
+        RedisInteger HStrLen(RedisParam key, RedisParam field);
 
         RedisMultiBytes HVals(RedisParam key);
         RedisMultiString HValStrings(RedisParam key);

@@ -211,7 +211,7 @@ namespace Sweet.Redis
                                 {
                                     var expectation = command.ExpectInteger(connection);
                                     if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
-                                        (result as RedisInt).TrySetResult(expectation.Value);
+                                        (result as RedisInteger).TrySetResult(expectation.Value);
                                 }
                                 break;
                             case RedisCommandExpect.MultiDataBytes:

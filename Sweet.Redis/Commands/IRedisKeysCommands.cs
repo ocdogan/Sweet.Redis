@@ -123,7 +123,7 @@ namespace Sweet.Redis
      */
     public interface IRedisKeysCommands
     {
-        RedisInt Del(RedisParam key, params RedisParam[] keys);
+        RedisInteger Del(RedisParam key, params RedisParam[] keys);
 
         RedisBytes Dump(RedisParam key);
 
@@ -137,16 +137,16 @@ namespace Sweet.Redis
                      long timeoutMs, bool copy, bool replace, params RedisParam[] keys);
         RedisBool Move(RedisParam key, int db);
 
-        RedisInt ObjectRefCount(RedisParam key);
+        RedisInteger ObjectRefCount(RedisParam key);
         RedisBytes ObjectEncoding(RedisParam key);
         RedisString ObjectEncodingString(RedisParam key);
-        RedisInt ObjectIdleTime(RedisParam key);
+        RedisInteger ObjectIdleTime(RedisParam key);
 
         RedisBool Persist(RedisParam key);
 
         RedisBool PExpire(RedisParam key, long milliseconds);
         RedisBool PExpireAt(RedisParam key, long millisecondsTimestamp);
-        RedisInt PTtl(RedisParam key);
+        RedisInteger PTtl(RedisParam key);
 
         RedisString RandomKey();
 
@@ -161,12 +161,12 @@ namespace Sweet.Redis
         RedisMultiBytes Sort(RedisParam key, bool descending, bool alpha = false,
                       int start = -1, int end = -1, RedisParam? by = null, RedisParam? get = null);
 
-        RedisInt Touch(RedisParam key, params RedisParam[] keys);
+        RedisInteger Touch(RedisParam key, params RedisParam[] keys);
 
-        RedisInt Ttl(RedisParam key);
+        RedisInteger Ttl(RedisParam key);
 
         RedisString Type(RedisParam key);
 
-        RedisInt Wait(int numberOfSlaves, int timeout);
+        RedisInteger Wait(int numberOfSlaves, int timeout);
     }
 }

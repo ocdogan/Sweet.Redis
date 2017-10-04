@@ -57,7 +57,7 @@ namespace Sweet.Redis
             return ExpectOne(RedisCommands.PfAdd, key, element);
         }
 
-        public RedisInt PfCount(RedisParam key, params RedisParam[] keys)
+        public RedisInteger PfCount(RedisParam key, params RedisParam[] keys)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");

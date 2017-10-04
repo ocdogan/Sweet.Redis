@@ -129,7 +129,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.Yes);
         }
 
-        public RedisMultiInt ScriptExists(RedisParam sha1, params RedisParam[] sha1s)
+        public RedisMultiInteger ScriptExists(RedisParam sha1, params RedisParam[] sha1s)
         {
             if (sha1.IsEmpty)
                 throw new ArgumentNullException("sha1");

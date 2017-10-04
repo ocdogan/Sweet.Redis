@@ -54,7 +54,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.Client, RedisCommands.GetName);
         }
 
-        public RedisInt ClientKill(RedisParam? ip = null, int port = -1, RedisParam? clientId = null, RedisParam? type = null, bool skipMe = true)
+        public RedisInteger ClientKill(RedisParam? ip = null, int port = -1, RedisParam? clientId = null, RedisParam? type = null, bool skipMe = true)
         {
             ValidateNotDisposed();
 
@@ -222,7 +222,7 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.Set, parameter, value);
         }
 
-        public RedisInt DbSize()
+        public RedisInteger DbSize()
         {
             return ExpectInteger(RedisCommands.DbSize);
         }
@@ -310,7 +310,7 @@ namespace Sweet.Redis
             return new RedisResult<RedisSlowLogInfo[]>(null);
         }
 
-        public RedisInt SlowLogLen()
+        public RedisInteger SlowLogLen()
         {
             return ExpectInteger(RedisCommands.SlowLog, RedisCommands.Len);
         }

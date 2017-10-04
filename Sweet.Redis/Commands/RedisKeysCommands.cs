@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisInt Del(RedisParam key, params RedisParam[] keys)
+        public RedisInteger Del(RedisParam key, params RedisParam[] keys)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -132,7 +132,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.Move, key, db.ToBytes());
         }
 
-        public RedisInt ObjectRefCount(RedisParam key)
+        public RedisInteger ObjectRefCount(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -156,7 +156,7 @@ namespace Sweet.Redis
             return ExpectBulkString(RedisCommands.Object, RedisCommands.Encoding, key);
         }
 
-        public RedisInt ObjectIdleTime(RedisParam key)
+        public RedisInteger ObjectIdleTime(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -188,7 +188,7 @@ namespace Sweet.Redis
             return ExpectGreaterThanZero(RedisCommands.PExpireAt, key, millisecondsTimestamp.ToBytes());
         }
 
-        public RedisInt PTtl(RedisParam key)
+        public RedisInteger PTtl(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -276,7 +276,7 @@ namespace Sweet.Redis
             return ExpectMultiDataBytes(RedisCommands.Sort, parameters);
         }
 
-        public RedisInt Touch(RedisParam key, params RedisParam[] keys)
+        public RedisInteger Touch(RedisParam key, params RedisParam[] keys)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -293,7 +293,7 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommands.Touch, keys.ToBytesArray());
         }
 
-        public RedisInt Ttl(RedisParam key)
+        public RedisInteger Ttl(RedisParam key)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -309,7 +309,7 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.Type, key.Data);
         }
 
-        public RedisInt Wait(int numberOfSlaves, int timeout)
+        public RedisInteger Wait(int numberOfSlaves, int timeout)
         {
             return ExpectInteger(RedisCommands.Ttl, numberOfSlaves.ToBytes(), timeout.ToBytes());
         }

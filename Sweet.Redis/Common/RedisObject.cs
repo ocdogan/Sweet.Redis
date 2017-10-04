@@ -26,14 +26,14 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisObj : RedisResult<object>
+    public class RedisObject : RedisResult<object>
     {
         #region .Ctors
 
-        internal RedisObj()
+        internal RedisObject()
         { }
 
-        internal RedisObj(object value)
+        internal RedisObject(object value)
             : base(value)
         { }
 
@@ -57,7 +57,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisObj;
+            var rObj = obj as RedisObject;
             if (!ReferenceEquals(rObj, null))
                 return (rObj.m_Status == m_Status) && Object.Equals(m_RawData, obj);
             return false;
@@ -77,7 +77,7 @@ namespace Sweet.Redis
 
         #region Operator Overloads        		
 
-        public static bool operator ==(RedisObj a, RedisObj b)
+        public static bool operator ==(RedisObject a, RedisObject b)
         {
             if (ReferenceEquals(a, null))
                 return ReferenceEquals(b, null);
@@ -91,7 +91,7 @@ namespace Sweet.Redis
             return (a.m_Status == b.m_Status) && Object.Equals(a.m_RawData, b.m_RawData);
         }
 
-        public static bool operator !=(RedisObj a, RedisObj b)
+        public static bool operator !=(RedisObject a, RedisObject b)
         {
             return !(a == b);
         }

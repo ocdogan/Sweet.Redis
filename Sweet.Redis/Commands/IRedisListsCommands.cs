@@ -108,18 +108,18 @@ namespace Sweet.Redis
 
         RedisBool LInsert(RedisParam key, bool insertBefore, RedisParam pivot, RedisParam value);
 
-        RedisInt LLen(RedisParam key);
+        RedisInteger LLen(RedisParam key);
 
         RedisBytes LPop(RedisParam key);
         RedisString LPopString(RedisParam key);
 
-        RedisInt LPush(RedisParam key, RedisParam value);
-        RedisInt LPushX(RedisParam key, RedisParam value);
+        RedisInteger LPush(RedisParam key, RedisParam value);
+        RedisInteger LPushX(RedisParam key, RedisParam value);
 
         RedisMultiBytes LRange(RedisParam key, int start, int end);
         RedisMultiString LRangeString(RedisParam key, int start, int end);
 
-        RedisInt LRem(RedisParam key, int count, RedisParam value);
+        RedisInteger LRem(RedisParam key, int count, RedisParam value);
 
         RedisBool LSet(RedisParam key, int index, RedisParam value);
 
@@ -130,8 +130,8 @@ namespace Sweet.Redis
         RedisString RPopLPushString(RedisParam source, RedisParam destination);
         RedisString RPopString(RedisParam key);
 
-        RedisInt RPush(RedisParam key, RedisParam[] values);
-        RedisInt RPushX(RedisParam key, RedisParam value);
+        RedisInteger RPush(RedisParam key, RedisParam[] values);
+        RedisInteger RPushX(RedisParam key, RedisParam value);
     }
 
 }

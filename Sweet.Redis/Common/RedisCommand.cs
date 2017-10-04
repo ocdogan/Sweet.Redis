@@ -206,7 +206,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisInt ExpectInteger(IRedisConnection connection, bool throwException = true)
+        public RedisInteger ExpectInteger(IRedisConnection connection, bool throwException = true)
         {
             var result = ExpectNullableInteger(connection, throwException);
             if (result == null)
@@ -406,7 +406,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisInt ExpectInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisInteger ExpectInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
         {
             var result = ExpectNullableInteger(socket, settings, throwException);
             if (result == null)
