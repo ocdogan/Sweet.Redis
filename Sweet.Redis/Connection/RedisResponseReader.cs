@@ -189,7 +189,7 @@ namespace Sweet.Redis
             var item = new RedisRawResponse();
 
             item.SetTypeByte(b);
-            if (item.Type == RedisRawObjType.Undefined)
+            if (item.Type == RedisRawObjectType.Undefined)
                 throw new RedisException("Undefined redis response type");
 
             var data = ReadLine(socket);
@@ -198,13 +198,13 @@ namespace Sweet.Redis
 
             switch (item.Type)
             {
-                case RedisRawObjType.Integer:
-                case RedisRawObjType.SimpleString:
-                case RedisRawObjType.Error:
+                case RedisRawObjectType.Integer:
+                case RedisRawObjectType.SimpleString:
+                case RedisRawObjectType.Error:
                     item.SetData(data);
                     SetReady(item);
                     break;
-                case RedisRawObjType.BulkString:
+                case RedisRawObjectType.BulkString:
                     {
                         var lenStr = Encoding.UTF8.GetString(data);
                         if (String.IsNullOrEmpty(lenStr))
@@ -238,7 +238,7 @@ namespace Sweet.Redis
                         SetReady(item);
                     }
                     break;
-                case RedisRawObjType.Array:
+                case RedisRawObjectType.Array:
                     {
                         var lenStr = Encoding.UTF8.GetString(data);
                         if (String.IsNullOrEmpty(lenStr))

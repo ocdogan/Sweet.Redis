@@ -230,7 +230,7 @@ namespace Sweet.Redis
                                 case RedisCommandExpect.Response:
                                     {
                                         var result = command.Execute(connection);
-                                        (tcs as TaskCompletionSource<RedisResult<RedisRawResponse>>).TrySetResult(result);
+                                        (tcs as TaskCompletionSource<RedisResponse>).TrySetResult(result);
                                     }
                                     break;
                                 case RedisCommandExpect.Array:

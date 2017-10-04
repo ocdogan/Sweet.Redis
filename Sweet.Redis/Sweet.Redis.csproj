@@ -118,8 +118,8 @@
     <Compile Include="Buffers\RedisFixedBuffer.cs" />
     <Compile Include="Common\IRedisDisposable.cs" />
     <Compile Include="Common\IRedisRawResponse.cs" />
-    <Compile Include="Common\RedisRawObj.cs" />
-    <Compile Include="Common\RedisRawObjType.cs" />
+    <Compile Include="Common\RedisRawObject.cs" />
+    <Compile Include="Common\RedisRawObjectType.cs" />
     <Compile Include="Common\RedisResponse.cs" />
     <Compile Include="Connection\IRedisDbConnection.cs" />
     <Compile Include="Connection\IRedisDb.cs" />

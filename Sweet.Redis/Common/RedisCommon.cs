@@ -146,38 +146,38 @@ namespace Sweet.Redis
             }
         }
 
-        internal static RedisRawObjType ResponseType(this byte b)
+        internal static RedisRawObjectType ResponseType(this byte b)
         {
             switch (b)
             {
                 case (byte)'+':
-                    return RedisRawObjType.SimpleString;
+                    return RedisRawObjectType.SimpleString;
                 case (byte)'-':
-                    return RedisRawObjType.Error;
+                    return RedisRawObjectType.Error;
                 case (byte)'$':
-                    return RedisRawObjType.BulkString;
+                    return RedisRawObjectType.BulkString;
                 case (byte)':':
-                    return RedisRawObjType.Integer;
+                    return RedisRawObjectType.Integer;
                 case (byte)'*':
-                    return RedisRawObjType.Array;
+                    return RedisRawObjectType.Array;
                 default:
-                    return RedisRawObjType.Undefined;
+                    return RedisRawObjectType.Undefined;
             }
         }
 
-        internal static byte ResponseTypeByte(this RedisRawObjType b)
+        internal static byte ResponseTypeByte(this RedisRawObjectType b)
         {
             switch (b)
             {
-                case RedisRawObjType.SimpleString:
+                case RedisRawObjectType.SimpleString:
                     return (byte)'+';
-                case RedisRawObjType.Error:
+                case RedisRawObjectType.Error:
                     return (byte)'-';
-                case RedisRawObjType.BulkString:
+                case RedisRawObjectType.BulkString:
                     return (byte)'$';
-                case RedisRawObjType.Integer:
+                case RedisRawObjectType.Integer:
                     return (byte)':';
-                case RedisRawObjType.Array:
+                case RedisRawObjectType.Array:
                     return (byte)'*';
                 default:
                     return (byte)'?';

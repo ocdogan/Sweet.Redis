@@ -81,7 +81,7 @@ namespace Sweet.Redis
         public static RedisPubSubResponse ToPubSubResponse(IRedisRawResponse response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.Array)
+                response.Type == RedisRawObjectType.Array)
             {
                 var items = response.Items;
                 if (items != null && items.Count >= 3)
@@ -89,7 +89,7 @@ namespace Sweet.Redis
                     var index = 0;
                     var typeItem = items[index++];
 
-                    if (typeItem != null && typeItem.Type == RedisRawObjType.BulkString)
+                    if (typeItem != null && typeItem.Type == RedisRawObjectType.BulkString)
                     {
                         var data = typeItem.Data;
                         if (data != null)
@@ -126,7 +126,7 @@ namespace Sweet.Redis
                                         return RedisPubSubResponse.Empty;
 
                                     var channelItem = items[index++];
-                                    if (channelItem != null && channelItem.Type == RedisRawObjType.BulkString)
+                                    if (channelItem != null && channelItem.Type == RedisRawObjectType.BulkString)
                                     {
                                         data = channelItem.Data;
                                         if (data != null)
@@ -167,7 +167,7 @@ namespace Sweet.Redis
                                                     data = dataItem.Data;
                                                     switch (dataItem.Type)
                                                     {
-                                                        case RedisRawObjType.Integer:
+                                                        case RedisRawObjectType.Integer:
                                                             {
                                                                 var value = -1L;
                                                                 if (data != null)
@@ -175,7 +175,7 @@ namespace Sweet.Redis
 
                                                                 return new RedisPubSubResponse(type, typeStr, channel, pattern, value);
                                                             }
-                                                        case RedisRawObjType.BulkString:
+                                                        case RedisRawObjectType.BulkString:
                                                             return new RedisPubSubResponse(type, typeStr, channel, pattern, dataItem.Data);
                                                     }
                                                 }

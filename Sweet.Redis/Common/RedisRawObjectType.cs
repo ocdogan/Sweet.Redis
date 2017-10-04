@@ -22,26 +22,15 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Generic;
-
 namespace Sweet.Redis
 {
-    public interface IRedisRawResponse : IDisposable
+    public enum RedisRawObjectType : int
     {
-        int ChildCount { get; }
-        byte[] Data { get; }
-        bool HasChild { get; }
-        bool HasData { get; }
-        bool IsVoid { get; }
-        IList<IRedisRawResponse> Items { get; }
-        int Length { get; }
-        IRedisRawResponse Parent { get; }
-        bool Ready { get; }
-        RedisRawObjectType Type { get; }
-        int TypeByte { get; }
-
-        void Clear();
-        byte[] ReleaseData();
+        Undefined,
+        SimpleString,
+        Error,
+        Integer,
+        BulkString,
+        Array
     }
 }

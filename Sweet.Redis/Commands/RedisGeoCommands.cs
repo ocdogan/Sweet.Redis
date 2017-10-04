@@ -253,7 +253,7 @@ namespace Sweet.Redis
                 return new RedisResult<RedisGeoRadiusResult[]>(new RedisGeoRadiusResult[0]);
 
             var value = array.Value;
-            if (value == null || value.Type != RedisRawObjType.Array)
+            if (value == null || value.Type != RedisRawObjectType.Array)
                 return new RedisResult<RedisGeoRadiusResult[]>(new RedisGeoRadiusResult[0]);
 
             var items = value.Items;
@@ -271,17 +271,17 @@ namespace Sweet.Redis
             return new RedisResult<RedisGeoRadiusResult[]>(list.ToArray());
         }
 
-        private static RedisGeoRadiusResult ToGeoRadiusResult(RedisRawObj obj)
+        private static RedisGeoRadiusResult ToGeoRadiusResult(RedisRawObject obj)
         {
             if (obj != null)
             {
-                if (obj.Type == RedisRawObjType.BulkString)
+                if (obj.Type == RedisRawObjectType.BulkString)
                 {
                     var member = obj.Data as string;
                     if (member != null)
                         return new RedisGeoRadiusResult(member);
                 }
-                else if (obj.Type == RedisRawObjType.Array)
+                else if (obj.Type == RedisRawObjectType.Array)
                 {
                     var items = obj.Items;
                     if (items == null)
@@ -298,7 +298,7 @@ namespace Sweet.Redis
                     RedisGeoPosition? coord = null;
 
                     var item = items[0];
-                    if (item != null && item.Type == RedisRawObjType.BulkString)
+                    if (item != null && item.Type == RedisRawObjectType.BulkString)
                     {
                         data = item.Data;
                         if (data != null && data is string)
@@ -311,16 +311,16 @@ namespace Sweet.Redis
                         if (child != null)
                         {
                             data = child.Data;
-                            if (child.Type == RedisRawObjType.Array)
+                            if (child.Type == RedisRawObjectType.Array)
                                 coord = ToGeoPosition(child);
                             else if (data != null)
                             {
-                                if (child.Type == RedisRawObjType.Integer)
+                                if (child.Type == RedisRawObjectType.Integer)
                                 {
                                     if (data is long)
                                         hash = (long)data;
                                 }
-                                else if (child.Type == RedisRawObjType.BulkString)
+                                else if (child.Type == RedisRawObjectType.BulkString)
                                 {
                                     var str = data as string;
                                     if (str != null)
@@ -340,15 +340,15 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static RedisGeoPosition ToGeoPosition(RedisRawObj obj)
+        private static RedisGeoPosition ToGeoPosition(RedisRawObject obj)
         {
-            if (obj != null && obj.Type == RedisRawObjType.Array)
+            if (obj != null && obj.Type == RedisRawObjectType.Array)
             {
                 var items = obj.Items;
                 if (items != null && items.Count >= 2)
                 {
                     var item = items[0];
-                    if (item != null && item.Type == RedisRawObjType.BulkString)
+                    if (item != null && item.Type == RedisRawObjectType.BulkString)
                     {
                         var data = item.Data;
                         if (data != null && data is string)
@@ -357,7 +357,7 @@ namespace Sweet.Redis
                             if (double.TryParse((string)data, out longitude))
                             {
                                 item = items[1];
-                                if (item != null && item.Type == RedisRawObjType.BulkString)
+                                if (item != null && item.Type == RedisRawObjectType.BulkString)
                                 {
                                     data = item.Data;
                                     if (data != null && data is string)

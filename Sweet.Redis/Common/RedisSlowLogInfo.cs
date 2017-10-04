@@ -116,10 +116,10 @@ namespace Sweet.Redis
 
         #region Static Methods
 
-        public static RedisSlowLogInfo[] ToSlowLogInfo(RedisRawObj response)
+        public static RedisSlowLogInfo[] ToSlowLogInfo(RedisRawObject response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.Array)
+                response.Type == RedisRawObjectType.Array)
             {
                 var children = response.Items;
                 if (children != null && children.Count > 0)
@@ -129,7 +129,7 @@ namespace Sweet.Redis
                     foreach (var child in children)
                     {
                         if (child != null &&
-                            child.Type == RedisRawObjType.Array)
+                            child.Type == RedisRawObjectType.Array)
                         {
                             var items = child.Items;
                             if (items != null && items.Count >= 4)
@@ -176,7 +176,7 @@ namespace Sweet.Redis
         public static RedisSlowLogInfo[] ToSlowLogInfo(IRedisRawResponse response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.Array)
+                response.Type == RedisRawObjectType.Array)
             {
                 var children = response.Items;
                 if (children != null && children.Count > 0)
@@ -186,7 +186,7 @@ namespace Sweet.Redis
                     foreach (var child in children)
                     {
                         if (child != null &&
-                            child.Type == RedisRawObjType.Array)
+                            child.Type == RedisRawObjectType.Array)
                         {
                             var items = child.Items;
                             if (items != null && items.Count >= 4)
@@ -230,12 +230,12 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static bool TryParseInteger(RedisRawObj response, out long value)
+        private static bool TryParseInteger(RedisRawObject response, out long value)
         {
             value = RedisConstants.Zero;
 
             if (response != null &&
-                response.Type == RedisRawObjType.Integer)
+                response.Type == RedisRawObjectType.Integer)
             {
                 var data = response.Data;
                 if (data != null && data is long)
@@ -252,7 +252,7 @@ namespace Sweet.Redis
             value = RedisConstants.Zero;
 
             if (response != null &&
-                response.Type == RedisRawObjType.Integer)
+                response.Type == RedisRawObjectType.Integer)
             {
                 var data = response.Data;
                 if (data != null && data.Length > 0)
@@ -268,7 +268,7 @@ namespace Sweet.Redis
         private static string[] ParseCommandInfo(IRedisRawResponse response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.Array)
+                response.Type == RedisRawObjectType.Array)
             {
                 var items = response.Items;
                 if (items != null)
@@ -281,7 +281,7 @@ namespace Sweet.Redis
                         foreach (var item in items)
                         {
                             if (item != null &&
-                                item.Type == RedisRawObjType.BulkString)
+                                item.Type == RedisRawObjectType.BulkString)
                             {
                                 var data = item.Data;
                                 if (data == null)
@@ -300,10 +300,10 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static string[] ParseCommandInfo(RedisRawObj response)
+        private static string[] ParseCommandInfo(RedisRawObject response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.Array)
+                response.Type == RedisRawObjectType.Array)
             {
                 var items = response.Items;
                 if (items != null)
@@ -316,7 +316,7 @@ namespace Sweet.Redis
                         foreach (var item in items)
                         {
                             if (item != null &&
-                                item.Type == RedisRawObjType.BulkString)
+                                item.Type == RedisRawObjectType.BulkString)
                                 result.Add(item.Data as string);
                         }
 
@@ -330,7 +330,7 @@ namespace Sweet.Redis
         private static string ParseBulkString(IRedisRawResponse response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.BulkString)
+                response.Type == RedisRawObjectType.BulkString)
             {
                 var data = response.Data;
                 if (data == null)
@@ -344,10 +344,10 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static string ParseBulkString(RedisRawObj response)
+        private static string ParseBulkString(RedisRawObject response)
         {
             if (response != null &&
-                response.Type == RedisRawObjType.BulkString)
+                response.Type == RedisRawObjectType.BulkString)
                 return response.Data as string;
             return null;
         }

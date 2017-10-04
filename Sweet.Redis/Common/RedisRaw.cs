@@ -24,14 +24,14 @@
 
 namespace Sweet.Redis
 {
-    public class RedisRaw : RedisResult<RedisRawObj>
+    public class RedisRaw : RedisResult<RedisRawObject>
     {
         #region .Ctors
 
         internal RedisRaw()
         { }
 
-        internal RedisRaw(RedisRawObj value)
+        internal RedisRaw(RedisRawObject value)
             : base(value)
         { }
 
@@ -45,12 +45,12 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisRaw(RedisRawObj value)  // implicit RedisRawObj to RedisRaw conversion operator
+        public static implicit operator RedisRaw(RedisRawObject value)  // implicit RedisRawObj to RedisRaw conversion operator
         {
             return new RedisRaw(value);
         }
 
-        public static implicit operator RedisRawObj(RedisRaw value)  // implicit RedisRaw to RedisRawObj conversion operator
+        public static implicit operator RedisRawObject(RedisRaw value)  // implicit RedisRaw to RedisRawObj conversion operator
         {
             return value.Value;
         }

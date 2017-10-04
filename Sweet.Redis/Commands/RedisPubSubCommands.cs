@@ -60,7 +60,7 @@ namespace Sweet.Redis
             if (response != null)
             {
                 var responseValue = response.Value;
-                if (responseValue != null && responseValue.Type == RedisRawObjType.Array)
+                if (responseValue != null && responseValue.Type == RedisRawObjectType.Array)
                 {
                     var items = responseValue.Items;
                     if (items != null)
@@ -75,8 +75,8 @@ namespace Sweet.Redis
                                 var item = items[i];
 
                                 if (item != null &&
-                                    (item.Type == RedisRawObjType.BulkString ||
-                                     item.Type == RedisRawObjType.SimpleString))
+                                    (item.Type == RedisRawObjectType.BulkString ||
+                                     item.Type == RedisRawObjectType.SimpleString))
                                     result[i] = item.Data as string ?? String.Empty;
                             }
                         }
@@ -99,7 +99,7 @@ namespace Sweet.Redis
             if (response != null)
             {
                 var responseValue = response.Value;
-                if (responseValue != null && responseValue.Type == RedisRawObjType.Array)
+                if (responseValue != null && responseValue.Type == RedisRawObjectType.Array)
                 {
                     var items = responseValue.Items;
                     if (items != null)
@@ -118,12 +118,12 @@ namespace Sweet.Redis
                                 var count = RedisConstants.Zero;
 
                                 if (nameItem != null &&
-                                    (nameItem.Type == RedisRawObjType.BulkString ||
-                                     nameItem.Type == RedisRawObjType.SimpleString))
+                                    (nameItem.Type == RedisRawObjectType.BulkString ||
+                                     nameItem.Type == RedisRawObjectType.SimpleString))
                                     name = nameItem.Data as string ?? String.Empty;
 
                                 if (countItem != null &&
-                                    countItem.Type == RedisRawObjType.Integer)
+                                    countItem.Type == RedisRawObjectType.Integer)
                                     count = (long)countItem.Data;
 
                                 result[index] = new RedisKeyValue<string, long>(name, count);

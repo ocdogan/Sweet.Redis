@@ -152,7 +152,7 @@ namespace Sweet.Redis
             if (response != null)
             {
                 var responseValue = response.Value;
-                if (responseValue != null && responseValue.Type == RedisRawObjType.Array)
+                if (responseValue != null && responseValue.Type == RedisRawObjectType.Array)
                 {
                     var items = responseValue.Items;
                     if (items != null)
@@ -163,7 +163,7 @@ namespace Sweet.Redis
                         {
                             var item = items[i];
                             if (item != null &&
-                                item.Type == RedisRawObjType.Integer)
+                                item.Type == RedisRawObjectType.Integer)
                             {
                                 var data = item.Data;
                                 if (data is long)

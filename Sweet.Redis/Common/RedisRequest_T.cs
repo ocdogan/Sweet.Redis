@@ -169,7 +169,7 @@ namespace Sweet.Redis
                                 {
                                     var expectation = command.Execute(connection);
                                     if (Interlocked.Read(ref m_State) == (long)RequestState.Started)
-                                        (result as RedisResult<IRedisRawResponse>).TrySetResult(expectation);
+                                        (result as RedisResponse).TrySetResult(expectation);
                                 }
                                 break;
                             case RedisCommandExpect.Array:

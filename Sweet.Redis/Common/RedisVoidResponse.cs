@@ -72,7 +72,7 @@ namespace Sweet.Redis
 
         public override bool Ready { get { return true; } }
 
-        public override RedisRawObjType Type { get { return RedisRawObjType.Undefined; } }
+        public override RedisRawObjectType Type { get { return RedisRawObjectType.Undefined; } }
 
         public override int TypeByte { get { return -1; } }
 
