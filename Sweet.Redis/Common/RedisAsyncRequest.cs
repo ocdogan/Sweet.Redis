@@ -45,6 +45,8 @@ namespace Sweet.Redis
 
         public abstract void Process(IRedisConnection connection, int timeoutMilliseconds = -1);
 
+        public abstract void Process(RedisSocket socket, RedisSettings settings, int timeoutMilliseconds = -1);
+
         public abstract bool Expire(int timeoutMilliseconds = -1);
 
         #endregion Methods

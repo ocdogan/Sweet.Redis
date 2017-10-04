@@ -468,7 +468,7 @@ namespace Sweet.Redis
             }
         }
 
-        public IRedisRawResponse Execute(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisRawResponse Execute(RedisSocket socket, RedisSettings settings, bool throwException = true)
         {
             ValidateNotDisposed();
             return ExecuteInternal(socket, settings, throwException);

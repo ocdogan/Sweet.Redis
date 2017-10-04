@@ -40,7 +40,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
-            MultiThreading7();
+            // MultiThreading7();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -54,7 +54,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // Shutdown();
 
-            // Transaction1();
+            Transaction1();
         }
 
         #region Transaction
@@ -72,11 +72,17 @@ namespace Sweet.Redis.ConsoleTest
                         {
                             Console.Clear();
 
-                            var result1 = transaction.Connection.Ping(1);
-                            var result2 = transaction.Connection.Ping(2);
-                            var result3 = transaction.Connection.Ping(3);
-                            var result4 = transaction.Connection.Ping(4);
-                            var result5 = transaction.Connection.Ping(5);
+                            var list = new List<RedisResult>();
+                            for (var i = 0; i < 100; i++)
+                            {
+                                var result = transaction.Connection.Ping(i + 1);
+                                list.Add(result);
+                            }
+
+                            transaction.Execute();
+
+                            for (var i = 0; i < list.Count; i++)
+                                Console.WriteLine(list[i]);
                         }
                         catch (Exception e)
                         {

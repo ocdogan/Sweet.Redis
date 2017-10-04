@@ -32,11 +32,18 @@ namespace Sweet.Redis
 {
     internal abstract class RedisRequest : IRedisDisposable
     {
+        #region Static Members
+
+        private static long s_IdGen;
+
+        #endregion Static Members
+
         #region Field Members
 
         private long m_Disposed;
         private DateTime m_CreationTime;
 
+        private long m_Id;
         private string m_OKIf;
         private RedisCommand m_Command;
         private RedisCommandExpect m_Expectation;
@@ -49,6 +56,7 @@ namespace Sweet.Redis
         public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
                                  string okIf, object stateObject)
         {
+            m_Id = NextId();
             m_OKIf = okIf;
             m_Expectation = expectation;
             m_Command = command;
@@ -92,19 +100,6 @@ namespace Sweet.Redis
             get { return m_CreationTime; }
         }
 
-        public abstract bool IsCanceled { get; }
-
-        public abstract bool IsCompleted { get; }
-
-        public abstract bool IsFaulted { get; }
-
-        public abstract bool IsStarted { get; }
-
-        public object StateObject
-        {
-            get { return m_StateObject; }
-        }
-
         public bool Disposed
         {
             get { return Interlocked.Read(ref m_Disposed) != RedisConstants.Zero; }
@@ -115,9 +110,24 @@ namespace Sweet.Redis
             get { return m_Expectation; }
         }
 
+        public long Id { get { return m_Id; } }
+
+        public abstract bool IsCanceled { get; }
+
+        public abstract bool IsCompleted { get; }
+
+        public abstract bool IsFaulted { get; }
+
+        public abstract bool IsStarted { get; }
+
         public string OKIf
         {
             get { return m_OKIf; }
+        }
+
+        public object StateObject
+        {
+            get { return m_StateObject; }
         }
 
         #endregion Properties
@@ -132,9 +142,22 @@ namespace Sweet.Redis
 
         public abstract void Cancel();
 
+        public abstract void Process(RedisSocket socket, RedisSettings settings);
+
         public abstract void Process(IRedisConnection connection);
 
         public abstract void SetException(Exception exception);
+
+        #region Static Methods
+
+        private static long NextId()
+        {
+            var result = Interlocked.Add(ref s_IdGen, RedisConstants.One);
+            Interlocked.CompareExchange(ref s_IdGen, RedisConstants.Zero, (long)int.MaxValue);
+            return result;
+        }
+
+        #endregion Static Methods
 
         #endregion Methods
     }

@@ -26,6 +26,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Sweet.Redis
 {
@@ -180,12 +181,14 @@ namespace Sweet.Redis
         { }
 
         internal RedisResult(object value)
+            : this()
         {
             m_RawData = value;
             m_Status = RedisResultStatus.Completed;
         }
 
         internal RedisResult(object value, RedisResultStatus status)
+            : this()
         {
             m_RawData = value;
             m_Status = status;
@@ -213,14 +216,6 @@ namespace Sweet.Redis
             }
         }
 
-        public virtual RedisResultType Type { get { return RedisResultType.Custom; } }
-
-        public RedisResultStatus Status
-        {
-            get { return m_Status; }
-            internal set { m_Status = value; }
-        }
-
         protected virtual object RawData
         {
             get
@@ -230,8 +225,19 @@ namespace Sweet.Redis
             set
             {
                 m_RawData = value;
-                IsCompleted = true;
+                m_Status = RedisResultStatus.Completed;
             }
+        }
+
+        public RedisResultStatus Status
+        {
+            get { return m_Status; }
+            internal set { m_Status = value; }
+        }
+
+        public virtual RedisResultType Type 
+        { 
+            get { return RedisResultType.Custom; } 
         }
 
         #endregion Properties

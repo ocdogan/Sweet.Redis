@@ -37,7 +37,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_State;
-        private ConcurrentQueue<RedisRequest> m_RequestQ;
+        private List<RedisRequest> m_RequestList;
 
         #endregion Field Members
 
@@ -56,7 +56,9 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_State, (long)RedisTransactionState.Disposed);
 
             base.OnDispose(disposing);
-            Interlocked.Exchange(ref m_RequestQ, null);
+
+            var requests = Interlocked.Exchange(ref m_RequestList, null);
+            Cancel(requests);
         }
 
         #endregion Destructors
@@ -81,35 +83,117 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Executing,
                 (long)RedisTransactionState.Ready) == (long)RedisTransactionState.Ready)
             {
+                var completed = true;
                 try
                 {
-                    throw new NotImplementedException();
+                    var requests = Interlocked.Exchange(ref m_RequestList, null);
+                    if (requests != null)
+                    {
+                        var count = requests.Count;
+                        if (count > 0)
+                        {
+                            using (var connection = Pool.Connect(DbIndex))
+                            {
+                                if (connection == null)
+                                {
+                                    completed = false;
+                                    Cancel(requests);
+                                }
+                                else
+                                {
+                                    var socket = connection.Connect();
+                                    if (!socket.IsConnected())
+                                    {
+                                        completed = false;
+                                        Cancel(requests);
+                                    }
+                                    else
+                                    {
+                                        var settings = connection.Settings;
+
+                                        for (var i = 0; i < count; i++)
+                                        {
+                                            try
+                                            {
+                                                var request = requests[i];
+
+                                                request.Process(socket, settings);
+                                                if (!request.IsCompleted)
+                                                {
+                                                    completed = false;
+                                                    Cancel(requests, i);
+                                                    break;
+                                                }
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                for (var j = 0; j < count; j++)
+                                                {
+                                                    try
+                                                    {
+                                                        requests[j].SetException(e);
+                                                    }
+                                                    catch (Exception)
+                                                    { }
+                                                }
+                                                throw;
+                                            }
+                                        }
+
+                                        return completed;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_State, (long)RedisTransactionState.Empty);
+                    Interlocked.Exchange(ref m_State, completed ? (long)RedisTransactionState.Initiated : (long)RedisTransactionState.Failed);
                 }
             }
             return false;
         }
 
+        private static void Cancel(IList<RedisRequest> requests, int start = 0)
+        {
+            if (requests != null)
+            {
+                var count = requests.Count;
+                for (var j = Math.Max(0, start); j < count; j++)
+                {
+                    try
+                    {
+                        requests[j].Cancel();
+                    }
+                    catch (Exception)
+                    { }
+                }
+            }
+        }
+
         protected internal override T Expect<T>(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
         {
-            var state = (RedisTransactionState)Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Ready,
-                (long)RedisTransactionState.Empty);
+            SetReady();
 
-            if (state == RedisTransactionState.Executing)
-                throw new RedisException("Can not expect any command while executing");
-
-            var queue = m_RequestQ;
-            if (queue == null)
-                queue = m_RequestQ = new ConcurrentQueue<RedisRequest>();
+            var requests = m_RequestList;
+            if (requests == null)
+                requests = m_RequestList = new List<RedisRequest>();
 
             var request = new RedisRequest<T>(command, expectation, okIf);
-            queue.Enqueue(request);
+            requests.Add(request);
 
             var result = request.Result;
             return !ReferenceEquals(result, null) ? (T)(object)result : default(T);
+        }
+
+        private void SetReady()
+        {
+            var state = (RedisTransactionState)Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Ready,
+                (long)RedisTransactionState.Initiated);
+
+            if (state == RedisTransactionState.Executing)
+                throw new RedisException("Can not expect any command while executing");
         }
 
         #endregion Execution Methods

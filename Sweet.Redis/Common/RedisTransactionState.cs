@@ -26,9 +26,10 @@ namespace Sweet.Redis
 {
     public enum RedisTransactionState : long
     {
-        Empty = 0L,
+        Initiated = 0L,
         Ready = 1L,
         Executing = 2L,
-        Disposed = 3L
+        Failed = 3L,
+        Disposed = 4L
     }
 }
