@@ -26,14 +26,14 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisNullableInt : RedisResult<long?>
+    public class RedisNullableInteger : RedisResult<long?>
     {
         #region .Ctors
 
-        internal RedisNullableInt()
+        internal RedisNullableInteger()
         { }
 
-        internal RedisNullableInt(long? value)
+        internal RedisNullableInteger(long? value)
             : base(value)
         { }
 
@@ -57,7 +57,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisNullableInt;
+            var rObj = obj as RedisNullableInteger;
             if (!ReferenceEquals(rObj, null))
                 return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
             return false;
@@ -86,42 +86,42 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisNullableInt(long? value)  // implicit long to RedisNullableInt conversion operator
+        public static implicit operator RedisNullableInteger(long? value)  // implicit long to RedisNullableInt conversion operator
         {
-            return new RedisNullableInt(value);
+            return new RedisNullableInteger(value);
         }
 
-        public static implicit operator RedisNullableInt(int? value)  // implicit int to RedisNullableInt conversion operator
+        public static implicit operator RedisNullableInteger(int? value)  // implicit int to RedisNullableInt conversion operator
         {
-            return new RedisNullableInt(value);
+            return new RedisNullableInteger(value);
         }
 
-        public static implicit operator RedisNullableInt(double? value)  // implicit double to RedisNullableInt conversion operator
+        public static implicit operator RedisNullableInteger(double? value)  // implicit double to RedisNullableInt conversion operator
         {
-            return new RedisNullableInt((long)value);
+            return new RedisNullableInteger((long)value);
         }
 
-        public static implicit operator RedisNullableInt(RedisDouble value)  // implicit RedisDouble to RedisNullableInt conversion operator
+        public static implicit operator RedisNullableInteger(RedisDouble value)  // implicit RedisDouble to RedisNullableInt conversion operator
         {
-            return new RedisNullableInt((long?)value.Value);
+            return new RedisNullableInteger((long?)value.Value);
         }
 
-        public static implicit operator RedisNullableInt(RedisNullableDouble value)  // implicit RedisNullableDouble to RedisNullableInt conversion operator
+        public static implicit operator RedisNullableInteger(RedisNullableDouble value)  // implicit RedisNullableDouble to RedisNullableInt conversion operator
         {
-            return new RedisNullableInt((long?)value.Value);
+            return new RedisNullableInteger((long?)value.Value);
         }
 
-        public static implicit operator long? (RedisNullableInt value)  // implicit RedisNullableInt to long conversion operator
+        public static implicit operator long? (RedisNullableInteger value)  // implicit RedisNullableInt to long conversion operator
         {
             return value.Value;
         }
 
-        public static implicit operator int? (RedisNullableInt value)  // implicit RedisNullableInt to int conversion operator
+        public static implicit operator int? (RedisNullableInteger value)  // implicit RedisNullableInt to int conversion operator
         {
             return (int)value.Value;
         }
 
-        public static implicit operator double? (RedisNullableInt value)  // implicit RedisNullableInt to double conversion operator
+        public static implicit operator double? (RedisNullableInteger value)  // implicit RedisNullableInt to double conversion operator
         {
             return value.Value;
         }
@@ -130,7 +130,7 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
-        public static bool operator ==(RedisNullableInt a, RedisNullableInt b)
+        public static bool operator ==(RedisNullableInteger a, RedisNullableInteger b)
         {
             if (ReferenceEquals(a, null))
                 return ReferenceEquals(b, null);
@@ -144,7 +144,7 @@ namespace Sweet.Redis
             return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
         }
 
-        public static bool operator !=(RedisNullableInt a, RedisNullableInt b)
+        public static bool operator !=(RedisNullableInteger a, RedisNullableInteger b)
         {
             return !(a == b);
         }

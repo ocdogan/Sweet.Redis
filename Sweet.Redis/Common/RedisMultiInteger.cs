@@ -156,7 +156,67 @@ namespace Sweet.Redis
             return new RedisMultiInteger(longs);
         }
 
-        public static implicit operator int[] (RedisMultiInteger value)  // implicit RedisMultiInt to int[] conversion operator
+        public static implicit operator RedisMultiInteger(short[] value)  // implicit short[] to RedisMultiInt conversion operator
+        {
+            long[] longs = null;
+            if (value != null)
+            {
+                var length = value.Length;
+
+                longs = new long[length];
+                if (length > 0)
+                    for (var i = 0; i < length; i++)
+                        longs[i] = (long)value[i];
+            }
+            return new RedisMultiInteger(longs);
+        }
+
+        public static implicit operator RedisMultiInteger(double[] value)  // implicit double[] to RedisMultiInt conversion operator
+        {
+            long[] longs = null;
+            if (value != null)
+            {
+                var length = value.Length;
+
+                longs = new long[length];
+                if (length > 0)
+                    for (var i = 0; i < length; i++)
+                        longs[i] = (long)value[i];
+            }
+            return new RedisMultiInteger(longs);
+        }
+
+        public static implicit operator RedisMultiInteger(decimal[] value)  // implicit decimal[] to RedisMultiInt conversion operator
+        {
+            long[] longs = null;
+            if (value != null)
+            {
+                var length = value.Length;
+
+                longs = new long[length];
+                if (length > 0)
+                    for (var i = 0; i < length; i++)
+                        longs[i] = Convert.ToInt64(value[i]);
+            }
+            return new RedisMultiInteger(longs);
+        }
+
+        public static implicit operator RedisMultiInteger(float[] value)  // implicit float[] to RedisMultiInt conversion operator
+        {
+            long[] longs = null;
+            if (value != null)
+            {
+                var length = value.Length;
+
+                longs = new long[length];
+                if (length > 0)
+                    for (var i = 0; i < length; i++)
+                        longs[i] = Convert.ToInt64(value[i]);
+            }
+            return new RedisMultiInteger(longs);
+        }
+
+        public static implicit operator int[](RedisMultiInteger value)  // implicit RedisMultiInt to int[] conversion operator
         {
             var longs = value.Value;
             if (longs != null)

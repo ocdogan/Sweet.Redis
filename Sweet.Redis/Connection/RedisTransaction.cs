@@ -89,8 +89,8 @@ namespace Sweet.Redis
                     var requests = Interlocked.Exchange(ref m_RequestList, null);
                     if (requests != null)
                     {
-                        var count = requests.Count;
-                        if (count > 0)
+                        var requestCount = requests.Count;
+                        if (requestCount > 0)
                         {
                             using (var connection = Pool.Connect(DbIndex))
                             {
@@ -111,14 +111,14 @@ namespace Sweet.Redis
                                     {
                                         var settings = connection.Settings;
 
-                                        for (var i = 0; i < count; i++)
+                                        for (var i = 0; i < requestCount; i++)
                                         {
                                             try
                                             {
                                                 var request = requests[i];
 
                                                 request.Process(socket, settings);
-                                                if (!request.IsCompleted)
+                                                if (!request.IsStarted)
                                                 {
                                                     completed = false;
                                                     Cancel(requests, i);
@@ -127,7 +127,9 @@ namespace Sweet.Redis
                                             }
                                             catch (Exception e)
                                             {
-                                                for (var j = 0; j < count; j++)
+                                                completed = false;
+
+                                                for (var j = 0; j < requestCount; j++)
                                                 {
                                                     try
                                                     {
@@ -136,7 +138,67 @@ namespace Sweet.Redis
                                                     catch (Exception)
                                                     { }
                                                 }
+
+                                                var discard = new RedisCommand(DbIndex, RedisCommands.Discard);
+                                                discard.ExpectSimpleString(socket, settings, RedisConstants.OK);
+
                                                 throw;
+                                            }
+                                        }
+
+                                        if (completed)
+                                        {
+                                            var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
+
+                                            var execResult = exec.ExpectArray(socket, settings);
+
+                                            var itemCount = 0;
+                                            IList<RedisRawObject> items = null;
+
+                                            if (execResult != null)
+                                            {
+                                                var raw = execResult.Value;
+                                                if (raw != null)
+                                                {
+                                                    items = raw.Items;
+                                                    if (items != null)
+                                                        itemCount = items.Count;
+                                                }
+                                            }
+
+                                            requestCount--;
+                                            for (var i = 0; i < requestCount; i++)
+                                            {
+                                                try
+                                                {
+                                                    var request = requests[i + 1];
+                                                    if (request != null)
+                                                    {
+                                                        if (i >= itemCount)
+                                                            request.Cancel();
+                                                        else
+                                                        {
+                                                            var child = items[i];
+                                                            if (child == null)
+                                                                request.Cancel();
+                                                            else
+                                                                request.SetResult(child.Data);
+                                                        }
+                                                    }
+                                                }
+                                                catch (Exception e)
+                                                {
+                                                    for (var j = 0; j < requestCount; j++)
+                                                    {
+                                                        try
+                                                        {
+                                                            requests[j].SetException(e);
+                                                        }
+                                                        catch (Exception)
+                                                        { }
+                                                    }
+                                                    throw;
+                                                }
                                             }
                                         }
 
@@ -149,7 +211,7 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_State, completed ? (long)RedisTransactionState.Initiated : (long)RedisTransactionState.Failed);
+                    Interlocked.Exchange(ref m_State, completed ? (long)RedisTransactionState.Ready : (long)RedisTransactionState.Failed);
                 }
             }
             return false;
@@ -178,9 +240,14 @@ namespace Sweet.Redis
 
             var requests = m_RequestList;
             if (requests == null)
+            {
                 requests = m_RequestList = new List<RedisRequest>();
 
-            var request = new RedisRequest<T>(command, expectation, okIf);
+                var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
+                requests.Add(new RedisTransactionalRequest<RedisBool>(multiCommand, RedisCommandExpect.OK));
+            }
+
+            var request = new RedisTransactionalRequest<T>(command, expectation, okIf);
             requests.Add(request);
 
             var result = request.Result;

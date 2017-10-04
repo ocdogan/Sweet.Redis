@@ -44,6 +44,7 @@ namespace Sweet.Redis
         private DateTime m_CreationTime;
 
         private long m_Id;
+        private bool m_Transactional;
         private string m_OKIf;
         private RedisCommand m_Command;
         private RedisCommandExpect m_Expectation;
@@ -54,13 +55,14 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
-                                 string okIf, object stateObject)
+            string okIf = null, object stateObject = null, bool transactional = false)
         {
             m_Id = NextId();
             m_OKIf = okIf;
             m_Expectation = expectation;
             m_Command = command;
             m_StateObject = stateObject;
+            m_Transactional = transactional;
             m_CreationTime = DateTime.UtcNow;
         }
 
@@ -130,6 +132,11 @@ namespace Sweet.Redis
             get { return m_StateObject; }
         }
 
+        public bool Transactional
+        {
+            get { return m_Transactional; }
+        }
+
         #endregion Properties
 
         #region Methods
@@ -147,6 +154,8 @@ namespace Sweet.Redis
         public abstract void Process(IRedisConnection connection);
 
         public abstract void SetException(Exception exception);
+
+        public abstract void SetResult(object value);
 
         #region Static Methods
 

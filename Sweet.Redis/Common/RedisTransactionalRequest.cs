@@ -22,42 +22,22 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Collections.Concurrent;
+using System.Reflection;
+using System.Threading;
+
 namespace Sweet.Redis
 {
-    public class RedisRaw : RedisResult<RedisRawObject>
+    internal class RedisTransactionalRequest<T> : RedisRequest<T>
+        where T : RedisResult
     {
         #region .Ctors
 
-        internal RedisRaw()
-        { }
-
-        internal RedisRaw(RedisRawObject value)
-            : base(value)
+        public RedisTransactionalRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
+            : base(command, expectation, okIf, true)
         { }
 
         #endregion .Ctors
-
-        #region Properties
-
-        public override RedisResultType Type 
-        { 
-            get { return RedisResultType.Raw; } 
-        }
-
-        #endregion Properties
-
-        #region Conversion Methods
-
-        public static implicit operator RedisRaw(RedisRawObject value)  // implicit RedisRawObj to RedisRaw conversion operator
-        {
-            return new RedisRaw(value);
-        }
-
-        public static implicit operator RedisRawObject(RedisRaw value)  // implicit RedisRaw to RedisRawObj conversion operator
-        {
-            return value.Value;
-        }
-
-        #endregion Conversion Methods
     }
 }

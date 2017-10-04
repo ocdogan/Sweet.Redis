@@ -34,6 +34,7 @@ namespace Sweet.Redis
         Error,
         Integer,
         MultiBytes,
+        MultiDouble,
         MultiInt,
         MultiString,
         Null,

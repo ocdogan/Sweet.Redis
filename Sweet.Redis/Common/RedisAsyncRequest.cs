@@ -35,7 +35,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
-                                 string okIf, object stateObject)
+                                 string okIf = null, object stateObject = null)
             : base(command, expectation, okIf, stateObject)
         { }
 

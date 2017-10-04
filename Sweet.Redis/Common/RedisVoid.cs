@@ -30,16 +30,35 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
+        internal RedisVoid()
+        {
+            m_RawData = RedisVoidVal.Value;
+        }
+
         internal RedisVoid(bool completed = true)
         {
+            m_RawData = RedisVoidVal.Value;
             if (completed)
                 SetCompleted();
-
         }
 
         #endregion .Ctors
 
         #region Properties
+
+        protected internal override object RawData
+        {
+            get { return RedisVoidVal.Value; }
+            set 
+            {
+                m_Status = RedisResultStatus.Completed;
+            }
+        }
+
+        public override RedisResultType Type 
+        { 
+            get { return RedisResultType.Void; } 
+        }
 
         public override RedisVoidVal Value
         {
@@ -50,17 +69,20 @@ namespace Sweet.Redis
             }
             internal set
             {
-                base.Value = RedisVoidVal.Value;
+                m_Status = RedisResultStatus.Completed;
             }
         }
-
-        public override RedisResultType Type { get { return RedisResultType.Void; } }
 
         #endregion Properties
 
         #region Methods
 
         #region Overrides
+
+        protected internal override void TrySetResult(object value)
+        {
+            m_Status = RedisResultStatus.Completed;
+        }
 
         public override bool Equals(object obj)
         {

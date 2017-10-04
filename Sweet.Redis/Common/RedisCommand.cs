@@ -214,7 +214,7 @@ namespace Sweet.Redis
             return result.Value;
         }
 
-        public RedisNullableInt ExpectNullableInteger(IRedisConnection connection, bool throwException = true)
+        public RedisNullableInteger ExpectNullableInteger(IRedisConnection connection, bool throwException = true)
         {
             using (var response = ExecuteInternal(connection, throwException))
             {
@@ -414,7 +414,7 @@ namespace Sweet.Redis
             return result.Value;
         }
 
-        public RedisNullableInt ExpectNullableInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisNullableInteger ExpectNullableInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
         {
             using (var response = ExecuteInternal(socket, settings, throwException))
             {

@@ -53,11 +53,12 @@
     <Compile Include="Common\RedisCommandExpect.cs" />
     <Compile Include="Common\RedisDate.cs" />
     <Compile Include="Common\RedisInternalDisposable.cs" />
+    <Compile Include="Common\RedisMultiDouble.cs" />
     <Compile Include="Common\RedisMultiInteger.cs" />
     <Compile Include="Common\RedisMultiString.cs" />
     <Compile Include="Common\RedisNull.cs" />
     <Compile Include="Common\RedisNullableDouble.cs" />
-    <Compile Include="Common\RedisNullableInt.cs" />
+    <Compile Include="Common\RedisNullableInteger.cs" />
     <Compile Include="Common\RedisNullVal.cs" />
     <Compile Include="Common\RedisParam.cs" />
     <Compile Include="Common\RedisRequest.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Common\RedisServerInfoStatsSection.cs" />
     <Compile Include="Common\RedisServerInfoReplicationSection.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
+    <Compile Include="Common\RedisTransactionalRequest.cs" />
     <Compile Include="Common\RedisTransactionState.cs" />
     <Compile Include="Common\RedisVoid.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />

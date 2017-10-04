@@ -1046,7 +1046,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisNullableInt ZRank(RedisParam key, RedisParam member)
+        public RedisNullableInteger ZRank(RedisParam key, RedisParam member)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
@@ -1597,7 +1597,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisNullableInt ZRevRank(RedisParam key, RedisParam member)
+        public RedisNullableInteger ZRevRank(RedisParam key, RedisParam member)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");

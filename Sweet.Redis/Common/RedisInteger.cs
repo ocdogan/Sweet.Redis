@@ -22,6 +22,8 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+
 namespace Sweet.Redis
 {
     public class RedisInteger : RedisResult<long>
@@ -94,9 +96,39 @@ namespace Sweet.Redis
             return new RedisInteger(value);
         }
 
+        public static implicit operator RedisInteger(short value)  // implicit short to RedisInt conversion operator
+        {
+            return new RedisInteger(value);
+        }
+
         public static implicit operator RedisInteger(double value)  // implicit double to RedisInt conversion operator
         {
             return new RedisInteger((long)value);
+        }
+
+        public static implicit operator RedisInteger(decimal value)  // implicit decimal to RedisInt conversion operator
+        {
+            return new RedisInteger(Convert.ToInt64(value));
+        }
+
+        public static implicit operator RedisInteger(float value)  // implicit float to RedisInt conversion operator
+        {
+            return new RedisInteger(Convert.ToInt64(value));
+        }
+
+        public static implicit operator RedisInteger(ulong value)  // implicit ulong to RedisInt conversion operator
+        {
+            return new RedisInteger((long)value);
+        }
+
+        public static implicit operator RedisInteger(uint value)  // implicit uint to RedisInt conversion operator
+        {
+            return new RedisInteger(value);
+        }
+
+        public static implicit operator RedisInteger(ushort value)  // implicit ushort to RedisInt conversion operator
+        {
+            return new RedisInteger(value);
         }
 
         public static implicit operator RedisInteger(RedisDouble value)  // implicit RedisDouble to RedisInt conversion operator
@@ -114,9 +146,39 @@ namespace Sweet.Redis
             return (int)value.Value;
         }
 
+        public static implicit operator short(RedisInteger value)  // implicit RedisInt to short conversion operator
+        {
+            return (short)value.Value;
+        }
+
         public static implicit operator double(RedisInteger value)  // implicit RedisInt to double conversion operator
         {
             return value.Value;
+        }
+
+        public static implicit operator decimal(RedisInteger value)  // implicit RedisInt to decimal conversion operator
+        {
+            return value.Value;
+        }
+
+        public static implicit operator float(RedisInteger value)  // implicit RedisInt to float conversion operator
+        {
+            return value.Value;
+        }
+        
+        public static implicit operator ulong(RedisInteger value)  // implicit RedisInt to ulong conversion operator
+        {
+            return (ulong)value.Value;
+        }
+
+        public static implicit operator uint(RedisInteger value)  // implicit RedisInt to uint conversion operator
+        {
+            return (uint)value.Value;
+        }
+
+        public static implicit operator ushort(RedisInteger value)  // implicit RedisInt to ushort conversion operator
+        {
+            return (ushort)value.Value;
         }
 
         #endregion Conversion Methods

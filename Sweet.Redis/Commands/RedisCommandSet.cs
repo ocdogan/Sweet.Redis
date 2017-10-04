@@ -179,7 +179,7 @@ namespace Sweet.Redis
             return m_Db.ExpectNullableDouble(cmd, parameters);
         }
 
-        protected RedisNullableInt ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
+        protected RedisNullableInteger ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
             return m_Db.ExpectNullableInteger(cmd, parameters);

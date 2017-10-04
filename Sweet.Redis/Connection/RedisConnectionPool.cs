@@ -759,7 +759,7 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisNullableInt ExpectNullableInteger(RedisCommand command, bool throwException = true)
+        internal RedisNullableInteger ExpectNullableInteger(RedisCommand command, bool throwException = true)
         {
             ValidateNotDisposed();
 
@@ -769,7 +769,7 @@ namespace Sweet.Redis
                 connection = Connect(command.DbIndex);
                 if (connection == null)
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableInt>(command, RedisCommandExpect.NullableInteger, null);
+                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableInteger>(command, RedisCommandExpect.NullableInteger, null);
                     StartToProcessQ();
 
                     return asyncRequest.Task.Result;

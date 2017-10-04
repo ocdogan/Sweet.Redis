@@ -112,9 +112,7 @@ namespace Sweet.Redis
 
         protected internal override void TrySetResult(object value)
         {
-            if (!(value is TValue))
-                throw new RedisException("Value is not in expected type");
-            base.TrySetResult(value);
+            base.TrySetResult((TValue)value);
         }
 
         #region Overrides
@@ -216,7 +214,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual object RawData
+        protected internal virtual object RawData
         {
             get
             {

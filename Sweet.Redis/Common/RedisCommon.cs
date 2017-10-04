@@ -70,6 +70,8 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region Socket
+
         internal static bool IsConnected(this Socket socket, int poll = -1)
         {
             if (socket == null || !socket.Connected)
@@ -146,6 +148,78 @@ namespace Sweet.Redis
             }
         }
 
+        #endregion Socket
+
+        internal static int IndexOf(this byte[] data, byte b, int startPos = 0, int length = -1)
+        {
+            if (data != null && length != 0)
+            {
+                var dataLength = data.Length;
+
+                startPos = Math.Max(0, startPos);
+                if (dataLength > 0 && startPos < dataLength)
+                {
+                    var endPos = dataLength;
+                    if (length > 0)
+                        endPos = Math.Min(dataLength, startPos + length);
+
+                    for (var i = startPos; i < endPos; i++)
+                        if (data[i] == b)
+                            return i;
+                }
+            }
+            return -1;
+        }
+
+        internal static int ScanCRLF(this byte[] data, int index = 0, int length = -1)
+        {
+            if (data != null)
+            {
+                var dataLen = data.Length;
+                if (dataLen > 0)
+                {
+                    length = Math.Max(0, Math.Min(dataLen - index, length));
+                    if (length > 0)
+                    {
+                        var end = Math.Min(dataLen, index + length);
+                        for (var i = index; i < end; i++)
+                            if (data[i] == '\n' && i >= index && data[i - 1] == '\r')
+                                return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        internal static bool Equals<T>(this T[] source, T[] destination, Func<T, T, bool> comparer)
+        {
+            if (comparer == null)
+                throw new ArgumentNullException("comparer");
+
+            if (source == null)
+                return destination == null;
+
+            if (destination == null)
+                return source == null;
+
+            var sourceLen = source.Length;
+            if (sourceLen == destination.Length)
+            {
+                if (sourceLen > 0)
+                {
+                    for (var i = 0; i < sourceLen; i++)
+                    {
+                        if (!comparer(source[i], destination[i]))
+                            return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        #region Conversion
+
         internal static RedisRawObjectType ResponseType(this byte b)
         {
             switch (b)
@@ -182,26 +256,6 @@ namespace Sweet.Redis
                 default:
                     return (byte)'?';
             }
-        }
-
-        internal static int ScanCRLF(this byte[] data, int index = 0, int length = -1)
-        {
-            if (data != null)
-            {
-                var dataLen = data.Length;
-                if (dataLen > 0)
-                {
-                    length = Math.Max(0, Math.Min(dataLen - index, length));
-                    if (length > 0)
-                    {
-                        var end = Math.Min(dataLen, index + length);
-                        for (var i = index; i < end; i++)
-                            if (data[i] == '\n' && i >= index && data[i - 1] == '\r')
-                                return i;
-                    }
-                }
-            }
-            return -1;
         }
 
         internal static double ToUnixTimeStamp(this DateTime date)
@@ -287,6 +341,95 @@ namespace Sweet.Redis
             return null;
         }
 
+        internal static int ToInt(this string s, int defaultValue = int.MinValue)
+        {
+            if (!String.IsNullOrEmpty(s))
+            {
+                int result;
+                if (int.TryParse(s, out result))
+                    return result;
+            }
+            return defaultValue;
+        }
+
+        internal static long ToLong(this string s, long defaultValue = long.MinValue)
+        {
+            if (!String.IsNullOrEmpty(s))
+            {
+                long result;
+                if (long.TryParse(s, out result))
+                    return result;
+            }
+            return defaultValue;
+        }
+
+        internal static RedisResult ToRedisResult(this object obj)
+        {
+            if (obj != null)
+            {
+                var tc = Type.GetTypeCode(obj.GetType());
+                switch (tc)
+                {
+                    case TypeCode.Object:
+                        if (obj is RedisParam)
+                            return (RedisBytes)((RedisParam)obj).Data;
+                        if (obj is RedisResult)
+                            return (RedisResult)obj;
+                        if (obj is byte[])
+                            return (RedisBytes)(byte[])obj;
+                        if (obj is byte[][])
+                            return (RedisMultiBytes)(byte[][])obj;
+                        if (obj is string[])
+                            return (RedisMultiString)(string[])obj;
+                        if (obj is long[])
+                            return (RedisMultiInteger)(long[])obj;
+                        if (obj is int[])
+                            return (RedisMultiInteger)(int[])obj;
+                        if (obj is double[])
+                            return (RedisMultiDouble)(double[])obj;
+                        if (obj is decimal[])
+                            return (RedisMultiDouble)(decimal[])obj;
+                        if (obj is float[])
+                            return (RedisMultiDouble)(float[])obj;
+                        if (obj is short[])
+                            return (RedisMultiInteger)(short[])obj;
+                        return (RedisString)obj.ToString();
+                    case TypeCode.String:
+                        return (RedisString)(string)obj;
+                    case TypeCode.Int32:
+                        return (RedisInteger)(int)obj;
+                    case TypeCode.Int64:
+                        return (RedisInteger)(long)obj;
+                    case TypeCode.Decimal:
+                        return (RedisDouble)(decimal)obj;
+                    case TypeCode.Double:
+                        return (RedisDouble)(double)obj;
+                    case TypeCode.Boolean:
+                        return (RedisBool)(bool)obj;
+                    case TypeCode.Single:
+                        return (RedisDouble)(float)obj;
+                    case TypeCode.Int16:
+                        return (RedisInteger)(short)obj;
+                    case TypeCode.UInt32:
+                        return (RedisInteger)(uint)obj;
+                    case TypeCode.UInt64:
+                        return (RedisInteger)(ulong)obj;
+                    case TypeCode.UInt16:
+                        return (RedisInteger)(ushort)obj;
+                    case TypeCode.DateTime:
+                        return (RedisInteger)((DateTime)obj).Ticks;
+                    case TypeCode.Char:
+                        return (RedisString)obj.ToString();
+                    case TypeCode.Byte:
+                        return (RedisBytes)(new byte[] { (byte)obj });
+                }
+            }
+            return null;
+        }
+        #endregion Conversion
+
+        #region ToBytesArray
+
         internal static byte[][] ToBytesArray(this RedisParam[] parameters)
         {
             if (parameters != null)
@@ -351,32 +494,9 @@ namespace Sweet.Redis
             return null;
         }
 
-        internal static bool Equals<T>(this T[] source, T[] destination, Func<T, T, bool> comparer)
-        {
-            if (comparer == null)
-                throw new ArgumentNullException("comparer");
+        #endregion ToBytesArray
 
-            if (source == null)
-                return destination == null;
-
-            if (destination == null)
-                return source == null;
-
-            var sourceLen = source.Length;
-            if (sourceLen == destination.Length)
-            {
-                if (sourceLen > 0)
-                {
-                    for (var i = 0; i < sourceLen; i++)
-                    {
-                        if (!comparer(source[i], destination[i]))
-                            return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
+        #region Split
 
         internal static T[] Split<T>(this T[] source, int index, int length)
         {
@@ -420,6 +540,10 @@ namespace Sweet.Redis
             return destination;
         }
 
+        #endregion Split
+
+        #region ConvertToByteArray
+
         internal static byte[][] ConvertToByteArray(this string[] keys)
         {
             if (keys == null)
@@ -453,6 +577,10 @@ namespace Sweet.Redis
 
             return result;
         }
+
+        #endregion ConvertToByteArray
+
+        #region Merge
 
         internal static byte[][] Merge(this RedisParam[] keys, RedisParam[] values)
         {
@@ -628,6 +756,10 @@ namespace Sweet.Redis
             }
             return result;
         }
+
+        #endregion Merge
+
+        #region Join
 
         internal static byte[][] Join(this RedisParam[] values1, RedisParam[] values2)
         {
@@ -1029,48 +1161,7 @@ namespace Sweet.Redis
 
         }
 
-        internal static int ToInt(this string s, int defaultValue = int.MinValue)
-        {
-            if (!String.IsNullOrEmpty(s))
-            {
-                int result;
-                if (int.TryParse(s, out result))
-                    return result;
-            }
-            return defaultValue;
-        }
-
-        internal static long ToLong(this string s, long defaultValue = long.MinValue)
-        {
-            if (!String.IsNullOrEmpty(s))
-            {
-                long result;
-                if (long.TryParse(s, out result))
-                    return result;
-            }
-            return defaultValue;
-        }
-
-        internal static int IndexOf(this byte[] data, byte b, int startPos = 0, int length = -1)
-        {
-            if (data != null && length != 0)
-            {
-                var dataLength = data.Length;
-
-                startPos = Math.Max(0, startPos);
-                if (dataLength > 0 && startPos < dataLength)
-                {
-                    var endPos = dataLength;
-                    if (length > 0)
-                        endPos = Math.Min(dataLength, startPos + length);
-
-                    for (var i = startPos; i < endPos; i++)
-                        if (data[i] == b)
-                            return i;
-                }
-            }
-            return -1;
-        }
+        #endregion Join
 
         #endregion Methods
     }

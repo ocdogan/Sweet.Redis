@@ -307,10 +307,10 @@ namespace Sweet.Redis
             return Expect<RedisNullableDouble>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.NullableDouble);
         }
 
-        protected internal virtual RedisNullableInt ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
+        protected internal virtual RedisNullableInteger ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Expect<RedisNullableInt>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.NullableInteger);
+            return Expect<RedisNullableInteger>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.NullableInteger);
         }
 
         protected internal virtual RedisBool ExpectOK(byte[] cmd, params byte[][] parameters)

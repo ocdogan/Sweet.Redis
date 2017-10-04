@@ -59,7 +59,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Transaction
 
-        static void Transaction1()
+        static void Transaction2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
@@ -83,6 +83,39 @@ namespace Sweet.Redis.ConsoleTest
 
                             for (var i = 0; i < list.Count; i++)
                                 Console.WriteLine(list[i]);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void Transaction1()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var transaction = pool.BeginTransaction())
+                {
+                    var i = 0;
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            var result = transaction.Connection.Ping(++i);
+
+                            transaction.Execute();
+
+                            Console.WriteLine(result);
                         }
                         catch (Exception e)
                         {

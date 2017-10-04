@@ -191,7 +191,7 @@ namespace Sweet.Redis
         RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
         RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisNullableInt ZRank(RedisParam key, RedisParam member);
+        RedisNullableInteger ZRank(RedisParam key, RedisParam member);
 
         RedisInteger ZRem(RedisParam key, RedisParam member, params RedisParam[] members);
 
@@ -247,7 +247,7 @@ namespace Sweet.Redis
         RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
         RedisResult<RedisKeyValue<string, double>[]> ZRevRangeByScoreWithScoresString(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
 
-        RedisNullableInt ZRevRank(RedisParam key, RedisParam member);
+        RedisNullableInteger ZRevRank(RedisParam key, RedisParam member);
 
         RedisMultiBytes ZScan(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
         RedisMultiString ZScanString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);

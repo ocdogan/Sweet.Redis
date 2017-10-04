@@ -355,5 +355,10 @@ namespace Sweet.Redis
         public readonly static byte[] SentinelChanelSwitchMaster = "switch-master".ToBytes();
         public readonly static byte[] SentinelChanelTiltEntered = "+tilt".ToBytes();
         public readonly static byte[] SentinelChanelTiltExited = "-tilt".ToBytes();
+
+        // Transaction commands
+        public readonly static byte[] Multi = "MULTI".ToBytes();
+        public readonly static byte[] Exec = "EXEC".ToBytes();
+        public readonly static byte[] Discard = "DISCARD".ToBytes();
     }
 }

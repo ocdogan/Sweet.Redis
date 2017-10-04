@@ -82,11 +82,111 @@ namespace Sweet.Redis
             return new RedisBool(value);
         }
 
+        public static implicit operator RedisBool(byte value)  // implicit byte to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1);
+        }
+
+        public static implicit operator RedisBool(short value)  // implicit short to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1);
+        }
+
+        public static implicit operator RedisBool(int value)  // implicit int to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1);
+        }
+
+        public static implicit operator RedisBool(long value)  // implicit long to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1L);
+        }
+
+        public static implicit operator RedisBool(double value)  // implicit double to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1d);
+        }
+
+        public static implicit operator RedisBool(decimal value)  // implicit decimal to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1m);
+        }
+
+        public static implicit operator RedisBool(float value)  // implicit float to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1f);
+        }
+
+        public static implicit operator RedisBool(ushort value)  // implicit ushort to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1u);
+        }
+
+        public static implicit operator RedisBool(uint value)  // implicit uint to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1u);
+        }
+
+        public static implicit operator RedisBool(ulong value)  // implicit uint to RedisBool conversion operator
+        {
+            return new RedisBool(value == 1ul);
+        }
+
         public static implicit operator bool(RedisBool value)  // implicit RedisBool to bool conversion operator
         {
             return value.Value;
         }
 
+        public static implicit operator byte(RedisBool value)  // implicit RedisBool to byte conversion operator
+        {
+            return value.Value ? (byte)1 : (byte)0;
+        }
+
+        public static implicit operator short(RedisBool value)  // implicit RedisBool to short conversion operator
+        {
+            return value.Value ? (short)1 : (short)0;
+        }
+
+        public static implicit operator int(RedisBool value)  // implicit RedisBool to int conversion operator
+        {
+            return value.Value ? 1 : 0;
+        }
+
+        public static implicit operator long(RedisBool value)  // implicit RedisBool to long conversion operator
+        {
+            return value.Value ? 1L : 0L;
+        }
+
+        public static implicit operator double(RedisBool value)  // implicit RedisBool to double conversion operator
+        {
+            return value.Value ? 1d : 0d;
+        }
+
+        public static implicit operator decimal(RedisBool value)  // implicit RedisBool to decimal conversion operator
+        {
+            return value.Value ? 1m : 0m;
+        }
+
+        public static implicit operator float(RedisBool value)  // implicit RedisBool to byte conversion operator
+        {
+            return value.Value ? 1f : 0f;
+        }
+
+        public static implicit operator ushort(RedisBool value)  // implicit RedisBool to ushort conversion operator
+        {
+            return value.Value ? (ushort)1 : (ushort)0;
+        }
+
+        public static implicit operator uint(RedisBool value)  // implicit RedisBool to uint conversion operator
+        {
+            return value.Value ? 1u : 0u;
+        }
+
+        public static implicit operator ulong(RedisBool value)  // implicit RedisBool to ulong conversion operator
+        {
+            return value.Value ? 1ul : 0ul;
+        }
+        
         #endregion Conversion Methods
 
         #region Operator Overloads

@@ -85,14 +85,14 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisDouble(double value)  // implicit double to RedisDouble conversion operator
-        {
-            return new RedisDouble(value);
-        }
-
         public static implicit operator double(RedisDouble value)  // implicit RedisDouble to double conversion operator
         {
             return value.Value;
+        }
+
+        public static implicit operator RedisDouble(double value)  // implicit double to RedisDouble conversion operator
+        {
+            return new RedisDouble(value);
         }
 
         public static implicit operator RedisDouble(long value)  // implicit long to RedisDouble conversion operator
@@ -101,6 +101,36 @@ namespace Sweet.Redis
         }
 
         public static implicit operator RedisDouble(int value)  // implicit int to RedisDouble conversion operator
+        {
+            return new RedisDouble(value);
+        }
+
+        public static implicit operator RedisDouble(short value)  // implicit short to RedisDouble conversion operator
+        {
+            return new RedisDouble(value);
+        }
+
+        public static implicit operator RedisDouble(decimal value)  // implicit decimal to RedisDouble conversion operator
+        {
+            return new RedisDouble(Convert.ToDouble(value));
+        }
+
+        public static implicit operator RedisDouble(float value)  // implicit float to RedisDouble conversion operator
+        {
+            return new RedisDouble(Convert.ToDouble(value));
+        }
+
+        public static implicit operator RedisDouble(ulong value)  // implicit ulong to RedisDouble conversion operator
+        {
+            return new RedisDouble(value);
+        }
+
+        public static implicit operator RedisDouble(uint value)  // implicit uint to RedisDouble conversion operator
+        {
+            return new RedisDouble(value);
+        }
+
+        public static implicit operator RedisDouble(ushort value)  // implicit ushort to RedisDouble conversion operator
         {
             return new RedisDouble(value);
         }
