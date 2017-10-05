@@ -34,7 +34,7 @@ namespace Sweet.Redis
         internal RedisBytes()
         { }
 
-        internal RedisBytes(byte[] value)
+        public RedisBytes(byte[] value)
             : base(value)
         { }
 
@@ -116,15 +116,273 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisBytes(byte[] value)  // implicit byte[] to RedisBytes conversion operator
+        #region To RedisBytes
+
+        public static implicit operator RedisBytes(byte[] value)  // implicit to RedisBytes conversion operator
         {
             return new RedisBytes(value);
         }
 
-        public static implicit operator byte[] (RedisBytes value)  // implicit RedisBytes to byte[] conversion operator
+        public static implicit operator RedisBytes(string value)  // implicit to RedisBytes conversion operator
         {
-            return value.Value;
+            return new RedisBytes(value.ToBytes());
         }
+
+        public static implicit operator RedisBytes(long value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(int value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(short value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(double value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(decimal value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(float value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(ulong value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(uint value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(ushort value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(bool value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value ? "1".ToBytes() : "0".ToBytes());
+        }
+
+        public static implicit operator RedisBytes(DateTime value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(TimeSpan value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.Ticks.ToBytes());
+        }
+
+        public static implicit operator RedisBytes(long? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(int? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(short? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(double? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(decimal? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(float? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(ulong? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(uint? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(ushort? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(DateTime? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(TimeSpan? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? value.Value.Ticks.ToBytes() : null);
+        }
+
+        public static implicit operator RedisBytes(bool? value)  // implicit to RedisBytes conversion operator
+        {
+            return new RedisBytes(value.HasValue ? (value.Value ? "1".ToBytes() : "0".ToBytes()) : null);
+        }
+
+        #endregion To RedisBytes
+
+        #region From RedisBytes
+
+        public static implicit operator byte[](RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value != null ? value.Value : null;
+        }
+
+        public static implicit operator string(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? null : Encoding.UTF8.GetString(value.Value);
+        }
+
+        public static implicit operator long(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(long) : long.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator int(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(int) : int.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator short(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(short) : short.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator double(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(double) : double.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator decimal(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(decimal) : decimal.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator float(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(float) : float.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator ulong(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(ulong) : ulong.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator uint(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(uint) : uint.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator ushort(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(ushort) : ushort.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator bool(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(bool) : Encoding.UTF8.GetString(value.Value) == "1";
+        }
+
+        public static implicit operator DateTime(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(DateTime) : new DateTime(long.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture));
+        }
+
+        public static implicit operator TimeSpan(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? default(TimeSpan) : new TimeSpan(long.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture));
+        }
+
+        public static implicit operator long?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (long?)null : long.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator int?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (int?)null : int.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator short?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (short?)null : short.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator double?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (double?)null : double.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator decimal?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (decimal?)null : decimal.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator float?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (float?)null : float.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator ulong?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (ulong?)null : ulong.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator uint?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (uint?)null : uint.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator ushort?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (ushort?)null : ushort.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture);
+        }
+
+        public static implicit operator bool?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (bool?)null : Encoding.UTF8.GetString(value.Value) == "1";
+        }
+
+        public static implicit operator DateTime?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (DateTime?)null : new DateTime(long.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture));
+        }
+
+        public static implicit operator TimeSpan?(RedisBytes value)  // implicit from RedisBytes conversion operator
+        {
+            return value == null || value.Value == null ? (TimeSpan?)null : new TimeSpan(long.Parse(Encoding.UTF8.GetString(value.Value), RedisConstants.InvariantCulture));
+        }
+
+        #endregion From RedisBytes
 
         #endregion Conversion Methods
 
