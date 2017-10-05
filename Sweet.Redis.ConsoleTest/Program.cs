@@ -81,7 +81,7 @@ namespace Sweet.Redis.ConsoleTest
                                 list.Add(result);
                             }
 
-                            transaction.Execute();
+                            transaction.Commit();
 
                             for (var i = 0; i < list.Count; i++)
                                 Console.WriteLine(list[i]);
@@ -115,7 +115,7 @@ namespace Sweet.Redis.ConsoleTest
 
                             var result = transaction.Connection.Ping(++i);
 
-                            transaction.Execute();
+                            transaction.Commit();
 
                             Console.WriteLine(result);
                         }
@@ -438,7 +438,7 @@ namespace Sweet.Redis.ConsoleTest
 
                     if (transactional)
                     {
-                        if (!((IRedisTransaction)db).Execute())
+                        if (!((IRedisTransaction)db).Commit())
                             throw new Exception("can not execute");
 
                         if (!b)
@@ -524,7 +524,7 @@ namespace Sweet.Redis.ConsoleTest
                                             var sw = new Stopwatch();
                                             
                                             sw.Restart();
-                                            var execResult = ((IRedisTransaction)rdb).Execute();
+                                            var execResult = ((IRedisTransaction)rdb).Commit();
                                             sw.Stop();
 
                                             ticks += sw.ElapsedTicks;

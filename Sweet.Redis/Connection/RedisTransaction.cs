@@ -76,7 +76,7 @@ namespace Sweet.Redis
 
         #region Execution Methods
 
-        public bool Execute()
+        public bool Commit()
         {
             ValidateNotDisposed();
 
@@ -137,6 +137,13 @@ namespace Sweet.Redis
                             return false;
                         }
 
+                        if (Interlocked.Read(ref m_State) != (long)RedisTransactionState.Executing)
+                        {
+                            innerState = RedisTransactionState.Failed;
+                            Discard(requests, socket, settings);
+                            return false;
+                        }
+
                         if (Exec(requests, socket, settings))
                         {
                             innerState = RedisTransactionState.Ready;
@@ -150,6 +157,27 @@ namespace Sweet.Redis
                                          (long)RedisTransactionState.Ready :
                                          (long)RedisTransactionState.Failed);
                 }
+            }
+            return false;
+        }
+
+        public bool Discard()
+        {
+            ValidateNotDisposed();
+
+            if (Interlocked.CompareExchange(ref m_State, (long)RedisTransactionState.Executing,
+                (long)RedisTransactionState.Ready) == (long)RedisTransactionState.Ready)
+            {
+                try
+                {
+                    var requests = Interlocked.Exchange(ref m_RequestList, null);
+                    Cancel(requests);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref m_State, (long)RedisTransactionState.Ready);
+                }
+                return true;
             }
             return false;
         }
@@ -342,14 +370,17 @@ namespace Sweet.Redis
             if (requests != null)
             {
                 var count = requests.Count;
-                for (var j = Math.Max(0, start); j < count; j++)
+                if (count > 0)
                 {
-                    try
+                    for (var j = Math.Max(0, start); j < count; j++)
                     {
-                        requests[j].Cancel();
+                        try
+                        {
+                            requests[j].Cancel();
+                        }
+                        catch (Exception)
+                        { }
                     }
-                    catch (Exception)
-                    { }
                 }
             }
         }

@@ -28,7 +28,8 @@ namespace Sweet.Redis
 {
     public interface IRedisTransaction : IRedisDb, IRedisDisposable
     {
-        bool Execute();
+        bool Commit();
+        bool Discard();
         RedisTransactionState Status { get; }
     }
 }
