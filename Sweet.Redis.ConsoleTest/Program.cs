@@ -40,7 +40,8 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading4();
             // MultiThreading5();
             // MultiThreading6();
-            // MultiThreading7();
+            // MultiThreading7a();           
+            // MultiThreading7b();
             MultiThreading8();
 
             // MonitorTest1();
@@ -353,15 +354,21 @@ namespace Sweet.Redis.ConsoleTest
             var mediumText = new string('x', 5000);
             var mediumBytes = Encoding.UTF8.GetBytes(mediumText);
 
-            MultiThreadingBase(12, 2, 10, 50, "medium_text", mediumText, true, 5,
-                               (rdb, dbIndex) =>
-            {
-                var result = rdb.Strings.Get("medium_text");
-                return mediumBytes;
-            }, true);
+            MultiThreadingBase(12, 2, 10, 500, "medium_text", mediumText, true, 5,
+                (rdb, dbIndex) =>
+                {
+                    var result = rdb.Strings.Get("medium_text");
+                    return new RedisBytes(mediumBytes);
+                }, true);
         }
 
-        static void MultiThreading7()
+        static void MultiThreading7b()
+        {
+            MultiThreadingBase(12, 10, 10, 500, "medium_text", new string('x', 5000), true, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
+        }
+
+        static void MultiThreading7a()
         {
             MultiThreadingBase(12, 2, 1, 5000, "medium_text", new string('x', 5000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
@@ -408,7 +415,7 @@ namespace Sweet.Redis.ConsoleTest
             var tinyText = new string('x', 10);
 
             MultiThreadingBase(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value); });
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); });
         }
 
         static void MultiThreadingBase(int dbIndex, int maxCount, int threadCount, int loopCount,
@@ -485,7 +492,7 @@ namespace Sweet.Redis.ConsoleTest
                                 var autoReset = tupple.Item2;
                                 using (var rdb = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
                                 {
-                                    var results = new List<RedisResult>();
+                                    var results = new List<Tuple<string, long, RedisResult>>();
                                     try
                                     {
                                         var @this = tupple.Item1;
@@ -495,11 +502,14 @@ namespace Sweet.Redis.ConsoleTest
                                         for (var j = 0; j < loopCount; j++)
                                         {
                                             sw.Restart();
-                                            var data = proc(rdb, dbIndex, results);
+                                            var data = proc(rdb, dbIndex);
                                             sw.Stop();
 
-                                            Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                                (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
+                                            if (transactional)
+                                                results.Add(new Tuple<string, long, RedisResult>(@this.Name, sw.ElapsedMilliseconds, data));
+                                            else
+                                                Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
+                                                    (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
 
                                             lock (ticksLock)
                                             {
@@ -509,11 +519,27 @@ namespace Sweet.Redis.ConsoleTest
                                     }
                                     finally
                                     {
-                                        if (transactional &&
-                                            ((IRedisTransaction)rdb).Execute())
+                                        if (transactional)
                                         {
-                                            for (var i = 0; i < results.Count; i++)
+                                            var sw = new Stopwatch();
+                                            
+                                            sw.Restart();
+                                            var execResult = ((IRedisTransaction)rdb).Execute();
+                                            sw.Stop();
 
+                                            ticks += sw.ElapsedTicks;
+
+                                            if (execResult)
+                                            {
+                                                for (var j = 0; j < results.Count; j++)
+                                                {
+                                                    var tuple = results[i];
+                                                    var data = tuple.Item3;
+
+                                                    Console.WriteLine(tuple.Item1 + ": Processed, " + tuple.Item2.ToString("D3") + " msec, " +
+                                                        (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
+                                                }
+                                            }
                                         }
                                         autoReset.Set();
                                     }
