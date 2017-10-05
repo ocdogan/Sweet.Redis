@@ -31,7 +31,7 @@ namespace Sweet.Redis
         internal RedisResponse()
         { }
 
-        internal RedisResponse(RedisRawResponse value)
+        public RedisResponse(RedisRawResponse value)
             : base(value)
         { }
 

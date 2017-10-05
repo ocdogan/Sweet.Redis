@@ -356,7 +356,7 @@ namespace Sweet.Redis.ConsoleTest
             MultiThreadingBase(12, 2, 10, 50, "medium_text", mediumText, true, 5,
                                (rdb, dbIndex) =>
             {
-                rdb.Strings.Get("medium_text");
+                var result = rdb.Strings.Get("medium_text");
                 return mediumBytes;
             }, true);
         }
@@ -413,7 +413,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void MultiThreadingBase(int dbIndex, int maxCount, int threadCount, int loopCount,
                                        string testKey, string testText, bool requireKeyPress,
-                                       int sleepSecs, Func<IRedisDb, int, byte[]> proc, bool transactional = false)
+                                       int sleepSecs, Func<IRedisDb, int, RedisResult> proc, bool transactional = false)
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                      // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
@@ -485,6 +485,7 @@ namespace Sweet.Redis.ConsoleTest
                                 var autoReset = tupple.Item2;
                                 using (var rdb = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
                                 {
+                                    var results = new List<RedisResult>();
                                     try
                                     {
                                         var @this = tupple.Item1;
@@ -494,7 +495,7 @@ namespace Sweet.Redis.ConsoleTest
                                         for (var j = 0; j < loopCount; j++)
                                         {
                                             sw.Restart();
-                                            var data = proc(rdb, dbIndex);
+                                            var data = proc(rdb, dbIndex, results);
                                             sw.Stop();
 
                                             Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
@@ -508,8 +509,12 @@ namespace Sweet.Redis.ConsoleTest
                                     }
                                     finally
                                     {
-                                        if (transactional)
-                                            ((IRedisTransaction)rdb).Execute();
+                                        if (transactional &&
+                                            ((IRedisTransaction)rdb).Execute())
+                                        {
+                                            for (var i = 0; i < results.Count; i++)
+
+                                        }
                                         autoReset.Set();
                                     }
                                 }

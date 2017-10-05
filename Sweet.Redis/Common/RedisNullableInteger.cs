@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisNullableInteger()
         { }
 
-        internal RedisNullableInteger(long? value)
+        public RedisNullableInteger(long? value)
             : base(value)
         { }
 

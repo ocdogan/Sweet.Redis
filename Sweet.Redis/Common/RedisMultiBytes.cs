@@ -34,7 +34,7 @@ namespace Sweet.Redis
         internal RedisMultiBytes()
         { }
 
-        internal RedisMultiBytes(byte[][] value)
+        public RedisMultiBytes(byte[][] value)
             : base(value)
         { }
 

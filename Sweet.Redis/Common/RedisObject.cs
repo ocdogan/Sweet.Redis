@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisObject()
         { }
 
-        internal RedisObject(object value)
+        public RedisObject(object value)
             : base(value)
         { }
 

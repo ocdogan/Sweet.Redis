@@ -28,9 +28,19 @@ namespace Sweet.Redis
 {
     public class RedisNull : RedisResult<RedisNullVal>
     {
+        #region Static Members
+
+        private static readonly RedisNull Default = new RedisNull(null);
+
+        #endregion Static Members
+
         #region .Ctors
 
         internal RedisNull()
+        { }
+
+        private RedisNull(object dummy)
+            : base(RedisNullVal.Value)
         { }
 
         #endregion .Ctors
@@ -50,7 +60,10 @@ namespace Sweet.Redis
             }
         }
 
-        public override RedisResultType Type { get { return RedisResultType.Null; } }
+        public override RedisResultType Type 
+        { 
+            get { return RedisResultType.Null; } 
+        }
 
         #endregion Properties
 

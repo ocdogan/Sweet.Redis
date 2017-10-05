@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisBool()
         { }
 
-        internal RedisBool(bool value)
+        public RedisBool(bool value)
             : base(value)
         { }
 

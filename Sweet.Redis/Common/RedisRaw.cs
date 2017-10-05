@@ -31,7 +31,7 @@ namespace Sweet.Redis
         internal RedisRaw()
         { }
 
-        internal RedisRaw(RedisRawObject value)
+        public RedisRaw(RedisRawObject value)
             : base(value)
         { }
 

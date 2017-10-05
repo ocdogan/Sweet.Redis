@@ -34,7 +34,7 @@ namespace Sweet.Redis
         internal RedisMultiString()
         { }
 
-        internal RedisMultiString(string[] value)
+        public RedisMultiString(string[] value)
             : base(value)
         { }
 

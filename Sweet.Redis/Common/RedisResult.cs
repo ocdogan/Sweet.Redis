@@ -36,7 +36,7 @@ namespace Sweet.Redis
             : base()
         { }
 
-        internal RedisResult(T value)
+        public RedisResult(T value)
             : base(value)
         { }
     }
@@ -48,11 +48,11 @@ namespace Sweet.Redis
         internal RedisResult()
         { }
 
-        internal RedisResult(TValue value)
+        public RedisResult(TValue value)
             : base(value)
         { }
 
-        internal RedisResult(TValue value, RedisResultStatus status)
+        public RedisResult(TValue value, RedisResultStatus status)
             : base(value, status)
         { }
 
@@ -178,14 +178,14 @@ namespace Sweet.Redis
         internal RedisResult()
         { }
 
-        internal RedisResult(object value)
+        public RedisResult(object value)
             : this()
         {
             m_RawData = value;
             m_Status = RedisResultStatus.Completed;
         }
 
-        internal RedisResult(object value, RedisResultStatus status)
+        public RedisResult(object value, RedisResultStatus status)
             : this()
         {
             m_RawData = value;

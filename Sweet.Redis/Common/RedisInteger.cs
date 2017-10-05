@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisInteger()
         { }
 
-        internal RedisInteger(long value)
+        public RedisInteger(long value)
             : base(value)
         { }
 

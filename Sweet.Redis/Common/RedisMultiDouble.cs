@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisMultiDouble()
         { }
 
-        internal RedisMultiDouble(double[] value)
+        public RedisMultiDouble(double[] value)
             : base(value)
         { }
 

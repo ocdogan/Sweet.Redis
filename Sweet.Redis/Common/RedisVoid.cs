@@ -28,6 +28,12 @@ namespace Sweet.Redis
 {
     public class RedisVoid : RedisResult<RedisVoidVal>
     {
+        #region Static Members
+
+        private static readonly RedisVoid Default = new RedisVoid(true);
+
+        #endregion
+
         #region .Ctors
 
         internal RedisVoid()
@@ -35,11 +41,10 @@ namespace Sweet.Redis
             m_RawData = RedisVoidVal.Value;
         }
 
-        internal RedisVoid(bool completed = true)
+        internal RedisVoid(bool dummy)
         {
             m_RawData = RedisVoidVal.Value;
-            if (completed)
-                SetCompleted();
+            SetCompleted();
         }
 
         #endregion .Ctors

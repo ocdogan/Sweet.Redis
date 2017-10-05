@@ -34,7 +34,7 @@ namespace Sweet.Redis
         internal RedisMultiInteger()
         { }
 
-        internal RedisMultiInteger(long[] value)
+        public RedisMultiInteger(long[] value)
             : base(value)
         { }
 

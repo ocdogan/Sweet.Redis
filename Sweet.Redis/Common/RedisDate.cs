@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisDate()
         { }
 
-        internal RedisDate(DateTime value)
+        public RedisDate(DateTime value)
             : base(value)
         { }
 
