@@ -365,7 +365,7 @@ namespace Sweet.Redis
 
         internal static RedisResult ToRedisResult(this object obj)
         {
-            if (obj != null)
+            if (!ReferenceEquals(obj, null))
             {
                 var tc = Type.GetTypeCode(obj.GetType());
                 switch (tc)
@@ -426,6 +426,69 @@ namespace Sweet.Redis
             }
             return null;
         }
+
+        internal static RedisResult<T> ToRedisResult<T>(this T obj)
+        {
+            if (!ReferenceEquals(obj, null))
+            {
+                var tc = Type.GetTypeCode(typeof(T));
+                switch (tc)
+                {
+                    case TypeCode.Object:
+                        if (obj is RedisResult)
+                            return (RedisResult<T>)(RedisResult)(object)obj;
+                        if (obj is byte[])
+                            return (RedisResult<T>)(object)(RedisBytes)(byte[])(object)obj;
+                        if (obj is byte[][])
+                            return (RedisResult<T>)(object)(RedisMultiBytes)(byte[][])(object)obj;
+                        if (obj is string[])
+                            return (RedisResult<T>)(object)(RedisMultiString)(string[])(object)obj;
+                        if (obj is long[])
+                            return (RedisResult<T>)(object)(RedisMultiInteger)(long[])(object)obj;
+                        if (obj is int[])
+                            return (RedisResult<T>)(object)(RedisMultiInteger)(int[])(object)obj;
+                        if (obj is double[])
+                            return (RedisResult<T>)(object)(RedisMultiDouble)(double[])(object)obj;
+                        if (obj is decimal[])
+                            return (RedisResult<T>)(object)(RedisMultiDouble)(decimal[])(object)obj;
+                        if (obj is float[])
+                            return (RedisResult<T>)(object)(RedisMultiDouble)(float[])(object)obj;
+                        if (obj is short[])
+                            return (RedisResult<T>)(object)(RedisMultiInteger)(short[])(object)obj;
+                        return (RedisResult<T>)(object)(RedisString)obj.ToString();
+                    case TypeCode.String:
+                        return (RedisResult<T>)(object)(RedisString)(string)(object)obj;
+                    case TypeCode.Int32:
+                        return (RedisResult<T>)(object)(RedisInteger)(int)(object)obj;
+                    case TypeCode.Int64:
+                        return (RedisResult<T>)(object)(RedisInteger)(long)(object)obj;
+                    case TypeCode.Decimal:
+                        return (RedisResult<T>)(object)(RedisDouble)(decimal)(object)obj;
+                    case TypeCode.Double:
+                        return (RedisResult<T>)(object)(RedisDouble)(double)(object)obj;
+                    case TypeCode.Boolean:
+                        return (RedisResult<T>)(object)(RedisBool)(bool)(object)obj;
+                    case TypeCode.Single:
+                        return (RedisResult<T>)(object)(RedisDouble)(float)(object)obj;
+                    case TypeCode.Int16:
+                        return (RedisResult<T>)(object)(RedisInteger)(short)(object)obj;
+                    case TypeCode.UInt32:
+                        return (RedisResult<T>)(object)(RedisInteger)(uint)(object)obj;
+                    case TypeCode.UInt64:
+                        return (RedisResult<T>)(object)(RedisInteger)(ulong)(object)obj;
+                    case TypeCode.UInt16:
+                        return (RedisResult<T>)(object)(RedisInteger)(ushort)(object)obj;
+                    case TypeCode.DateTime:
+                        return (RedisResult<T>)(object)(RedisInteger)((DateTime)(object)obj).Ticks;
+                    case TypeCode.Char:
+                        return (RedisResult<T>)(object)(RedisString)obj.ToString();
+                    case TypeCode.Byte:
+                        return (RedisResult<T>)(object)(RedisBytes)(new byte[] { (byte)(object)obj });
+                }
+            }
+            return null;
+        }
+
         #endregion Conversion
 
         #region ToBytesArray
