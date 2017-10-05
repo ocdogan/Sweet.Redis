@@ -99,6 +99,8 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region Execution Methods
+
         #region IRedisConnection Execution Methods
 
         public RedisBool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
@@ -782,6 +784,8 @@ namespace Sweet.Redis
         }
 
         #endregion Common Execution Methods
+
+        #endregion Execution Methods
 
         #region WriteTo Methods
 

@@ -74,13 +74,14 @@
     <Compile Include="Common\RedisServerInfoStatsSection.cs" />
     <Compile Include="Common\RedisServerInfoReplicationSection.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
-    <Compile Include="Common\RedisTransactionalRequest.cs" />
-    <Compile Include="Common\RedisTransactionState.cs" />
+    <Compile Include="Common\RedisBatchRequest.cs" />
+    <Compile Include="Common\RedisBatchState.cs" />
     <Compile Include="Common\RedisVoid.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\RedisVoidVal.cs" />
     <Compile Include="Connection\IRedisCommandSet.cs" />
     <Compile Include="Connection\IRedisConnectionPool.cs" />
+    <Compile Include="Connection\IRedisPipeline.cs" />
     <Compile Include="Connection\IRedisTransaction.cs" />
     <Compile Include="Connection\RedisActionBag.cs" />
     <Compile Include="Connection\RedisAsyncRequestQ.cs" />
@@ -93,6 +94,8 @@
     <Compile Include="Connection\RedisContinuousReader.cs" />
     <Compile Include="Connection\RedisMonitorChannel.cs" />
     <Compile Include="Connection\RedisMonitorMessage.cs" />
+    <Compile Include="Connection\RedisPipeline.cs" />
+    <Compile Include="Connection\RedisPipelineBase.cs" />
     <Compile Include="Connection\RedisSingleResponseReader.cs" />
     <Compile Include="Connection\RedisTransaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

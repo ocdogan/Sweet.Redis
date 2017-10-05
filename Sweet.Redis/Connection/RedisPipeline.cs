@@ -32,11 +32,11 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisTransaction : RedisPipelineBase, IRedisTransaction
+    internal class RedisPipeline : RedisPipelineBase, IRedisPipeline
     {
         #region .Ctors
 
-        public RedisTransaction(RedisConnectionPool pool, int db, bool throwOnError = true)
+        public RedisPipeline(RedisConnectionPool pool, int db, bool throwOnError = true)
             : base(pool, db, throwOnError)
         { }
 
@@ -46,22 +46,19 @@ namespace Sweet.Redis
 
         #region Execution Methods
 
-        public bool Commit()
+        public bool Execute()
         {
             return Flush();
         }
 
-        public bool Discard()
+        public bool Cancel()
         {
             return Rollback();
         }
 
         protected override void OnBeforeFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
         {
-            var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
-            var multiResult = multiCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
-
-            processNextChain = multiResult;
+            processNextChain = true;
         }
 
         protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)

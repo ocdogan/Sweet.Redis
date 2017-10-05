@@ -22,29 +22,14 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    public interface IRedisDb : IRedisDisposable
+    public enum RedisBatchState : long
     {
-        Guid Id { get; }
-        int DbIndex { get; }
-        bool ThrowOnError { get; }
-
-        RedisConnectionPool Pool { get; }
-
-        IRedisConnectionCommands Connection { get; }
-        IRedisGeoCommands Geo { get; }
-        IRedisHashesCommands Hashes { get; }
-        IRedisHyperLogLogCommands HyperLogLogCommands { get; }
-        IRedisKeysCommands Keys { get; }
-        IRedisListsCommands Lists { get; }
-        IRedisPubSubCommands PubSubs { get; }
-        IRedisScriptingCommands Scripting { get; }
-        IRedisServerCommands Server { get; }
-        IRedisSetsCommands Sets { get; }
-        IRedisSortedSetsCommands SortedSets { get; }
-        IRedisStringsCommands Strings { get; }
+        Initialized = 0L,
+        WaitingCommit = 1L,
+        Executing = 2L,
+        Failed = 3L,
+        Disposed = 4L
     }
 }

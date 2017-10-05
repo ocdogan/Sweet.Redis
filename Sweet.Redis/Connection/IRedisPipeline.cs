@@ -22,14 +22,15 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+
 namespace Sweet.Redis
 {
-    public enum RedisTransactionState : long
+    public interface IRedisPipeline : IRedisDb, IRedisDisposable
     {
-        Initiated = 0L,
-        Ready = 1L,
-        Executing = 2L,
-        Failed = 3L,
-        Disposed = 4L
+        bool Execute();
+        bool Cancel();
+
+        RedisBatchState Status { get; }
     }
 }

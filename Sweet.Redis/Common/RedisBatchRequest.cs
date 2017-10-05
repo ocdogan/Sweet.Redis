@@ -29,12 +29,12 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisTransactionalRequest<T> : RedisRequest<T>
+    internal class RedisBatchRequest<T> : RedisRequest<T>
         where T : RedisResult
     {
         #region .Ctors
 
-        public RedisTransactionalRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
+        public RedisBatchRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
             : base(command, expectation, okIf, true)
         { }
 

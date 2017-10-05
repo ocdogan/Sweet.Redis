@@ -30,6 +30,7 @@ namespace Sweet.Redis
     {
         bool Commit();
         bool Discard();
-        RedisTransactionState Status { get; }
+
+        RedisBatchState Status { get; }
     }
 }
