@@ -56,19 +56,10 @@ namespace Sweet.Redis
             return Rollback();
         }
 
-        protected override void OnBeforeFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
+        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
-            processNextChain = true;
-        }
-
-        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
-        {
-            processNextChain = Process(requests, socket, settings);
-        }
-
-        protected override void OnAfterFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
-        {
-            processNextChain = Exec(requests, socket, settings);
+            success = Process(requests, socket, settings);
+            success = Exec(requests, socket, settings);
         }
 
         private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)

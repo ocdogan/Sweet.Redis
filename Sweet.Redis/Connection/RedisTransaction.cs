@@ -56,22 +56,26 @@ namespace Sweet.Redis
             return Rollback();
         }
 
-        protected override void OnBeforeFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
+        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
             var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
             var multiResult = multiCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
 
-            processNextChain = multiResult;
-        }
+            success = multiResult;
+            if (!success)
+            {
+                Cancel(requests);
+                return;
+            }
 
-        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
-        {
-            processNextChain = Process(requests, socket, settings);
-        }
+            success = Process(requests, socket, settings);
+            if (!success)
+            {
+                Discard(requests, socket, settings);
+                return;
+            }
 
-        protected override void OnAfterFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
-        {
-            processNextChain = Exec(requests, socket, settings);
+            success = Exec(requests, socket, settings);
         }
 
         private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)

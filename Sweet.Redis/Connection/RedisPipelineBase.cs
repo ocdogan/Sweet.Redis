@@ -117,34 +117,15 @@ namespace Sweet.Redis
                             return false;
                         }
 
-                        var settings = connection.Settings;
-
-                        bool processNextChain;
-                        OnBeforeFlush(requests, socket, settings, out processNextChain);
-
-                        if (!processNextChain)
-                        {
-                            innerState = RedisBatchState.Failed;
-                            Cancel(requests);
-
-                            return false;
-                        }
-
                         innerState = RedisBatchState.Executing;
-                        OnFlush(requests, socket, settings, out processNextChain);
 
-                        if (!processNextChain || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
+                        bool success;
+                        OnFlush(requests, socket, connection.Settings, out success);
+
+                        if (!success || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
                         {
                             innerState = RedisBatchState.Failed;
-                            Discard(requests, socket, settings);
-                            return false;
-                        }
-
-                        OnAfterFlush(requests, socket, settings, out processNextChain);
-                        if (!processNextChain)
-                        {
-                            innerState = RedisBatchState.Failed;
-                            Discard(requests, socket, settings);
+                            Discard(requests, socket, connection.Settings);
                             return false;
                         }
 
@@ -162,19 +143,19 @@ namespace Sweet.Redis
             return false;
         }
 
-        protected virtual void OnBeforeFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
+        protected virtual void OnBeforeFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
-            processNextChain = true;
+            success = true;
         }
 
-        protected virtual void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
+        protected virtual void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
-            processNextChain = true;
+            success = true;
         }
 
-        protected virtual void OnAfterFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool processNextChain)
+        protected virtual void OnAfterFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
-            processNextChain = true;
+            success = true;
         }
         
         protected virtual bool Rollback()
