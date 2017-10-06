@@ -83,28 +83,21 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_State, (long)RedisBatchState.Executing,
                 (long)RedisBatchState.WaitingCommit) == (long)RedisBatchState.WaitingCommit)
             {
-                var innerState = RedisBatchState.Initialized;
+                var success = false;
                 try
                 {
                     var requests = Interlocked.Exchange(ref m_RequestQ, null);
                     if (requests == null)
-                    {
-                        innerState = RedisBatchState.Initialized;
                         return false;
-                    }
 
                     var requestCount = requests.Count;
                     if (requestCount == 0)
-                    {
-                        innerState = RedisBatchState.Initialized;
                         return false;
-                    }
 
                     using (var connection = Pool.Connect(DbIndex))
                     {
                         if (connection == null)
                         {
-                            innerState = RedisBatchState.Failed;
                             Cancel(requests);
                             return false;
                         }
@@ -112,32 +105,28 @@ namespace Sweet.Redis
                         var socket = connection.Connect();
                         if (!socket.IsConnected())
                         {
-                            innerState = RedisBatchState.Failed;
                             Cancel(requests);
                             return false;
                         }
 
-                        innerState = RedisBatchState.Executing;
-
-                        bool success;
                         OnFlush(requests, socket, connection.Settings, out success);
 
                         if (!success || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
                         {
-                            innerState = RedisBatchState.Failed;
+                            success = false;
                             Discard(requests, socket, connection.Settings);
                             return false;
                         }
 
-                        innerState = RedisBatchState.Initialized;
+                        success = true;
                         return true;
                     }
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_State, innerState == RedisBatchState.Initialized ?
-                                         (long)RedisBatchState.Initialized :
-                                         (long)RedisBatchState.Failed);
+                    Interlocked.Exchange(ref m_State, success ? 
+                                    (long)RedisBatchState.Ready : 
+                                    (long)RedisBatchState.Failed);
                 }
             }
             return false;
@@ -177,7 +166,7 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    Interlocked.CompareExchange(ref m_State, (long)RedisBatchState.Initialized,
+                    Interlocked.CompareExchange(ref m_State, (long)RedisBatchState.Ready,
                         (long)RedisBatchState.WaitingCommit);
                 }
                 return true;
@@ -187,31 +176,24 @@ namespace Sweet.Redis
 
         protected virtual void Discard(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, Exception exception = null)
         {
-            try
+            if (requests != null)
             {
-                if (requests != null)
+                var requestCount = requests.Count;
+                for (var i = 0; i < requestCount; i++)
                 {
-                    var requestCount = requests.Count;
-                    for (var j = 0; j < requestCount; j++)
+                    try
                     {
-                        try
+                        var request = requests[i];
+                        if (request != null)
                         {
                             if (exception == null)
-                                requests[j].Cancel();
+                                request.Cancel();
                             else
-                                requests[j].SetException(exception);
+                                request.SetException(exception);
                         }
-                        catch (Exception)
-                        { }
                     }
-                }
-            }
-            finally
-            {
-                if (socket.IsConnected())
-                {
-                    var discardCommand = new RedisCommand(DbIndex, RedisCommands.Discard);
-                    discardCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
+                    catch (Exception)
+                    { }
                 }
             }
         }
@@ -223,11 +205,13 @@ namespace Sweet.Redis
                 var count = requests.Count;
                 if (count > 0)
                 {
-                    for (var j = Math.Max(0, start); j < count; j++)
+                    for (var i = Math.Max(0, start); i < count; i++)
                     {
                         try
                         {
-                            requests[j].Cancel();
+                            var request = requests[i];
+                            if (request != null)
+                                request.Cancel();
                         }
                         catch (Exception)
                         { }
@@ -243,11 +227,13 @@ namespace Sweet.Redis
                 var count = requests.Count;
                 if (count > 0)
                 {
-                    for (var j = 0; j < count; j++)
+                    for (var i = 0; i < count; i++)
                     {
                         try
                         {
-                            requests[j].SetException(exception);
+                            var request = requests[i];
+                            if (request != null)
+                                request.SetException(exception);
                         }
                         catch (Exception)
                         { }
@@ -264,17 +250,23 @@ namespace Sweet.Redis
             if (requests == null)
                 requests = m_RequestQ = new List<RedisRequest>();
 
-            var request = new RedisBatchRequest<T>(command, expectation, okIf);
+            var request = CreateRequest<T>(command, expectation, okIf);
             requests.Add(request);
 
             var result = request.Result;
             return !ReferenceEquals(result, null) ? (T)(object)result : default(T);
         }
 
+        protected virtual RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf) 
+            where T : RedisResult
+        {
+            return new RedisBatchRequest<T>(command, expectation, okIf);
+        }
+
         protected void SetWaitingCommit()
         {
             var currentState = (RedisBatchState)Interlocked.CompareExchange(ref m_State, (long)RedisBatchState.WaitingCommit,
-                (long)RedisBatchState.Initialized);
+                (long)RedisBatchState.Ready);
 
             if (currentState == RedisBatchState.Executing)
                 throw new RedisException("Can not expect any command while executing");

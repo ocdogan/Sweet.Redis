@@ -34,8 +34,9 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisBatchRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
-            : base(command, expectation, okIf, true)
+        public RedisBatchRequest(RedisCommand command, RedisCommandExpect expectation, 
+            string okIf = null, RedisRequestType requestType = RedisRequestType.Pipelined)
+            : base(command, expectation, okIf, requestType)
         { }
 
         #endregion .Ctors

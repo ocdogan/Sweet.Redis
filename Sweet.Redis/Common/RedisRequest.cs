@@ -44,7 +44,7 @@ namespace Sweet.Redis
         private DateTime m_CreationTime;
 
         private long m_Id;
-        private bool m_Transactional;
+        private RedisRequestType m_RequestType;
         private string m_OKIf;
         private RedisCommand m_Command;
         private RedisCommandExpect m_Expectation;
@@ -55,14 +55,14 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
-            string okIf = null, object stateObject = null, bool transactional = false)
+            string okIf = null, object stateObject = null, RedisRequestType requestType = RedisRequestType.Default)
         {
             m_Id = NextId();
             m_OKIf = okIf;
             m_Expectation = expectation;
             m_Command = command;
             m_StateObject = stateObject;
-            m_Transactional = transactional;
+            m_RequestType = requestType;
             m_CreationTime = DateTime.UtcNow;
         }
 
@@ -114,27 +114,42 @@ namespace Sweet.Redis
 
         public long Id { get { return m_Id; } }
 
+        public virtual bool IsAsync
+        {
+            get { return RequestType == RedisRequestType.Async; }
+        }
+
         public abstract bool IsCanceled { get; }
 
         public abstract bool IsCompleted { get; }
 
         public abstract bool IsFaulted { get; }
 
+        public virtual bool IsPipelined
+        {
+            get { return RequestType == RedisRequestType.Pipelined; }
+        }
+
         public abstract bool IsStarted { get; }
+
+        public virtual bool IsTransactional
+        {
+            get { return RequestType == RedisRequestType.Transactional; }
+        }
 
         public string OKIf
         {
             get { return m_OKIf; }
         }
 
+        public virtual RedisRequestType RequestType
+        {
+            get { return m_RequestType; }
+        }
+
         public object StateObject
         {
             get { return m_StateObject; }
-        }
-
-        public bool Transactional
-        {
-            get { return m_Transactional; }
         }
 
         #endregion Properties

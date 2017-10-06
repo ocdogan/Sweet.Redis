@@ -26,7 +26,7 @@ namespace Sweet.Redis
 {
     public enum RedisBatchState : long
     {
-        Initialized = 0L,
+        Ready = 0L,
         WaitingCommit = 1L,
         Executing = 2L,
         Failed = 3L,

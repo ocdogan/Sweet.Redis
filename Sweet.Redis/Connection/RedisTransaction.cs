@@ -78,6 +78,11 @@ namespace Sweet.Redis
             success = Exec(requests, socket, settings);
         }
 
+        protected override RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf)
+        {
+            return new RedisTransactionalRequest<T>(command, expectation, okIf);
+        }
+
         private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
         {
             if (requests != null)
@@ -105,6 +110,19 @@ namespace Sweet.Redis
                 return true;
             }
             return false;
+        }
+
+        protected override void Discard(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, Exception exception = null)
+        {
+            try
+            {
+                base.Discard(requests, socket, settings, exception);
+            }
+            finally
+            {
+                if (socket.IsConnected())
+                    (new RedisCommand(DbIndex, RedisCommands.Discard)).ExpectSimpleString(socket, settings, RedisConstants.OK);
+            }
         }
 
         private bool Exec(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)

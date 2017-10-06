@@ -62,6 +62,11 @@ namespace Sweet.Redis
             success = Exec(requests, socket, settings);
         }
 
+        protected override RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf)
+        {
+            return new RedisPipelineRequest<T>(command, expectation, okIf);
+        }
+
         private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
         {
             if (requests != null)

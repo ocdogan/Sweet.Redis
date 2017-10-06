@@ -23,32 +23,21 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
+using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal abstract class RedisAsyncRequest : RedisRequest
+    internal class RedisTransactionalRequest<T> : RedisBatchRequest<T>
+        where T : RedisResult
     {
         #region .Ctors
 
-        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
-                                 string okIf = null, object stateObject = null)
-            : base(command, expectation, okIf, stateObject, RedisRequestType.Async)
+        public RedisTransactionalRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
+            : base(command, expectation, okIf, RedisRequestType.Transactional)
         { }
 
         #endregion .Ctors
-
-        #region Methods
-
-        public abstract void Process(IRedisConnection connection, int timeoutMilliseconds = -1);
-
-        public abstract void Process(RedisSocket socket, RedisSettings settings, int timeoutMilliseconds = -1);
-
-        public abstract bool Expire(int timeoutMilliseconds = -1);
-
-        #endregion Methods
     }
 }

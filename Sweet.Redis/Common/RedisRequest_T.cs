@@ -67,8 +67,9 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null, bool transactional = false)
-            : base(command, expectation, okIf, null, transactional)
+        public RedisRequest(RedisCommand command, RedisCommandExpect expectation, 
+            string okIf = null, RedisRequestType requestType = RedisRequestType.Default)
+            : base(command, expectation, okIf, null, requestType)
         { }
 
         #endregion .Ctors
@@ -288,7 +289,7 @@ namespace Sweet.Redis
 
                     settings = settings ?? RedisSettings.Default;
 
-                    if (Transactional)
+                    if (IsTransactional)
                     {
                         command.ExpectSimpleString(socket, settings, RedisConstants.OK);
                         return;
