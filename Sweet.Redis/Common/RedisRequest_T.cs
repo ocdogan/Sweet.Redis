@@ -257,7 +257,7 @@ namespace Sweet.Redis
                 if (connection == null || connection.Disposed)
                     Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
                 else
-                    ProcessInternal(connection.Connect(), connection.Settings);
+                    ProcessInternal(connection.Connect(), connection.Settings ?? RedisSettings.Default);
             }
         }
 
@@ -268,7 +268,7 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) ==
                 (long)RequestState.Waiting)
             {
-                ProcessInternal(socket, settings);
+                ProcessInternal(socket, settings ?? RedisSettings.Default);
             }
         }
 

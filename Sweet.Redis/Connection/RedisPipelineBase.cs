@@ -109,12 +109,14 @@ namespace Sweet.Redis
 
                         try
                         {
-                            OnFlush(requests, socket, connection.Settings, out success);
+                            var settings = connection.Settings ?? RedisSettings.Default;
+
+                            OnFlush(requests, socket, settings, out success);
 
                             if (!success || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
                             {
                                 success = false;
-                                Discard(requests, socket, connection.Settings);
+                                Discard(requests, socket, settings);
                                 return false;
                             }
 
@@ -276,60 +278,6 @@ namespace Sweet.Redis
 
             if (currentState == RedisBatchState.Executing)
                 throw new RedisFatalException("Can not expect any command while executing");
-        }
-
-        protected virtual bool ProcessResult(IList<RedisRequest> requests, RedisRawObject rawObject)
-        {
-            if (requests != null)
-            {
-                var requestCount = requests.Count;
-                if (requestCount > 0)
-                {
-                    var itemCount = 0;
-                    IList<RedisRawObject> items = null;
-
-                    if (!ReferenceEquals(rawObject, null))
-                    {
-                        items = rawObject.Items;
-                        if (items != null)
-                            itemCount = items.Count;
-                    }
-
-                    for (var i = 0; i < requestCount; i++)
-                    {
-                        try
-                        {
-                            var request = requests[i];
-                            if (ReferenceEquals(request, null))
-                                continue;
-
-                            var child = (i < itemCount) ? items[i] : null;
-                            if (ReferenceEquals(child, null))
-                            {
-                                request.Cancel();
-                                continue;
-                            }
-
-                            ProcessRequest(request, child);
-                        }
-                        catch (Exception e)
-                        {
-                            for (var j = 0; j < requestCount; j++)
-                            {
-                                try
-                                {
-                                    requests[j].SetException(e);
-                                }
-                                catch (Exception)
-                                { }
-                            }
-                            throw;
-                        }
-                    }
-                    return true;
-                }
-            }
-            return false;
         }
 
         protected virtual void ProcessRequest(RedisRequest request, RedisRawObject rawObj)

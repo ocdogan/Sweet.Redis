@@ -58,6 +58,8 @@ namespace Sweet.Redis
 
         protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
+            settings = settings ?? RedisSettings.Default;
+
             success = Send(requests, socket, settings);
             if (success && socket.IsConnected())
                 success = Receive(requests, socket, settings);

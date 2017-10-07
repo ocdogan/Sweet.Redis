@@ -313,7 +313,7 @@ namespace Sweet.Redis
             Process(socket, settings, -1);
         }
 
-        public override void Process(IRedisConnection connection, int timeoutMilliseconds = -1)
+        public override void Process(IRedisConnection connection, int timeoutMilliseconds)
         {
             ValidateNotDisposed();
 
@@ -340,7 +340,7 @@ namespace Sweet.Redis
                         if (command == null || connection == null || connection.Disposed)
                             tcs.TrySetCanceled();
                         else
-                            Process(connection.Connect(), connection.Settings, timeoutMilliseconds);
+                            Process(connection.Connect(), connection.Settings ?? RedisSettings.Default, timeoutMilliseconds);
                     }
                 }
                 catch (Exception e)
@@ -350,7 +350,7 @@ namespace Sweet.Redis
             }
         }
 
-        public override void Process(RedisSocket socket, RedisSettings settings, int timeoutMilliseconds = -1)
+        public override void Process(RedisSocket socket, RedisSettings settings, int timeoutMilliseconds)
         {
             ValidateNotDisposed();
 

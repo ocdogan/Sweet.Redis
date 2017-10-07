@@ -151,6 +151,8 @@ namespace Sweet.Redis
 
         #region Constants
 
+        public const int RedisBatchBase = 1000;
+
         public const string FatalException = "Fatal exception";
 
         public const string OK = "OK";

@@ -86,6 +86,8 @@ namespace Sweet.Redis
                 var requestCount = requests.Count;
                 if (requestCount > 0)
                 {
+                    settings = settings ?? RedisSettings.Default;
+
                     for (var i = 0; i < requestCount; i++)
                     {
                         try
@@ -135,9 +137,72 @@ namespace Sweet.Redis
             {
                 var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
 
+                settings = settings ?? RedisSettings.Default;
+
                 var execResult = exec.ExpectArray(socket, settings);
                 if (!ReferenceEquals(execResult, null))
                     return ProcessResult(requests, execResult.Value);
+            }
+            return false;
+        }
+
+        protected virtual bool ProcessResult(IList<RedisRequest> requests, RedisRawObject rawObject)
+        {
+            if (requests != null)
+            {
+                var requestCount = requests.Count;
+                if (requestCount > 0)
+                {
+                    var itemCount = 0;
+                    IList<RedisRawObject> items = null;
+
+                    if (!ReferenceEquals(rawObject, null))
+                    {
+                        items = rawObject.Items;
+                        if (items != null)
+                            itemCount = items.Count;
+                        else
+                        {
+                            ProcessRequest(requests[0], rawObject);
+                            Cancel(requests, 1);
+
+                            return true;
+                        }
+                    }
+
+                    for (var i = 0; i < requestCount; i++)
+                    {
+                        try
+                        {
+                            var request = requests[i];
+                            if (ReferenceEquals(request, null))
+                                continue;
+
+                            var child = (i < itemCount) ? items[i] : null;
+                            if (ReferenceEquals(child, null))
+                            {
+                                request.Cancel();
+                                continue;
+                            }
+
+                            ProcessRequest(request, child);
+                        }
+                        catch (Exception e)
+                        {
+                            for (var j = 0; j < requestCount; j++)
+                            {
+                                try
+                                {
+                                    requests[j].SetException(e);
+                                }
+                                catch (Exception)
+                                { }
+                            }
+                            throw;
+                        }
+                    }
+                    return true;
+                }
             }
             return false;
         }

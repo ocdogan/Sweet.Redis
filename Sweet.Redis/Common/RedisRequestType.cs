@@ -29,11 +29,12 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal enum RedisRequestType
+    internal enum RedisRequestType : int
     {
-        Default,
-        Async,
-        Pipelined,
-        Transactional
+        Default = 0,
+        Async = 1,
+        Batch = RedisConstants.RedisBatchBase,
+        Pipelined = RedisConstants.RedisBatchBase + 1,
+        Transactional = RedisConstants.RedisBatchBase + 2
     }
 }

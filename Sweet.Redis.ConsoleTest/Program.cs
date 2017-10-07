@@ -56,10 +56,10 @@ namespace Sweet.Redis.ConsoleTest
 
             // Shutdown();
 
-            Transaction1();
+            // Transaction1();
             // Transaction2();
             // Transaction3();
-            // Transaction4();
+            Transaction4();
 
             // Pipeline1();
             // Pipeline2();
