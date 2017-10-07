@@ -150,6 +150,8 @@ namespace Sweet.Redis
 
         #endregion Socket
 
+        #region General
+
         internal static int IndexOf(this byte[] data, byte b, int startPos = 0, int length = -1)
         {
             if (data != null && length != 0)
@@ -217,6 +219,8 @@ namespace Sweet.Redis
             }
             return false;
         }
+
+        #endregion General
 
         #region Conversion
 

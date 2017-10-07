@@ -22,20 +22,16 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Concurrent;
-using System.Reflection;
-using System.Threading;
-
 namespace Sweet.Redis
 {
-    internal class RedisTransactionalRequest<T> : RedisBatchRequest<T>
+    internal class RedisBatchRequest<T> : RedisRequest<T>
         where T : RedisResult
     {
         #region .Ctors
 
-        public RedisTransactionalRequest(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
-            : base(command, expectation, okIf, RedisRequestType.Transactional)
+        public RedisBatchRequest(RedisCommand command, RedisCommandExpect expectation,
+            string okIf = null, RedisRequestType requestType = RedisRequestType.Pipelined)
+            : base(command, expectation, okIf, requestType)
         { }
 
         #endregion .Ctors

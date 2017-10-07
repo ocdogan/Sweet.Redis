@@ -42,7 +42,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading6();
             // MultiThreading7a();           
             // MultiThreading7b();
-            MultiThreading8();
+            // MultiThreading8();
 
             // MonitorTest1();
             // MonitorTest2();
@@ -57,9 +57,272 @@ namespace Sweet.Redis.ConsoleTest
             // Shutdown();
 
             // Transaction1();
+            // Transaction2();
+            // Transaction3();
+            // Transaction4();
+
+            // Pipeline1();
+            // Pipeline2();
+            // Pipeline3();
+            Pipeline4();
         }
 
+        #region Pipeline
+
+        static void Pipeline4()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var pipeline = pool.CreatePipeline())
+                {
+                    var sw = new Stopwatch();
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            sw.Restart();
+
+                            var list = new List<RedisResult>();
+                            for (var i = 0; i < 100; i++)
+                            {
+                                pipeline.Strings.Set("abc_" + i, i);
+                                var result = pipeline.Strings.Get("abc_" + i);
+
+                                list.Add(result);
+                            }
+
+                            pipeline.Execute();
+
+                            sw.Stop();
+
+                            sw.Stop();
+
+                            for (var i = 0; i < list.Count; i++)
+                                Console.WriteLine(list[i]);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void Pipeline3()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var pipeline = pool.CreatePipeline())
+                {
+                    var i = 0;
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            i++;
+                            pipeline.Strings.Set("abc_" + i, i);
+                            var result = pipeline.Strings.Get("abc_" + i);
+
+                            pipeline.Execute();
+
+                            string str = result;
+                            Console.WriteLine(str);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void Pipeline2()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var pipeline = pool.CreatePipeline())
+                {
+                    var sw = new Stopwatch();
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            sw.Restart();
+
+                            var list = new List<RedisResult>();
+                            for (var i = 0; i < 100; i++)
+                            {
+                                var result = pipeline.Connection.Ping(i + 1);
+                                list.Add(result);
+                            }
+
+                            pipeline.Execute();
+
+                            sw.Stop();
+
+                            for (var i = 0; i < list.Count; i++)
+                                Console.WriteLine(list[i]);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void Pipeline1()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var pipeline = pool.CreatePipeline())
+                {
+                    var i = 0;
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            var result = pipeline.Connection.Ping(++i);
+
+                            pipeline.Execute();
+
+                            Console.WriteLine(result);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        #endregion Pipeline
+
         #region Transaction
+
+        static void Transaction4()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var transaction = pool.BeginTransaction())
+                {
+                    var sw = new Stopwatch();
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            sw.Restart();
+
+                            var list = new List<RedisResult>();
+                            for (var i = 0; i < 100; i++)
+                            {
+                                transaction.Strings.Set("abc_" + i, i);
+                                var result = transaction.Strings.Get("abc_" + i);
+
+                                list.Add(result);
+                            }
+
+                            transaction.Commit();
+
+                            sw.Stop();
+
+                            sw.Stop();
+
+                            for (var i = 0; i < list.Count; i++)
+                                Console.WriteLine(list[i]);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
+
+        static void Transaction3()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var transaction = pool.BeginTransaction())
+                {
+                    var i = 0;
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            i++;
+                            transaction.Strings.Set("abc_" + i, i);
+                            var result = transaction.Strings.Get("abc_" + i);
+
+                            transaction.Commit();
+
+                            string str = result;
+                            Console.WriteLine(str);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
 
         static void Transaction2()
         {
@@ -68,11 +331,14 @@ namespace Sweet.Redis.ConsoleTest
             {
                 using (var transaction = pool.BeginTransaction())
                 {
+                    var sw = new Stopwatch();
                     do
                     {
                         try
                         {
                             Console.Clear();
+
+                            sw.Restart();
 
                             var list = new List<RedisResult>();
                             for (var i = 0; i < 100; i++)
@@ -83,6 +349,8 @@ namespace Sweet.Redis.ConsoleTest
 
                             transaction.Commit();
 
+                            sw.Stop();
+
                             for (var i = 0; i < list.Count; i++)
                                 Console.WriteLine(list[i]);
                         }
@@ -90,6 +358,9 @@ namespace Sweet.Redis.ConsoleTest
                         {
                             Console.WriteLine(e);
                         }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");
@@ -522,7 +793,7 @@ namespace Sweet.Redis.ConsoleTest
                                         if (transactional)
                                         {
                                             var sw = new Stopwatch();
-                                            
+
                                             sw.Restart();
                                             var execResult = ((IRedisTransaction)rdb).Commit();
                                             sw.Stop();

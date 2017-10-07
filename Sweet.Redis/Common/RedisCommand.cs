@@ -291,10 +291,9 @@ namespace Sweet.Redis
             else
             {
                 response = connection.SendReceive(this);
-
-                if (response == null && throwException)
+                if (ReferenceEquals(response, null) && throwException)
                     throw new RedisException("Corrupted redis response data");
-                HandleError(response);
+                response.HandleError();
             }
             return response;
         }
@@ -494,9 +493,9 @@ namespace Sweet.Redis
                 using (var reader = new RedisSingleResponseReader(settings))
                     response = reader.Execute(socket);
 
-                if (response == null && throwException)
+                if (ReferenceEquals(response, null) && throwException)
                     throw new RedisException("Corrupted redis response data");
-                HandleError(response);
+                response.HandleError();
             }
             return response;
         }
@@ -766,30 +765,13 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected static void HandleError(IRedisRawResponse response)
-        {
-            if (response != null)
-            {
-                if (response.Type == RedisRawObjectType.Error)
-                {
-                    var data = response.Data;
-                    throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
-                }
-
-                var items = response.Items;
-                if (items != null)
-                    for (var i = items.Count - 1; i > -1; i--)
-                        HandleError(items[i]);
-            }
-        }
-
         #endregion Common Execution Methods
 
         #endregion Execution Methods
 
         #region WriteTo Methods
 
-        public void WriteTo(Stream stream)
+        public void WriteTo(Stream stream, bool flush = true)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream");
@@ -797,21 +779,21 @@ namespace Sweet.Redis
             if (!stream.CanWrite)
                 throw new ArgumentException("Can not write to closed stream", "stream");
 
-            using (var writer = new RedisStreamWriter(stream, true))
+            using (var writer = new RedisStreamWriter(stream, flush))
             {
                 WriteTo(writer);
             }
         }
 
-        public void WriteTo(RedisSocket socket)
+        public void WriteTo(RedisSocket socket, bool flush = true)
         {
             if (socket == null)
                 throw new ArgumentNullException("socket");
 
-            WriteTo(socket.GetBufferedStream());
+            WriteTo(socket.GetBufferedStream(), flush);
         }
 
-        public Task WriteToAsync(Stream stream)
+        public Task WriteToAsync(Stream stream, bool flush = true)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream");
@@ -821,7 +803,7 @@ namespace Sweet.Redis
 
             Action action = () =>
             {
-                using (var writer = new RedisStreamWriter(stream, true))
+                using (var writer = new RedisStreamWriter(stream, flush))
                 {
                     WriteTo(writer);
                 }
@@ -829,7 +811,7 @@ namespace Sweet.Redis
             return action.InvokeAsync();
         }
 
-        public Task WriteToAsync(RedisSocket socket)
+        public Task WriteToAsync(RedisSocket socket, bool flush = true)
         {
             if (socket == null)
                 throw new ArgumentNullException("socket");
@@ -837,12 +819,12 @@ namespace Sweet.Redis
             Action<Stream> action = (stream) =>
             {
                 if (stream != null)
-                    WriteTo(stream);
+                    WriteTo(stream, flush);
             };
             return action.InvokeAsync(socket.GetBufferedStream());
         }
 
-        protected virtual void WriteTo(IRedisWriter writer)
+        public virtual void WriteTo(IRedisWriter writer)
         {
             var argsLength = m_Arguments != null ? m_Arguments.Length : 0;
 

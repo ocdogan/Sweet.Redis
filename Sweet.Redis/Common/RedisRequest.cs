@@ -23,10 +23,7 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -164,9 +161,9 @@ namespace Sweet.Redis
 
         public abstract void Cancel();
 
-        public abstract void Process(RedisSocket socket, RedisSettings settings);
-
         public abstract void Process(IRedisConnection connection);
+
+        public abstract void Process(RedisSocket socket, RedisSettings settings);
 
         public abstract void SetException(Exception exception);
 

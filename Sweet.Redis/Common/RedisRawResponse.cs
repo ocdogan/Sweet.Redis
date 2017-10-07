@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -352,6 +353,26 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_ReadOnlyList, new ReadOnlyCollection<IRedisRawResponse>(list));
 
             return list;
+        }
+
+        public void HandleError()
+        {
+            if (Type == RedisRawObjectType.Error)
+            {
+                var data = m_Data;
+                throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
+            }
+
+            var items = m_List;
+            if (items != null)
+            {
+                for (var i = items.Count - 1; i > -1; i--)
+                {
+                    var item = items[i];
+                    if (item != null)
+                        item.HandleError();
+                }
+            }
         }
 
         #endregion Methods

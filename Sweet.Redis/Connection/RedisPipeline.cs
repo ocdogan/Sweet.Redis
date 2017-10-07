@@ -23,12 +23,7 @@
 #endregion License
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -56,168 +51,102 @@ namespace Sweet.Redis
             return Rollback();
         }
 
-        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
-        {
-            success = Process(requests, socket, settings);
-            success = Exec(requests, socket, settings);
-        }
-
         protected override RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf)
         {
             return new RedisPipelineRequest<T>(command, expectation, okIf);
         }
 
-        private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
+        {
+            success = Send(requests, socket, settings);
+            if (success && socket.IsConnected())
+                success = Receive(requests, socket, settings);
+        }
+
+        private bool Send(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
         {
             if (requests != null)
             {
                 var requestCount = requests.Count;
-                for (var i = 0; i < requestCount; i++)
+                if (requests.Count > 0 && socket.IsConnected())
                 {
+                    var anySend = false;
+                    var stream = socket.GetBufferedStream();
                     try
                     {
-                        var request = requests[i];
-                        request.Process(socket, settings);
-
-                        if (!request.IsStarted)
+                        for (var i = 0; i < requestCount; i++)
                         {
-                            Discard(requests, socket, settings);
-                            return false;
+                            try
+                            {
+                                var request = requests[i];
+                                request.Command.WriteTo(stream, false);
+
+                                anySend = true;
+                            }
+                            catch (Exception)
+                            {
+                                Cancel(requests, i);
+                                break;
+                            }
                         }
                     }
-                    catch (Exception e)
+                    finally
                     {
-                        Discard(requests, socket, settings, e);
-                        throw;
+                        if (anySend)
+                            stream.Flush();
                     }
+                    return anySend;
                 }
-                return true;
             }
             return false;
         }
 
-        private bool Exec(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        private bool Receive(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
         {
             if (requests != null)
             {
-                var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
-                var execResult = exec.ExpectArray(socket, settings);
-
-                var itemCount = 0;
-                IList<RedisRawObject> items = null;
-
-                if (execResult != null)
-                {
-                    var raw = execResult.Value;
-                    if (raw != null)
-                    {
-                        items = raw.Items;
-                        if (items != null)
-                            itemCount = items.Count;
-                    }
-                }
-
                 var requestCount = requests.Count;
-                if (itemCount != requestCount)
+                if (requestCount > 0)
                 {
-                    Cancel(requests);
-                    return false;
-                }
-
-                for (var i = 0; i < requestCount; i++)
-                {
-                    try
+                    using (var reader = new RedisSingleResponseReader(settings))
                     {
-                        var request = requests[i];
-                        if (ReferenceEquals(request, null))
-                            continue;
-
-                        if (i >= itemCount)
-                        {
-                            request.Cancel();
-                            continue;
-                        }
-
-                        var child = items[i];
-                        if (ReferenceEquals(child, null))
-                        {
-                            request.Cancel();
-                            continue;
-                        }
-
-                        var data = child.Data;
-                        switch (request.Expectation)
-                        {
-                            case RedisCommandExpect.BulkString:
-                                {
-                                    var str = ReferenceEquals(data, null) ? null :
-                                        (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
-
-                                    request.SetResult(str);
-                                }
-                                break;
-                            case RedisCommandExpect.BulkStringBytes:
-                                {
-                                    data = ReferenceEquals(data, null) ? null :
-                                        (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
-
-                                    request.SetResult(data);
-                                }
-                                break;
-                            case RedisCommandExpect.SimpleString:
-                                {
-                                    var str = ReferenceEquals(data, null) ? null :
-                                        (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
-
-                                    if (String.IsNullOrEmpty(request.OKIf))
-                                        request.SetResult(str);
-                                    else
-                                        request.SetResult(String.Equals(request.OKIf, str));
-                                }
-                                break;
-                            case RedisCommandExpect.SimpleStringBytes:
-                                {
-                                    data = ReferenceEquals(data, null) ? null :
-                                        (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
-
-                                    if (String.IsNullOrEmpty(request.OKIf))
-                                        request.SetResult(data);
-                                    else
-                                        request.SetResult(Encoding.UTF8.GetBytes(request.OKIf).Equals(data));
-                                }
-                                break;
-                            case RedisCommandExpect.OK:
-                                request.SetResult(RedisConstants.OK.Equals(data));
-                                break;
-                            case RedisCommandExpect.One:
-                                request.SetResult(RedisConstants.One.Equals(data));
-                                break;
-                            case RedisCommandExpect.GreaterThanZero:
-                                request.SetResult(RedisConstants.Zero.CompareTo(data) == -1);
-                                break;
-                            case RedisCommandExpect.Nothing:
-                                request.SetResult(RedisVoidVal.Value);
-                                break;
-                            default:
-                                request.SetResult(data);
-                                break;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        for (var j = 0; j < requestCount; j++)
+                        for (var i = 0; i < requestCount; i++)
                         {
                             try
                             {
-                                requests[j].SetException(e);
+                                var request = requests[i];
+                                if (ReferenceEquals(request, null))
+                                    continue;
+
+                                var execResult = reader.Execute(socket);
+                                if (ReferenceEquals(execResult, null))
+                                    throw new RedisException("Corrupted redis response data");
+
+                                execResult.HandleError();
+
+                                var rawObj = RedisRawObject.ToObject(execResult);
+                                if (ReferenceEquals(rawObj, null))
+                                    throw new RedisException("Corrupted redis response data");
+
+                                ProcessRequest(request, rawObj);
                             }
-                            catch (Exception)
-                            { }
+                            catch (Exception e)
+                            {
+                                for (var j = i; j < requestCount; j++)
+                                {
+                                    try
+                                    {
+                                        requests[j].SetException(e);
+                                    }
+                                    catch (Exception)
+                                    { }
+                                }
+                                throw;
+                            }
                         }
-                        throw;
                     }
+                    return true;
                 }
-                return true;
             }
             return false;
         }

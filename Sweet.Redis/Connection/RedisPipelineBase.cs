@@ -23,12 +23,9 @@
 #endregion License
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -124,8 +121,8 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    Interlocked.Exchange(ref m_State, success ? 
-                                    (long)RedisBatchState.Ready : 
+                    Interlocked.Exchange(ref m_State, success ?
+                                    (long)RedisBatchState.Ready :
                                     (long)RedisBatchState.Failed);
                 }
             }
@@ -146,7 +143,7 @@ namespace Sweet.Redis
         {
             success = true;
         }
-        
+
         protected virtual bool Rollback()
         {
             ValidateNotDisposed();
@@ -257,7 +254,7 @@ namespace Sweet.Redis
             return !ReferenceEquals(result, null) ? (T)(object)result : default(T);
         }
 
-        protected virtual RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf) 
+        protected virtual RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf)
             where T : RedisResult
         {
             return new RedisBatchRequest<T>(command, expectation, okIf);
@@ -270,6 +267,129 @@ namespace Sweet.Redis
 
             if (currentState == RedisBatchState.Executing)
                 throw new RedisException("Can not expect any command while executing");
+        }
+
+        protected virtual bool ProcessResult(IList<RedisRequest> requests, RedisRawObject rawObject)
+        {
+            var itemCount = 0;
+            IList<RedisRawObject> items = null;
+
+            if (!ReferenceEquals(rawObject, null))
+            {
+                items = rawObject.Items;
+                if (items != null)
+                    itemCount = items.Count;
+            }
+
+            var requestCount = requests.Count;
+            if (itemCount != requestCount)
+            {
+                Cancel(requests);
+                return false;
+            }
+
+            for (var i = 0; i < requestCount; i++)
+            {
+                try
+                {
+                    var request = requests[i];
+                    if (ReferenceEquals(request, null))
+                        continue;
+
+                    if (i >= itemCount)
+                    {
+                        request.Cancel();
+                        continue;
+                    }
+
+                    var child = items[i];
+                    if (ReferenceEquals(child, null))
+                    {
+                        request.Cancel();
+                        continue;
+                    }
+
+                    ProcessRequest(request, child);
+                }
+                catch (Exception e)
+                {
+                    for (var j = 0; j < requestCount; j++)
+                    {
+                        try
+                        {
+                            requests[j].SetException(e);
+                        }
+                        catch (Exception)
+                        { }
+                    }
+                    throw;
+                }
+            }
+            return true;
+        }
+
+        protected virtual void ProcessRequest(RedisRequest request, RedisRawObject rawObj)
+        {
+            if (!ReferenceEquals(rawObj, null))
+            {
+                var data = rawObj.Data;
+                switch (request.Expectation)
+                {
+                    case RedisCommandExpect.BulkString:
+                        {
+                            var str = ReferenceEquals(data, null) ? null :
+                                (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
+
+                            request.SetResult(str);
+                        }
+                        break;
+                    case RedisCommandExpect.BulkStringBytes:
+                        {
+                            data = ReferenceEquals(data, null) ? null :
+                                (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
+
+                            request.SetResult(data);
+                        }
+                        break;
+                    case RedisCommandExpect.SimpleString:
+                        {
+                            var str = ReferenceEquals(data, null) ? null :
+                                (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
+
+                            if (String.IsNullOrEmpty(request.OKIf))
+                                request.SetResult(str);
+                            else
+                                request.SetResult(String.Equals(request.OKIf, str));
+                        }
+                        break;
+                    case RedisCommandExpect.SimpleStringBytes:
+                        {
+                            data = ReferenceEquals(data, null) ? null :
+                                (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
+
+                            if (String.IsNullOrEmpty(request.OKIf))
+                                request.SetResult(data);
+                            else
+                                request.SetResult(Encoding.UTF8.GetBytes(request.OKIf).Equals(data));
+                        }
+                        break;
+                    case RedisCommandExpect.OK:
+                        request.SetResult(RedisConstants.OK.Equals(data));
+                        break;
+                    case RedisCommandExpect.One:
+                        request.SetResult(RedisConstants.One.Equals(data));
+                        break;
+                    case RedisCommandExpect.GreaterThanZero:
+                        request.SetResult(RedisConstants.Zero.CompareTo(data) == -1);
+                        break;
+                    case RedisCommandExpect.Nothing:
+                        request.SetResult(RedisVoidVal.Value);
+                        break;
+                    default:
+                        request.SetResult(data);
+                        break;
+                }
+            }
         }
 
         #endregion Execution Methods

@@ -159,7 +159,7 @@ namespace Sweet.Redis
                 sBuilder.Append(") ");
             }
 
-            if (obj == null)
+            if (ReferenceEquals(obj, null))
             {
                 sBuilder.AppendLine("(nil)");
                 return;
@@ -169,30 +169,33 @@ namespace Sweet.Redis
 
             switch (obj.Type)
             {
-                case RedisRawObjectType.SimpleString:
                 case RedisRawObjectType.BulkString:
                     {
-                        var str = data as string;
+                        var str = data as byte[];
                         if (str == null)
                             sBuilder.AppendLine("(nil)");
-                        else if (str == String.Empty)
+                        else if (str.Length == 0)
                             sBuilder.AppendLine("(empty)");
                         else
                         {
                             sBuilder.Append('"');
-                            sBuilder.Append(str);
+                            sBuilder.Append(Encoding.UTF8.GetString(str));
                             sBuilder.Append('"');
                             sBuilder.AppendLine();
                         }
                     }
                     break;
+                case RedisRawObjectType.SimpleString:
                 case RedisRawObjectType.Error:
                     {
-                        sBuilder.Append("(error) ");
+                        if (obj.Type == RedisRawObjectType.Error)
+                            sBuilder.Append("(error) ");
 
                         var str = data as string;
-                        if (String.IsNullOrEmpty(str))
+                        if (str == null)
                             sBuilder.AppendLine("(nil)");
+                        else if (str == String.Empty)
+                            sBuilder.AppendLine("(empty)");
                         else
                         {
                             sBuilder.Append('"');
@@ -243,6 +246,7 @@ namespace Sweet.Redis
                     break;
             }
         }
+
         #endregion Methods
     }
 }

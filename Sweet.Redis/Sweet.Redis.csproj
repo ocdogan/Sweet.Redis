@@ -61,7 +61,7 @@
     <Compile Include="Common\RedisNullableInteger.cs" />
     <Compile Include="Common\RedisNullVal.cs" />
     <Compile Include="Common\RedisParam.cs" />
-    <Compile Include="Common\RedisPipelineRequest.cs" />
+    <Compile Include="Common\RedisPipelineRequest_T.cs" />
     <Compile Include="Common\RedisRequest.cs" />
     <Compile Include="Common\RedisRequestType.cs" />
     <Compile Include="Common\RedisRequest_T.cs" />
@@ -76,9 +76,9 @@
     <Compile Include="Common\RedisServerInfoStatsSection.cs" />
     <Compile Include="Common\RedisServerInfoReplicationSection.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
-    <Compile Include="Common\RedisBatchRequest.cs" />
+    <Compile Include="Common\RedisBatchRequest_T.cs" />
     <Compile Include="Common\RedisBatchState.cs" />
-    <Compile Include="Common\RedisTransactionalRequest.cs" />
+    <Compile Include="Common\RedisTransactionalRequest_T.cs" />
     <Compile Include="Common\RedisVoid.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\RedisVoidVal.cs" />

@@ -31,10 +31,12 @@ namespace Sweet.Redis
     {
         bool IsUpdater { get; }
 
-        void WriteTo(Stream stream);
-        void WriteTo(RedisSocket socket);
+        void WriteTo(IRedisWriter writer);
 
-        Task WriteToAsync(Stream stream);
-        Task WriteToAsync(RedisSocket socket);
+        void WriteTo(Stream stream, bool flush = true);
+        void WriteTo(RedisSocket socket, bool flush = true);
+
+        Task WriteToAsync(Stream stream, bool flush = true);
+        Task WriteToAsync(RedisSocket socket, bool flush = true);
     }
 }

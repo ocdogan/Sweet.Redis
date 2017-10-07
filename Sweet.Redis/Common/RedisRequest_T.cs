@@ -29,7 +29,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisRequest<T> : RedisRequest
+    internal abstract class RedisRequest<T> : RedisRequest
         where T : RedisResult
     {
         #region RequestState
@@ -47,7 +47,7 @@ namespace Sweet.Redis
 
         #region Constants
 
-        private const int MaxTimeout = 60 * 1000;
+        protected const int MaxTimeout = 60 * 1000;
 
         #endregion Constants
 
@@ -59,15 +59,15 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private T m_Result;
-        private long m_State;
-        private Exception m_Exception;
+        protected T m_Result;
+        protected long m_State;
+        protected Exception m_Exception;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisRequest(RedisCommand command, RedisCommandExpect expectation, 
+        public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
             string okIf = null, RedisRequestType requestType = RedisRequestType.Default)
             : base(command, expectation, okIf, null, requestType)
         { }
@@ -109,7 +109,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private T CreateResult()
+        protected virtual T CreateResult()
         {
             var result = m_Result;
             if (ReferenceEquals(result, null))
@@ -272,139 +272,8 @@ namespace Sweet.Redis
             }
         }
 
-        protected void ProcessInternal(RedisSocket socket, RedisSettings settings)
-        {
-            try
-            {
-                if (socket == null || socket.Disposed || !socket.IsConnected())
-                    Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
-                else
-                {
-                    var command = Command;
-                    if (command == null || command.Disposed)
-                    {
-                        Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
-                        return;
-                    }
-
-                    settings = settings ?? RedisSettings.Default;
-
-                    if (IsTransactional)
-                    {
-                        command.ExpectSimpleString(socket, settings, RedisConstants.OK);
-                        return;
-                    }
-
-                    var result = CreateResult();
-
-                    switch (Expectation)
-                    {
-                        case RedisCommandExpect.Response:
-                            {
-                                var expectation = command.Execute(socket, settings);
-                                (result as RedisResponse).TrySetResult(expectation);
-                            }
-                            break;
-                        case RedisCommandExpect.Array:
-                            {
-                                var expectation = command.ExpectArray(socket, settings);
-                                (result as RedisRaw).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.BulkString:
-                            {
-                                var expectation = command.ExpectBulkString(socket, settings);
-                                (result as RedisString).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.BulkStringBytes:
-                            {
-                                var expectation = command.ExpectBulkStringBytes(socket, settings);
-                                (result as RedisBytes).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.Double:
-                            {
-                                var expectation = command.ExpectDouble(socket, settings);
-                                (result as RedisDouble).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.GreaterThanZero:
-                            {
-                                var expectation = command.ExpectInteger(socket, settings);
-                                (result as RedisBool).TrySetResult(expectation.Value > RedisConstants.Zero);
-                            }
-                            break;
-                        case RedisCommandExpect.Integer:
-                            {
-                                var expectation = command.ExpectInteger(socket, settings);
-                                (result as RedisInteger).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.MultiDataBytes:
-                            {
-                                var expectation = command.ExpectMultiDataBytes(socket, settings);
-                                (result as RedisMultiBytes).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.MultiDataStrings:
-                            {
-                                var expectation = command.ExpectMultiDataStrings(socket, settings);
-                                (result as RedisMultiString).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.Nothing:
-                            {
-                                var expectation = command.ExpectNothing(socket, settings);
-                                (result as RedisVoid).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.NullableDouble:
-                            {
-                                var expectation = command.ExpectNullableDouble(socket, settings);
-                                (result as RedisNullableDouble).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.NullableInteger:
-                            {
-                                var expectation = command.ExpectNullableInteger(socket, settings);
-                                (result as RedisNullableInteger).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.OK:
-                            {
-                                var expectation = command.ExpectSimpleString(socket, settings, RedisConstants.OK);
-                                (result as RedisBool).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.One:
-                            {
-                                var expectation = command.ExpectInteger(socket, settings);
-                                (result as RedisBool).TrySetResult(expectation.Value == RedisConstants.One);
-                            }
-                            break;
-                        case RedisCommandExpect.SimpleString:
-                            {
-                                var expectation = command.ExpectSimpleString(socket, settings);
-                                (result as RedisString).TrySetResult(expectation.Value);
-                            }
-                            break;
-                        case RedisCommandExpect.SimpleStringBytes:
-                            {
-                                var expectation = command.ExpectSimpleStringBytes(socket, settings);
-                                (result as RedisBytes).TrySetResult(expectation.Value);
-                            }
-                            break;
-                    }
-
-                    Interlocked.CompareExchange(ref m_State, (long)RequestState.Completed, (long)RequestState.Initiated);
-                }
-            }
-            catch (Exception e)
-            {
-                SetException(e);
-            }
-        }
+        protected virtual void ProcessInternal(RedisSocket socket, RedisSettings settings)
+        { }
 
         #endregion Methods
     }

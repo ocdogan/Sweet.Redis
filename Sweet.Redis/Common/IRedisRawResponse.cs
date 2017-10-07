@@ -43,5 +43,7 @@ namespace Sweet.Redis
 
         void Clear();
         byte[] ReleaseData();
+
+        void HandleError();
     }
 }
