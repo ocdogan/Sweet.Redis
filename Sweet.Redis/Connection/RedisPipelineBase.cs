@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -106,17 +107,25 @@ namespace Sweet.Redis
                             return false;
                         }
 
-                        OnFlush(requests, socket, connection.Settings, out success);
-
-                        if (!success || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
+                        try
                         {
-                            success = false;
-                            Discard(requests, socket, connection.Settings);
-                            return false;
-                        }
+                            OnFlush(requests, socket, connection.Settings, out success);
 
-                        success = true;
-                        return true;
+                            if (!success || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
+                            {
+                                success = false;
+                                Discard(requests, socket, connection.Settings);
+                                return false;
+                            }
+
+                            success = true;
+                            return true;
+                        }
+                        catch (SocketException)
+                        {
+                            socket.DisposeSocket();
+                            throw;
+                        }
                     }
                 }
                 finally
