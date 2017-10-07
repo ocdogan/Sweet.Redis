@@ -271,61 +271,56 @@ namespace Sweet.Redis
 
         protected virtual bool ProcessResult(IList<RedisRequest> requests, RedisRawObject rawObject)
         {
-            var itemCount = 0;
-            IList<RedisRawObject> items = null;
-
-            if (!ReferenceEquals(rawObject, null))
+            if (requests != null)
             {
-                items = rawObject.Items;
-                if (items != null)
-                    itemCount = items.Count;
-            }
-
-            var requestCount = requests.Count;
-            if (itemCount != requestCount)
-            {
-                Cancel(requests);
-                return false;
-            }
-
-            for (var i = 0; i < requestCount; i++)
-            {
-                try
+                var requestCount = requests.Count;
+                if (requestCount > 0)
                 {
-                    var request = requests[i];
-                    if (ReferenceEquals(request, null))
-                        continue;
+                    var itemCount = 0;
+                    IList<RedisRawObject> items = null;
 
-                    if (i >= itemCount)
+                    if (!ReferenceEquals(rawObject, null))
                     {
-                        request.Cancel();
-                        continue;
+                        items = rawObject.Items;
+                        if (items != null)
+                            itemCount = items.Count;
                     }
 
-                    var child = items[i];
-                    if (ReferenceEquals(child, null))
-                    {
-                        request.Cancel();
-                        continue;
-                    }
-
-                    ProcessRequest(request, child);
-                }
-                catch (Exception e)
-                {
-                    for (var j = 0; j < requestCount; j++)
+                    for (var i = 0; i < requestCount; i++)
                     {
                         try
                         {
-                            requests[j].SetException(e);
+                            var request = requests[i];
+                            if (ReferenceEquals(request, null))
+                                continue;
+
+                            var child = (i < itemCount) ? items[i] : null;
+                            if (ReferenceEquals(child, null))
+                            {
+                                request.Cancel();
+                                continue;
+                            }
+
+                            ProcessRequest(request, child);
                         }
-                        catch (Exception)
-                        { }
+                        catch (Exception e)
+                        {
+                            for (var j = 0; j < requestCount; j++)
+                            {
+                                try
+                                {
+                                    requests[j].SetException(e);
+                                }
+                                catch (Exception)
+                                { }
+                            }
+                            throw;
+                        }
                     }
-                    throw;
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
 
         protected virtual void ProcessRequest(RedisRequest request, RedisRawObject rawObj)
