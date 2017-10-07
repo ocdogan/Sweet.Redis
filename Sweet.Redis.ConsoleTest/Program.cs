@@ -59,7 +59,8 @@ namespace Sweet.Redis.ConsoleTest
             // Transaction1();
             // Transaction2();
             // Transaction3();
-            Transaction4();
+            // Transaction4();
+            Transaction5();
 
             // Pipeline1();
             // Pipeline2();
@@ -292,6 +293,62 @@ namespace Sweet.Redis.ConsoleTest
         #endregion Pipeline
 
         #region Transaction
+
+        static void Transaction5()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5000; i++)
+                        db.Strings.Set("abc_" + i, i);
+                }
+
+                using (var transaction = pool.BeginTransaction())
+                {
+                    var sw = new Stopwatch();
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            transaction.Watch("foo", "boo");
+
+                            sw.Restart();
+
+                            var list = new List<RedisResult>();
+                            for (var i = 0; i < 5000; i++)
+                            {
+                                var result = transaction.Strings.Get("abc_" + i);
+                                list.Add(result);
+                            }
+
+                            transaction.Commit();
+
+                            sw.Stop();
+
+                            sw.Stop();
+
+                            for (var i = 0; i < list.Count; i++)
+                                Console.WriteLine(list[i]);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
 
         static void Transaction4()
         {

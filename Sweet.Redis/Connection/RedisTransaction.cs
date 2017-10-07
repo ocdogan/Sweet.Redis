@@ -34,7 +34,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private ConcurrentQueue<RedisParam> m_WatchQ = new ConcurrentQueue<RedisParam>();
+        private ConcurrentQueue<RedisParam> m_WatchQ;
 
         #endregion Field Members
 
@@ -77,8 +77,12 @@ namespace Sweet.Redis
             if (Interlocked.Read(ref m_State) == (long)RedisBatchState.Executing)
                 throw new RedisException("Transaction is being executed");
 
+            var queue = m_WatchQ;
+            if (queue == null)
+                queue = m_WatchQ = new ConcurrentQueue<RedisParam>();
+
             if (!key.IsEmpty)
-                m_WatchQ.Enqueue(key);
+                queue.Enqueue(key);
 
             var length = keys.Length;
             if (length > 0)
@@ -86,7 +90,7 @@ namespace Sweet.Redis
                 foreach (var k in keys)
                 {
                     if (!k.IsEmpty)
-                        m_WatchQ.Enqueue(k);
+                        queue.Enqueue(k);
                 }
             }
             return true;
@@ -96,30 +100,23 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var queue = m_WatchQ;
-            if (queue == null || queue.Count > 0)
-                Interlocked.Exchange(ref m_WatchQ, new ConcurrentQueue<RedisParam>());
-
+            Interlocked.Exchange(ref m_WatchQ, null);
             return true;
         }
 
         protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
-            var queue = m_WatchQ;
+            var queue = Interlocked.Exchange(ref m_WatchQ, null);
             if (queue != null && queue.Count > 0)
             {
-                RedisParam key;
-                if (queue.TryDequeue(out key))
-                {
-                    var watchCommand = new RedisCommand(DbIndex, RedisCommands.Watch,
-                                                        RedisCommandType.SendAndReceive, queue.ToArray().ToBytesArray());
-                    var watchResult = watchCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
+                var watchCommand = new RedisCommand(DbIndex, RedisCommands.Watch,
+                                                    RedisCommandType.SendAndReceive, queue.ToArray().ToBytesArray());
+                var watchResult = watchCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
 
-                    if (!watchResult)
-                    {
-                        success = false;
-                        return;
-                    }
+                if (!watchResult)
+                {
+                    success = false;
+                    return;
                 }
             }
 
