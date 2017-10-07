@@ -64,10 +64,65 @@ namespace Sweet.Redis.ConsoleTest
             // Pipeline1();
             // Pipeline2();
             // Pipeline3();
-            Pipeline4();
+            // Pipeline4();
+            Pipeline5();
         }
 
         #region Pipeline
+
+        static void Pipeline5()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+            {
+                using (var db = pool.GetDb())
+                {
+                    for (var i = 0; i < 5000; i++)
+                        db.Strings.Set("abc_" + i, i);
+                }
+
+                using (var pipeline = pool.CreatePipeline())
+                {
+                    var sw = new Stopwatch();
+                    do
+                    {
+                        try
+                        {
+                            Console.Clear();
+
+                            sw.Restart();
+
+                            var list = new List<RedisResult>();
+                            for (var i = 0; i < 5000; i++)
+                            {
+                                var result = pipeline.Strings.Get("abc_" + i);
+                                list.Add(result);
+                            }
+
+                            pipeline.Execute();
+
+                            sw.Stop();
+
+                            sw.Stop();
+
+                            for (var i = 0; i < list.Count; i++)
+                                Console.WriteLine(list[i]);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+
+                        Console.WriteLine();
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    }
+                    while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+                }
+            }
+        }
 
         static void Pipeline4()
         {
