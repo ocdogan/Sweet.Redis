@@ -153,6 +153,8 @@ namespace Sweet.Redis
 
         #region Constants
 
+        public const string FatalException = "Fatal exception";
+
         public const string CRLF = "\r\n";
 
         public const int DefaultPort = 6379;

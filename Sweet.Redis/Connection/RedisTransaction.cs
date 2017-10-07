@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace Sweet.Redis
 {
@@ -97,6 +98,11 @@ namespace Sweet.Redis
                                 Discard(requests, socket, settings);
                                 return false;
                             }
+                        }
+                        catch (SocketException e)
+                        {
+                            Discard(requests, socket, settings, e);
+                            throw new RedisFatalException(e);
                         }
                         catch (Exception e)
                         {

@@ -68,10 +68,10 @@ namespace Sweet.Redis
             RedisSocket socket = null, bool connectImmediately = false)
         {
             if (settings == null)
-                throw new ArgumentNullException("settings");
+                throw new RedisFatalException(new ArgumentNullException("settings"));
 
             if (onReleaseSocket == null)
-                throw new ArgumentNullException("releaseAction");
+                throw new RedisFatalException(new ArgumentNullException("releaseAction"));
 
             m_Settings = settings;
             m_CreateAction = onCreateSocket;
@@ -164,14 +164,15 @@ namespace Sweet.Redis
 
         protected bool Auth(RedisSocket socket, string password)
         {
-            if (password == null)
-                throw new ArgumentNullException("password");
-
-            ValidateNotDisposed();
-            using (var cmd = new RedisCommand(-1, RedisCommands.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
+            if (!String.IsNullOrEmpty(password))
             {
-                return cmd.ExpectSimpleString(socket, Settings, RedisConstants.OK, true);
+                ValidateNotDisposed();
+                using (var cmd = new RedisCommand(-1, RedisCommands.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
+                {
+                    return cmd.ExpectSimpleString(socket, Settings, RedisConstants.OK, true);
+                }
             }
+            return true;
         }
 
         protected bool SetClientName(RedisSocket socket, string clientName)
@@ -189,13 +190,13 @@ namespace Sweet.Redis
         public virtual RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
-            throw new NotImplementedException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
+            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
         }
 
         public virtual RedisRawResponse SendReceive(IRedisCommand cmd)
         {
             ValidateNotDisposed();
-            throw new NotImplementedException("SendAndReceive is not supported by base connection. Use Send method for sending command.");
+            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending command.");
         }
 
         public override void ValidateNotDisposed()
@@ -203,7 +204,7 @@ namespace Sweet.Redis
             if (Disposed)
             {
                 if (!String.IsNullOrEmpty(Name))
-                    throw new ObjectDisposedException(Name);
+                    throw new RedisFatalException(new ObjectDisposedException(Name));
                 base.ValidateNotDisposed();
             }
         }
@@ -277,7 +278,7 @@ namespace Sweet.Redis
 
                     var ipAddress = task.Result;
                     if (ipAddress == null)
-                        throw new RedisException("Can not resolce host address");
+                        throw new RedisFatalException("Can not resolce host address");
 
                     socket.ConnectAsync(ipAddress, m_Settings.Port)
                         .ContinueWith(ca =>
@@ -317,14 +318,14 @@ namespace Sweet.Redis
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 SetState((long)RedisConnectionState.Failed);
 
                 Interlocked.CompareExchange(ref m_Socket, null, socket);
                 socket.DisposeSocket();
 
-                throw;
+                throw new RedisFatalException(e);
             }
             return socket;
         }
@@ -411,7 +412,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new SocketException((int)SocketError.NotConnected);
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
 
             socket.SendAsync(data, 0, data.Length).Wait();
@@ -420,7 +421,7 @@ namespace Sweet.Redis
         public void Send(IRedisCommand cmd)
         {
             if (cmd == null)
-                throw new ArgumentNullException("cmd");
+                throw new RedisFatalException(new ArgumentNullException("cmd"));
 
             ValidateNotDisposed();
 
@@ -430,7 +431,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new SocketException((int)SocketError.NotConnected);
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
 
             cmd.WriteTo(socket);
@@ -446,7 +447,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new SocketException((int)SocketError.NotConnected);
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
             return socket.SendAsync(data, 0, data.Length);
         }
@@ -454,7 +455,7 @@ namespace Sweet.Redis
         public Task SendAsync(IRedisCommand cmd)
         {
             if (cmd == null)
-                throw new ArgumentNullException("cmd");
+                throw new RedisFatalException(new ArgumentNullException("cmd"));
 
             ValidateNotDisposed();
 
@@ -464,7 +465,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new SocketException((int)SocketError.NotConnected);
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
             return cmd.WriteToAsync(socket);
         }

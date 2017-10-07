@@ -121,10 +121,10 @@ namespace Sweet.Redis
                             success = true;
                             return true;
                         }
-                        catch (SocketException)
+                        catch (SocketException e)
                         {
                             socket.DisposeSocket();
-                            throw;
+                            throw new RedisFatalException(e);
                         }
                     }
                 }
@@ -275,7 +275,7 @@ namespace Sweet.Redis
                 (long)RedisBatchState.Ready);
 
             if (currentState == RedisBatchState.Executing)
-                throw new RedisException("Can not expect any command while executing");
+                throw new RedisFatalException("Can not expect any command while executing");
         }
 
         protected virtual bool ProcessResult(IList<RedisRequest> requests, RedisRawObject rawObject)

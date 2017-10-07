@@ -89,7 +89,7 @@ namespace Sweet.Redis
         public virtual void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new RedisException(GetType().Name + " is disposed");
+                throw new RedisFatalException(GetType().Name + " is disposed");
         }
 
         private long NextId()

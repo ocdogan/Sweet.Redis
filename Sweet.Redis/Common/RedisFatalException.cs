@@ -28,51 +28,49 @@ using System.Runtime.Serialization;
 namespace Sweet.Redis
 {
     [Serializable]
-    public class RedisException : Exception
+    public class RedisFatalException : RedisException
     {
-        #region Field Members
-
-        private string m_Prefix;
-
-        #endregion Field Members
-
         #region .Ctors
 
-        public RedisException()
+        public RedisFatalException()
             : base()
         { }
 
-        public RedisException(string message)
+        public RedisFatalException(string message)
             : base(message)
         { }
 
-        public RedisException(string prefix, string message)
+        public RedisFatalException(string prefix, string message)
             : base(message)
         {
             Prefix = prefix;
         }
 
-        public RedisException(string message, Exception innerException)
+        public RedisFatalException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
-        public RedisException(string prefix, string message, Exception innerException)
+        public RedisFatalException(string prefix, string message, Exception innerException)
             : base(message, innerException)
         {
             Prefix = prefix;
         }
 
-        public RedisException(string message, Exception innerException, params object[] args)
+        public RedisFatalException(string message, Exception innerException, params object[] args)
             : base(string.Format(message, args), innerException)
         { }
 
-        public RedisException(string prefix, string message, Exception innerException, params object[] args)
+        public RedisFatalException(string prefix, string message, Exception innerException, params object[] args)
             : base(string.Format(message, args), innerException)
         {
             Prefix = prefix;
         }
 
-        protected RedisException(SerializationInfo info, StreamingContext context)
+        public RedisFatalException(Exception innerException)
+            : base(RedisConstants.FatalException, innerException)
+        { }
+
+        protected RedisFatalException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
 
@@ -80,27 +78,9 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public virtual RedisExceptionType ExceptionType
+        public override RedisExceptionType ExceptionType
         {
-            get { return RedisExceptionType.Error; }
-        }
-
-        public string Prefix
-        {
-            get { return String.IsNullOrEmpty(m_Prefix) ? "ERR" : m_Prefix; }
-            set
-            {
-                if (value == null)
-                {
-                    m_Prefix = null;
-                }
-                else
-                {
-                    m_Prefix = value.Trim();
-                    if (m_Prefix == String.Empty)
-                        m_Prefix = null;
-                }
-            }
+            get { return RedisExceptionType.Fatal; }
         }
 
         #endregion Properties

@@ -613,7 +613,7 @@ namespace Sweet.Redis
         public bool ConnectAsync(SocketAsyncEventArgs e)
         {
             if (e == null)
-                throw new ArgumentNullException("e");
+                throw new RedisFatalException(new ArgumentNullException("e"));
             e.Completed += OnConnectComplete;
 
             return m_Socket.ConnectAsync(e);
@@ -642,7 +642,7 @@ namespace Sweet.Redis
         public bool DisconnectAsync(SocketAsyncEventArgs e)
         {
             if (e == null)
-                throw new ArgumentNullException("e");
+                throw new RedisFatalException(new ArgumentNullException("e"));
             e.Completed += OnDisconnectComplete;
 
             return m_Socket.DisconnectAsync(e);

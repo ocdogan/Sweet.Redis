@@ -195,6 +195,9 @@
     <Compile Include="Common\RedisServerInfoSection.cs" />
     <Compile Include="Connection\RedisSocketWriter.cs" />
     <Compile Include="Common\RedisRawResponse.cs" />
+    <Compile Include="Common\RedisFatalException.cs" />
+    <Compile Include="Common\RedisExceptionType.cs" />
+    <Compile Include="Common\RedisWarnException.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
