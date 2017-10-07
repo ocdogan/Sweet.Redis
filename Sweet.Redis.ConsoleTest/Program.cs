@@ -56,7 +56,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // Shutdown();
 
-            // Transaction1();
+            Transaction1();
             // Transaction2();
             // Transaction3();
             // Transaction4();
@@ -65,7 +65,7 @@ namespace Sweet.Redis.ConsoleTest
             // Pipeline2();
             // Pipeline3();
             // Pipeline4();
-            Pipeline5();
+            // Pipeline5();
         }
 
         #region Pipeline

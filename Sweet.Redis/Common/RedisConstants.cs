@@ -45,8 +45,6 @@ namespace Sweet.Redis
 
         public static readonly byte[] ZeroBytes = "0".ToBytes();
 
-        public static readonly string OK = "OK";
-
         // Commands that do not require DB
         public static readonly Dictionary<byte[], bool> CommandsNotRequireDB = new Dictionary<byte[], bool> {
             { "AUTH".ToBytes(), true },
@@ -154,6 +152,9 @@ namespace Sweet.Redis
         #region Constants
 
         public const string FatalException = "Fatal exception";
+
+        public const string OK = "OK";
+        public const string QUEUED = "QUEUED";
 
         public const string CRLF = "\r\n";
 

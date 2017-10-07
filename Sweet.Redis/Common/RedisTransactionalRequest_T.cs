@@ -59,7 +59,9 @@ namespace Sweet.Redis
 
                     if (IsTransactional)
                     {
-                        command.ExpectSimpleString(socket, settings, RedisConstants.OK);
+                        var queueResult = command.ExpectSimpleString(socket, settings, RedisConstants.QUEUED);
+                        if (!queueResult)
+                            throw new RedisException("An error occured in transaction queue");
                         return;
                     }
 

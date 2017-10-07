@@ -120,7 +120,7 @@ namespace Sweet.Redis
 
                                 var execResult = reader.Execute(socket);
                                 if (ReferenceEquals(execResult, null))
-                                    throw new RedisFatalException(("Corrupted redis response data");
+                                    throw new RedisFatalException("Corrupted redis response data");
 
                                 execResult.HandleError();
 
