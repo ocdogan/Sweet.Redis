@@ -27,12 +27,12 @@ using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
-    internal class RedisPipeline : RedisPipelineBase, IRedisPipeline
+    internal class RedisPipeline : RedisBatch, IRedisPipeline
     {
         #region .Ctors
 
-        public RedisPipeline(RedisConnectionPool pool, int db, bool throwOnError = true)
-            : base(pool, db, throwOnError)
+        public RedisPipeline(RedisConnectionPool pool, int dbIndex, bool throwOnError = true)
+            : base(pool, dbIndex, throwOnError)
         { }
 
         #endregion .Ctors

@@ -30,7 +30,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisPipelineBase : RedisDb
+    internal class RedisBatch : RedisDb
     {
         #region Field Members
 
@@ -41,8 +41,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisPipelineBase(RedisConnectionPool pool, int db, bool throwOnError = true)
-            : base(pool, db, throwOnError)
+        public RedisBatch(RedisConnectionPool pool, int dbIndex, bool throwOnError = true)
+            : base(pool, dbIndex, throwOnError)
         { }
 
         #endregion .Ctors

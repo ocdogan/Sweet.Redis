@@ -23,20 +23,38 @@
 #endregion License
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisTransaction : RedisPipelineBase, IRedisTransaction
+    internal class RedisTransaction : RedisBatch, IRedisTransaction
     {
+        #region Field Members
+
+        private ConcurrentQueue<RedisParam> m_WatchQ = new ConcurrentQueue<RedisParam>();
+
+        #endregion Field Members
+
         #region .Ctors
 
-        public RedisTransaction(RedisConnectionPool pool, int db, bool throwOnError = true)
-            : base(pool, db, throwOnError)
+        public RedisTransaction(RedisConnectionPool pool, int dbIndex, bool throwOnError = true)
+            : base(pool, dbIndex, throwOnError)
         { }
 
         #endregion .Ctors
+
+        #region Destructors
+
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+            Interlocked.Exchange(ref m_WatchQ, null);
+        }
+
+        #endregion Destructors
 
         #region Methods
 
@@ -52,8 +70,59 @@ namespace Sweet.Redis
             return Rollback();
         }
 
+        public bool Watch(RedisParam key, params RedisParam[] keys)
+        {
+            ValidateNotDisposed();
+
+            if (Interlocked.Read(ref m_State) == (long)RedisBatchState.Executing)
+                throw new RedisException("Transaction is being executed");
+
+            if (!key.IsEmpty)
+                m_WatchQ.Enqueue(key);
+
+            var length = keys.Length;
+            if (length > 0)
+            {
+                foreach (var k in keys)
+                {
+                    if (!k.IsEmpty)
+                        m_WatchQ.Enqueue(k);
+                }
+            }
+            return true;
+        }
+
+        public bool Unwatch()
+        {
+            ValidateNotDisposed();
+
+            var queue = m_WatchQ;
+            if (queue == null || queue.Count > 0)
+                Interlocked.Exchange(ref m_WatchQ, new ConcurrentQueue<RedisParam>());
+
+            return true;
+        }
+
         protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
         {
+            var queue = m_WatchQ;
+            if (queue != null && queue.Count > 0)
+            {
+                RedisParam key;
+                if (queue.TryDequeue(out key))
+                {
+                    var watchCommand = new RedisCommand(DbIndex, RedisCommands.Watch,
+                                                        RedisCommandType.SendAndReceive, queue.ToArray().ToBytesArray());
+                    var watchResult = watchCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
+
+                    if (!watchResult)
+                    {
+                        success = false;
+                        return;
+                    }
+                }
+            }
+
             var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
             var multiResult = multiCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
 

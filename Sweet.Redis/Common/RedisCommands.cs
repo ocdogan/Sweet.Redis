@@ -360,5 +360,7 @@ namespace Sweet.Redis
         public readonly static byte[] Multi = "MULTI".ToBytes();
         public readonly static byte[] Exec = "EXEC".ToBytes();
         public readonly static byte[] Discard = "DISCARD".ToBytes();
+        public readonly static byte[] Watch = "WATCH".ToBytes();
+        public readonly static byte[] Unwatch = "UNWATCH".ToBytes();
     }
 }

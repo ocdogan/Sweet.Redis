@@ -497,6 +497,13 @@ namespace Sweet.Redis
 
         #region ToBytesArray
 
+        internal static byte[][] ToBytesArray(this RedisParam param)
+        {
+            if (!param.IsNull)
+                return new byte[][] { param.Data };
+            return null;
+        }
+
         internal static byte[][] ToBytesArray(this RedisParam[] parameters)
         {
             if (parameters != null)

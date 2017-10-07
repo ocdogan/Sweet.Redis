@@ -31,6 +31,9 @@ namespace Sweet.Redis
         bool Commit();
         bool Discard();
 
+        bool Watch(RedisParam key, params RedisParam[] keys);
+        bool Unwatch();
+
         RedisBatchState Status { get; }
     }
 }

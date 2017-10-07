@@ -98,7 +98,7 @@
     <Compile Include="Connection\RedisMonitorChannel.cs" />
     <Compile Include="Connection\RedisMonitorMessage.cs" />
     <Compile Include="Connection\RedisPipeline.cs" />
-    <Compile Include="Connection\RedisPipelineBase.cs" />
+    <Compile Include="Connection\RedisBatch.cs" />
     <Compile Include="Connection\RedisSingleResponseReader.cs" />
     <Compile Include="Connection\RedisTransaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
