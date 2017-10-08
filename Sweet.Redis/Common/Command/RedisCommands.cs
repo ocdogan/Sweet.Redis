@@ -320,6 +320,7 @@ namespace Sweet.Redis
         public readonly static byte[] SentinelFailover = "failover".ToBytes();
         public readonly static byte[] SentinelFlushConfig = "flushconfig".ToBytes();
         public readonly static byte[] SentinelGetMasterAddrByName = "get-master-addr-by-name".ToBytes();
+        public readonly static byte[] SentinelIsMasterDownByAddr = "is-master-down-by-addr".ToBytes();
         public readonly static byte[] SentinelMaster = "master".ToBytes();
         public readonly static byte[] SentinelMasters = "masters".ToBytes();
         public readonly static byte[] SentinelMonitor = "MONITOR".ToBytes();
