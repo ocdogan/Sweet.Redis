@@ -26,7 +26,7 @@ using System;
 
 namespace Sweet.Redis
 {
-    public class RedisSettings
+    public class RedisSettings : RedisConnectionSettings
     {
         #region Static Members
 
@@ -42,18 +42,14 @@ namespace Sweet.Redis
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
             int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
             bool useAsyncCompleter = true)
+            : base(host, port, connectionTimeout, receiveTimeout, sendTimeout)
         {
-            Host = host;
-            Port = port;
             Password = password;
             ClientName = clientName;
             UseAsyncCompleter = useAsyncCompleter;
-            ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
             IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
             MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
             ReadBufferSize = Math.Max(0, readBufferSize);
-            ReceiveTimeout = Math.Max(RedisConstants.MinReceiveTimeout, Math.Min(RedisConstants.MaxReceiveTimeout, receiveTimeout));
-            SendTimeout = Math.Max(RedisConstants.MinSendTimeout, Math.Min(RedisConstants.MaxSendTimeout, sendTimeout));
             WaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, waitTimeout));
             WriteBufferSize = Math.Max(0, writeBufferSize);
         }
@@ -63,15 +59,10 @@ namespace Sweet.Redis
         #region Properties
 
         public string ClientName { get; private set; }
-        public int ConnectionTimeout { get; private set; }
-        public string Host { get; private set; }
         public int IdleTimeout { get; private set; }
         public int MaxCount { get; private set; }
         public string Password { get; private set; }
-        public int Port { get; private set; }
         public int ReadBufferSize { get; private set; }
-        public int ReceiveTimeout { get; private set; }
-        public int SendTimeout { get; private set; }
         public bool UseAsyncCompleter { get; private set; }
         public int WaitTimeout { get; private set; }
         public int WriteBufferSize { get; private set; }

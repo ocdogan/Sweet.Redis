@@ -104,14 +104,14 @@ namespace Sweet.Redis
             return true;
         }
 
-        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
+        protected override void OnFlush(IList<RedisRequest> requests, RedisSocketContext context, out bool success)
         {
             var queue = Interlocked.Exchange(ref m_WatchQ, null);
             if (queue != null && queue.Count > 0)
             {
                 var watchCommand = new RedisCommand(DbIndex, RedisCommands.Watch,
                                                     RedisCommandType.SendAndReceive, queue.ToArray().ToBytesArray());
-                var watchResult = watchCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
+                var watchResult = watchCommand.ExpectSimpleString(context, RedisConstants.OK);
 
                 if (!watchResult)
                 {
@@ -121,7 +121,7 @@ namespace Sweet.Redis
             }
 
             var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
-            var multiResult = multiCommand.ExpectSimpleString(socket, settings, RedisConstants.OK);
+            var multiResult = multiCommand.ExpectSimpleString(context, RedisConstants.OK);
 
             success = multiResult;
             if (!success)
@@ -130,14 +130,14 @@ namespace Sweet.Redis
                 return;
             }
 
-            success = Process(requests, socket, settings);
+            success = Process(requests, context);
             if (!success)
             {
-                Discard(requests, socket, settings);
+                Discard(requests, context);
                 return;
             }
 
-            success = Exec(requests, socket, settings);
+            success = Exec(requests, context);
         }
 
         protected override RedisBatchRequest<T> CreateRequest<T>(RedisCommand command, RedisCommandExpect expectation, string okIf)
@@ -145,36 +145,37 @@ namespace Sweet.Redis
             return new RedisTransactionalRequest<T>(command, expectation, okIf);
         }
 
-        private bool Process(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        private bool Process(IList<RedisRequest> requests, RedisSocketContext context)
         {
             if (requests != null)
             {
                 var requestCount = requests.Count;
                 if (requestCount > 0)
                 {
-                    settings = settings ?? RedisSettings.Default;
+                    var socket = context.Socket;
+                    var settings = context.Settings;
 
                     for (var i = 0; i < requestCount; i++)
                     {
                         try
                         {
                             var request = requests[i];
-                            request.Process(socket, settings);
+                            request.Process(context);
 
                             if (!request.IsStarted)
                             {
-                                Discard(requests, socket, settings);
+                                Discard(requests, context);
                                 return false;
                             }
                         }
                         catch (SocketException e)
                         {
-                            Discard(requests, socket, settings, e);
+                            Discard(requests, context, e);
                             throw new RedisFatalException(e);
                         }
                         catch (Exception e)
                         {
-                            Discard(requests, socket, settings, e);
+                            Discard(requests, context, e);
                             throw;
                         }
                     }
@@ -184,28 +185,26 @@ namespace Sweet.Redis
             return false;
         }
 
-        protected override void Discard(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, Exception exception = null)
+        protected override void Discard(IList<RedisRequest> requests, RedisSocketContext context, Exception exception = null)
         {
             try
             {
-                base.Discard(requests, socket, settings, exception);
+                base.Discard(requests, context, exception);
             }
             finally
             {
-                if (socket.IsConnected())
-                    (new RedisCommand(DbIndex, RedisCommands.Discard)).ExpectSimpleString(socket, settings, RedisConstants.OK);
+                if (context.Socket.IsConnected())
+                    (new RedisCommand(DbIndex, RedisCommands.Discard)).ExpectSimpleString(context, RedisConstants.OK);
             }
         }
 
-        private bool Exec(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        private bool Exec(IList<RedisRequest> requests, RedisSocketContext context)
         {
             if (requests != null)
             {
                 var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
 
-                settings = settings ?? RedisSettings.Default;
-
-                var execResult = exec.ExpectArray(socket, settings);
+                var execResult = exec.ExpectArray(context);
                 if (!ReferenceEquals(execResult, null))
                     return ProcessResult(requests, execResult.Value);
             }

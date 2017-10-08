@@ -109,7 +109,7 @@ namespace Sweet.Redis
             {
                 using (var cmd = new RedisCommand(db, RedisCommands.Select, RedisCommandType.SendAndReceive, db.ToBytes()))
                 {
-                    return cmd.ExpectSimpleString(socket, Settings, RedisConstants.OK, throwException);
+                    return cmd.ExpectSimpleString(new RedisSocketContext(socket, Settings), RedisConstants.OK, throwException);
                 }
             }
             return true;

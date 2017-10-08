@@ -394,11 +394,11 @@ namespace Sweet.Redis
             return tcs.Task;
         }
 
-        public static Task<int> SendAsync(this RedisSocket socket, byte[] data, int offset, int count, SocketFlags socketFlags = SocketFlags.None)
+        public static Task<int> SendAsync(this RedisSocket socket, byte[] data, int offset, int count)
         {
             var tcs = new TaskCompletionSource<int>(socket);
 
-            socket.BeginSend(data, offset, count, socketFlags, ar =>
+            socket.GetRealStream().BeginWrite(data, offset, count, ar =>
             {
                 var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try
@@ -417,11 +417,11 @@ namespace Sweet.Redis
             return tcs.Task;
         }
 
-        public static Task<int> ReceiveAsync(this RedisSocket socket, byte[] data, int offset, int count, SocketFlags socketFlags = SocketFlags.None)
+        public static Task<int> ReceiveAsync(this RedisSocket socket, byte[] data, int offset, int count)
         {
             var tcs = new TaskCompletionSource<int>(socket);
 
-            socket.BeginReceive(data, offset, count, socketFlags, ar =>
+            socket.GetRealStream().BeginRead(data, offset, count, ar =>
             {
                 var innerTcs = ar.DiscoverTaskCompletionSource<int>();
                 try

@@ -22,39 +22,36 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+
 namespace Sweet.Redis
 {
-    internal class RedisSingleResponseReader : RedisResponseReader
+    public class RedisConnectionSettings
     {
         #region .Ctors
 
-        public RedisSingleResponseReader(RedisSettings settings)
-            : base(settings, 16 * 1024)
-        { }
+        public RedisConnectionSettings(string host = RedisConstants.IP4LocalHost, int port = RedisConstants.DefaultPort,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout)
+        {
+            Host = host;
+            Port = port;
+            ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
+            ReceiveTimeout = Math.Max(RedisConstants.MinReceiveTimeout, Math.Min(RedisConstants.MaxReceiveTimeout, receiveTimeout));
+            SendTimeout = Math.Max(RedisConstants.MinSendTimeout, Math.Min(RedisConstants.MaxSendTimeout, sendTimeout));
+        }
 
         #endregion .Ctors
 
-        #region Methods
+        #region Properties
 
-        public RedisRawResponse Execute(RedisSocket socket)
-        {
-            if (socket.IsConnected() && base.BeginReading())
-            {
-                try
-                {
-                    var result = base.ReadResponse(socket);
-                    if (result != null && result.IsVoid)
-                        return null;
-                    return result;
-                }
-                finally
-                {
-                    EndReading();
-                }
-            }
-            return null;
-        }
+        public int ConnectionTimeout { get; private set; }
+        public string Host { get; private set; }
+        public int Port { get; private set; }
+        public int ReceiveTimeout { get; private set; }
+        public int SendTimeout { get; private set; }
 
-        #endregion Methods
+        #endregion Properties
     }
 }

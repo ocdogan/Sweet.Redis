@@ -177,8 +177,10 @@ namespace Sweet.Redis
                         throw new ArgumentException("Length can not exceed data size", "length");
 
                     if (m_UseAsyncIfNeeded && (dataLength > 512))
-                        return m_Socket.SendAsync(data, index, length, SocketFlags.None).Result;
-                    return m_Socket.Send(data, index, length, SocketFlags.None);
+                        return m_Socket.SendAsync(data, index, length).Result;
+
+                    m_Socket.GetRealStream().Write(data, index, length);
+                    return length;
                 }
             }
             return 0;

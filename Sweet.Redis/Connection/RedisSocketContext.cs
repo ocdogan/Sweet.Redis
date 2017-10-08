@@ -22,39 +22,47 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System.Threading;
+
 namespace Sweet.Redis
 {
-    internal class RedisSingleResponseReader : RedisResponseReader
+    public class RedisSocketContext : RedisInternalDisposable
     {
+        #region Field Members
+
+        private RedisSocket m_Socket;
+        private RedisSettings m_Settings;
+
+        #endregion Field Members
+
         #region .Ctors
 
-        public RedisSingleResponseReader(RedisSettings settings)
-            : base(settings, 16 * 1024)
-        { }
+        internal RedisSocketContext(RedisSocket socket, RedisSettings settings)
+        {
+            m_Socket = socket;
+            m_Settings = settings ?? RedisSettings.Default;
+        }
 
         #endregion .Ctors
 
-        #region Methods
+        #region Destructors
 
-        public RedisRawResponse Execute(RedisSocket socket)
+        protected override void OnDispose(bool disposing)
         {
-            if (socket.IsConnected() && base.BeginReading())
-            {
-                try
-                {
-                    var result = base.ReadResponse(socket);
-                    if (result != null && result.IsVoid)
-                        return null;
-                    return result;
-                }
-                finally
-                {
-                    EndReading();
-                }
-            }
-            return null;
+            Interlocked.Exchange(ref m_Socket, null);
+            Interlocked.Exchange(ref m_Settings, null);
+
+            base.OnDispose(disposing);
         }
 
-        #endregion Methods
+        #endregion Destructors
+
+        #region Properties
+
+        public RedisSocket Socket { get { return m_Socket; } }
+
+        public RedisSettings Settings { get { return m_Settings; } }
+
+        #endregion Properties
     }
 }

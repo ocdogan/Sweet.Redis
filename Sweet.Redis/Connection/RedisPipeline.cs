@@ -56,98 +56,104 @@ namespace Sweet.Redis
             return new RedisPipelineRequest<T>(command, expectation, okIf);
         }
 
-        protected override void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
+        protected override void OnFlush(IList<RedisRequest> requests, RedisSocketContext context, out bool success)
         {
-            settings = settings ?? RedisSettings.Default;
-
-            success = Send(requests, socket, settings);
-            if (success && socket.IsConnected())
-                success = Receive(requests, socket, settings);
+            success = Send(requests, context);
+            if (success && context.Socket.IsConnected())
+                success = Receive(requests, context);
         }
 
-        private bool Send(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        private bool Send(IList<RedisRequest> requests, RedisSocketContext context)
         {
             if (requests != null)
             {
                 var requestCount = requests.Count;
-                if (requests.Count > 0 && socket.IsConnected())
+                if (requests.Count > 0)
                 {
-                    var anySend = false;
-                    var stream = socket.GetBufferedStream();
-                    try
+                    var socket = context.Socket;
+                    if (socket.IsConnected())
                     {
-                        for (var i = 0; i < requestCount; i++)
+                        var anySend = false;
+                        var stream = socket.GetBufferedStream();
+                        try
                         {
-                            try
+                            for (var i = 0; i < requestCount; i++)
                             {
-                                var request = requests[i];
-                                request.Command.WriteTo(stream, false);
+                                try
+                                {
+                                    var request = requests[i];
+                                    request.Command.WriteTo(stream, false);
 
-                                anySend = true;
-                            }
-                            catch (Exception)
-                            {
-                                Cancel(requests, i);
-                                break;
+                                    anySend = true;
+                                }
+                                catch (Exception)
+                                {
+                                    Cancel(requests, i);
+                                    break;
+                                }
                             }
                         }
+                        finally
+                        {
+                            if (anySend)
+                                stream.Flush();
+                        }
+                        return anySend;
                     }
-                    finally
-                    {
-                        if (anySend)
-                            stream.Flush();
-                    }
-                    return anySend;
                 }
             }
             return false;
         }
 
-        private bool Receive(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings)
+        private bool Receive(IList<RedisRequest> requests, RedisSocketContext context)
         {
             if (requests != null)
             {
                 var requestCount = requests.Count;
                 if (requestCount > 0)
                 {
-                    using (var reader = new RedisSingleResponseReader(settings))
+                    var socket = context.Socket;
+                    if (socket.IsConnected())
                     {
-                        for (var i = 0; i < requestCount; i++)
+                        using (var reader = new RedisSingleResponseReader(context.Settings))
                         {
-                            try
+                            for (var i = 0; i < requestCount; i++)
                             {
-                                var request = requests[i];
-                                if (ReferenceEquals(request, null))
-                                    continue;
-
-                                var execResult = reader.Execute(socket);
-                                if (ReferenceEquals(execResult, null))
-                                    throw new RedisFatalException("Corrupted redis response data");
-
-                                execResult.HandleError();
-
-                                var rawObj = RedisRawObject.ToObject(execResult);
-                                if (ReferenceEquals(rawObj, null))
-                                    throw new RedisFatalException("Corrupted redis response data");
-
-                                ProcessRequest(request, rawObj);
-                            }
-                            catch (Exception e)
-                            {
-                                for (var j = i; j < requestCount; j++)
+                                try
                                 {
-                                    try
-                                    {
-                                        requests[j].SetException(e);
-                                    }
-                                    catch (Exception)
-                                    { }
+                                    var request = requests[i];
+                                    if (ReferenceEquals(request, null))
+                                        continue;
+
+                                    var execResult = reader.Execute(socket);
+                                    if (ReferenceEquals(execResult, null))
+                                        throw new RedisFatalException("Corrupted redis response data");
+
+                                    execResult.HandleError();
+
+                                    var rawObj = RedisRawObject.ToObject(execResult);
+                                    if (ReferenceEquals(rawObj, null))
+                                        throw new RedisFatalException("Corrupted redis response data");
+
+                                    ProcessRequest(request, rawObj);
                                 }
-                                throw;
+                                catch (Exception e)
+                                {
+                                    for (var j = i; j < requestCount; j++)
+                                    {
+                                        try
+                                        {
+                                            requests[j].SetException(e);
+                                        }
+                                        catch (Exception)
+                                        { }
+                                    }
+                                    throw;
+                                }
                             }
                         }
+                        return true;
                     }
-                    return true;
                 }
             }
             return false;

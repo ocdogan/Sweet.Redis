@@ -257,22 +257,22 @@ namespace Sweet.Redis
                 if (connection == null || connection.Disposed)
                     Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
                 else
-                    ProcessInternal(connection.Connect(), connection.Settings ?? RedisSettings.Default);
+                    ProcessInternal(new RedisSocketContext(connection.Connect(), connection.Settings));
             }
         }
 
-        public override void Process(RedisSocket socket, RedisSettings settings)
+        public override void Process(RedisSocketContext context)
         {
             ValidateNotDisposed();
 
             if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) ==
                 (long)RequestState.Waiting)
             {
-                ProcessInternal(socket, settings ?? RedisSettings.Default);
+                ProcessInternal(context);
             }
         }
 
-        protected virtual void ProcessInternal(RedisSocket socket, RedisSettings settings)
+        protected virtual void ProcessInternal(RedisSocketContext context)
         { }
 
         #endregion Methods

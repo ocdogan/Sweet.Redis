@@ -163,7 +163,7 @@ namespace Sweet.Redis
 
         public abstract void Process(IRedisConnection connection);
 
-        public abstract void Process(RedisSocket socket, RedisSettings settings);
+        public abstract void Process(RedisSocketContext context);
 
         public abstract void SetException(Exception exception);
 

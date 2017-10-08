@@ -138,7 +138,6 @@
     <Compile Include="Connection\RedisResponseReader.cs" />
     <Compile Include="Connection\RedisSettings.cs" />
     <Compile Include="Connection\RedisSocket.cs" />
-    <Compile Include="Connection\IRedisCommand.cs" />
     <Compile Include="Common\RedisStreamWriter.cs" />
     <Compile Include="Common\IRedisWriter.cs" />
     <Compile Include="Commands\IRedisSortedSetsCommands.cs" />
@@ -198,6 +197,9 @@
     <Compile Include="Common\RedisFatalException.cs" />
     <Compile Include="Common\RedisExceptionType.cs" />
     <Compile Include="Common\RedisWarnException.cs" />
+    <Compile Include="Connection\RedisConnectionSettings.cs" />
+    <Compile Include="Connection\RedisSocketContext.cs" />
+    <Compile Include="Common\IRedisCommand.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

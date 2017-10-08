@@ -87,6 +87,7 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             var onDisconnect = Interlocked.Exchange(ref m_OnDisconnect, null);
+            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
 
             var rs = Interlocked.Exchange(ref m_RealStream, null);
             if (rs != null)
@@ -96,7 +97,6 @@ namespace Sweet.Redis
             if (ws != null)
                 ws.Dispose();
 
-            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
             base.OnDispose(disposing);
 
             if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())

@@ -109,14 +109,14 @@ namespace Sweet.Redis
 
                         try
                         {
-                            var settings = connection.Settings ?? RedisSettings.Default;
+                            var context = new RedisSocketContext(socket, connection.Settings ?? RedisSettings.Default);
 
-                            OnFlush(requests, socket, settings, out success);
+                            OnFlush(requests, context, out success);
 
                             if (!success || Interlocked.Read(ref m_State) != (long)RedisBatchState.Executing)
                             {
                                 success = false;
-                                Discard(requests, socket, settings);
+                                Discard(requests, context);
                                 return false;
                             }
 
@@ -140,17 +140,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        protected virtual void OnBeforeFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
-        {
-            success = true;
-        }
-
-        protected virtual void OnFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
-        {
-            success = true;
-        }
-
-        protected virtual void OnAfterFlush(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, out bool success)
+        protected virtual void OnFlush(IList<RedisRequest> requests, RedisSocketContext context, out bool success)
         {
             success = true;
         }
@@ -182,7 +172,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        protected virtual void Discard(IList<RedisRequest> requests, RedisSocket socket, RedisSettings settings, Exception exception = null)
+        protected virtual void Discard(IList<RedisRequest> requests, RedisSocketContext context, Exception exception = null)
         {
             if (requests != null)
             {

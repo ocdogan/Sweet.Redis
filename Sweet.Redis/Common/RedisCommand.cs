@@ -302,9 +302,9 @@ namespace Sweet.Redis
 
         #region RedisSocket Execution Methods
 
-        public RedisBool ExpectSimpleString(RedisSocket socket, RedisSettings settings, string expectedResult, bool throwException = true)
+        public RedisBool ExpectSimpleString(RedisSocketContext context, string expectedResult, bool throwException = true)
         {
-            var result = ExpectSimpleStringInternal(socket, settings, throwException);
+            var result = ExpectSimpleStringInternal(context, throwException);
             if (!String.IsNullOrEmpty(result))
             {
                 if (!String.IsNullOrEmpty(expectedResult))
@@ -318,22 +318,22 @@ namespace Sweet.Redis
             return false;
         }
 
-        public RedisString ExpectSimpleString(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisString ExpectSimpleString(RedisSocketContext context, bool throwException = true)
         {
-            return ExpectSimpleStringInternal(socket, settings, throwException);
+            return ExpectSimpleStringInternal(context, throwException);
         }
 
-        private string ExpectSimpleStringInternal(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        private string ExpectSimpleStringInternal(RedisSocketContext context, bool throwException = true)
         {
-            var bytes = ExpectSimpleStringBytes(socket, settings, throwException);
+            var bytes = ExpectSimpleStringBytes(context, throwException);
             if (bytes == null)
                 return null;
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public RedisBool ExpectSimpleStringBytes(RedisSocket socket, RedisSettings settings, byte[] expectedResult, bool throwException = true)
+        public RedisBool ExpectSimpleStringBytes(RedisSocketContext context, byte[] expectedResult, bool throwException = true)
         {
-            var result = ExpectSimpleStringBytesInternal(socket, settings, throwException);
+            var result = ExpectSimpleStringBytesInternal(context, throwException);
             if (result == null)
                 return expectedResult == null;
 
@@ -346,20 +346,20 @@ namespace Sweet.Redis
             return false;
         }
 
-        public RedisVoid ExpectNothing(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisVoid ExpectNothing(RedisSocketContext context, bool throwException = true)
         {
-            ExecuteInternal(socket, settings, throwException, true);
+            ExecuteInternal(context, throwException, true);
             return new RedisVoid(true);
         }
 
-        public RedisBytes ExpectSimpleStringBytes(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisBytes ExpectSimpleStringBytes(RedisSocketContext context, bool throwException = true)
         {
-            return ExpectSimpleStringBytesInternal(socket, settings, throwException);
+            return ExpectSimpleStringBytesInternal(context, throwException);
         }
 
-        private byte[] ExpectSimpleStringBytesInternal(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        private byte[] ExpectSimpleStringBytesInternal(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 if (response == null)
                 {
@@ -378,17 +378,17 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisString ExpectBulkString(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisString ExpectBulkString(RedisSocketContext context, bool throwException = true)
         {
-            var bytes = ExpectBulkStringBytes(socket, settings, throwException);
+            var bytes = ExpectBulkStringBytes(context, throwException);
             if (bytes == null)
                 return null;
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public RedisBytes ExpectBulkStringBytes(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisBytes ExpectBulkStringBytes(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 if (response == null)
                 {
@@ -407,41 +407,41 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisInteger ExpectInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisInteger ExpectInteger(RedisSocketContext context, bool throwException = true)
         {
-            var result = ExpectNullableInteger(socket, settings, throwException);
+            var result = ExpectNullableInteger(context, throwException);
             if (result == null)
                 return long.MinValue;
             return result.Value;
         }
 
-        public RedisNullableInteger ExpectNullableInteger(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisNullableInteger ExpectNullableInteger(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 return ForNullableInteger(response, throwException);
             }
         }
 
-        public RedisDouble ExpectDouble(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisDouble ExpectDouble(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 return ForDouble(response, throwException);
             }
         }
 
-        public RedisNullableDouble ExpectNullableDouble(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisNullableDouble ExpectNullableDouble(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 return ForNullableDouble(response, throwException);
             }
         }
 
-        public RedisRaw ExpectArray(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisRaw ExpectArray(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 if (response == null)
                 {
@@ -453,30 +453,38 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisMultiString ExpectMultiDataStrings(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisMultiString ExpectMultiDataStrings(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 return ForMutiDataStrings(response, throwException);
             }
         }
 
-        public RedisMultiBytes ExpectMultiDataBytes(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisMultiBytes ExpectMultiDataBytes(RedisSocketContext context, bool throwException = true)
         {
-            using (var response = ExecuteInternal(socket, settings, throwException))
+            using (var response = ExecuteInternal(context, throwException))
             {
                 return ForMultiDataBytes(response, throwException);
             }
         }
 
-        public RedisRawResponse Execute(RedisSocket socket, RedisSettings settings, bool throwException = true)
+        public RedisRawResponse Execute(RedisSocketContext context, bool throwException = true)
         {
             ValidateNotDisposed();
-            return ExecuteInternal(socket, settings, throwException);
+            return ExecuteInternal(context, throwException);
         }
 
-        private RedisRawResponse ExecuteInternal(RedisSocket socket, RedisSettings settings, bool throwException = true, bool sendNotReceive = false)
+        private RedisRawResponse ExecuteInternal(RedisSocketContext context, bool throwException = true, bool sendNotReceive = false)
         {
+            if (context == null)
+            {
+                if (throwException)
+                    throw new ArgumentNullException("context");
+                return null;
+            }
+
+            var socket = context.Socket;
             if (socket == null)
             {
                 if (throwException)
@@ -490,7 +498,7 @@ namespace Sweet.Redis
             else
             {
                 WriteTo(socket);
-                using (var reader = new RedisSingleResponseReader(settings))
+                using (var reader = new RedisSingleResponseReader(context.Settings))
                     response = reader.Execute(socket);
 
                 if (ReferenceEquals(response, null) && throwException)

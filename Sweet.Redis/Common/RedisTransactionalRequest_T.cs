@@ -40,11 +40,11 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected override void ProcessInternal(RedisSocket socket, RedisSettings settings)
+        protected override void ProcessInternal(RedisSocketContext context)
         {
             try
             {
-                if (socket == null || socket.Disposed || !socket.IsConnected())
+                if (context == null || !context.Socket.IsConnected())
                     Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
                 else
                 {
@@ -55,7 +55,7 @@ namespace Sweet.Redis
                         return;
                     }
 
-                    var queueResult = command.ExpectSimpleString(socket, settings, RedisConstants.QUEUED);
+                    var queueResult = command.ExpectSimpleString(context, RedisConstants.QUEUED);
                     if (!queueResult)
                         throw new RedisException("An error occured in transaction queue");
                 }

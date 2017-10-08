@@ -169,7 +169,7 @@ namespace Sweet.Redis
                 ValidateNotDisposed();
                 using (var cmd = new RedisCommand(-1, RedisCommands.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
                 {
-                    return cmd.ExpectSimpleString(socket, Settings, RedisConstants.OK, true);
+                    return cmd.ExpectSimpleString(new RedisSocketContext(socket, Settings), RedisConstants.OK, true);
                 }
             }
             return true;
@@ -183,7 +183,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             using (var cmd = new RedisCommand(-1, RedisCommands.Client, RedisCommandType.SendAndReceive, RedisCommands.SetName, clientName.ToBytes()))
             {
-                return cmd.ExpectSimpleString(socket, Settings, RedisConstants.OK, true);
+                return cmd.ExpectSimpleString(new RedisSocketContext(socket, Settings), RedisConstants.OK, true);
             }
         }
 
