@@ -863,11 +863,13 @@ namespace Sweet.Redis
                         throw new RedisFatalException("Remote end-point can not be defined for ssl usage");
 
                     var ssl = new SslStream(rs, false, m_SslCertificateValidation,
-                                            m_SslCertificateSelection, EncryptionPolicy.RequireEncryption);
+                                            m_SslCertificateSelection);
 
                     ssl.AuthenticateAsClient(host);
                     if (!ssl.IsEncrypted)
                         throw new Exception("Cannot create encrypted connection to end-point: " + host);
+
+                    rs = ssl;
                 }
 
                 Interlocked.Exchange(ref m_RealStream, rs);
