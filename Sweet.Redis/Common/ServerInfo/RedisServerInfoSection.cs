@@ -28,7 +28,7 @@ using System.Globalization;
 
 namespace Sweet.Redis
 {
-    public class RedisServerInfoSection : Dictionary<string, string>
+    public class RedisServerInfoSection : RedisInfoBase
     {
         #region .Ctors
 
@@ -46,119 +46,6 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
-
-        public string Get(string key)
-        {
-            if (!String.IsNullOrEmpty(key))
-            {
-                string result;
-                TryGetValue(key, out result);
-
-                return result;
-            }
-            return null;
-        }
-
-        public DateTime? GetDate(string key)
-        {
-            var ticks = GetInteger(key);
-            if (ticks.HasValue)
-                return ticks.Value.FromUnixTimeStamp();
-            return null;
-        }
-
-        public double? GetDouble(string key)
-        {
-            if (!String.IsNullOrEmpty(key))
-            {
-                string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
-                {
-                    if (value.EndsWith("%", StringComparison.OrdinalIgnoreCase))
-                        value = value.Substring(0, value.Length - 1);
-
-                    if (!String.IsNullOrEmpty(value))
-                    {
-                        if (value.StartsWith("%", StringComparison.OrdinalIgnoreCase))
-                            value = value.Substring(1, value.Length - 1);
-
-                        if (!String.IsNullOrEmpty(value))
-                        {
-                            double result;
-                            if (double.TryParse(value, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign,
-                                RedisConstants.InvariantCulture, out result))
-                                return result;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        public long? GetInteger(string key)
-        {
-            if (!String.IsNullOrEmpty(key))
-            {
-                string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
-                {
-                    long result;
-                    if (long.TryParse(value, out result))
-                        return result;
-                }
-            }
-            return null;
-        }
-
-        public IDictionary<string, string> GetItems(string key, char itemSeparator, char valueSeparator)
-        {
-            if (!String.IsNullOrEmpty(key))
-            {
-                string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
-                {
-                    var result = new Dictionary<string, string>();
-
-                    var items = value.Split(new[] { itemSeparator }, StringSplitOptions.RemoveEmptyEntries);
-                    if (items != null)
-                    {
-                        foreach (var item in items)
-                        {
-                            if (!String.IsNullOrEmpty(item))
-                            {
-                                var pos = item.IndexOf(valueSeparator);
-                                if (pos == -1)
-                                    result[item] = null;
-                                else
-                                {
-                                    var name = (item.Substring(0, pos) ?? String.Empty).TrimEnd();
-                                    if (pos == item.Length - 1)
-                                        result[name] = null;
-                                    else
-                                    {
-                                        var itemValue = (item.Substring(pos + 1, item.Length - pos - 1) ?? String.Empty).TrimEnd();
-                                        result[name] = itemValue;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    return result;
-                }
-            }
-            return null;
-        }
-
-        public bool GetOK(string key)
-        {
-            if (!String.IsNullOrEmpty(key))
-            {
-                string value;
-                if (TryGetValue(key, out value) && (value != null))
-                    return value.ToLowerInvariant() == "ok";
-            }
-            return false;
-        }
 
         #region Static Methods
 
@@ -236,6 +123,7 @@ namespace Sweet.Redis
         }
 
         #endregion Static Methods
+
         #endregion Methods
     }
 }

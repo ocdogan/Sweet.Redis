@@ -199,6 +199,10 @@
     <Compile Include="Connection\ReaderWriter\RedisStreamWriter.cs" />
     <Compile Include="Common\Disposable\RedisDisposable.cs" />
     <Compile Include="Common\Disposable\RedisInternalDisposable.cs" />
+    <Compile Include="Common\SentinelInfo\RedisSentinelMasterInfo.cs" />
+    <Compile Include="Common\RedisInfoBase.cs" />
+    <Compile Include="Common\SentinelInfo\RedisSentinelNodeInfo.cs" />
+    <Compile Include="Common\SentinelInfo\RedisSentinelSlaveInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -225,6 +229,7 @@
     <Folder Include="Connection\Sockets\" />
     <Folder Include="Common\ClientInfo\" />
     <Folder Include="Common\Disposable\" />
+    <Folder Include="Common\SentinelInfo\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
