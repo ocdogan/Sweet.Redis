@@ -254,15 +254,7 @@ namespace Sweet.Redis
                         }
                         catch (Exception e)
                         {
-                            for (var j = 0; j < requestCount; j++)
-                            {
-                                try
-                                {
-                                    requests[j].SetException(e);
-                                }
-                                catch (Exception)
-                                { }
-                            }
+                            SetException(requests, e, i);
                             throw;
                         }
                     }

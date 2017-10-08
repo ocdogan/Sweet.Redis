@@ -218,14 +218,14 @@ namespace Sweet.Redis
             }
         }
 
-        protected static void SetException(IList<RedisRequest> requests, Exception exception)
+        protected static void SetException(IList<RedisRequest> requests, Exception exception, int start = 0)
         {
             if (exception != null && requests != null)
             {
                 var count = requests.Count;
                 if (count > 0)
                 {
-                    for (var i = 0; i < count; i++)
+                    for (var i = Math.Max(0, start); i < count; i++)
                     {
                         try
                         {
