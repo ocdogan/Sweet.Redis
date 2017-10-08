@@ -74,7 +74,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Pipeline5()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -128,7 +128,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Pipeline4()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var pipeline = pool.CreatePipeline())
                 {
@@ -178,7 +178,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Pipeline3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var pipeline = pool.CreatePipeline())
                 {
@@ -214,7 +214,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Pipeline2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var pipeline = pool.CreatePipeline())
                 {
@@ -260,7 +260,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Pipeline1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var pipeline = pool.CreatePipeline())
                 {
@@ -297,7 +297,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Transaction5()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -353,7 +353,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Transaction4()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var transaction = pool.BeginTransaction())
                 {
@@ -403,7 +403,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Transaction3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var transaction = pool.BeginTransaction())
                 {
@@ -439,7 +439,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Transaction2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var transaction = pool.BeginTransaction())
                 {
@@ -485,7 +485,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Transaction1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var transaction = pool.BeginTransaction())
                 {
@@ -522,7 +522,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Shutdown()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -553,7 +553,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Info1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -606,7 +606,7 @@ namespace Sweet.Redis.ConsoleTest
         static void SlowLog1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -649,7 +649,7 @@ namespace Sweet.Redis.ConsoleTest
         static void Geo1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -807,7 +807,7 @@ namespace Sweet.Redis.ConsoleTest
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                      // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
-                     new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: maxCount, useAsyncCompleter: false))) // LOCAL
+                     new RedisSettings("127.0.0.1", 6379, maxCount: maxCount, useAsyncCompleter: false))) // LOCAL
             {
                 using (var db = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
                 {
@@ -981,7 +981,7 @@ namespace Sweet.Redis.ConsoleTest
         static void MonitorTest3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.MonitorChannel.Subscribe((m) =>
                 {
@@ -1036,7 +1036,7 @@ namespace Sweet.Redis.ConsoleTest
         static void MonitorTest2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.MonitorChannel.Subscribe((m) =>
                 {
@@ -1083,7 +1083,7 @@ namespace Sweet.Redis.ConsoleTest
             var largeText = Encoding.UTF8.GetBytes(new string('x', 100000));
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.MonitorChannel.Subscribe((m) =>
                 {
@@ -1115,7 +1115,7 @@ namespace Sweet.Redis.ConsoleTest
             var largeText = Encoding.UTF8.GetBytes(new string('x', 100000));
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1151,7 +1151,7 @@ namespace Sweet.Redis.ConsoleTest
             var smallText = Encoding.UTF8.GetBytes(new string('x', 1000));
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1185,7 +1185,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest10()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1214,7 +1214,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest9()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1246,7 +1246,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest8()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1276,7 +1276,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest7()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1302,7 +1302,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest6()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.PSubscribe((m) =>
                 {
@@ -1328,7 +1328,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest5()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.Subscribe((m) =>
                 {
@@ -1356,7 +1356,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest4()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.Subscribe((m) =>
                 {
@@ -1384,7 +1384,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.Subscribe((m) =>
                 {
@@ -1408,7 +1408,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 pool.PubSubChannel.Subscribe((m) =>
                 {
@@ -1432,7 +1432,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PubSubTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -1516,7 +1516,7 @@ namespace Sweet.Redis.ConsoleTest
             var script = "return {1,2,3.3333,'foo',nil,'bar'}";
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -1546,7 +1546,7 @@ namespace Sweet.Redis.ConsoleTest
             var script = "return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}";
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -1578,7 +1578,7 @@ namespace Sweet.Redis.ConsoleTest
             var script = "return {1,2,3.3333,'foo',nil,'bar'}";
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -1609,7 +1609,7 @@ namespace Sweet.Redis.ConsoleTest
             var script = "return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}";
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -1646,7 +1646,7 @@ namespace Sweet.Redis.ConsoleTest
             var largeText = new string('x', 100000);
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
@@ -1688,7 +1688,7 @@ namespace Sweet.Redis.ConsoleTest
             var largeText = new string('x', 100000);
 
             using (var pool = new RedisConnectionPool("My redis pool",
-                    new RedisSettings(host: "127.0.0.1", port: 6379, maxCount: 1)))
+                    new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
             {
                 using (var db = pool.GetDb())
                 {
