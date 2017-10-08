@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Net.Security;
 
 namespace Sweet.Redis
 {
@@ -41,8 +42,11 @@ namespace Sweet.Redis
             int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
             int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true)
-            : base(host, port, connectionTimeout, receiveTimeout, sendTimeout)
+            bool useAsyncCompleter = true, bool useSsl = false,
+            LocalCertificateSelectionCallback sslCertificateSelection = null,
+            RemoteCertificateValidationCallback sslCertificateValidation = null)
+            : base(host, port, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
+                   sslCertificateSelection, sslCertificateValidation)
         {
             Password = password;
             ClientName = clientName;

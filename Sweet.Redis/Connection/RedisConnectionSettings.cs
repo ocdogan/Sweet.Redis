@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Net.Security;
 
 namespace Sweet.Redis
 {
@@ -30,13 +31,20 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisConnectionSettings(string host = RedisConstants.IP4LocalHost, int port = RedisConstants.DefaultPort,
+        public RedisConnectionSettings(string host = RedisConstants.IP4LocalHost,
+            int port = RedisConstants.DefaultPort,
             int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
-            int sendTimeout = RedisConstants.DefaultSendTimeout)
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            bool useSsl = false,
+            LocalCertificateSelectionCallback sslCertificateSelection = null,
+            RemoteCertificateValidationCallback sslCertificateValidation = null)
         {
             Host = host;
             Port = port;
+            UseSsl = useSsl;
+            SslCertificateSelection = sslCertificateSelection;
+            SslCertificateValidation = sslCertificateValidation;
             ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
             ReceiveTimeout = Math.Max(RedisConstants.MinReceiveTimeout, Math.Min(RedisConstants.MaxReceiveTimeout, receiveTimeout));
             SendTimeout = Math.Max(RedisConstants.MinSendTimeout, Math.Min(RedisConstants.MaxSendTimeout, sendTimeout));
@@ -51,6 +59,9 @@ namespace Sweet.Redis
         public int Port { get; private set; }
         public int ReceiveTimeout { get; private set; }
         public int SendTimeout { get; private set; }
+        public LocalCertificateSelectionCallback SslCertificateSelection { get; private set; }
+        public RemoteCertificateValidationCallback SslCertificateValidation { get; private set; }
+        public bool UseSsl { get; private set; }
 
         #endregion Properties
     }

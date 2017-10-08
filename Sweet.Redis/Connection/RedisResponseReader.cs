@@ -23,8 +23,8 @@
 #endregion License
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -356,6 +356,7 @@ namespace Sweet.Redis
                     double receiveTimeout = m_ReceiveTimeout;
                     var infiniteTimeout = (long)receiveTimeout == Timeout.Infinite;
 
+                    var stream = socket.GetRealStream();
                     var readStatus = SocketError.Success;
                     do
                     {
@@ -363,7 +364,33 @@ namespace Sweet.Redis
                         {
                             var now = DateTime.UtcNow;
 
-                            var receivedLength = socket.Receive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None, out readStatus);
+                            var receivedLength = 0;
+                            if (!socket.UseSsl)
+                                receivedLength = socket.Receive(m_Buffer, m_WritePosition, receiveSize, SocketFlags.None, out readStatus);
+                            else
+                            {
+                                try
+                                {
+                                    readStatus = SocketError.Success;
+                                    receivedLength = stream.Read(m_Buffer, m_WritePosition, receiveSize);
+                                }
+                                catch (Exception e)
+                                {
+                                    while (e != null)
+                                    {
+                                        e = e.InnerException;
+                                        if (e is SocketException)
+                                        {
+                                            readStatus = ((SocketException)e).SocketErrorCode;
+                                            break;
+                                        }
+                                    }
+
+                                    if (readStatus != SocketError.Success)
+                                        throw;
+                                }
+                            }
+
                             if (readStatus == SocketError.TimedOut ||
                                 readStatus == SocketError.WouldBlock)
                             {

@@ -27,6 +27,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -46,37 +47,63 @@ namespace Sweet.Redis
         private bool m_Authenticated;
 
         private long m_Id;
+
+        private bool m_UseSsl;
         private Socket m_Socket;
         private Action<RedisSocket> m_OnConnect;
         private Action<RedisSocket> m_OnDisconnect;
 
-        private NetworkStream m_RealStream;
+        private object m_RemoteEP;
+        private Stream m_RealStream;
         private BufferedStream m_BufferedStream;
+
+        private LocalCertificateSelectionCallback m_SslCertificateSelection;
+        private RemoteCertificateValidationCallback m_SslCertificateValidation;
 
         #endregion Field Members
 
         #region Constructors
 
-        private RedisSocket(Socket socket)
+        private RedisSocket(Socket socket, bool useSsl = false,
+                           LocalCertificateSelectionCallback sslCertificateSelection = null,
+                           RemoteCertificateValidationCallback sslCertificateValidation = null,
+                           Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
             m_Id = NextId();
             m_Socket = socket;
-        }
-
-        public RedisSocket(SocketInformation socketInformation, Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
-        {
-            m_Id = NextId();
+            m_UseSsl = useSsl;
             m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
+            m_SslCertificateSelection = sslCertificateSelection;
+            m_SslCertificateValidation = sslCertificateValidation;
+        }
+
+        public RedisSocket(SocketInformation socketInformation, bool useSsl = false,
+                           LocalCertificateSelectionCallback sslCertificateSelection = null,
+                           RemoteCertificateValidationCallback sslCertificateValidation = null,
+                           Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
+        {
+            m_Id = NextId();
+            m_UseSsl = useSsl;
+            m_OnConnect = onConnect;
+            m_OnDisconnect = onDisconnect;
+            m_SslCertificateSelection = sslCertificateSelection;
+            m_SslCertificateValidation = sslCertificateValidation;
             m_Socket = new RedisNativeSocket(socketInformation);
         }
 
         public RedisSocket(AddressFamily addressFamily, SocketType socketType,
-                           ProtocolType protocolType, Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
+                           ProtocolType protocolType, bool useSsl = false,
+                           LocalCertificateSelectionCallback sslCertificateSelection = null,
+                           RemoteCertificateValidationCallback sslCertificateValidation = null,
+                           Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
             m_Id = NextId();
+            m_UseSsl = useSsl;
             m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
+            m_SslCertificateSelection = sslCertificateSelection;
+            m_SslCertificateValidation = sslCertificateValidation;
             m_Socket = new RedisNativeSocket(addressFamily, socketType, protocolType);
         }
 
@@ -88,6 +115,9 @@ namespace Sweet.Redis
         {
             var onDisconnect = Interlocked.Exchange(ref m_OnDisconnect, null);
             var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
+
+            Interlocked.Exchange(ref m_SslCertificateSelection, null);
+            Interlocked.Exchange(ref m_SslCertificateValidation, null);
 
             var rs = Interlocked.Exchange(ref m_RealStream, null);
             if (rs != null)
@@ -392,6 +422,11 @@ namespace Sweet.Redis
             }
         }
 
+        public bool UseSsl
+        {
+            get { return m_UseSsl; }
+        }
+
         #endregion Properties
 
         #region Static Methods
@@ -444,27 +479,27 @@ namespace Sweet.Redis
             return m_Socket.BeginAccept(callback, new RedisAsyncStateWrapper(state));
         }
 
-        public IAsyncResult BeginConnect(EndPoint end_point, AsyncCallback callback, object state)
+        public IAsyncResult BeginConnect(EndPoint endPoint, AsyncCallback callback, object state)
         {
-            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
-            return m_Socket.BeginConnect(end_point, callback, new RedisAsyncStateWrapper(state, connState));
+            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), endPoint);
+            return m_Socket.BeginConnect(endPoint, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginConnect(IPAddress address, int port, AsyncCallback callback, object state)
         {
-            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), address);
             return m_Socket.BeginConnect(address, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginConnect(IPAddress[] addresses, int port, AsyncCallback callback, object state)
         {
-            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), addresses);
             return m_Socket.BeginConnect(addresses, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginConnect(string host, int port, AsyncCallback callback, object state)
         {
-            var connState = new Tuple<Socket, bool>(m_Socket, m_Socket.IsConnected());
+            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), new DnsEndPoint(host, port));
             return m_Socket.BeginConnect(host, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
@@ -573,8 +608,14 @@ namespace Sweet.Redis
 
             m_Socket.Connect(remoteEP);
 
-            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
-                onConnect(this);
+            if (!m_Socket.IsConnected())
+                m_RemoteEP = null;
+            else
+            {
+                m_RemoteEP = remoteEP;
+                if (wasDisconnected && (onConnect != null))
+                    onConnect(this);
+            }
         }
 
         public void Connect(IPAddress address, int port)
@@ -584,8 +625,14 @@ namespace Sweet.Redis
 
             m_Socket.Connect(address, port);
 
-            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
-                onConnect(this);
+            if (!m_Socket.IsConnected())
+                m_RemoteEP = null;
+            else
+            {
+                m_RemoteEP = address;
+                if (wasDisconnected && (onConnect != null))
+                    onConnect(this);
+            }
         }
 
         public void Connect(IPAddress[] addresses, int port)
@@ -595,8 +642,14 @@ namespace Sweet.Redis
 
             m_Socket.Connect(addresses, port);
 
-            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
-                onConnect(this);
+            if (!m_Socket.IsConnected())
+                m_RemoteEP = null;
+            else
+            {
+                m_RemoteEP = addresses;
+                if (wasDisconnected && (onConnect != null))
+                    onConnect(this);
+            }
         }
 
         public void Connect(string host, int port)
@@ -606,8 +659,14 @@ namespace Sweet.Redis
 
             m_Socket.Connect(host, port);
 
-            if (wasDisconnected && (onConnect != null) && m_Socket.IsConnected())
-                onConnect(this);
+            if (!m_Socket.IsConnected())
+                m_RemoteEP = null;
+            else
+            {
+                m_RemoteEP = new DnsEndPoint(host, port);
+                if (wasDisconnected && (onConnect != null))
+                    onConnect(this);
+            }
         }
 
         public bool ConnectAsync(SocketAsyncEventArgs e)
@@ -623,9 +682,16 @@ namespace Sweet.Redis
         {
             e.Completed -= OnConnectComplete;
 
-            var onConnect = m_OnConnect;
-            if ((onConnect != null) && e.ConnectSocket.IsConnected())
-                onConnect(this);
+            if (!e.ConnectSocket.IsConnected())
+                m_RemoteEP = null;
+            else
+            {
+                m_RemoteEP = e.RemoteEndPoint;
+
+                var onConnect = m_OnConnect;
+                if (onConnect != null)
+                    onConnect(this);
+            }
         }
 
         public void Disconnect(bool reuseSocket)
@@ -679,18 +745,26 @@ namespace Sweet.Redis
 
         public void EndConnect(IAsyncResult asyncResult)
         {
-            Tuple<Socket, bool> connState = null;
+            Tuple<Socket, bool, object> connState = null;
 
             var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
             if (wrapper != null)
-                connState = wrapper.Tag as Tuple<Socket, bool>;
+                connState = wrapper.Tag as Tuple<Socket, bool, object>;
 
             m_Socket.EndConnect(asyncResult);
 
-            var onConnect = m_OnConnect;
-            if ((onConnect != null) && (connState != null) &&
-                !connState.Item2 && connState.Item1.IsConnected())
-                onConnect(this);
+            if ((connState == null) || !connState.Item1.IsConnected())
+                m_RemoteEP = null;
+            else
+            {
+                m_RemoteEP = connState.Item3;
+                if (!connState.Item2)
+                {
+                    var onConnect = m_OnConnect;
+                    if (onConnect != null)
+                        onConnect(this);
+                }
+            }
         }
 
         public void EndDisconnect(IAsyncResult asyncResult)
@@ -749,6 +823,31 @@ namespace Sweet.Redis
             return m_Socket.EndSendTo(asyncResult);
         }
 
+        private string GetConnectedHost()
+        {
+            var remoteEP = GetConnectedHost(m_RemoteEP);
+            if (String.IsNullOrEmpty(remoteEP))
+                remoteEP = GetConnectedHost(LocalEndPoint);
+            return remoteEP;
+        }
+
+        private static string GetConnectedHost(object remoteEP)
+        {
+            if (remoteEP != null)
+            {
+                if (remoteEP is DnsEndPoint)
+                    return ((DnsEndPoint)remoteEP).Host;
+
+                if (remoteEP is IPEndPoint)
+                {
+                    var address = ((IPEndPoint)remoteEP).Address;
+                    if (address != null)
+                        return address.ToString();
+                }
+            }
+            return null;
+        }
+
         public Stream GetRealStream()
         {
             ValidateNotDisposed();
@@ -757,6 +856,20 @@ namespace Sweet.Redis
             if (rs == null)
             {
                 rs = new NetworkStream(m_Socket, false);
+                if (UseSsl)
+                {
+                    var host = GetConnectedHost();
+                    if (String.IsNullOrEmpty(host))
+                        throw new RedisFatalException("Remote end-point can not be defined for ssl usage");
+
+                    var ssl = new SslStream(rs, false, m_SslCertificateValidation,
+                                            m_SslCertificateSelection, EncryptionPolicy.RequireEncryption);
+
+                    ssl.AuthenticateAsClient(host);
+                    if (!ssl.IsEncrypted)
+                        throw new Exception("Cannot create encrypted connection to end-point: " + host);
+                }
+
                 Interlocked.Exchange(ref m_RealStream, rs);
             }
             return rs;

@@ -247,7 +247,7 @@ namespace Sweet.Redis
 
         protected virtual RedisSocket NewSocket()
         {
-            var socket = new RedisSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var socket = new RedisSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp, Settings.UseSsl);
 
             var onCreateSocket = m_CreateAction;
             if (onCreateSocket != null)
