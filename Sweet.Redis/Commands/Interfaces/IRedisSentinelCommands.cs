@@ -22,41 +22,9 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Threading;
-using System.Text;
-
 namespace Sweet.Redis
 {
-    public class RedisSentinelClient : RedisClient, IRedisSentinelClient
+    public interface IRedisSentinelCommands
     {
-        #region Field Members
-
-        private IRedisSentinelCommands m_Commands;
-
-        #endregion Field Members
-
-        #region .Ctors
-
-        public RedisSentinelClient(bool throwOnError = true)
-            : base(throwOnError)
-        { }
-
-        #endregion .Ctors
-
-        #region Properties
-
-        public IRedisSentinelCommands Sentinel
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Commands == null)
-                    m_Commands = new RedisSentinelCommands(this);
-                return m_Commands;
-            }
-        }
-
-        #endregion Properties
     }
 }

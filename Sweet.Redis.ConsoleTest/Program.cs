@@ -120,6 +120,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
                         Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                        Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");
@@ -170,6 +171,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
                         Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                        Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");
@@ -252,6 +254,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
                         Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                        Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");
@@ -345,6 +348,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
                         Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                        Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");
@@ -395,6 +399,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
                         Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                        Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");
@@ -477,6 +482,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         Console.WriteLine();
                         Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                        Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
 
                         Console.WriteLine();
                         Console.WriteLine("Press any key to continue, ESC to escape ...");

@@ -46,12 +46,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\Interfaces\IRedisSentinelCommands.cs" />
+    <Compile Include="Commands\RedisSentinelCommands.cs" />
     <Compile Include="Common\RedisParam.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Connection\Interfaces\IRedisCommandExecuter.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnectionProvider.cs" />
     <Compile Include="Connection\Interfaces\IRedisClient.cs" />
+    <Compile Include="Connection\Interfaces\IRedisSentinelClient.cs" />
     <Compile Include="Connection\RedisClient.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelClient.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelConnection.cs" />
