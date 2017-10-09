@@ -26,21 +26,11 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisDb : IRedisDisposable, IRedisClient
+    public interface IRedisClient
     {
-        RedisConnectionPool Pool { get; }
-
-        IRedisConnectionCommands Connection { get; }
-        IRedisGeoCommands Geo { get; }
-        IRedisHashesCommands Hashes { get; }
-        IRedisHyperLogLogCommands HyperLogLogCommands { get; }
-        IRedisKeysCommands Keys { get; }
-        IRedisListsCommands Lists { get; }
-        IRedisPubSubCommands PubSubs { get; }
-        IRedisScriptingCommands Scripting { get; }
-        IRedisServerCommands Server { get; }
-        IRedisSetsCommands Sets { get; }
-        IRedisSortedSetsCommands SortedSets { get; }
-        IRedisStringsCommands Strings { get; }
+        int DbIndex { get; }
+        Guid Id { get; }
+        bool ThrowOnError { get; }
+        void ValidateNotDisposed();
     }
 }

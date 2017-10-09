@@ -28,7 +28,7 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    public class RedisClient : RedisDisposable
+    public class RedisClient : RedisDisposable, IRedisClient
     {
         #region Field Members
 

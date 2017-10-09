@@ -31,17 +31,17 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private RedisDb m_Db;
+        private RedisClient m_Client;
         private Guid m_Id;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisCommandSet(RedisDb db)
+        public RedisCommandSet(RedisClient client)
         {
-            m_Db = db;
-            m_Id = db.Id;
+            m_Client = client;
+            m_Id = client.Id;
         }
 
         #endregion .Ctors
@@ -50,16 +50,16 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Interlocked.Exchange(ref m_Db, null);
+            Interlocked.Exchange(ref m_Client, null);
         }
 
         #endregion Destructors
 
         #region Properties
 
-        public IRedisDb Db
+        public IRedisClient Client
         {
-            get { return m_Db; }
+            get { return m_Client; }
         }
 
         public Guid Id
@@ -122,103 +122,103 @@ namespace Sweet.Redis
         protected RedisRaw ExpectArray(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectArray(cmd, parameters);
+            return m_Client.ExpectArray(cmd, parameters);
         }
 
         protected RedisString ExpectBulkString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectBulkString(cmd, parameters);
+            return m_Client.ExpectBulkString(cmd, parameters);
         }
 
         protected RedisBytes ExpectBulkStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectBulkStringBytes(cmd, parameters);
+            return m_Client.ExpectBulkStringBytes(cmd, parameters);
         }
 
         protected RedisDouble ExpectDouble(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectDouble(cmd, parameters);
+            return m_Client.ExpectDouble(cmd, parameters);
         }
 
         protected RedisBool ExpectGreaterThanZero(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectGreaterThanZero(cmd, parameters);
+            return m_Client.ExpectGreaterThanZero(cmd, parameters);
         }
 
         protected RedisInteger ExpectInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectInteger(cmd, parameters);
+            return m_Client.ExpectInteger(cmd, parameters);
         }
 
         protected RedisMultiBytes ExpectMultiDataBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectMultiDataBytes(cmd, parameters);
+            return m_Client.ExpectMultiDataBytes(cmd, parameters);
         }
 
         protected RedisMultiString ExpectMultiDataStrings(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectMultiDataStrings(cmd, parameters);
+            return m_Client.ExpectMultiDataStrings(cmd, parameters);
         }
 
         protected RedisVoid ExpectNothing(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectNothing(cmd, parameters);
+            return m_Client.ExpectNothing(cmd, parameters);
         }
 
         protected RedisNullableDouble ExpectNullableDouble(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectNullableDouble(cmd, parameters);
+            return m_Client.ExpectNullableDouble(cmd, parameters);
         }
 
         protected RedisNullableInteger ExpectNullableInteger(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectNullableInteger(cmd, parameters);
+            return m_Client.ExpectNullableInteger(cmd, parameters);
         }
 
         protected RedisBool ExpectOK(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectOK(cmd, parameters);
+            return m_Client.ExpectOK(cmd, parameters);
         }
 
         protected RedisBool ExpectOne(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectOne(cmd, parameters);
+            return m_Client.ExpectOne(cmd, parameters);
         }
 
         protected RedisBool ExpectSimpleString(byte[] cmd, string expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectSimpleString(cmd, expectedResult, parameters);
+            return m_Client.ExpectSimpleString(cmd, expectedResult, parameters);
         }
 
         protected RedisString ExpectSimpleString(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectSimpleString(cmd, parameters);
+            return m_Client.ExpectSimpleString(cmd, parameters);
         }
 
         protected RedisBool ExpectSimpleStringBytes(byte[] cmd, byte[] expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectSimpleStringBytes(cmd, expectedResult, parameters);
+            return m_Client.ExpectSimpleStringBytes(cmd, expectedResult, parameters);
         }
 
         protected RedisBytes ExpectSimpleStringBytes(byte[] cmd, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return m_Db.ExpectSimpleStringBytes(cmd, parameters);
+            return m_Client.ExpectSimpleStringBytes(cmd, parameters);
         }
 
         #endregion Execution Methods

@@ -28,7 +28,7 @@ namespace Sweet.Redis
 {
     public interface IRedisCommandSet
     {
-        IRedisDb Db { get; }
+        IRedisClient Client { get; }
         Guid Id { get; }
     }
 }
