@@ -49,6 +49,11 @@
     <Compile Include="Common\RedisParam.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
+    <Compile Include="Connection\Interfaces\IRedisCommandExecuter.cs" />
+    <Compile Include="Connection\Interfaces\IRedisConnectionProvider.cs" />
+    <Compile Include="Connection\RedisClient.cs" />
+    <Compile Include="Connection\Sentinel\RedisSentinelClient.cs" />
+    <Compile Include="Connection\Sentinel\RedisSentinelConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Buffers\RedisChunkBuffer.cs" />
     <Compile Include="Buffers\RedisByteBuffer.cs" />
@@ -208,29 +213,7 @@
   <ItemGroup>
     <None Include="License.md" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Common\Result\" />
-    <Folder Include="Common\Exception\" />
-    <Folder Include="Common\Request\" />
-    <Folder Include="Common\ServerInfo\" />
-    <Folder Include="Common\Geo\" />
-    <Folder Include="Common\Interfaces\" />
-    <Folder Include="Commands\Interfaces\" />
-    <Folder Include="Common\Command\" />
-    <Folder Include="Connection\Interfaces\" />
-    <Folder Include="Connection\Continuous\" />
-    <Folder Include="Connection\Db\" />
-    <Folder Include="Connection\PubSub\" />
-    <Folder Include="Connection\Async\" />
-    <Folder Include="Connection\Settings\" />
-    <Folder Include="Connection\ReaderWriter\" />
-    <Folder Include="Connection\Pooling\" />
-    <Folder Include="Connection\Monitor\" />
-    <Folder Include="Connection\Sockets\" />
-    <Folder Include="Common\ClientInfo\" />
-    <Folder Include="Common\Disposable\" />
-    <Folder Include="Common\SentinelInfo\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

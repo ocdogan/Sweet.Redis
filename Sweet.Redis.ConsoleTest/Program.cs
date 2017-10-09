@@ -104,10 +104,14 @@ namespace Sweet.Redis.ConsoleTest
 
                             sw.Stop();
 
-                            sw.Stop();
-
+                            var sBuilder = new StringBuilder(20 * 1024);
                             for (var i = 0; i < list.Count; i++)
-                                Console.WriteLine(list[i]);
+                            {
+                                sBuilder.Append(list[i]);
+                                sBuilder.AppendLine();
+                            }
+
+                            Console.WriteLine(sBuilder.ToString());
                         }
                         catch (Exception e)
                         {

@@ -116,11 +116,13 @@ namespace Sweet.Redis
         public static readonly byte[] Rename = "RENAME".ToBytes();
         public static readonly byte[] RenameNx = "RENAMENX".ToBytes();
         public static readonly byte[] Restore = "RESTORE".ToBytes();
-        public static readonly byte[] ScanLoop = "SCANLOOP".ToBytes();
+        public static readonly byte[] Scan = "SCAN".ToBytes();
         public static readonly byte[] Sort = "SORT".ToBytes();
         public static readonly byte[] Touch = "TOUCH".ToBytes();
         public static readonly byte[] Ttl = "TTL".ToBytes();
         public static readonly byte[] Type = "TYPE".ToBytes();
+        public static readonly byte[] Unlink = "UNLINK".ToBytes();
+        public static readonly byte[] Wait = "WAIT".ToBytes();
 
         // Migrate command options
         public static readonly byte[] Copy = "COPY".ToBytes();

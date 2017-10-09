@@ -167,6 +167,8 @@ namespace Sweet.Redis
 
         RedisString Type(RedisParam key);
 
+        RedisInteger Unlink(RedisParam key, params RedisParam[] keys);
+
         RedisInteger Wait(int numberOfSlaves, int timeout);
     }
 }

@@ -31,7 +31,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisCommand : RedisDisposable, IRedisCommand
+    public class RedisCommand : RedisDisposable, IRedisCommand
     {
         #region Field Members
 
@@ -46,7 +46,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisCommand(int db, byte[] command, RedisCommandType commandType = RedisCommandType.SendAndReceive,
+        protected internal RedisCommand(int db, byte[] command, RedisCommandType commandType = RedisCommandType.SendAndReceive,
                             params byte[][] args)
         {
             if (command == null)

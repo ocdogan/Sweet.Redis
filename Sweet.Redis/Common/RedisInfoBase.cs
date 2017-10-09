@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -38,6 +39,8 @@ namespace Sweet.Redis
         #endregion .Ctors
 
         #region Methods
+
+        #region Get Methods
 
         public string Get(string key)
         {
@@ -151,6 +154,8 @@ namespace Sweet.Redis
             }
             return false;
         }
+
+        #endregion Get Methods
 
         #endregion Methods
     }

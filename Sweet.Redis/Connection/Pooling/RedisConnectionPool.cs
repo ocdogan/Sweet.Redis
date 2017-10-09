@@ -503,9 +503,9 @@ namespace Sweet.Redis
 
         #endregion Member Store Methods
 
-        #region Command Execution
+        #region IRedisCommandExecuter Methods
 
-        internal RedisResponse Execute(RedisCommand command, bool throwException = true)
+        protected internal override RedisResponse Execute(RedisCommand command, bool throwException = true)
         {
             if (command == null)
                 throw new ArgumentNullException("command");
@@ -531,7 +531,7 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisRaw ExpectArray(RedisCommand command, bool throwException = true)
+        protected internal override RedisRaw ExpectArray(RedisCommand command, bool throwException = true)
         {
             if (command == null)
                 throw new ArgumentNullException("command");
@@ -557,8 +557,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisString ExpectBulkString(RedisCommand command, bool throwException = true)
+        protected internal override RedisString ExpectBulkString(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -580,8 +583,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBytes ExpectBulkStringBytes(RedisCommand command, bool throwException = true)
+        protected internal override RedisBytes ExpectBulkStringBytes(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -603,8 +609,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisDouble ExpectDouble(RedisCommand command, bool throwException = true)
+        protected internal override RedisDouble ExpectDouble(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -626,8 +635,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBool ExpectGreaterThanZero(RedisCommand command, bool throwException = true)
+        protected internal override RedisBool ExpectGreaterThanZero(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -649,8 +661,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisInteger ExpectInteger(RedisCommand command, bool throwException = true)
+        protected internal override RedisInteger ExpectInteger(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -672,8 +687,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisMultiBytes ExpectMultiDataBytes(RedisCommand command, bool throwException = true)
+        protected internal override RedisMultiBytes ExpectMultiDataBytes(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -695,8 +713,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisMultiString ExpectMultiDataStrings(RedisCommand command, bool throwException = true)
+        protected internal override RedisMultiString ExpectMultiDataStrings(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -718,8 +739,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisVoid ExpectNothing(RedisCommand command, bool throwException = true)
+        protected internal override RedisVoid ExpectNothing(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -741,8 +765,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
+        protected internal override RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -764,8 +791,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisNullableInteger ExpectNullableInteger(RedisCommand command, bool throwException = true)
+        protected internal override RedisNullableInteger ExpectNullableInteger(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -787,8 +817,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBool ExpectOK(RedisCommand command, bool throwException = true)
+        protected internal override RedisBool ExpectOK(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -810,8 +843,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBool ExpectOne(RedisCommand command, bool throwException = true)
+        protected internal override RedisBool ExpectOne(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -833,8 +869,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBool ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException = true)
+        protected internal override RedisBool ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -856,8 +895,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisString ExpectSimpleString(RedisCommand command, bool throwException = true)
+        protected internal override RedisString ExpectSimpleString(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             var connection = Connect(command.DbIndex);
@@ -875,8 +917,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBool ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException = true)
+        protected internal override RedisBool ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -898,8 +943,11 @@ namespace Sweet.Redis
             }
         }
 
-        internal RedisBytes ExpectSimpleStringBytes(RedisCommand command, bool throwException = true)
+        protected internal override RedisBytes ExpectSimpleStringBytes(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
@@ -921,7 +969,7 @@ namespace Sweet.Redis
             }
         }
 
-        #endregion Command Execution
+        #endregion IRedisCommandExecuter Methods
 
         #endregion Member Methods
 

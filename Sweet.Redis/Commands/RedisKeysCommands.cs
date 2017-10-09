@@ -285,9 +285,7 @@ namespace Sweet.Redis
 
             if (keys.Length > 0)
             {
-                var parameters = key
-                                    .Join(keys.ToBytesArray());
-
+                var parameters = key.Join(keys.ToBytesArray());
                 return ExpectInteger(RedisCommands.Touch, parameters);
             }
             return ExpectInteger(RedisCommands.Touch, keys.ToBytesArray());
@@ -309,9 +307,24 @@ namespace Sweet.Redis
             return ExpectSimpleString(RedisCommands.Type, key.Data);
         }
 
+        public RedisInteger Unlink(RedisParam key, params RedisParam[] keys)
+        {
+            if (key.IsNull)
+                throw new ArgumentNullException("key");
+
+            ValidateNotDisposed();
+
+            if (keys.Length > 0)
+            {
+                var parameters = key.Join(keys.ToBytesArray());
+                return ExpectInteger(RedisCommands.Unlink, parameters);
+            }
+            return ExpectInteger(RedisCommands.Unlink, keys.ToBytesArray());
+        }
+
         public RedisInteger Wait(int numberOfSlaves, int timeout)
         {
-            return ExpectInteger(RedisCommands.Ttl, numberOfSlaves.ToBytes(), timeout.ToBytes());
+            return ExpectInteger(RedisCommands.Wait, numberOfSlaves.ToBytes(), timeout.ToBytes());
         }
 
         #endregion Methods

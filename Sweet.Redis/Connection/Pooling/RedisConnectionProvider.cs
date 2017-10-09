@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisConnectionProvider : RedisDisposable
+    public class RedisConnectionProvider : RedisDisposable, IRedisConnectionProvider, IRedisCommandExecuter
     {
         #region Constants
 
@@ -96,6 +96,8 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region IRedisConnectionProvider Methods
+
         protected virtual RedisSettings GetSettings()
         {
             return m_Settings;
@@ -121,7 +123,12 @@ namespace Sweet.Redis
         protected virtual void OnConnectionTimeout(RedisConnectionRetryEventArgs e)
         { }
 
-        internal virtual IRedisConnection Connect(int db)
+        IRedisConnection IRedisConnectionProvider.Connect(int db)
+        {
+            return this.Connect(db);
+        }
+        
+        protected internal virtual IRedisConnection Connect(int db)
         {
             ValidateNotDisposed();
 
@@ -193,8 +200,341 @@ namespace Sweet.Redis
         }
 
         protected virtual void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
+        { }
+
+        #endregion IRedisConnectionProvider Methods
+
+        #region IRedisCommandExecuter Methods
+
+        protected internal virtual RedisResponse Execute(RedisCommand command, bool throwException = true)
         {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.Execute(connection, throwException);
+            }
         }
+
+        protected internal virtual RedisRaw ExpectArray(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectArray(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisString ExpectBulkString(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectBulkString(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisBytes ExpectBulkStringBytes(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectBulkStringBytes(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisDouble ExpectDouble(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectDouble(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisBool ExpectGreaterThanZero(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
+            }
+        }
+
+        protected internal virtual RedisInteger ExpectInteger(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectInteger(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisMultiBytes ExpectMultiDataBytes(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectMultiDataBytes(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisMultiString ExpectMultiDataStrings(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectMultiDataStrings(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisVoid ExpectNothing(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectNothing(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectNullableDouble(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisNullableInteger ExpectNullableInteger(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectNullableInteger(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisBool ExpectOK(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleString(connection, "OK", throwException);
+            }
+        }
+
+        protected internal virtual RedisBool ExpectOne(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectInteger(connection, throwException) == RedisConstants.One;
+            }
+        }
+
+        protected internal virtual RedisBool ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleString(connection, expectedResult, throwException);
+            }
+        }
+
+        protected internal virtual RedisString ExpectSimpleString(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleString(connection, throwException);
+            }
+        }
+
+        protected internal virtual RedisBool ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
+            }
+        }
+
+        protected internal virtual RedisBytes ExpectSimpleStringBytes(RedisCommand command, bool throwException = true)
+        {
+            if (command == null)
+                throw new ArgumentNullException("command");
+
+            ValidateNotDisposed();
+
+            using (var connection = Connect(command.DbIndex))
+            {
+                return command.ExpectSimpleStringBytes(connection, throwException);
+            }
+        }
+
+        #endregion IRedisCommandExecuter Methods
+
+        #region IRedisCommandExecuter Methods
+
+        RedisResponse IRedisCommandExecuter.Execute(RedisCommand command, bool throwException)
+        {
+            return this.Execute(command, throwException);
+        }
+
+        RedisRaw IRedisCommandExecuter.ExpectArray(RedisCommand command, bool throwException)
+        {
+            return this.ExpectArray(command, throwException);
+        }
+
+        RedisString IRedisCommandExecuter.ExpectBulkString(RedisCommand command, bool throwException)
+        {
+            return this.ExpectBulkString(command, throwException);
+        }
+
+        RedisBytes IRedisCommandExecuter.ExpectBulkStringBytes(RedisCommand command, bool throwException)
+        {
+            return this.ExpectBulkStringBytes(command, throwException);
+        }
+
+        RedisDouble IRedisCommandExecuter.ExpectDouble(RedisCommand command, bool throwException)
+        {
+            return this.ExpectDouble(command, throwException);
+        }
+
+        RedisBool IRedisCommandExecuter.ExpectGreaterThanZero(RedisCommand command, bool throwException)
+        {
+            return this.ExpectGreaterThanZero(command, throwException);
+        }
+
+        RedisInteger IRedisCommandExecuter.ExpectInteger(RedisCommand command, bool throwException)
+        {
+            return this.ExpectInteger(command, throwException);
+        }
+
+        RedisMultiBytes IRedisCommandExecuter.ExpectMultiDataBytes(RedisCommand command, bool throwException)
+        {
+            return this.ExpectMultiDataBytes(command, throwException);
+        }
+
+        RedisMultiString IRedisCommandExecuter.ExpectMultiDataStrings(RedisCommand command, bool throwException)
+        {
+            return this.ExpectMultiDataStrings(command, throwException);
+        }
+
+        RedisVoid IRedisCommandExecuter.ExpectNothing(RedisCommand command, bool throwException)
+        {
+            return this.ExpectNothing(command, throwException);
+        }
+
+        RedisNullableDouble IRedisCommandExecuter.ExpectNullableDouble(RedisCommand command, bool throwException)
+        {
+            return this.ExpectNullableDouble(command, throwException);
+        }
+
+        RedisNullableInteger IRedisCommandExecuter.ExpectNullableInteger(RedisCommand command, bool throwException)
+        {
+            return this.ExpectNullableInteger(command, throwException);
+        }
+
+        RedisBool IRedisCommandExecuter.ExpectOK(RedisCommand command, bool throwException)
+        {
+            return this.ExpectOK(command, throwException);
+        }
+
+        RedisBool IRedisCommandExecuter.ExpectOne(RedisCommand command, bool throwException)
+        {
+            return this.ExpectOne(command, throwException);
+        }
+
+        RedisBool IRedisCommandExecuter.ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException)
+        {
+            return this.ExpectSimpleString(command, expectedResult, throwException);
+        }
+
+        RedisString IRedisCommandExecuter.ExpectSimpleString(RedisCommand command, bool throwException)
+        {
+            return this.ExpectSimpleString(command, throwException);
+        }
+
+        RedisBool IRedisCommandExecuter.ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException)
+        {
+            return this.ExpectSimpleStringBytes(command, expectedResult, throwException);
+        }
+
+        RedisBytes IRedisCommandExecuter.ExpectSimpleStringBytes(RedisCommand command, bool throwException)
+        {
+            return this.ExpectSimpleStringBytes(command, throwException);
+        }
+
+        #endregion IRedisCommandExecuter Methods
 
         #endregion Methods
     }

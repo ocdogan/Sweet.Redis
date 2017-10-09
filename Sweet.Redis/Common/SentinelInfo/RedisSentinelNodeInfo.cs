@@ -73,14 +73,7 @@ namespace Sweet.Redis
 
         public string Ip { get { return Get("port"); } } // 127.0.0.1
 
-        public int? Port
-        {
-            get
-            {
-                var result = GetInteger("port");
-                return result.HasValue ? (int?)(int)result.Value : null;
-            }
-        } // 6379
+        public long? Port { get { return GetInteger("port"); } } // 6379
 
         public string RunId { get { return Get("runid"); } } // f790ed3ab5f8fa33fa1ea3eb64e3c17103d795c7
 
