@@ -59,25 +59,25 @@ namespace Sweet.Redis
 
         public long? SentinelSimulateFailureFlags { get { return GetInteger("sentinel_simulate_failure_flags"); } } // 0
 
-        public IDictionary<string, string> Master0 { get { return GetItems("master0", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master0 { get { return GetAttributes("master0"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master1 { get { return GetItems("master1", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master1 { get { return GetAttributes("master1"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master2 { get { return GetItems("master2", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master2 { get { return GetAttributes("master2"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master3 { get { return GetItems("master3", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master3 { get { return GetAttributes("master3"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master4 { get { return GetItems("master4", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master4 { get { return GetAttributes("master4"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master5 { get { return GetItems("master5", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master5 { get { return GetAttributes("master5"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master6 { get { return GetItems("master6", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master6 { get { return GetAttributes("master6"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master7 { get { return GetItems("master7", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master7 { get { return GetAttributes("master7"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master8 { get { return GetItems("master8", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master8 { get { return GetAttributes("master8"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
 
-        public IDictionary<string, string> Master9 { get { return GetItems("master9", ',', '='); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        public IDictionary<string, string> Master9 { get { return GetAttributes("master9"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
         
         #endregion Properties
     }

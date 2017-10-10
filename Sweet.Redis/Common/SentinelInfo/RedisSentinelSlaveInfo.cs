@@ -22,10 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-
 namespace Sweet.Redis
 {
     /*
@@ -50,12 +46,16 @@ namespace Sweet.Redis
     slave-priority : 100
     slave-repl-offset : 2216974
     */
-    public class RedisSentinelSlaveInfo : RedisSentinelNodeInfo
+    public class RedisSentinelSlaveInfo : RedisSentinelInfoBase
     {
         #region .Ctors
 
         internal RedisSentinelSlaveInfo(string[] infoLines = null)
             : base(infoLines)
+        { }
+
+        internal RedisSentinelSlaveInfo(RedisRawObject rawObject)
+            : base(rawObject)
         { }
 
         #endregion .Ctors

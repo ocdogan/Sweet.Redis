@@ -22,10 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-
 namespace Sweet.Redis
 {
     /*
@@ -50,12 +46,16 @@ namespace Sweet.Redis
     failover-timeout : 180000
     parallel-syncs : 1
     */
-    public class RedisSentinelMasterInfo : RedisSentinelNodeInfo
+    public class RedisSentinelMasterInfo : RedisSentinelInfoBase
     {
         #region .Ctors
 
         internal RedisSentinelMasterInfo(string[] infoLines = null)
             : base(infoLines)
+        { }
+
+        internal RedisSentinelMasterInfo(RedisRawObject rawObject)
+            : base(rawObject)
         { }
 
         #endregion .Ctors

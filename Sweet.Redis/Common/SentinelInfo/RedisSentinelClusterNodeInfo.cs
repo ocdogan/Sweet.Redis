@@ -30,24 +30,25 @@ namespace Sweet.Redis
     port : 6379
     runid : f790ed3ab5f8fa33fa1ea3eb64e3c17103d795c7
     flags : master
-    pending-commands : 0
+    link-pending-commands : 0
+    link-refcount : 1
     last-ping-sent : 0
     last-ok-ping-reply : 65
     last-ping-reply : 65
     down-after-milliseconds : 30000
-    last-hello-message : 399
-    voted-leader : ?
-    voted-leader-epoch : 0
+    info-refresh : 8181
+    role-reported : master
+    role-reported-time : 108592
     */
-    public class RedisSentinelNodeInfo : RedisSentinelInfoBase
+    public class RedisSentinelClusterNodeInfo : RedisSentinelInfoBase
     {
         #region .Ctors
 
-        internal RedisSentinelNodeInfo(string[] infoLines = null)
+        internal RedisSentinelClusterNodeInfo(string[] infoLines = null)
             : base(infoLines)
         { }
 
-        internal RedisSentinelNodeInfo(RedisRawObject rawObject)
+        internal RedisSentinelClusterNodeInfo(RedisRawObject rawObject)
             : base(rawObject)
         { }
 
@@ -55,15 +56,15 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public long? PendingCommands { get { return GetInteger("pending-commands"); } } // 0
+        public long? LinkPendingCommands { get { return GetInteger("link-pending-commands"); } } // 0
 
-        public long? LastHelloMessage { get { return GetInteger("last-hello-message"); } } // 399
+        public long? LinkRefCount { get { return GetInteger("link-refcount"); } } // 1
 
         public long? InfoRefresh { get { return GetInteger("info-refresh"); } } // 8181
 
-        public string VotedLeader { get { return Get("voted-leader"); } } // ?
+        public string[] RoleReported { get { return GetItems("role-reported"); } } // master
 
-        public long? VotedLeaderEpoch { get { return GetInteger("voted-leader-epoch"); } } // 0
+        public long? RoleReportedTime { get { return GetInteger("role-reported-time"); } } // 108592
 
         #endregion Properties
     }

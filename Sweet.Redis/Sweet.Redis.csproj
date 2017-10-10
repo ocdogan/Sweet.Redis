@@ -48,9 +48,13 @@
   <ItemGroup>
     <Compile Include="Commands\Interfaces\IRedisSentinelCommands.cs" />
     <Compile Include="Commands\RedisSentinelCommands.cs" />
+    <Compile Include="Common\RedisEndPoint.cs" />
     <Compile Include="Common\RedisParam.cs" />
+    <Compile Include="Common\RedisRole.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
+    <Compile Include="Common\SentinelInfo\RedisSentinelClusterNodeInfo.cs" />
+    <Compile Include="Common\SentinelInfo\RedisSentinelNodeInfo.cs" />
     <Compile Include="Connection\Interfaces\IRedisCommandExecuter.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnectionProvider.cs" />
     <Compile Include="Connection\Interfaces\IRedisClient.cs" />
@@ -210,7 +214,7 @@
     <Compile Include="Common\Disposable\RedisInternalDisposable.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelMasterInfo.cs" />
     <Compile Include="Common\RedisInfoBase.cs" />
-    <Compile Include="Common\SentinelInfo\RedisSentinelNodeInfo.cs" />
+    <Compile Include="Common\SentinelInfo\RedisSentinelInfoBase.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelSlaveInfo.cs" />
   </ItemGroup>
   <ItemGroup />

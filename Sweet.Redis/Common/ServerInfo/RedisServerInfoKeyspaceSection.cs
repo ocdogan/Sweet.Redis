@@ -45,37 +45,37 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public IDictionary<string, string> db0 { get { return GetItems("db0", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db0 { get { return GetAttributes("db0"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db1 { get { return GetItems("db1", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db1 { get { return GetAttributes("db1"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db2 { get { return GetItems("db2", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db2 { get { return GetAttributes("db2"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db3 { get { return GetItems("db3", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db3 { get { return GetAttributes("db3"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db4 { get { return GetItems("db4", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db4 { get { return GetAttributes("db4"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db5 { get { return GetItems("db5", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db5 { get { return GetAttributes("db5"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db6 { get { return GetItems("db6", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db6 { get { return GetAttributes("db6"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db7 { get { return GetItems("db7", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db7 { get { return GetAttributes("db7"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db8 { get { return GetItems("db8", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db8 { get { return GetAttributes("db8"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db9 { get { return GetItems("db9", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db9 { get { return GetAttributes("db9"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db10 { get { return GetItems("db10", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db10 { get { return GetAttributes("db10"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db11 { get { return GetItems("db11", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db11 { get { return GetAttributes("db11"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db12 { get { return GetItems("db12", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db12 { get { return GetAttributes("db12"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db13 { get { return GetItems("db13", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db13 { get { return GetAttributes("db13"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db14 { get { return GetItems("db14", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db14 { get { return GetAttributes("db14"); } } // db0:keys=12,expires=0,avg_ttl=0
 
-        public IDictionary<string, string> db15 { get { return GetItems("db15", ',', '='); } } // db0:keys=12,expires=0,avg_ttl=0
+        public IDictionary<string, string> db15 { get { return GetAttributes("db15"); } } // db0:keys=12,expires=0,avg_ttl=0
 
         #endregion Properties
     }

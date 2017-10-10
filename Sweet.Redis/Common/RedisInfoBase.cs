@@ -105,7 +105,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public IDictionary<string, string> GetItems(string key, char itemSeparator, char valueSeparator)
+        public IDictionary<string, string> GetAttributes(string key, char itemSeparator = ',', char valueSeparator = '=')
         {
             if (!String.IsNullOrEmpty(key))
             {
@@ -140,6 +140,17 @@ namespace Sweet.Redis
                     }
                     return result;
                 }
+            }
+            return null;
+        }
+
+        public string[] GetItems(string key, char separator = ',')
+        {
+            if (!String.IsNullOrEmpty(key))
+            {
+                string value;
+                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
+                    return value.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
             }
             return null;
         }

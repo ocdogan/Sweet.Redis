@@ -24,46 +24,23 @@
 
 namespace Sweet.Redis
 {
-    /*
-    name : mymaster
-    ip : 127.0.0.1
-    port : 6379
-    runid : f790ed3ab5f8fa33fa1ea3eb64e3c17103d795c7
-    flags : master
-    pending-commands : 0
-    last-ping-sent : 0
-    last-ok-ping-reply : 65
-    last-ping-reply : 65
-    down-after-milliseconds : 30000
-    last-hello-message : 399
-    voted-leader : ?
-    voted-leader-epoch : 0
-    */
-    public class RedisSentinelNodeInfo : RedisSentinelInfoBase
+    public class RedisEndPoint
     {
         #region .Ctors
 
-        internal RedisSentinelNodeInfo(string[] infoLines = null)
-            : base(infoLines)
-        { }
-
-        internal RedisSentinelNodeInfo(RedisRawObject rawObject)
-            : base(rawObject)
-        { }
+        public RedisEndPoint(string ipAddress, int port)
+        {
+            IPAddress = ipAddress;
+            Port = port;
+        }
 
         #endregion .Ctors
 
         #region Properties
 
-        public long? PendingCommands { get { return GetInteger("pending-commands"); } } // 0
+        public string IPAddress { get; private set; }
 
-        public long? LastHelloMessage { get { return GetInteger("last-hello-message"); } } // 399
-
-        public long? InfoRefresh { get { return GetInteger("info-refresh"); } } // 8181
-
-        public string VotedLeader { get { return Get("voted-leader"); } } // ?
-
-        public long? VotedLeaderEpoch { get { return GetInteger("voted-leader-epoch"); } } // 0
+        public int Port { get; private set; }
 
         #endregion Properties
     }

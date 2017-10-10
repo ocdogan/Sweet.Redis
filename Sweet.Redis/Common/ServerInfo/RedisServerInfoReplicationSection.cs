@@ -58,25 +58,25 @@ namespace Sweet.Redis
 
         public long? ConnectedSlaves { get { return GetInteger("connected_slaves"); } } // 1
 
-        public IDictionary<string, string> Slave0 { get { return GetItems("slave0", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave0 { get { return GetAttributes("slave0"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave1 { get { return GetItems("slave1", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave1 { get { return GetAttributes("slave1"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave2 { get { return GetItems("slave2", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave2 { get { return GetAttributes("slave2"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave3 { get { return GetItems("slave3", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave3 { get { return GetAttributes("slave3"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave4 { get { return GetItems("slave4", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave4 { get { return GetAttributes("slave4"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave5 { get { return GetItems("slave5", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave5 { get { return GetAttributes("slave5"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave6 { get { return GetItems("slave6", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave6 { get { return GetAttributes("slave6"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave7 { get { return GetItems("slave7", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave7 { get { return GetAttributes("slave7"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
-        public IDictionary<string, string> Slave8 { get { return GetItems("slave8", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave8 { get { return GetAttributes("slave8"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
         
-        public IDictionary<string, string> Slave9 { get { return GetItems("slave9", ',', '='); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public IDictionary<string, string> Slave9 { get { return GetAttributes("slave9"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
         public string MasterReplId { get { return Get("master_replid"); } } // c11020e01bc557109082cb298de257f7c04e4914
 
