@@ -32,14 +32,31 @@ namespace Sweet.Redis
 
         internal RedisRoleInfo(string role)
         {
-            Role = role;
+            RoleName = role;
+            switch (role)
+            {
+                case "master":
+                    Role = RedisRole.Master;
+                    break;
+                case "slave":
+                    Role = RedisRole.Slave;
+                    break;
+                case "sentinel":
+                    Role = RedisRole.Sentinel;
+                    break;
+                default:
+                    Role = RedisRole.Undefined;
+                    break;
+            }
         }
 
         #endregion .Ctors
 
         #region Properties
 
-        public string Role { get; private set; }
+        public RedisRole Role { get; private set; }
+
+        public string RoleName { get; private set; }
 
         #endregion Properties
 
