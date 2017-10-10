@@ -26,6 +26,6 @@ namespace Sweet.Redis
 {
     public interface IRedisSentinelClient : IRedisClient
     {
-        IRedisSentinelCommands Sentinel { get; }
+        IRedisSentinelCommands Commands { get; }
     }
 }

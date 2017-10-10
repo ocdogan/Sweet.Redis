@@ -46,7 +46,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public IRedisSentinelCommands Sentinel
+        public IRedisSentinelCommands Commands
         {
             get
             {
