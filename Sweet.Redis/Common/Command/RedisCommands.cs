@@ -184,6 +184,7 @@ namespace Sweet.Redis
         public static readonly byte[] Info = "INFO".ToBytes();
         public static readonly byte[] LastSave = "LASTSAVE".ToBytes();
         public static readonly byte[] Monitor = "MONITOR".ToBytes();
+        public static readonly byte[] Role = "ROLE".ToBytes();
         public static readonly byte[] Save = "SAVE".ToBytes();
         public static readonly byte[] ShutDown = "SHUTDOWN".ToBytes();
         public static readonly byte[] SlaveOf = "SLAVEOF".ToBytes();

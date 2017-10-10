@@ -216,12 +216,19 @@
     <Compile Include="Common\RedisInfoBase.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelInfoBase.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelSlaveInfo.cs" />
+    <Compile Include="Common\Roles\RedisRoleInfo.cs" />
+    <Compile Include="Common\Roles\RedisMasterRoleInfo.cs" />
+    <Compile Include="Common\Roles\RedisSlaveRoleInfo.cs" />
+    <Compile Include="Common\Roles\RedisMasterRoleSlaveInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <None Include="License.md" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Common\Roles\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

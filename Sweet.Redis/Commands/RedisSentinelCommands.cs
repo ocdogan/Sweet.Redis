@@ -112,6 +112,18 @@ namespace Sweet.Redis
             return new RedisResult<RedisEndPoint>(null);
         }
 
+        public RedisResult<RedisServerInfo> Info(RedisParam? section = null)
+        {
+            string lines;
+            if (!section.HasValue || section.Value.IsNull)
+                lines = ExpectBulkString(RedisCommands.Info);
+            else
+                lines = ExpectBulkString(RedisCommands.Info, section);
+
+            var info = RedisServerInfo.Parse(lines);
+            return new RedisResult<RedisServerInfo>(info);
+        }
+
         public RedisBool IsMasterDownByAddr(string ipAddress, int port)
         {
             if (String.IsNullOrEmpty(ipAddress))
@@ -197,6 +209,17 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("pattern");
 
             return ExpectInteger(RedisCommands.Sentinel, RedisCommands.SentinelReset, pattern);
+        }
+
+        public RedisResult<RedisRoleInfo> Role()
+        {
+            var raw = ExpectArray(RedisCommands.Role);
+            if (!ReferenceEquals(raw, null))
+            {
+                var result = RedisRoleInfo.Parse(raw.Value);
+                return new RedisResult<RedisRoleInfo>(result);
+            }
+            return new RedisResult<RedisRoleInfo>(null);
         }
 
         public RedisResult<RedisSentinelNodeInfo[]> Sentinels(string masterName)

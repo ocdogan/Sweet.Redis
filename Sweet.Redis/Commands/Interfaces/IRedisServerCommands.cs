@@ -181,6 +181,8 @@ namespace Sweet.Redis
 
         RedisResult<RedisServerInfo> Info(RedisParam? section = null);
 
+        RedisResult<RedisRoleInfo> Role();
+
         RedisDate LastSave();
         RedisBool Save();
 

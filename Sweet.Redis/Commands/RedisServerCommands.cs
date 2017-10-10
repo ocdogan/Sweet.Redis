@@ -269,6 +269,17 @@ namespace Sweet.Redis
             return DateTime.MinValue;
         }
 
+        public RedisResult<RedisRoleInfo> Role()
+        {
+            var raw = ExpectArray(RedisCommands.Role);
+            if (!ReferenceEquals(raw, null))
+            {
+                var result = RedisRoleInfo.Parse(raw.Value);
+                return new RedisResult<RedisRoleInfo>(result);
+            }
+            return new RedisResult<RedisRoleInfo>(null);
+        }
+
         public RedisBool Save()
         {
             return ExpectSimpleString(RedisCommands.Save, RedisConstants.OK);

@@ -60,12 +60,14 @@ namespace Sweet.Redis
         RedisBool Failover(string masterName);
         RedisBool FlushConfig();
         RedisResult<RedisEndPoint> GetMasterAddrByName(string masterName);
+        RedisResult<RedisServerInfo> Info(RedisParam? section = null);
         RedisBool IsMasterDownByAddr(string ipAddress, int port);
         RedisResult<RedisSentinelMasterInfo> Master(string masterName);
         RedisResult<RedisSentinelMasterInfo[]> Masters();
         RedisBool Monitor(string masterName, string ipAddress, int port, int quorum);
         RedisBool Remove(string masterName);
         RedisInteger Reset(RedisParam pattern);
+        RedisResult<RedisRoleInfo> Role();
         RedisResult<RedisSentinelNodeInfo[]> Sentinels(string masterName);
         RedisBool Set(string masterName, RedisParam parameter, RedisParam value);
         RedisResult<RedisSentinelSlaveInfo[]> Slaves(string masterName);
