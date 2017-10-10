@@ -220,6 +220,7 @@
     <Compile Include="Common\Roles\RedisMasterRoleInfo.cs" />
     <Compile Include="Common\Roles\RedisSlaveRoleInfo.cs" />
     <Compile Include="Common\Roles\RedisMasterRoleSlaveInfo.cs" />
+    <Compile Include="Common\Roles\RedisSentinelRoleInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

@@ -23,32 +23,29 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
-    public class RedisRoleInfo
+    public class RedisSentinelRoleInfo : RedisRoleInfo
     {
         #region .Ctors
 
-        internal RedisRoleInfo(string role)
-        {
-            Role = role;
-        }
+        internal RedisSentinelRoleInfo(string role)
+            : base(role)
+        { }
 
         #endregion .Ctors
 
         #region Properties
 
-        public string Role { get; private set; }
+        public string[] MasterNames { get; protected set; }
 
         #endregion Properties
 
         #region Methods
 
-        protected virtual void ParseInfo(RedisRawObject rawObject)
-        { }
-
-        public static RedisRoleInfo Parse(RedisRawObject rawObject)
+        protected override void ParseInfo(RedisRawObject rawObject)
         {
             if (!ReferenceEquals(rawObject, null) && rawObject.Type == RedisRawObjectType.Array)
             {
@@ -56,42 +53,37 @@ namespace Sweet.Redis
                 if (list != null)
                 {
                     var count = list.Count;
-                    if (count > 0)
+                    if (count > 1)
                     {
-                        var item = list[0];
-                        if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
+                        var item = list[1];
+                        if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
                         {
-                            var role = item.Data as string;
-                            if (!String.IsNullOrEmpty(role))
+                            var items = item.Items;
+                            if (items != null)
                             {
-                                role = role.ToLowerInvariant();
-                                switch (role)
+                                var itemCount = items.Count;
+                                if (itemCount > 0)
                                 {
-                                    case "master":
+                                    var masterNames = new List<string>(itemCount);
+                                    for (var i = 0; i < itemCount; i++)
+                                    {
+                                        item = items[i];
+                                        if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                                         {
-                                            var result = new RedisMasterRoleInfo(role);
-                                            result.ParseInfo(rawObject);
-                                            return result;
+                                            var masterName = item.Data as string;
+                                            if (!String.IsNullOrEmpty(masterName))
+                                                masterNames.Add(masterName);
                                         }
-                                    case "slave":
-                                        {
-                                            var result = new RedisSlaveRoleInfo(role);
-                                            result.ParseInfo(rawObject);
-                                            return result;
-                                        }
-                                    case "sentinel":
-                                        {
-                                            var result = new RedisSentinelRoleInfo(role);
-                                            result.ParseInfo(rawObject);
-                                            return result;
-                                        }
+                                    }
+
+                                    if (masterNames.Count > 0)
+                                        MasterNames = masterNames.ToArray();
                                 }
                             }
                         }
                     }
                 }
             }
-            return null;
         }
 
         #endregion Methods
