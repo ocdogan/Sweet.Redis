@@ -156,8 +156,7 @@ namespace Sweet.Redis
                 if (subscriptions != null)
                 {
                     T message;
-                    if (TryConvertResponse(response, out message) &&
-                        !ReferenceEquals(message, null))
+                    if (TryConvertResponse(response, out message))
                         subscriptions.Invoke(message);
                 }
             }
