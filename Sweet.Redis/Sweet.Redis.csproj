@@ -55,11 +55,13 @@
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelClusterNodeInfo.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelNodeInfo.cs" />
+    <Compile Include="Connection\Continuous\RedisContinuousChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisCommandExecuter.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnectionProvider.cs" />
     <Compile Include="Connection\Interfaces\IRedisClient.cs" />
     <Compile Include="Connection\Interfaces\IRedisSentinelClient.cs" />
     <Compile Include="Connection\RedisClient.cs" />
+    <Compile Include="Connection\RedisSingleConnectionProvider.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelClient.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -170,7 +172,7 @@
     <Compile Include="Connection\Interfaces\IRedisDb.cs" />
     <Compile Include="Connection\Interfaces\IRedisDbConnection.cs" />
     <Compile Include="Connection\Interfaces\IRedisPipeline.cs" />
-    <Compile Include="Connection\Interfaces\IRedisPubSubConnection.cs" />
+    <Compile Include="Connection\Interfaces\IRedisContinuousConnection.cs" />
     <Compile Include="Connection\Interfaces\IRedisTransaction.cs" />
     <Compile Include="Connection\Continuous\RedisContinuousConnectionProvider.cs" />
     <Compile Include="Connection\Continuous\RedisContinuousReader.cs" />
@@ -227,9 +229,7 @@
     <None Include="License.md" />
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Folder Include="Common\Roles\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

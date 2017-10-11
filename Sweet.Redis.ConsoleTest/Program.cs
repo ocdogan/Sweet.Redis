@@ -45,7 +45,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading8();
 
             // MonitorTest1();
-            // MonitorTest2();
+            MonitorTest2();
             // MonitorTest3();
 
             // Geo1();
@@ -66,7 +66,7 @@ namespace Sweet.Redis.ConsoleTest
             // Pipeline2();
             // Pipeline3();
             // Pipeline4();
-            Pipeline5();
+            // Pipeline5();
         }
 
         #region Pipeline
@@ -1070,7 +1070,7 @@ namespace Sweet.Redis.ConsoleTest
                         db.Connection.Ping();
                 }
 
-                Thread.Sleep(5000);
+                Thread.Sleep(10000);
 
                 pool.MonitorChannel.Quit();
                 Thread.Sleep(1000);

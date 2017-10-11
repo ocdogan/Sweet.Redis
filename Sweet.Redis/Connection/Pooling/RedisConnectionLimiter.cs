@@ -36,6 +36,7 @@ namespace Sweet.Redis
         private readonly object m_SyncLock = new object();
 
         #endregion Field Members
+        
         #region .Ctors
 
         public RedisConnectionLimiter(int maxCount)

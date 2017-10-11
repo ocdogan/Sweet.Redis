@@ -447,9 +447,9 @@ namespace Sweet.Redis
             m_Authenticated = value;
         }
 
-        internal void SetDb(int db)
+        internal void SetDb(int dbIndex)
         {
-            m_DbIndex = Math.Min(Math.Max(db, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
         }
 
         #endregion Redis Based Methods

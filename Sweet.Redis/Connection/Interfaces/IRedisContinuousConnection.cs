@@ -23,44 +23,14 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisMonitorChannel : RedisContinuousChannel<RedisMonitorMessage>
+    public interface IRedisContinuousConnection : IRedisConnection
     {
-        #region .Ctors
+        bool Receiving { get; }
 
-        internal RedisMonitorChannel()
-            : base()
-        { }
-
-        #endregion .Ctors
-
-        #region Methods
-
-        protected override bool CanBeginReceive(byte[] cmd)
-        {
-            return cmd == RedisCommands.Monitor;
-        }
-
-        protected override RedisMonitorMessage ConvertResponse(IRedisRawResponse response)
-        {
-            return RedisMonitorMessage.ToMonitorMessage(response);
-        }
-
-        protected override void OnSubscribe()
-        {
-            SendAsync(RedisCommands.Monitor);
-        }
-
-        public void Monitor()
-        {
-            ValidateNotDisposed();
-            SendAsync(RedisCommands.Monitor);
-        }
-        
-        #endregion Methods
+        bool BeginReceive();
+        void EndReceive();
     }
 }

@@ -46,17 +46,18 @@ namespace Sweet.Redis
         #region .Ctors
 
         protected RedisConnectionProvider(string name, RedisSettings settings = null,
-                                      Func<int, RedisConnectionLimiter> connectionLimiter = null)
+            Func<int, RedisConnectionLimiter> connectionLimiter = null)
         {
             m_Settings = settings ?? RedisSettings.Default;
 
             name = (name ?? String.Empty).Trim();
-            m_Name = !String.IsNullOrEmpty(name) ? name : Guid.NewGuid().ToString("N").ToUpper();
+            m_Name = !String.IsNullOrEmpty(name) ? name : 
+                String.Format("{0}, {1}", GetType().Name, Guid.NewGuid().ToString("N").ToUpper());
 
             if (connectionLimiter == null)
                 connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);
 
-            m_ConnectionLimiter = connectionLimiter.Invoke(settings.MaxCount) ??
+            m_ConnectionLimiter = connectionLimiter(settings.MaxCount) ??
                                                    new RedisConnectionLimiter(settings.MaxCount);
         }
 
@@ -77,7 +78,17 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public int InUseCount
+        public virtual int AvailableCount
+        {
+            get
+            {
+                ValidateNotDisposed();
+                var connectionLimiter = m_ConnectionLimiter;
+                return (connectionLimiter != null) ? connectionLimiter.AvailableCount : 0;
+            }
+        }
+
+        public virtual int InUseCount
         {
             get
             {
@@ -86,6 +97,8 @@ namespace Sweet.Redis
                 return (connectionLimiter != null) ? connectionLimiter.InUseCount : 0;
             }
         }
+
+        public virtual int SpareCount { get { return 0; } }
 
         public string Name
         {
@@ -123,12 +136,12 @@ namespace Sweet.Redis
         protected virtual void OnConnectionTimeout(RedisConnectionRetryEventArgs e)
         { }
 
-        IRedisConnection IRedisConnectionProvider.Connect(int db)
+        IRedisConnection IRedisConnectionProvider.Connect(int dbIndex)
         {
-            return this.Connect(db);
+            return this.Connect(dbIndex);
         }
         
-        protected internal virtual IRedisConnection Connect(int db)
+        protected internal virtual IRedisConnection Connect(int dbIndex)
         {
             ValidateNotDisposed();
 
@@ -148,7 +161,7 @@ namespace Sweet.Redis
             {
                 var signaled = m_ConnectionLimiter.Wait(limiterWait);
                 if (signaled)
-                    return NewConnection(DequeueSocket(db), db, true);
+                    return NewConnection(DequeueSocket(dbIndex), dbIndex, true);
 
                 retryInfo.Entered();
                 OnConnectionRetry(retryInfo);
@@ -169,12 +182,12 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected virtual IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
+        protected virtual IRedisConnection NewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
         {
             return null;
         }
 
-        protected virtual RedisSocket DequeueSocket(int db)
+        protected virtual RedisSocket DequeueSocket(int dbIndex)
         {
             return null;
         }
@@ -186,12 +199,12 @@ namespace Sweet.Redis
                 connectionLimiter.Release();
         }
 
-        protected virtual void OnReleaseSocket(IRedisConnection conn, RedisSocket socket)
+        protected virtual void OnReleaseSocket(IRedisConnection connection, RedisSocket socket)
         {
             ValidateNotDisposed();
             try
             {
-                CompleteSocketRelease(conn, socket);
+                CompleteSocketRelease(connection, socket);
             }
             finally
             {
@@ -199,7 +212,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
+        protected virtual void CompleteSocketRelease(IRedisConnection connection, RedisSocket socket)
         { }
 
         #endregion IRedisConnectionProvider Methods

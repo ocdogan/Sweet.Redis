@@ -24,8 +24,12 @@
 
 namespace Sweet.Redis
 {
-    public interface IRedisConnectionProvider
+    public interface IRedisConnectionProvider : IRedisDisposable
     {
-        IRedisConnection Connect(int db);
+        int AvailableCount { get; }
+        int InUseCount { get; }
+        int SpareCount { get; }
+
+        IRedisConnection Connect(int dbIndex);
     }
 }

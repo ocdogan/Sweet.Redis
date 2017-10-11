@@ -53,10 +53,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisDb(RedisConnectionPool pool, int db, bool throwOnError = true)
+        public RedisDb(RedisConnectionPool pool, int dbIndex, bool throwOnError = true)
             : base(throwOnError)
         {
-            m_DbIndex = Math.Min(Math.Max(db, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
             m_Pool = pool;
         }
 

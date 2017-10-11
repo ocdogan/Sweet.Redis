@@ -28,8 +28,8 @@ namespace Sweet.Redis
 {
     interface IRedisConnectionPool
     {
-        IRedisDb GetDb(int db = 0);
-        IRedisTransaction BeginTransaction(int db = 0);
+        IRedisDb GetDb(int dbIndex = 0);
+        IRedisTransaction BeginTransaction(int dbIndex = 0);
 
         RedisMonitorChannel MonitorChannel { get; }
         RedisPubSubChannel PubSubChannel { get; }

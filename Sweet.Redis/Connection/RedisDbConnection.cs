@@ -102,12 +102,12 @@ namespace Sweet.Redis
             }
         }
 
-        protected bool SelectInternal(RedisSocket socket, int db, bool throwException)
+        protected bool SelectInternal(RedisSocket socket, int dbIndex, bool throwException)
         {
             ValidateNotDisposed();
-            if (db > RedisConstants.MinDbIndex && db <= RedisConstants.MaxDbIndex)
+            if (dbIndex > RedisConstants.MinDbIndex && dbIndex <= RedisConstants.MaxDbIndex)
             {
-                using (var cmd = new RedisCommand(db, RedisCommands.Select, RedisCommandType.SendAndReceive, db.ToBytes()))
+                using (var cmd = new RedisCommand(dbIndex, RedisCommands.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
                 {
                     return cmd.ExpectSimpleString(new RedisSocketContext(socket, Settings), RedisConstants.OK, throwException);
                 }

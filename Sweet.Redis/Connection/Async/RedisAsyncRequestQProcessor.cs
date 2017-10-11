@@ -198,8 +198,10 @@ namespace Sweet.Redis
                 var queue = parameters.Queue;
                 var idleStart = DateTime.MinValue;
 
-                using (var connection = new RedisDbConnection(Guid.NewGuid().ToString("N"),
-                        parameters.Settings, null, OnReleaseSocket, -1, null, false))
+                var name = String.Format("{0}, {1}", typeof(RedisDbConnection).Name, 
+                    Guid.NewGuid().ToString("N").ToUpper());
+
+                using (var connection = new RedisDbConnection(name, parameters.Settings, null, OnReleaseSocket, -1, null, false))
                 {
                     var idleSpinCount = 0;
                     var queueTimeoutMs = queue.TimeoutMilliseconds;

@@ -43,9 +43,9 @@ namespace Sweet.Redis
 
             #region .Ctors
 
-            public RedisConnectionPoolMember(RedisSocket socket, int db)
+            public RedisConnectionPoolMember(RedisSocket socket, int dbIndex)
             {
-                Db = db;
+                DbIndex = dbIndex;
                 Socket = socket;
                 PooledTime = DateTime.UtcNow;
             }
@@ -54,7 +54,7 @@ namespace Sweet.Redis
 
             #region Properties
 
-            public int Db { get; private set; }
+            public int DbIndex { get; private set; }
 
             public DateTime PooledTime { get; private set; }
 
@@ -184,7 +184,7 @@ namespace Sweet.Redis
                         channel = m_MonitorChannel;
                         if (channel == null)
                         {
-                            channel = new RedisMonitorChannel(this);
+                            channel = new RedisMonitorChannel();
                             Interlocked.Exchange(ref m_MonitorChannel, channel);
                         }
                     }
@@ -244,19 +244,19 @@ namespace Sweet.Redis
             }
         }
 
-        public IRedisTransaction BeginTransaction(int db = 0)
+        public IRedisTransaction BeginTransaction(int dbIndex = 0)
         {
-            return new RedisTransaction(this, db);
+            return new RedisTransaction(this, dbIndex);
         }
 
-        public IRedisPipeline CreatePipeline(int db = 0)
+        public IRedisPipeline CreatePipeline(int dbIndex = 0)
         {
-            return new RedisPipeline(this, db);
+            return new RedisPipeline(this, dbIndex);
         }
 
-        public IRedisDb GetDb(int db = 0)
+        public IRedisDb GetDb(int dbIndex = 0)
         {
-            return new RedisDb(this, db);
+            return new RedisDb(this, dbIndex);
         }
 
         #region Processor Methods
@@ -288,10 +288,10 @@ namespace Sweet.Redis
 
         #region Connection Methods
 
-        protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
+        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
-            return new RedisDbConnection(Name, settings, null, OnReleaseSocket, db,
+            return new RedisDbConnection(Name, settings, null, OnReleaseSocket, dbIndex,
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
 
@@ -339,7 +339,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected override RedisSocket DequeueSocket(int db)
+        protected override RedisSocket DequeueSocket(int dbIndex)
         {
             lock (m_MemberStoreLock)
             {
@@ -348,7 +348,7 @@ namespace Sweet.Redis
                 {
                     try
                     {
-                        if (member.Db == db)
+                        if (member.DbIndex == dbIndex)
                         {
                             var socket = member.ReleaseSocket();
 
@@ -381,7 +381,7 @@ namespace Sweet.Redis
                             try
                             {
                                 member = node.Value;
-                                if (member.Db == db)
+                                if (member.DbIndex == dbIndex)
                                 {
                                     socket = member.ReleaseSocket();
 

@@ -46,7 +46,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        protected internal RedisCommand(int db, byte[] command, RedisCommandType commandType = RedisCommandType.SendAndReceive,
+        protected internal RedisCommand(int dbIndex, byte[] command, RedisCommandType commandType = RedisCommandType.SendAndReceive,
                             params byte[][] args)
         {
             if (command == null)
@@ -55,7 +55,7 @@ namespace Sweet.Redis
             m_Arguments = args;
             m_Command = command;
             m_CommandType = commandType;
-            m_DbIndex = db;
+            m_DbIndex = dbIndex;
         }
 
         #endregion .Ctors

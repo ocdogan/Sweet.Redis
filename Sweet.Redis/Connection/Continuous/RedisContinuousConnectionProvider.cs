@@ -27,11 +27,10 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisContinuousConnectionProvider : RedisConnectionProvider
+    internal class RedisContinuousConnectionProvider : RedisSingleConnectionProvider
     {
         #region Field Members
 
-        private IRedisConnection m_Connection;
         private Action<IRedisRawResponse> m_OnReceiveResponse;
 
         #endregion Field Members
@@ -55,20 +54,10 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
-
             Interlocked.Exchange(ref m_OnReceiveResponse, null);
-
-            var connection = Interlocked.Exchange(ref m_Connection, null);
-            if (connection != null)
-                connection.Dispose();
         }
 
-        protected override RedisConnectionLimiter NewConnectionLimiter(int maxCount)
-        {
-            return new RedisConnectionLimiter(1);
-        }
-
-        protected override IRedisConnection NewConnection(RedisSocket socket, int db, bool connectImmediately = true)
+        protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
             return new RedisContinuousReaderConnection(Name, settings,
@@ -78,6 +67,7 @@ namespace Sweet.Redis
                 },
                 null,
                 OnReleaseSocket,
+                socket,
                 true);
         }
 
@@ -89,13 +79,6 @@ namespace Sweet.Redis
                 if (onReceiveResponse != null)
                     onReceiveResponse(response);
             }
-        }
-
-        protected override void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
-        {
-            var innerConnection = Interlocked.CompareExchange(ref m_Connection, null, conn);
-            if (innerConnection != null)
-                innerConnection.Dispose();
         }
 
         #endregion Methods

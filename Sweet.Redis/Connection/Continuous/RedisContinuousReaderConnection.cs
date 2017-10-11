@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisContinuousReaderConnection : RedisConnection, IRedisPubSubConnection, IRedisReceiver
+    internal class RedisContinuousReaderConnection : RedisConnection, IRedisContinuousConnection, IRedisReceiver
     {
         #region Constants
 
@@ -48,15 +48,14 @@ namespace Sweet.Redis
 
         internal RedisContinuousReaderConnection(string name, Action<IRedisRawResponse> onReceiveResponse,
             Action<RedisConnection, RedisSocket> onReleaseSocket, Action<RedisConnection, RedisSocket> onCreateSocket,
-            bool connectImmediately = false)
-            : this(name, RedisSettings.Default, onReceiveResponse, onCreateSocket, onReleaseSocket, connectImmediately)
+            RedisSocket socket = null, bool connectImmediately = false)
+            : this(name, RedisSettings.Default, onReceiveResponse, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         { }
 
         internal RedisContinuousReaderConnection(string name, RedisSettings settings,
             Action<IRedisRawResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onCreateSocket,
-            Action<RedisConnection, RedisSocket> onReleaseSocket,
-            bool connectImmediately = true)
-            : base(name, settings, onCreateSocket, onReleaseSocket, null, connectImmediately)
+            Action<RedisConnection, RedisSocket> onReleaseSocket, RedisSocket socket = null, bool connectImmediately = true)
+            : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         {
             m_OnReceiveResponse = onReceiveResponse;
         }
@@ -111,6 +110,22 @@ namespace Sweet.Redis
         {
             base.DoConfigure(socket);
             socket.Blocking = true;
+        }
+
+        public override void ReleaseSocket()
+        {
+            try
+            {
+                var socket = m_Socket;
+                if (socket != null)
+                {
+                    var onReleaseSocket = m_ReleaseAction;
+                    if (onReleaseSocket != null)
+                        onReleaseSocket(this, socket);
+                }
+            }
+            catch (Exception)
+            { }
         }
 
         public bool BeginReceive()

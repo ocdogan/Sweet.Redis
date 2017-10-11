@@ -40,6 +40,8 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private string m_Name;
+
         protected RedisSocket m_Socket;
         protected EndPoint m_EndPoint;
         protected RedisSettings m_Settings;
@@ -47,9 +49,8 @@ namespace Sweet.Redis
         private long m_LastError = (long)SocketError.Success;
         private long m_State = (long)RedisConnectionState.Idle;
 
-        private string m_Name;
-        private Action<RedisConnection, RedisSocket> m_CreateAction;
-        private Action<RedisConnection, RedisSocket> m_ReleaseAction;
+        protected Action<RedisConnection, RedisSocket> m_CreateAction;
+        protected Action<RedisConnection, RedisSocket> m_ReleaseAction;
 
         #endregion Field Members
 
@@ -328,6 +329,22 @@ namespace Sweet.Redis
                 throw new RedisFatalException(e);
             }
             return socket;
+        }
+
+        public virtual void ReleaseSocket()
+        {
+            try
+            {
+                var socket = Interlocked.Exchange(ref m_Socket, null);
+                if (socket != null)
+                {
+                    var onReleaseSocket = m_ReleaseAction;
+                    if (onReleaseSocket != null)
+                        onReleaseSocket(this, socket);
+                }
+            }
+            catch (Exception)
+            { }
         }
 
         protected long SetState(long state)
