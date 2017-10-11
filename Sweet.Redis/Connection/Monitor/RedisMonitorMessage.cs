@@ -73,7 +73,7 @@ namespace Sweet.Redis
 
         public static RedisMonitorMessage ToMonitorMessage(IRedisRawResponse response)
         {
-            if (response != null &&
+            if (!ReferenceEquals(response, null) &&
                 response.Type == RedisRawObjectType.SimpleString)
             {
                 var data = response.Data;

@@ -45,9 +45,10 @@ namespace Sweet.Redis
             return cmd == RedisCommands.Monitor;
         }
 
-        protected override RedisMonitorMessage ConvertResponse(IRedisRawResponse response)
+        protected override bool TryConvertResponse(IRedisRawResponse response, out RedisMonitorMessage value)
         {
-            return RedisMonitorMessage.ToMonitorMessage(response);
+            value = RedisMonitorMessage.ToMonitorMessage(response);
+            return !value.IsEmpty;
         }
 
         protected override void OnSubscribe()
@@ -60,7 +61,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             SendAsync(RedisCommands.Monitor);
         }
-        
+
         #endregion Methods
     }
 }

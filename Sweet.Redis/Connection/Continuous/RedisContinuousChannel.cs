@@ -109,7 +109,7 @@ namespace Sweet.Redis
 
         protected virtual string GetProviderName()
         {
-            return String.Format("{0}, {1}", GetType().Name, 
+            return String.Format("{0}, {1}", GetType().Name,
                 Guid.NewGuid().ToString("N").ToUpper());
         }
 
@@ -142,22 +142,30 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual T ConvertResponse(IRedisRawResponse response)
+        protected virtual bool TryConvertResponse(IRedisRawResponse response, out T value)
         {
-            return default(T);
+            value = default(T);
+            return true;
         }
 
         protected virtual void ResponseReceived(IRedisRawResponse response)
         {
-            if (!ReferenceEquals(response, null))
+            if (CanSendResponse(response))
             {
                 var subscriptions = m_Subscriptions;
                 if (subscriptions != null)
                 {
-                    var message = ConvertResponse(response);
-                    subscriptions.Invoke(message);
+                    T message;
+                    if (TryConvertResponse(response, out message) &&
+                        !ReferenceEquals(message, null))
+                        subscriptions.Invoke(message);
                 }
             }
+        }
+
+        protected virtual bool CanSendResponse(IRedisRawResponse response)
+        {
+            return !ReferenceEquals(response, null);
         }
 
         protected virtual void SendAsync(byte[] cmd, params byte[][] parameters)
@@ -175,7 +183,8 @@ namespace Sweet.Redis
                             {
                                 var command = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
                                 connection.SendAsync(command)
-                                    .ContinueWith(t => {
+                                    .ContinueWith(t =>
+                                    {
                                         var quitMessage = (command.Command == RedisCommands.Quit);
                                         command.Dispose();
 
@@ -253,8 +262,8 @@ namespace Sweet.Redis
             {
                 var provider = m_ConnectionProvider;
 
-                if (provider != null && 
-                    !provider.Disposed && 
+                if (provider != null &&
+                    !provider.Disposed &&
                     provider.SpareCount > 0)
                     SendAsync(RedisCommands.Quit);
             }

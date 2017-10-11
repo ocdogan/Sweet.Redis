@@ -45,8 +45,8 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading8();
 
             // MonitorTest1();
-            MonitorTest2();
-            // MonitorTest3();
+            // MonitorTest2();
+            MonitorTest3();
 
             // Geo1();
 
@@ -1026,7 +1026,7 @@ namespace Sweet.Redis.ConsoleTest
                         db.Connection.Ping("2");
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
                 pool.MonitorChannel.Monitor();
                 Thread.Sleep(1000);
 
