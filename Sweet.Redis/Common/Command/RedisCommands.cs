@@ -192,6 +192,9 @@ namespace Sweet.Redis
         public static readonly byte[] Sync = "SYNC".ToBytes();
         public static readonly byte[] Time = "TIME".ToBytes();
 
+        // Info command options
+        public static readonly byte[] Replication = "replication".ToBytes();
+
         // SlowLog command options
         public static readonly byte[] Len = "LEN".ToBytes();
         public static readonly byte[] Reset = "RESET".ToBytes();

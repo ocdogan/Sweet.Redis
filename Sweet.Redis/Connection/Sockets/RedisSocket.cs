@@ -48,6 +48,8 @@ namespace Sweet.Redis
 
         private long m_Id;
 
+        private RedisRole m_Role = RedisRole.Undefined;
+
         private bool m_UseSsl;
         private Socket m_Socket;
         private Action<RedisSocket> m_OnConnect;
@@ -358,6 +360,18 @@ namespace Sweet.Redis
             get
             {
                 return m_Socket.RemoteEndPoint;
+            }
+        }
+
+        public RedisRole Role
+        {
+            get
+            {
+                return m_Role;
+            }
+            set
+            {
+                m_Role = value;
             }
         }
 

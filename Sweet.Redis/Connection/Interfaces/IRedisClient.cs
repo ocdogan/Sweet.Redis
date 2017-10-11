@@ -31,6 +31,7 @@ namespace Sweet.Redis
         int DbIndex { get; }
         Guid Id { get; }
         bool ThrowOnError { get; }
+
         void ValidateNotDisposed();
     }
 }

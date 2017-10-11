@@ -156,6 +156,24 @@ namespace Sweet.Redis
     sentinel_scripts_queue_length:0
     sentinel_simulate_failure_flags:0
     master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+
+    # Commandstats
+    cmdstat_get:calls=903883,usec=1439965,usec_per_call=1.59
+    cmdstat_set:calls=228883,usec=537015,usec_per_call=2.35
+    cmdstat_select:calls=118,usec=263,usec_per_call=2.23
+    cmdstat_ping:calls=68521,usec=120832,usec_per_call=1.76
+    cmdstat_multi:calls=688,usec=1121,usec_per_call=1.63
+    cmdstat_exec:calls=399686,usec=1155672,usec_per_call=2.89
+    cmdstat_discard:calls=3,usec=6,usec_per_call=2.00
+    cmdstat_psync:calls=4,usec=5026,usec_per_call=1256.50
+    cmdstat_replconf:calls=59145,usec=85452,usec_per_call=1.44
+    cmdstat_info:calls=6158,usec=659946,usec_per_call=107.17
+    cmdstat_monitor:calls=12,usec=25,usec_per_call=2.08
+    cmdstat_role:calls=2,usec=61,usec_per_call=30.50
+    cmdstat_subscribe:calls=1,usec=4,usec_per_call=4.00
+    cmdstat_publish:calls=29902,usec=227726,usec_per_call=7.62
+    cmdstat_watch:calls=62,usec=433,usec_per_call=6.98
+    cmdstat_client:calls=2,usec=213,usec_per_call=106.50
     */
     public class RedisServerInfo : Dictionary<string, RedisServerInfoSection>
     {
@@ -168,10 +186,10 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public RedisServerInfoClientsSection Clients 
-        { 
-            get 
-            { 
+        public RedisServerInfoClientsSection Clients
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (!TryGetValue("clients", out section))
                     base["clients"] = section = new RedisServerInfoClientsSection("clients");
@@ -179,10 +197,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoClusterSection Cluster 
-        { 
-            get 
-            { 
+        public RedisServerInfoClusterSection Cluster
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("cluster", out section))
                     base["cluster"] = section = new RedisServerInfoClusterSection("cluster");
@@ -190,10 +208,21 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoCpuSection Cpu 
-        { 
-            get 
-            { 
+        public RedisServerInfoCommandStatsSection CommandStats
+        {
+            get
+            {
+                RedisServerInfoSection section;
+                if (TryGetValue("commandstats", out section))
+                    base["commandstats"] = section = new RedisServerInfoCommandStatsSection("commandstats");
+                return section as RedisServerInfoCommandStatsSection;
+            }
+        }
+
+        public RedisServerInfoCpuSection Cpu
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("cpu", out section))
                     base["cpu"] = section = new RedisServerInfoClientsSection("cpu");
@@ -201,10 +230,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoKeyspaceSection Keyspace 
-        { 
-            get 
-            { 
+        public RedisServerInfoKeyspaceSection Keyspace
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("keyspace", out section))
                     base["keyspace"] = section = new RedisServerInfoKeyspaceSection("keyspace");
@@ -212,10 +241,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoMemorySection Memory 
-        { 
-            get 
-            { 
+        public RedisServerInfoMemorySection Memory
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("memory", out section))
                     base["memory"] = section = new RedisServerInfoMemorySection("memory");
@@ -223,10 +252,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoPersistenceSection Persistence 
-        { 
-            get 
-            { 
+        public RedisServerInfoPersistenceSection Persistence
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("persistence", out section))
                     base["persistence"] = section = new RedisServerInfoPersistenceSection("persistence");
@@ -234,10 +263,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoSentinelSection Sentinel 
-        { 
-            get 
-            { 
+        public RedisServerInfoSentinelSection Sentinel
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("sentinel", out section))
                     base["sentinel"] = section = new RedisServerInfoSentinelSection("sentinel");
@@ -245,10 +274,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoServerSection Server 
-        { 
-            get 
-            { 
+        public RedisServerInfoServerSection Server
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("server", out section))
                     base["server"] = section = new RedisServerInfoServerSection("server");
@@ -256,10 +285,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoStatsSection Stats 
-        { 
-            get 
-            { 
+        public RedisServerInfoStatsSection Stats
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("stats", out section))
                     base["stats"] = section = new RedisServerInfoStatsSection("stats");
@@ -267,10 +296,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisServerInfoReplicationSection Replication 
-        { 
-            get 
-            { 
+        public RedisServerInfoReplicationSection Replication
+        {
+            get
+            {
                 RedisServerInfoSection section;
                 if (TryGetValue("replication", out section))
                     base["replication"] = section = new RedisServerInfoReplicationSection("replication");
@@ -293,7 +322,7 @@ namespace Sweet.Redis
             }
             return null;
         }
-        
+
         #region Static Methods
 
         public static RedisServerInfo Parse(string info)
@@ -311,13 +340,36 @@ namespace Sweet.Redis
                         for (var i = 0; i < length; i++)
                         {
                             var line = (lines[i] ?? String.Empty).TrimStart();
-                            if (line[0] == '#')
+                            if (!String.IsNullOrEmpty(line) && line[0] == '#')
                             {
-                                i++;
+                                var sectionName = line.TrimStart('#').Trim();
 
-                                var section = RedisServerInfoSection.ParseSection(line.TrimStart('#').Trim(), lines, ref i);
-                                if (section != null)
-                                    result[section.SectionName] = section;
+                                var sectionLines = !String.IsNullOrEmpty(sectionName) ?
+                                                          new List<string>() : null;
+
+                                i++;
+                                for (; i < length; i++)
+                                {
+                                    line = (lines[i] ?? String.Empty).TrimStart();
+                                    if (!String.IsNullOrEmpty(line))
+                                    {
+                                        if (line[0] == '#')
+                                        {
+                                            i--;
+                                            break;
+                                        }
+
+                                        if (sectionLines != null)
+                                            sectionLines.Add(line);
+                                    }
+                                }
+
+                                if (!String.IsNullOrEmpty(sectionName))
+                                {
+                                    var section = ParseSection(sectionName, sectionLines);
+                                    if (section != null)
+                                        result[sectionName] = section;
+                                }
                             }
                         }
 
@@ -327,7 +379,58 @@ namespace Sweet.Redis
             }
             return null;
         }
-        
+
+        private static RedisServerInfoSection ParseSection(string sectionName, IList<string> sectionLines)
+        {
+            RedisServerInfoSection result = null;
+            if (sectionLines != null && sectionLines.Count > 0)
+            {
+                var section = (sectionName ?? String.Empty).Trim().ToLowerInvariant();
+                switch (section)
+                {
+                    case "clients":
+                        result = new RedisServerInfoClientsSection(sectionName);
+                        break;
+                    case "cluster":
+                        result = new RedisServerInfoClusterSection(sectionName);
+                        break;
+                    case "cpu":
+                        result = new RedisServerInfoCpuSection(sectionName);
+                        break;
+                    case "keyspace":
+                        result = new RedisServerInfoKeyspaceSection(sectionName);
+                        break;
+                    case "memory":
+                        result = new RedisServerInfoMemorySection(sectionName);
+                        break;
+                    case "persistence":
+                        result = new RedisServerInfoPersistenceSection(sectionName);
+                        break;
+                    case "sentinel":
+                        result = new RedisServerInfoSentinelSection(sectionName);
+                        break;
+                    case "server":
+                        result = new RedisServerInfoServerSection(sectionName);
+                        break;
+                    case "stats":
+                        result = new RedisServerInfoStatsSection(sectionName);
+                        break;
+                    case "replication":
+                        result = new RedisServerInfoReplicationSection(sectionName);
+                        break;
+                    case "commandstats":
+                        result = new RedisServerInfoCommandStatsSection(sectionName);
+                        break;
+                    default:
+                        result = new RedisServerInfoSection(sectionName);
+                        break;
+                }
+
+                result.Parse(sectionLines);
+            }
+            return result;
+        }
+
         #endregion Static Methods
 
         #endregion Methods

@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -78,30 +79,37 @@ namespace Sweet.Redis
                         var item = list[0];
                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                         {
-                            var role = item.Data as string;
-                            if (!String.IsNullOrEmpty(role))
+                            var data = item.Data;
+                            if (data != null)
                             {
-                                role = role.ToLowerInvariant();
-                                switch (role)
+                                var bytes = data as byte[];
+                                var role = (bytes == null) ? data as string :
+                                    Encoding.UTF8.GetString(bytes);
+
+                                if (!String.IsNullOrEmpty(role))
                                 {
-                                    case "master":
-                                        {
-                                            var result = new RedisMasterRoleInfo(role);
-                                            result.ParseInfo(rawObject);
-                                            return result;
-                                        }
-                                    case "slave":
-                                        {
-                                            var result = new RedisSlaveRoleInfo(role);
-                                            result.ParseInfo(rawObject);
-                                            return result;
-                                        }
-                                    case "sentinel":
-                                        {
-                                            var result = new RedisSentinelRoleInfo(role);
-                                            result.ParseInfo(rawObject);
-                                            return result;
-                                        }
+                                    role = role.ToLowerInvariant();
+                                    switch (role)
+                                    {
+                                        case "master":
+                                            {
+                                                var result = new RedisMasterRoleInfo(role);
+                                                result.ParseInfo(rawObject);
+                                                return result;
+                                            }
+                                        case "slave":
+                                            {
+                                                var result = new RedisSlaveRoleInfo(role);
+                                                result.ParseInfo(rawObject);
+                                                return result;
+                                            }
+                                        case "sentinel":
+                                            {
+                                                var result = new RedisSentinelRoleInfo(role);
+                                                result.ParseInfo(rawObject);
+                                                return result;
+                                            }
+                                    }
                                 }
                             }
                         }

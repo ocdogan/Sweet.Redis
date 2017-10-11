@@ -33,6 +33,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private Guid m_Id;
+        private RedisRole m_Role = RedisRole.Undefined;
 
         #endregion Field Members
 
@@ -55,17 +56,27 @@ namespace Sweet.Redis
 
         public virtual int DbIndex { get { return -1; } }
 
+        public virtual RedisRole Role
+        {
+            get { return m_Role; }
+            protected internal set { m_Role = value; }
+        }
+
         public bool ThrowOnError { get; private set; }
 
         #endregion Properties
 
         #region Methods
 
+        #region IRedisConnection Methods
+
         public override void ValidateNotDisposed()
         {
             if (Disposed)
                 throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N"));
         }
+
+        #endregion IRedisConnection Methods
 
         #region Execution Methods
 

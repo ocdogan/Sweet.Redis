@@ -188,6 +188,69 @@ namespace Sweet.Redis
             }
         }
 
+        protected virtual void DiscoverRole(RedisSocket socket)
+        {
+            if (Disposed)
+                socket.Role = RedisRole.Undefined;
+            else
+            {
+                var role = RedisRole.Undefined;
+                try
+                {
+                    using (var cmd = new RedisCommand(-1, RedisCommands.Role, RedisCommandType.SendAndReceive))
+                    {
+                        var raw = cmd.ExpectArray(new RedisSocketContext(socket, Settings), true);
+                        if (!ReferenceEquals(raw, null) && raw.IsCompleted)
+                        {
+                            var info = RedisRoleInfo.Parse(raw.Value);
+                            if (!ReferenceEquals(info, null))
+                                role = info.Role;
+                        }
+                    }
+                }
+                catch (Exception)
+                { }
+
+                if (role == RedisRole.Undefined)
+                {
+                    try
+                    {
+                        using (var cmd = new RedisCommand(-1, RedisCommands.Info, RedisCommandType.SendAndReceive, RedisCommands.Replication))
+                        {
+                            string lines = cmd.ExpectBulkString(new RedisSocketContext(socket, Settings), true);
+
+                            var info = RedisServerInfo.Parse(lines);
+                            if (!ReferenceEquals(info, null))
+                            {
+                                var section = info.Replication;
+                                if (!ReferenceEquals(section, null))
+                                {
+                                    var roleStr = (section.Role ?? String.Empty).Trim().ToLowerInvariant();
+
+                                    switch (roleStr)
+                                    {
+                                        case "master":
+                                            role = RedisRole.Master;
+                                            break;
+                                        case "slave":
+                                            role = RedisRole.Slave;
+                                            break;
+                                        case "sentinel":
+                                            role = RedisRole.Sentinel;
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    { }
+                }
+
+                socket.Role = role;
+            }
+        }
+
         public virtual RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
@@ -243,6 +306,8 @@ namespace Sweet.Redis
 
                 if (!String.IsNullOrEmpty(settings.ClientName))
                     SetClientName(socket, settings.ClientName);
+
+                DiscoverRole(socket);
             }
         }
 

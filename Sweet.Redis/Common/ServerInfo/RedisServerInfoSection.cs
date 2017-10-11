@@ -47,82 +47,47 @@ namespace Sweet.Redis
 
         #region Methods
 
-        #region Static Methods
-
-        internal static RedisServerInfoSection ParseSection(string sectionName, string[] lines, ref int index)
+        protected virtual string ToItemName(string name)
         {
-            RedisServerInfoSection result;
+            return name;
+        }
 
-            var section = (sectionName ?? String.Empty).Trim().ToLowerInvariant();
-            switch (section)
-            {
-                case "clients":
-                    result = new RedisServerInfoClientsSection(sectionName);
-                    break;
-                case "cluster":
-                    result = new RedisServerInfoClusterSection(sectionName);
-                    break;
-                case "cpu":
-                    result = new RedisServerInfoCpuSection(sectionName);
-                    break;
-                case "keyspace":
-                    result = new RedisServerInfoKeyspaceSection(sectionName);
-                    break;
-                case "memory":
-                    result = new RedisServerInfoMemorySection(sectionName);
-                    break;
-                case "persistence":
-                    result = new RedisServerInfoPersistenceSection(sectionName);
-                    break;
-                case "sentinel":
-                    result = new RedisServerInfoSentinelSection(sectionName);
-                    break;
-                case "server":
-                    result = new RedisServerInfoServerSection(sectionName);
-                    break;
-                case "stats":
-                    result = new RedisServerInfoStatsSection(sectionName);
-                    break;
-                case "replication":
-                    result = new RedisServerInfoReplicationSection(sectionName);
-                    break;
-                default:
-                    result = new RedisServerInfoSection(sectionName);
-                    break;
-            }
+        protected internal virtual void Parse(IList<string> lines)
+        {
 
-            var length = lines.Length;
-            for (; index < length; index++)
+            if (lines != null)
             {
-                var line = (lines[index] ?? String.Empty).TrimStart();
-                if (!String.IsNullOrEmpty(line))
+                var length = lines.Count;
+                for (var index = 0; index < length; index++)
                 {
-                    if (line[0] == '#')
+                    var line = (lines[index] ?? String.Empty);
+                    if (!String.IsNullOrEmpty(line))
                     {
-                        index--;
-                        return result;
-                    }
-
-                    int pos = line.IndexOf(':');
-                    if (pos == -1)
-                        result[line.TrimEnd()] = null;
-                    else
-                    {
-                        var name = (line.Substring(0, pos) ?? String.Empty).TrimEnd();
-                        if (pos == line.Length - 1)
-                            result[name] = null;
+                        int pos = line.IndexOf(':');
+                        if (pos == -1)
+                        {
+                            var name = (ToItemName(line) ?? String.Empty).TrimEnd();
+                            if (!String.IsNullOrEmpty(name))
+                                this[name] = null;
+                        }
                         else
                         {
-                            var value = (line.Substring(pos + 1, line.Length - pos - 1) ?? String.Empty).TrimEnd();
-                            result[name] = value;
+                            var name = (ToItemName(line.Substring(0, pos)) ?? String.Empty).TrimEnd();
+                            if (!String.IsNullOrEmpty(name))
+                            {
+                                if (pos == line.Length - 1)
+                                    this[name] = null;
+                                else
+                                {
+                                    var value = (line.Substring(pos + 1, line.Length - pos - 1) ?? String.Empty).TrimEnd();
+                                    this[name] = value;
+                                }
+                            }
                         }
                     }
                 }
             }
-            return result;
         }
-
-        #endregion Static Methods
 
         #endregion Methods
     }

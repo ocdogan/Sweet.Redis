@@ -54,7 +54,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public long? Role { get { return GetInteger("role"); } } // master
+        public string Role { get { return Get("role"); } } // master
 
         public long? ConnectedSlaves { get { return GetInteger("connected_slaves"); } } // 1
 
@@ -75,7 +75,7 @@ namespace Sweet.Redis
         public IDictionary<string, string> Slave7 { get { return GetAttributes("slave7"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
         public IDictionary<string, string> Slave8 { get { return GetAttributes("slave8"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-        
+
         public IDictionary<string, string> Slave9 { get { return GetAttributes("slave9"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
 
         public string MasterReplId { get { return Get("master_replid"); } } // c11020e01bc557109082cb298de257f7c04e4914
@@ -95,7 +95,7 @@ namespace Sweet.Redis
         public string MasterReplId8 { get { return Get("master_replid8"); } } // 0000000000000000000000000000000000000000
 
         public string MasterReplId9 { get { return Get("master_replid9"); } } // 0000000000000000000000000000000000000000
-        
+
         public long? MasterReplOffset { get { return GetInteger("master_repl_offset"); } } // 1748511
 
         public long? SecondReplOffset { get { return GetInteger("second_repl_offset"); } } // -1
