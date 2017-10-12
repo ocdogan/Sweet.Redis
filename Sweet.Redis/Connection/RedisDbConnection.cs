@@ -44,16 +44,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisDbConnection(string name, Action<RedisConnection, RedisSocket> onCreateSocket,
-            Action<RedisConnection, RedisSocket> onReleaseSocket, int dbIndex, RedisSocket socket = null,
-            bool connectImmediately = false)
-            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, dbIndex, socket, connectImmediately)
-        { }
-
-        internal RedisDbConnection(string name, RedisSettings settings,
+        internal RedisDbConnection(string name, RedisRole role, RedisSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
             int dbIndex, RedisSocket socket = null, bool connectImmediately = false)
-            : base(name, settings, onCreateSocket, onReleaseSocket, socket, false)
+            : base(name, role, settings, onCreateSocket, onReleaseSocket, socket, false)
         {
             m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
             if (connectImmediately)

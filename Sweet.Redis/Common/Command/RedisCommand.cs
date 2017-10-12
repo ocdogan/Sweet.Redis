@@ -35,6 +35,8 @@ namespace Sweet.Redis
     {
         #region Field Members
 
+        private RedisRole? m_Role;
+
         private int m_DbIndex;
         private byte[] m_Command;
         private byte[][] m_Arguments;
@@ -87,11 +89,21 @@ namespace Sweet.Redis
                 if (updater == RedisConstants.MinusOne)
                 {
                     Interlocked.Exchange(ref m_IsUpdater,
-                        RedisConstants.CommandsThatUpdate.ContainsKey(m_Command) ?
+                        m_Command.IsUpdateCommand() ?
                         RedisConstants.One :
                         RedisConstants.Zero);
                 }
                 return updater == RedisConstants.One;
+            }
+        }
+
+        public RedisRole Role
+        {
+            get
+            {
+                if (!m_Role.HasValue)
+                    m_Role = m_Command.CommandRole();
+                return m_Role.Value;
             }
         }
 

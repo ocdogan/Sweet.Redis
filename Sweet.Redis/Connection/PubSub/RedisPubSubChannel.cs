@@ -115,7 +115,7 @@ namespace Sweet.Redis
             var connectionProvider = m_ConnectionProvider;
             if (connectionProvider != null)
             {
-                var connection = connectionProvider.Connect(-1);
+                var connection = connectionProvider.Connect(-1, RedisRole.Master);
 
                 if (connection != null && !connection.Connected)
                     connection.Connect();

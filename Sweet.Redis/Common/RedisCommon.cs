@@ -1237,6 +1237,35 @@ namespace Sweet.Redis
 
         #endregion Join
 
+        #region Commands
+
+        internal static bool IsDbRequiredCommand(this byte[] cmd)
+        {
+            if (cmd != null && cmd.Length > 0)
+                return !RedisConstants.CommandsNotRequireDB.ContainsKey(cmd);
+            return false;
+        }
+
+        internal static bool IsUpdateCommand(this byte[] cmd)
+        {
+            if (cmd != null && cmd.Length > 0)
+                return RedisConstants.CommandsThatUpdate.ContainsKey(cmd);
+            return false;
+        }
+
+        internal static RedisRole CommandRole(this byte[] cmd)
+        {
+            if (cmd == null || cmd.Length == 0)
+                return RedisRole.Undefined;
+            if (cmd == RedisCommands.Sentinel)
+                return RedisRole.Sentinel;
+            if (cmd.IsUpdateCommand())
+                return RedisRole.Master;
+            return RedisRole.Slave;
+        }
+
+        #endregion Commands
+
         #endregion Methods
     }
 }

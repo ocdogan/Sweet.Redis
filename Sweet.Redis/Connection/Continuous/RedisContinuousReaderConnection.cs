@@ -46,16 +46,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisContinuousReaderConnection(string name, Action<IRedisRawResponse> onReceiveResponse,
-            Action<RedisConnection, RedisSocket> onReleaseSocket, Action<RedisConnection, RedisSocket> onCreateSocket,
-            RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, RedisSettings.Default, onReceiveResponse, onCreateSocket, onReleaseSocket, socket, connectImmediately)
-        { }
-
-        internal RedisContinuousReaderConnection(string name, RedisSettings settings,
+        internal RedisContinuousReaderConnection(string name, RedisRole role, RedisSettings settings,
             Action<IRedisRawResponse> onReceiveResponse, Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket, RedisSocket socket = null, bool connectImmediately = true)
-            : base(name, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
+            : base(name, role, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         {
             m_OnReceiveResponse = onReceiveResponse;
         }

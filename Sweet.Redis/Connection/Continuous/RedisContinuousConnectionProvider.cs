@@ -57,10 +57,10 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_OnReceiveResponse, null);
         }
 
-        protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
+        protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
-            return new RedisContinuousReaderConnection(Name, settings,
+            return new RedisContinuousReaderConnection(Name, RedisRole.Master, settings,
                 (response) =>
                 {
                     ResponseReceived(response);

@@ -58,6 +58,11 @@ namespace Sweet.Redis
 
             public DateTime PooledTime { get; private set; }
 
+            public RedisRole Role
+            {
+                get { return m_Socket != null ? m_Socket.Role : RedisRole.Undefined; }
+            }
+
             public RedisSocket Socket
             {
                 get { return m_Socket; }
@@ -288,10 +293,10 @@ namespace Sweet.Redis
 
         #region Connection Methods
 
-        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
+        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisSettings.Default;
-            return new RedisDbConnection(Name, settings, null, OnReleaseSocket, dbIndex,
+            return new RedisDbConnection(Name, role, settings, null, OnReleaseSocket, dbIndex,
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
 
@@ -339,8 +344,9 @@ namespace Sweet.Redis
             }
         }
 
-        protected override RedisSocket DequeueSocket(int dbIndex)
+        protected override RedisSocket DequeueSocket(int dbIndex, RedisRole role)
         {
+            var hasAnyMember = false;
             lock (m_MemberStoreLock)
             {
                 var member = m_MemberStoreTail;
@@ -350,13 +356,17 @@ namespace Sweet.Redis
                     {
                         if (member.DbIndex == dbIndex)
                         {
-                            var socket = member.ReleaseSocket();
+                            hasAnyMember = true;
+                            if (role == RedisRole.Undefined || member.Role == role)
+                            {
+                                var socket = member.ReleaseSocket();
 
-                            m_MemberStoreTail = null;
-                            if (socket.IsConnected())
-                                return socket;
+                                m_MemberStoreTail = null;
+                                if (socket.IsConnected())
+                                    return socket;
 
-                            socket.DisposeSocket();
+                                socket.DisposeSocket();
+                            }
                         }
                     }
                     catch (Exception)
@@ -383,13 +393,17 @@ namespace Sweet.Redis
                                 member = node.Value;
                                 if (member.DbIndex == dbIndex)
                                 {
-                                    socket = member.ReleaseSocket();
+                                    hasAnyMember = true;
+                                    if (role == RedisRole.Undefined || member.Role == role)
+                                    {
+                                        socket = member.ReleaseSocket();
 
-                                    store.Remove(node);
-                                    if (socket.IsConnected())
-                                        return socket;
+                                        store.Remove(node);
+                                        if (socket.IsConnected())
+                                            return socket;
 
-                                    socket.DisposeSocket();
+                                        socket.DisposeSocket();
+                                    }
                                 }
                             }
                             catch (Exception)
@@ -402,6 +416,9 @@ namespace Sweet.Redis
                     }
                 }
             }
+
+            if (hasAnyMember && role == RedisRole.Slave)
+                return DequeueSocket(dbIndex, RedisRole.Master);
             return null;
         }
 
@@ -515,7 +532,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisResponse>(command, RedisCommandExpect.Response, null);
@@ -525,7 +542,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.Execute(connection, throwException);
             }
@@ -541,7 +558,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisRaw>(command, RedisCommandExpect.Array, null);
@@ -551,7 +568,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectArray(connection, throwException);
             }
@@ -567,7 +584,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisString>(command, RedisCommandExpect.BulkString, null);
@@ -577,7 +594,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectBulkString(connection, throwException);
             }
@@ -593,7 +610,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, null);
@@ -603,7 +620,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectBulkStringBytes(connection, throwException);
             }
@@ -619,7 +636,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisDouble>(command, RedisCommandExpect.Double, null);
@@ -629,7 +646,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectDouble(connection, throwException);
             }
@@ -645,7 +662,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.GreaterThanZero, null);
@@ -655,7 +672,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
             }
@@ -671,7 +688,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisInteger>(command, RedisCommandExpect.Integer, null);
@@ -681,7 +698,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectInteger(connection, throwException);
             }
@@ -697,7 +714,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisMultiBytes>(command, RedisCommandExpect.MultiDataBytes, null);
@@ -707,7 +724,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectMultiDataBytes(connection, throwException);
             }
@@ -723,7 +740,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisMultiString>(command, RedisCommandExpect.MultiDataStrings, null);
@@ -733,7 +750,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectMultiDataStrings(connection, throwException);
             }
@@ -749,7 +766,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisVoid>(command, RedisCommandExpect.NullableDouble, null);
@@ -759,7 +776,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectNothing(connection, throwException);
             }
@@ -775,7 +792,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableDouble>(command, RedisCommandExpect.NullableDouble, null);
@@ -785,7 +802,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectNullableDouble(connection, throwException);
             }
@@ -801,7 +818,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableInteger>(command, RedisCommandExpect.NullableInteger, null);
@@ -811,7 +828,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectNullableInteger(connection, throwException);
             }
@@ -827,7 +844,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, "OK");
@@ -837,7 +854,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectSimpleString(connection, "OK", throwException);
             }
@@ -853,7 +870,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.One, null);
@@ -863,7 +880,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectInteger(connection, throwException) == RedisConstants.One;
             }
@@ -879,7 +896,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, expectedResult);
@@ -889,7 +906,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectSimpleString(connection, expectedResult, throwException);
             }
@@ -902,7 +919,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            var connection = Connect(command.DbIndex);
+            var connection = Connect(command.DbIndex, command.Role);
             if (connection == null)
             {
                 var asyncRequest = m_AsycRequestQ.Enqueue<RedisString>(command, RedisCommandExpect.SimpleString, null);
@@ -911,7 +928,7 @@ namespace Sweet.Redis
                 return asyncRequest.Task.Result;
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectSimpleString(connection, throwException);
             }
@@ -927,7 +944,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, null);
@@ -937,7 +954,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
             }
@@ -953,7 +970,7 @@ namespace Sweet.Redis
             IRedisConnection connection = null;
             if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex);
+                connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
                     var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, null);
@@ -963,7 +980,7 @@ namespace Sweet.Redis
                 }
             }
 
-            using (connection = (connection ?? Connect(command.DbIndex)))
+            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
                 return command.ExpectSimpleStringBytes(connection, throwException);
             }

@@ -51,7 +51,7 @@ namespace Sweet.Redis
             m_Settings = settings ?? RedisSettings.Default;
 
             name = (name ?? String.Empty).Trim();
-            m_Name = !String.IsNullOrEmpty(name) ? name : 
+            m_Name = !String.IsNullOrEmpty(name) ? name :
                 String.Format("{0}, {1}", GetType().Name, Guid.NewGuid().ToString("N").ToUpper());
 
             if (connectionLimiter == null)
@@ -136,12 +136,12 @@ namespace Sweet.Redis
         protected virtual void OnConnectionTimeout(RedisConnectionRetryEventArgs e)
         { }
 
-        IRedisConnection IRedisConnectionProvider.Connect(int dbIndex)
+        IRedisConnection IRedisConnectionProvider.Connect(int dbIndex, RedisRole role)
         {
-            return this.Connect(dbIndex);
+            return this.Connect(dbIndex, role);
         }
-        
-        protected internal virtual IRedisConnection Connect(int dbIndex)
+
+        protected internal virtual IRedisConnection Connect(int dbIndex, RedisRole role)
         {
             ValidateNotDisposed();
 
@@ -161,7 +161,7 @@ namespace Sweet.Redis
             {
                 var signaled = m_ConnectionLimiter.Wait(limiterWait);
                 if (signaled)
-                    return NewConnection(DequeueSocket(dbIndex), dbIndex, true);
+                    return NewConnection(DequeueSocket(dbIndex, role), dbIndex, role, true);
 
                 retryInfo.Entered();
                 OnConnectionRetry(retryInfo);
@@ -182,12 +182,12 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected virtual IRedisConnection NewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
+        protected virtual IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
             return null;
         }
 
-        protected virtual RedisSocket DequeueSocket(int dbIndex)
+        protected virtual RedisSocket DequeueSocket(int dbIndex, RedisRole role)
         {
             return null;
         }
@@ -226,7 +226,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.Execute(connection, throwException);
             }
@@ -239,7 +239,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectArray(connection, throwException);
             }
@@ -252,7 +252,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectBulkString(connection, throwException);
             }
@@ -265,7 +265,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectBulkStringBytes(connection, throwException);
             }
@@ -278,7 +278,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectDouble(connection, throwException);
             }
@@ -291,7 +291,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
             }
@@ -304,7 +304,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectInteger(connection, throwException);
             }
@@ -317,7 +317,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectMultiDataBytes(connection, throwException);
             }
@@ -330,7 +330,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectMultiDataStrings(connection, throwException);
             }
@@ -343,7 +343,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectNothing(connection, throwException);
             }
@@ -356,7 +356,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectNullableDouble(connection, throwException);
             }
@@ -369,7 +369,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectNullableInteger(connection, throwException);
             }
@@ -382,7 +382,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectSimpleString(connection, "OK", throwException);
             }
@@ -395,7 +395,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectInteger(connection, throwException) == RedisConstants.One;
             }
@@ -408,7 +408,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectSimpleString(connection, expectedResult, throwException);
             }
@@ -421,7 +421,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectSimpleString(connection, throwException);
             }
@@ -434,7 +434,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
             }
@@ -447,7 +447,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            using (var connection = Connect(command.DbIndex))
+            using (var connection = Connect(command.DbIndex, command.Role))
             {
                 return command.ExpectSimpleStringBytes(connection, throwException);
             }

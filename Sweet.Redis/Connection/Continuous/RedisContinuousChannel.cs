@@ -113,14 +113,14 @@ namespace Sweet.Redis
                 Guid.NewGuid().ToString("N").ToUpper());
         }
 
-        protected virtual IRedisConnection Connect(bool beginReveive = false)
+        protected virtual IRedisConnection Connect(RedisRole role, bool beginReveive = false)
         {
             ValidateNotDisposed();
 
             var connectionProvider = m_ConnectionProvider;
             if (connectionProvider != null)
             {
-                var connection = connectionProvider.Connect(-1);
+                var connection = connectionProvider.Connect(-1, role);
 
                 if (connection != null && !connection.Connected)
                     connection.Connect();
@@ -173,7 +173,7 @@ namespace Sweet.Redis
             {
                 Action action = () =>
                 {
-                    var connection = Connect(CanBeginReceive(cmd));
+                    var connection = Connect(cmd.CommandRole(), CanBeginReceive(cmd));
                     if (connection != null)
                     {
                         try

@@ -42,6 +42,8 @@ namespace Sweet.Redis
 
         private string m_Name;
 
+        private RedisRole m_DesiredRole = RedisRole.Undefined;
+
         protected RedisSocket m_Socket;
         protected EndPoint m_EndPoint;
         protected RedisSettings m_Settings;
@@ -56,14 +58,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisConnection(string name,
-            Action<RedisConnection, RedisSocket> onCreateSocket,
-            Action<RedisConnection, RedisSocket> onReleaseSocket,
-            RedisSocket socket = null, bool connectImmediately = false)
-            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, socket, connectImmediately)
-        { }
-
-        internal RedisConnection(string name, RedisSettings settings,
+        internal RedisConnection(string name, RedisRole role, RedisSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
@@ -74,7 +69,8 @@ namespace Sweet.Redis
             if (onReleaseSocket == null)
                 throw new RedisFatalException(new ArgumentNullException("releaseAction"));
 
-            m_Settings = settings;
+            m_DesiredRole = role;
+            m_Settings = settings ?? RedisSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
             m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N") : name;
@@ -134,6 +130,11 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisRole DesiredRole
+        {
+            get { return m_DesiredRole; }
+        }
+
         public long LastError
         {
             get { return Interlocked.Read(ref m_LastError); }
@@ -142,6 +143,15 @@ namespace Sweet.Redis
         public string Name
         {
             get { return m_Name; }
+        }
+
+        public RedisRole Role
+        {
+            get
+            {
+                var socket = m_Socket;
+                return socket != null ? socket.Role : RedisRole.Undefined;
+            }
         }
 
         public RedisSettings Settings
@@ -190,9 +200,7 @@ namespace Sweet.Redis
 
         protected virtual void DiscoverRole(RedisSocket socket)
         {
-            if (Disposed)
-                socket.Role = RedisRole.Undefined;
-            else
+            if (!Disposed)
             {
                 var role = RedisRole.Undefined;
                 try

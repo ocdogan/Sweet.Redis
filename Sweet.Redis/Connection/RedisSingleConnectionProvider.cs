@@ -59,15 +59,15 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public override int SpareCount 
-        { 
-            get 
+        public override int SpareCount
+        {
+            get
             {
                 var connection = m_Connection;
                 if (connection != null && !connection.Disposed)
                     return 1;
-                return 0; 
-            } 
+                return 0;
+            }
         }
 
         #endregion Properties
@@ -90,7 +90,7 @@ namespace Sweet.Redis
             return new RedisConnectionLimiter(1);
         }
 
-        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
+        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
             var connection = m_Connection;
             if (connection == null || connection.Disposed)
@@ -100,19 +100,19 @@ namespace Sweet.Redis
                     connection = m_Connection;
                     if (connection == null || connection.Disposed)
                     {
-                        m_Connection = connection = OnNewConnection(socket, dbIndex, connectImmediately);
+                        m_Connection = connection = OnNewConnection(socket, dbIndex, role, connectImmediately);
                     }
                 }
             }
             return connection;
         }
 
-        protected virtual IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, bool connectImmediately = true)
+        protected virtual IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
             return null;
         }
 
-        protected override RedisSocket DequeueSocket(int dbIndex)
+        protected override RedisSocket DequeueSocket(int dbIndex, RedisRole role)
         {
             var socket = m_Socket;
             lock (m_SocketLock)

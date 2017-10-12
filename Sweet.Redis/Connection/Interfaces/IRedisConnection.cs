@@ -33,6 +33,7 @@ namespace Sweet.Redis
         bool Disposed { get; }
         long LastError { get; }
         string Name { get; }
+        RedisRole Role { get; }
         RedisSettings Settings { get; }
         RedisConnectionState State { get; }
 
