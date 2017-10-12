@@ -23,9 +23,7 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
 
 namespace Sweet.Redis
 {
@@ -33,16 +31,10 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        internal RedisSentinelConnection(string name, Action<RedisConnection, RedisSocket> onCreateSocket,
-            Action<RedisConnection, RedisSocket> onReleaseSocket, RedisSocket socket = null,
-            bool connectImmediately = false)
-            : this(name, RedisSettings.Default, onCreateSocket, onReleaseSocket, socket, connectImmediately)
-        { }
-
         internal RedisSentinelConnection(string name, RedisSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
-            : base(name, RedisRole.Sentinel, settings, onCreateSocket, onReleaseSocket, socket, false)
+            : base(name, RedisRole.Sentinel, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
         { }
 
         #endregion .Ctors
@@ -52,6 +44,7 @@ namespace Sweet.Redis
         public override RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)
@@ -79,6 +72,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"));
 
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)

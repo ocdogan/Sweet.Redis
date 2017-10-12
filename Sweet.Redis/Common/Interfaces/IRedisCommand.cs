@@ -30,6 +30,7 @@ namespace Sweet.Redis
     public interface IRedisCommand : IRedisDisposable
     {
         bool IsUpdater { get; }
+        RedisRole Role { get; }
 
         void WriteTo(IRedisWriter writer);
 

@@ -112,6 +112,7 @@ namespace Sweet.Redis
         public override RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)
@@ -139,6 +140,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"));
 
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)

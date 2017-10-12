@@ -29,6 +29,7 @@ namespace Sweet.Redis
         Undefined,
         Master,
         Slave,
+        SlaveOrMaster,
         Sentinel
     }
 }

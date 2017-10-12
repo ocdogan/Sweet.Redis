@@ -57,6 +57,11 @@ namespace Sweet.Redis
             }
         }
 
+        public override RedisRole Role
+        {
+            get { return RedisRole.Sentinel; }
+        }
+
         #endregion Properties
     }
 }

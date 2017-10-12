@@ -198,6 +198,23 @@ namespace Sweet.Redis
             }
         }
 
+        protected virtual bool NeedsToDiscoverRole()
+        {
+            return m_DesiredRole != RedisRole.Undefined;
+        }
+
+        protected virtual void ValidateRole()
+        {
+            if (m_DesiredRole != RedisRole.Undefined)
+            {
+                var role = Role;
+                if (role != m_DesiredRole &&
+                    (role == RedisRole.Sentinel || m_DesiredRole == RedisRole.Sentinel ||
+                     (role == RedisRole.Master && !(m_DesiredRole == RedisRole.Slave || m_DesiredRole == RedisRole.SlaveOrMaster))))
+                    throw new RedisException("Connected node does not satisfy the desired role");
+            }
+        }
+
         protected virtual void DiscoverRole(RedisSocket socket)
         {
             if (!Disposed)
@@ -259,18 +276,6 @@ namespace Sweet.Redis
             }
         }
 
-        public virtual RedisRawResponse SendReceive(byte[] data)
-        {
-            ValidateNotDisposed();
-            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
-        }
-
-        public virtual RedisRawResponse SendReceive(IRedisCommand cmd)
-        {
-            ValidateNotDisposed();
-            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending command.");
-        }
-
         public override void ValidateNotDisposed()
         {
             if (Disposed)
@@ -315,7 +320,8 @@ namespace Sweet.Redis
                 if (!String.IsNullOrEmpty(settings.ClientName))
                     SetClientName(socket, settings.ClientName);
 
-                DiscoverRole(socket);
+                if (NeedsToDiscoverRole())
+                    DiscoverRole(socket);
             }
         }
 
@@ -492,9 +498,22 @@ namespace Sweet.Redis
             }
         }
 
+        public virtual RedisRawResponse SendReceive(byte[] data)
+        {
+            ValidateNotDisposed();
+            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
+        }
+
+        public virtual RedisRawResponse SendReceive(IRedisCommand cmd)
+        {
+            ValidateNotDisposed();
+            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending command.");
+        }
+
         public void Send(byte[] data)
         {
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)
@@ -514,6 +533,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"));
 
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)
@@ -530,6 +550,7 @@ namespace Sweet.Redis
         public Task SendAsync(byte[] data)
         {
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)
@@ -548,6 +569,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"));
 
             ValidateNotDisposed();
+            ValidateRole();
 
             var socket = Connect();
             if (socket == null)

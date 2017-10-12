@@ -23,7 +23,6 @@
 #endregion License
 
 using System;
-using System.Threading;
 using System.Text;
 
 namespace Sweet.Redis
@@ -33,7 +32,6 @@ namespace Sweet.Redis
         #region Field Members
 
         private Guid m_Id;
-        private RedisRole m_Role = RedisRole.Undefined;
 
         #endregion Field Members
 
@@ -58,8 +56,7 @@ namespace Sweet.Redis
 
         public virtual RedisRole Role
         {
-            get { return m_Role; }
-            protected internal set { m_Role = value; }
+            get { return RedisRole.Undefined; }
         }
 
         public bool ThrowOnError { get; private set; }

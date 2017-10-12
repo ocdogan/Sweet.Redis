@@ -1261,7 +1261,7 @@ namespace Sweet.Redis
                 return RedisRole.Sentinel;
             if (cmd.IsUpdateCommand())
                 return RedisRole.Master;
-            return RedisRole.Slave;
+            return RedisRole.SlaveOrMaster;
         }
 
         #endregion Commands
