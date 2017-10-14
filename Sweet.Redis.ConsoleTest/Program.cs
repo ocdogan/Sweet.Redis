@@ -46,32 +46,103 @@ namespace Sweet.Redis.ConsoleTest
 
             // MonitorTest1();
             // MonitorTest2();
-            MonitorTest3();
+            // MonitorTest3();
 
-            // Geo1();
+            // GeoTest1();
 
-            // SlowLog1();
+            // SlowLogTest1();
 
-            // Info1();
+            // InfoTest1();
 
-            // Shutdown();
+            // ShutdownTest1();
 
-            // Transaction1();
-            // Transaction2();
-            // Transaction3();
-            // Transaction4();
-            // Transaction5();
+            // TransactionTest1();
+            // TransactionTest2();
+            // TransactionTest3();
+            // TransactionTest4();
+            // TransactionTest5();
 
-            // Pipeline1();
-            // Pipeline2();
-            // Pipeline3();
-            // Pipeline4();
-            // Pipeline5();
+            // PipelineTest1();
+            // PipelineTest2();
+            // PipelineTest3();
+            // PipelineTest4();
+            // PipelineTest5();
+
+            SentinelTest1();
         }
+
+        #region Sentinel
+
+        static void SentinelTest1()
+        {
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        sw.Restart();
+
+                        var masters = sentinelClient.Commands.Masters();
+                        if (masters == null)
+                            Console.WriteLine("(nil)");
+                        else
+                        {
+                            var masterInfos = masters.Value;
+
+                            if (masterInfos == null)
+                                Console.WriteLine("(nil)");
+                            else if (masterInfos.Length == 0)
+                                Console.WriteLine("(empty)");
+                            else
+                            {
+                                foreach (var master in masterInfos)
+                                {
+                                    Console.WriteLine("IP address: " + master.Ip);
+                                    Console.WriteLine("Port: " + master.Port);
+                                    Console.WriteLine("RunId: " + master.RunId);
+                                    Console.WriteLine("Config epoch: " + master.ConfigEpoch);
+                                    Console.WriteLine("Down after milliseconds: " + master.DownAfterMilliseconds);
+                                    Console.WriteLine("Failover timeout: " + master.FailoverTimeOut);
+                                    Console.WriteLine("Flags: " + master.Flags);
+                                    Console.WriteLine("Last OK ping reply: " + master.LastOKPingReply);
+                                    Console.WriteLine("Last ping reply: " + master.LastPingReply);
+                                    Console.WriteLine("Last ping sent: " + master.LastPingSent);
+                                    Console.WriteLine("Name: " + master.Name);
+                                    Console.WriteLine("Number of other sentinels: " + master.NumberOfOtherSentinels);
+                                    Console.WriteLine("Number of slaves: " + master.NumberOfSlaves);
+                                    Console.WriteLine("Parallel syncs: " + master.ParallelSyncs);
+                                    Console.WriteLine("Quorum: " + master.Quorum);
+                                    Console.WriteLine();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        #endregion Sentinel
 
         #region Pipeline
 
-        static void Pipeline5()
+        static void PipelineTest5()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -130,7 +201,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Pipeline4()
+        static void PipelineTest4()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -181,7 +252,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Pipeline3()
+        static void PipelineTest3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -217,7 +288,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Pipeline2()
+        static void PipelineTest2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -264,7 +335,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Pipeline1()
+        static void PipelineTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -301,7 +372,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Transaction
 
-        static void Transaction5()
+        static void TransactionTest5()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -358,7 +429,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Transaction4()
+        static void TransactionTest4()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -409,7 +480,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Transaction3()
+        static void TransactionTest3()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -445,7 +516,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Transaction2()
+        static void TransactionTest2()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -492,7 +563,7 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Transaction1()
+        static void TransactionTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -529,7 +600,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Shutdown
 
-        static void Shutdown()
+        static void ShutdownTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -560,7 +631,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Info
 
-        static void Info1()
+        static void InfoTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -613,7 +684,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region SlowLog
 
-        static void SlowLog1()
+        static void SlowLogTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -656,7 +727,7 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Geo
 
-        static void Geo1()
+        static void GeoTest1()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisSettings("127.0.0.1", 6379, maxCount: 1)))
@@ -1735,45 +1806,5 @@ namespace Sweet.Redis.ConsoleTest
         }
 
         #endregion Performance Tests
-
-        #region Generic
-
-        private static void WriteResult(string cmd, object result)
-        {
-            var str = (result == null) ? String.Empty : (result.ToString() ?? String.Empty);
-
-            Console.Write(cmd);
-            Console.WriteLine(str);
-            Console.WriteLine("Length: " + str.Length);
-            Console.WriteLine("-----------------------------------------------");
-            Console.WriteLine();
-        }
-
-        private static void ConsoleWriteMultiline(string cmd, string[] strArray)
-        {
-            Console.Write(cmd);
-            if (strArray == null)
-                Console.WriteLine("1..) (null)");
-            else
-            {
-                for (var i = 0; i < strArray.Length; i++)
-                {
-                    var str = strArray[i];
-                    if (str == null)
-                        Console.Write((i + 1) + ") (null)");
-                    else
-                        Console.Write((i + 1) + ") " + str);
-
-                    if (i < strArray.Length - 1)
-                        Console.Write(", ");
-
-                    Console.WriteLine();
-                }
-            }
-            Console.WriteLine("-----------------------------------------------");
-            Console.WriteLine();
-        }
-
-        #endregion Generic
     }
 }

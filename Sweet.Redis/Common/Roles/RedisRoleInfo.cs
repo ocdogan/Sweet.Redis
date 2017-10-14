@@ -82,10 +82,7 @@ namespace Sweet.Redis
                             var data = item.Data;
                             if (data != null)
                             {
-                                var bytes = data as byte[];
-                                var role = (bytes == null) ? data as string :
-                                    Encoding.UTF8.GetString(bytes);
-
+                                var role = item.DataText;
                                 if (!String.IsNullOrEmpty(role))
                                 {
                                     role = role.ToLowerInvariant();

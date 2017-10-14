@@ -60,7 +60,7 @@ namespace Sweet.Redis
                     {
                         var item = list[1];
                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
-                            IPAddress = item.Data as string;
+                            IPAddress = item.DataText;
 
                         if (count > 2)
                         {
@@ -78,18 +78,31 @@ namespace Sweet.Redis
                             {
                                 item = list[3];
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
-                                    State = item.Data as string;
+                                    State = item.DataText;
 
                                 if (count > 4)
                                 {
                                     item = list[4];
-                                    if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
+                                    if (!ReferenceEquals(item, null))
                                     {
-                                        var data = item.Data;
-                                        if (data is long)
-                                            DataReceived = (long)data;
-                                        else if (data is int)
-                                            DataReceived = (int)data;
+                                        if (item.Type == RedisRawObjectType.Integer)
+                                        {
+                                            var data = item.Data;
+                                            if (data is long)
+                                                DataReceived = (long)data;
+                                            else if (data is int)
+                                                DataReceived = (int)data;
+                                        }
+                                        else if (item.Type == RedisRawObjectType.BulkString)
+                                        {
+                                            var data = item.DataText;
+                                            if (!string.IsNullOrEmpty(data))
+                                            {
+                                                long l;
+                                                if (long.TryParse(data, out l))
+                                                    DataReceived = l;
+                                            }
+                                        }
                                     }
                                 }
                             }

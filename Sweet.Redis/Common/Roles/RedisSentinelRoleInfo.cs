@@ -70,7 +70,7 @@ namespace Sweet.Redis
                                         item = items[i];
                                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                                         {
-                                            var masterName = item.Data as string;
+                                            var masterName = item.DataText;
                                             if (!String.IsNullOrEmpty(masterName))
                                                 masterNames.Add(masterName);
                                         }

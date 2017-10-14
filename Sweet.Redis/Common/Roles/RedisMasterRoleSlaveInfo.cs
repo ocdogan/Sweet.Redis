@@ -61,14 +61,14 @@ namespace Sweet.Redis
 
                         var item = list[0];
                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
-                            result.IPAddress = item.Data as string;
+                            result.IPAddress = item.DataText;
 
                         if (count > 1)
                         {
                             item = list[1];
                             if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                             {
-                                var port = item.Data as string;
+                                var port = item.DataText;
                                 if (!String.IsNullOrEmpty(port))
                                 {
                                     int i;
@@ -82,7 +82,7 @@ namespace Sweet.Redis
                                 item = list[2];
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                                 {
-                                    var offset = item.Data as string;
+                                    var offset = item.DataText;
                                     if (!String.IsNullOrEmpty(offset))
                                     {
                                         long l;

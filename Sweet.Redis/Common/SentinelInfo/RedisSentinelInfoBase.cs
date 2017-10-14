@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -74,7 +75,7 @@ namespace Sweet.Redis
 
         public string Name { get { return Get("name"); } } // mymaster
 
-        public string Ip { get { return Get("port"); } } // 127.0.0.1
+        public string Ip { get { return Get("ip"); } } // 127.0.0.1
 
         public long? Port { get { return GetInteger("port"); } } // 6379
 
@@ -106,18 +107,18 @@ namespace Sweet.Redis
                     {
                         for (var i = 0; i < count; i += 2)
                         {
-                            var rawItem = list[i];
-                            if (!ReferenceEquals(rawItem, null) && rawItem.Type == RedisRawObjectType.BulkString)
+                            var item = list[i];
+                            if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                             {
-                                var key = rawItem.Data as string;
+                                var key = item.DataText;
                                 if (!String.IsNullOrEmpty(key))
                                 {
                                     var value = (string)null;
                                     if (i < count - 1)
                                     {
-                                        rawItem = list[i + 1];
-                                        if (!ReferenceEquals(rawItem, null) && rawItem.Type == RedisRawObjectType.BulkString)
-                                            value = rawItem.Data as string;
+                                        item = list[i + 1];
+                                        if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
+                                            value = item.DataText;
                                     }
 
                                     base[key] = value;

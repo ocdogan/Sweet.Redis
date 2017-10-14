@@ -59,14 +59,14 @@ namespace Sweet.Redis
 
         public long Id { get; private set; }
 
-        public DateTime Time{ get; private set; }
-        
+        public DateTime Time { get; private set; }
+
         public TimeSpan Duration { get; private set; }
-        
+
         public string ClientInfo { get; private set; }
-        
+
         public string ClientName { get; private set; }
-        
+
         public string[] CommandInfo { get; private set; }
 
         #endregion Properties
@@ -88,7 +88,7 @@ namespace Sweet.Redis
                 sBuilder.AppendFormat(", ClientName={0}", ClientName);
 
             sBuilder.Append(']');
-        
+
             var cmdInfo = CommandInfo;
             if (cmdInfo != null)
             {
@@ -246,7 +246,7 @@ namespace Sweet.Redis
             }
             return false;
         }
- 
+
         private static bool TryParseInteger(IRedisRawResponse response, out long value)
         {
             value = RedisConstants.Zero;
@@ -317,7 +317,7 @@ namespace Sweet.Redis
                         {
                             if (item != null &&
                                 item.Type == RedisRawObjectType.BulkString)
-                                result.Add(item.Data as string);
+                                result.Add(item.DataText);
                         }
 
                         return result.ToArray();
@@ -335,7 +335,7 @@ namespace Sweet.Redis
                 var data = response.Data;
                 if (data == null)
                     return null;
-                
+
                 if (data.Length == 0)
                     return String.Empty;
 
@@ -348,7 +348,7 @@ namespace Sweet.Redis
         {
             if (response != null &&
                 response.Type == RedisRawObjectType.BulkString)
-                return response.Data as string;
+                return response.DataText;
             return null;
         }
 

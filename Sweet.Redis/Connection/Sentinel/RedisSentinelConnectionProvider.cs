@@ -23,31 +23,32 @@
 #endregion License
 
 using System;
-using System.Net.Sockets;
+using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisSentinelConnection : RedisBidirectionalConnection
+    internal class RedisSentinelConnectionProvider : RedisSingleConnectionProvider
     {
         #region .Ctors
 
-        internal RedisSentinelConnection(string name, RedisSettings settings,
-            Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
-            RedisSocket socket = null, bool connectImmediately = false)
-            : base(name, RedisRole.Sentinel, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)
+        public RedisSentinelConnectionProvider(RedisSettings settings = null)
+            : base(String.Format("{0}, {1}", typeof(RedisSentinelConnectionProvider).Name, RedisCommon.NewGuidID()), settings)
         { }
 
         #endregion .Ctors
 
-        #region Member Methods
+        #region Methods
 
-        protected override RedisRole DiscoverRole(RedisSocket socket)
+        protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
-            var role = base.DiscoverRole(socket);
-            ValidateRole();
-            return role;
+            var settings = GetSettings() ?? RedisSettings.Default;
+            return new RedisSentinelConnection(Name, settings,
+                null,
+                OnReleaseSocket,
+                socket,
+                true);
         }
 
-        #endregion Member Methods
+        #endregion Methods
     }
 }

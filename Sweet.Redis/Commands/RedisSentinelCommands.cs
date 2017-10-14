@@ -85,20 +85,33 @@ namespace Sweet.Redis
                             var rawIP = list[0];
                             if (!ReferenceEquals(rawIP, null) && rawIP.Type == RedisRawObjectType.BulkString)
                             {
-                                var ipAddress = rawIP.Data as string;
+                                var ipAddress = rawIP.DataText;
                                 if (!String.IsNullOrEmpty(ipAddress))
                                 {
                                     int port = 0;
                                     if (count > 1)
                                     {
                                         var rawPort = list[0];
-                                        if (!ReferenceEquals(rawPort, null) && rawPort.Type == RedisRawObjectType.Integer)
+                                        if (!ReferenceEquals(rawPort, null))
                                         {
-                                            var data = rawPort.Data;
-                                            if (data is long)
-                                                port = (int)(long)data;
-                                            else if (data is int)
-                                                port = (int)data;
+                                            if (rawPort.Type == RedisRawObjectType.Integer)
+                                            {
+                                                var data = rawPort.Data;
+                                                if (data is long)
+                                                    port = (int)(long)data;
+                                                else if (data is int)
+                                                    port = (int)data;
+                                            }
+                                            else if (rawPort.Type == RedisRawObjectType.BulkString)
+                                            {
+                                                var data = rawPort.DataText;
+                                                if (!String.IsNullOrEmpty(data))
+                                                {
+                                                    long l;
+                                                    if (long.TryParse(data, out l))
+                                                        port = (int)l;
+                                                }
+                                            }
                                         }
                                     }
 
@@ -170,7 +183,7 @@ namespace Sweet.Redis
                                 var item = list[i];
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
                                 {
-                                    var info = new RedisSentinelMasterInfo(rawValue);
+                                    var info = new RedisSentinelMasterInfo(item);
                                     items.Add(info);
                                 }
                             }

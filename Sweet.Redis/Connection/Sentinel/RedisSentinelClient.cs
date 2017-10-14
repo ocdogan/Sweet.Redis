@@ -34,6 +34,8 @@ namespace Sweet.Redis
         private RedisSettings m_Settings;
         private IRedisSentinelCommands m_Commands;
 
+        private IRedisConnectionProvider m_ConnectionProvider;
+
         #endregion Field Members
 
         #region .Ctors
@@ -41,7 +43,11 @@ namespace Sweet.Redis
         public RedisSentinelClient(RedisSettings settings, bool throwOnError = true)
             : base(throwOnError)
         {
-            m_Settings = settings ?? RedisSettings.Default;
+            if (settings == null)
+                throw new ArgumentNullException("settings");
+
+            m_Settings = settings;
+            m_ConnectionProvider = new RedisSentinelConnectionProvider(m_Settings);
         }
 
         #endregion .Ctors
@@ -80,5 +86,79 @@ namespace Sweet.Redis
         }
 
         #endregion Properties
+
+        #region Methods
+
+        protected virtual IRedisConnection Connect()
+        {
+            ValidateNotDisposed();
+
+            var connectionProvider = m_ConnectionProvider;
+            if (connectionProvider != null)
+            {
+                var connection = connectionProvider.Connect(-1, RedisRole.Sentinel);
+
+                if (connection != null && !connection.Connected)
+                    connection.Connect();
+
+                OnConnect(connection);
+
+                return connection;
+            }
+            return null;
+        }
+
+        protected virtual void OnConnect(IRedisConnection connection)
+        { }
+
+        #region Execution Methods
+
+        protected internal override T Expect<T>(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
+        {
+            using (var connection = Connect())
+            {
+                switch (expectation)
+                {
+                    case RedisCommandExpect.Response:
+                        return (T)(object)command.Execute(connection, ThrowOnError);
+                    case RedisCommandExpect.Array:
+                        return (T)(object)command.ExpectArray(connection, ThrowOnError);
+                    case RedisCommandExpect.BulkString:
+                        return (T)(object)command.ExpectBulkString(connection, ThrowOnError);
+                    case RedisCommandExpect.BulkStringBytes:
+                        return (T)(object)command.ExpectBulkStringBytes(connection, ThrowOnError);
+                    case RedisCommandExpect.Double:
+                        return (T)(object)command.ExpectDouble(connection, ThrowOnError);
+                    case RedisCommandExpect.GreaterThanZero:
+                        return (T)(object)command.ExpectInteger(connection, ThrowOnError);
+                    case RedisCommandExpect.Integer:
+                        return (T)(object)command.ExpectInteger(connection, ThrowOnError);
+                    case RedisCommandExpect.MultiDataBytes:
+                        return (T)(object)command.ExpectMultiDataBytes(connection, ThrowOnError);
+                    case RedisCommandExpect.MultiDataStrings:
+                        return (T)(object)command.ExpectMultiDataStrings(connection, ThrowOnError);
+                    case RedisCommandExpect.Nothing:
+                        return (T)(object)command.ExpectNothing(connection, ThrowOnError);
+                    case RedisCommandExpect.NullableDouble:
+                        return (T)(object)command.ExpectNullableDouble(connection, ThrowOnError);
+                    case RedisCommandExpect.NullableInteger:
+                        return (T)(object)command.ExpectNullableInteger(connection, ThrowOnError);
+                    case RedisCommandExpect.OK:
+                        return (T)(object)command.ExpectSimpleString(connection, RedisConstants.OK, ThrowOnError);
+                    case RedisCommandExpect.One:
+                        return (T)(object)(command.ExpectInteger(connection, ThrowOnError) == RedisConstants.One);
+                    case RedisCommandExpect.SimpleString:
+                        return (T)(object)command.ExpectSimpleString(connection, ThrowOnError);
+                    case RedisCommandExpect.SimpleStringBytes:
+                        return (T)(object)command.ExpectSimpleStringBytes(connection, ThrowOnError);
+                    default:
+                        throw new RedisException("Undefined exception");
+                }
+            }
+        }
+
+        #endregion Execution Methods
+
+        #endregion Methods
     }
 }

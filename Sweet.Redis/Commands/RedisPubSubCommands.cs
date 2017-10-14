@@ -77,7 +77,7 @@ namespace Sweet.Redis
                                 if (item != null &&
                                     (item.Type == RedisRawObjectType.BulkString ||
                                      item.Type == RedisRawObjectType.SimpleString))
-                                    result[i] = item.Data as string ?? String.Empty;
+                                    result[i] = item.DataText ?? String.Empty;
                             }
                         }
 
@@ -120,7 +120,7 @@ namespace Sweet.Redis
                                 if (nameItem != null &&
                                     (nameItem.Type == RedisRawObjectType.BulkString ||
                                      nameItem.Type == RedisRawObjectType.SimpleString))
-                                    name = nameItem.Data as string ?? String.Empty;
+                                    name = nameItem.DataText ?? String.Empty;
 
                                 if (countItem != null &&
                                     countItem.Type == RedisRawObjectType.Integer)

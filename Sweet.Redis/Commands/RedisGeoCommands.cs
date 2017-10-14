@@ -277,7 +277,7 @@ namespace Sweet.Redis
             {
                 if (obj.Type == RedisRawObjectType.BulkString)
                 {
-                    var member = obj.Data as string;
+                    var member = obj.DataText;
                     if (member != null)
                         return new RedisGeoRadiusResult(member);
                 }
@@ -299,30 +299,26 @@ namespace Sweet.Redis
 
                     var item = items[0];
                     if (item != null && item.Type == RedisRawObjectType.BulkString)
-                    {
-                        data = item.Data;
-                        if (data != null && data is string)
-                            member = (string)data;
-                    }
+                        member = item.DataText;
 
                     for (var i = 1; i < count; i++)
                     {
                         var child = items[i];
                         if (child != null)
                         {
-                            data = child.Data;
                             if (child.Type == RedisRawObjectType.Array)
                                 coord = ToGeoPosition(child);
-                            else if (data != null)
+                            else
                             {
                                 if (child.Type == RedisRawObjectType.Integer)
                                 {
+                                    data = child.Data;
                                     if (data is long)
                                         hash = (long)data;
                                 }
                                 else if (child.Type == RedisRawObjectType.BulkString)
                                 {
-                                    var str = data as string;
+                                    var str = child.DataText;
                                     if (str != null)
                                     {
                                         var d = 0d;

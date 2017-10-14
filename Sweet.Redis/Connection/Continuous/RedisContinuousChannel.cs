@@ -109,8 +109,7 @@ namespace Sweet.Redis
 
         protected virtual string GetProviderName()
         {
-            return String.Format("{0}, {1}", GetType().Name,
-                Guid.NewGuid().ToString("N").ToUpper());
+            return String.Format("{0}, {1}", GetType().Name, RedisCommon.NewGuidID());
         }
 
         protected virtual IRedisConnection Connect(RedisRole role, bool beginReveive = false)
