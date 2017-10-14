@@ -220,6 +220,11 @@ namespace Sweet.Redis
             return false;
         }
 
+        internal static string NewGuidID()
+        {
+            return Guid.NewGuid().ToString("N").ToUpper();
+        }
+
         #endregion General
 
         #region Conversion
