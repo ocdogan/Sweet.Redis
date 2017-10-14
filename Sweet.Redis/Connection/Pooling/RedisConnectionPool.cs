@@ -300,7 +300,7 @@ namespace Sweet.Redis
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
 
-        protected override void CompleteSocketRelease(IRedisConnection conn, RedisSocket socket)
+        protected override void CompleteSocketRelease(IRedisConnection connection, RedisSocket socket)
         {
             EnqueueSocket(socket);
         }
