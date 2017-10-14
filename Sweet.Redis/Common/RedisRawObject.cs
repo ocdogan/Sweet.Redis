@@ -64,6 +64,38 @@ namespace Sweet.Redis
 
         public object Data { get; private set; }
 
+        public string DataText
+        {
+            get
+            {
+                var data = Data;
+                if (!ReferenceEquals(data, null))
+                {
+                    switch (Type)
+                    {
+                        case RedisRawObjectType.BulkString:
+                            if (data is byte[])
+                                return Encoding.UTF8.GetString((byte[])data);
+                            return data as string;
+                        case RedisRawObjectType.SimpleString:
+                        case RedisRawObjectType.Error:
+                            if (data is string)
+                                return (string)data;
+                            if (data is byte[])
+                                return Encoding.UTF8.GetString((byte[])data);
+                            break;
+                        case RedisRawObjectType.Integer:
+                            if (data is long)
+                                return ((long)data).ToString(RedisConstants.InvariantCulture);
+                            if (data is double)
+                                return ((double)data).ToString(RedisConstants.InvariantCulture);
+                            break;
+                    }
+                }
+                return null;
+            }
+        }
+
         public IList<RedisRawObject> Items
         {
             get { return m_List; }
