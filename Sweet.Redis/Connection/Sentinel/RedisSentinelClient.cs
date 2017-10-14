@@ -24,7 +24,6 @@
 
 using System;
 using System.Threading;
-using System.Text;
 
 namespace Sweet.Redis
 {
@@ -32,17 +31,30 @@ namespace Sweet.Redis
     {
         #region Field Members
 
+        private RedisSettings m_Settings;
         private IRedisSentinelCommands m_Commands;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisSentinelClient(bool throwOnError = true)
+        public RedisSentinelClient(RedisSettings settings, bool throwOnError = true)
             : base(throwOnError)
-        { }
+        {
+            m_Settings = settings ?? RedisSettings.Default;
+        }
 
         #endregion .Ctors
+
+        #region Destructors
+
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+            Interlocked.Exchange(ref m_Settings, null);
+        }
+
+        #endregion Destructors
 
         #region Properties
 
@@ -60,6 +72,11 @@ namespace Sweet.Redis
         public override RedisRole Role
         {
             get { return RedisRole.Sentinel; }
+        }
+
+        public RedisSettings Settings
+        {
+            get { return m_Settings; }
         }
 
         #endregion Properties
