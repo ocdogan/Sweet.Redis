@@ -224,6 +224,7 @@
     <Compile Include="Common\Roles\RedisMasterRoleSlaveInfo.cs" />
     <Compile Include="Common\Roles\RedisSentinelRoleInfo.cs" />
     <Compile Include="Common\ServerInfo\RedisServerInfoCommandStatsSection.cs" />
+    <Compile Include="Connection\RedisBidirectionalConnection.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

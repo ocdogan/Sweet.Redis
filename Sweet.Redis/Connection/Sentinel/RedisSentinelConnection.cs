@@ -27,7 +27,7 @@ using System.Net.Sockets;
 
 namespace Sweet.Redis
 {
-    internal class RedisSentinelConnection : RedisConnection
+    internal class RedisSentinelConnection : RedisBidirectionalConnection
     {
         #region .Ctors
 
@@ -41,53 +41,12 @@ namespace Sweet.Redis
 
         #region Member Methods
 
-        public override RedisRawResponse SendReceive(byte[] data)
+        protected override RedisRole DiscoverRole(RedisSocket socket)
         {
-            ValidateNotDisposed();
+            var role = base.DiscoverRole(socket);
             ValidateRole();
-
-            var socket = Connect();
-            if (socket == null)
-            {
-                SetLastError((long)SocketError.NotConnected);
-                SetState((long)RedisConnectionState.Failed);
-
-                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
-            }
-
-            var task = socket.SendAsync(data, 0, data.Length)
-                .ContinueWith<RedisRawResponse>((ret) =>
-                {
-                    if (ret.IsCompleted && ret.Result > 0)
-                        using (var reader = new RedisSingleResponseReader(Settings))
-                            return reader.Execute(socket);
-                    return null;
-                });
-            return task.Result;
+            return role;
         }
-
-        public override RedisRawResponse SendReceive(IRedisCommand cmd)
-        {
-            if (cmd == null)
-                throw new RedisFatalException(new ArgumentNullException("cmd"));
-
-            ValidateNotDisposed();
-            ValidateRole();
-
-            var socket = Connect();
-            if (socket == null)
-            {
-                SetLastError((long)SocketError.NotConnected);
-                SetState((long)RedisConnectionState.Failed);
-
-                throw new SocketException((int)SocketError.NotConnected);
-            }
-
-            cmd.WriteTo(socket);
-            using (var reader = new RedisSingleResponseReader(Settings))
-                return reader.Execute(socket);
-        }
-
         #endregion Member Methods
     }
 }

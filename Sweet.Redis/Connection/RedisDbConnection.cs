@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisDbConnection : RedisConnection, IRedisDbConnection
+    internal class RedisDbConnection : RedisBidirectionalConnection, IRedisDbConnection
     {
         #region Constants
 
@@ -107,53 +107,6 @@ namespace Sweet.Redis
                 }
             }
             return true;
-        }
-
-        public override RedisRawResponse SendReceive(byte[] data)
-        {
-            ValidateNotDisposed();
-            ValidateRole();
-
-            var socket = Connect();
-            if (socket == null)
-            {
-                SetLastError((long)SocketError.NotConnected);
-                SetState((long)RedisConnectionState.Failed);
-
-                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
-            }
-
-            var task = socket.SendAsync(data, 0, data.Length)
-                .ContinueWith<RedisRawResponse>((ret) =>
-                {
-                    if (ret.IsCompleted && ret.Result > 0)
-                        using (var reader = new RedisSingleResponseReader(Settings))
-                            return reader.Execute(socket);
-                    return null;
-                });
-            return task.Result;
-        }
-
-        public override RedisRawResponse SendReceive(IRedisCommand cmd)
-        {
-            if (cmd == null)
-                throw new RedisFatalException(new ArgumentNullException("cmd"));
-
-            ValidateNotDisposed();
-            ValidateRole();
-
-            var socket = Connect();
-            if (socket == null)
-            {
-                SetLastError((long)SocketError.NotConnected);
-                SetState((long)RedisConnectionState.Failed);
-
-                throw new SocketException((int)SocketError.NotConnected);
-            }
-
-            cmd.WriteTo(socket);
-            using (var reader = new RedisSingleResponseReader(Settings))
-                return reader.Execute(socket);
         }
 
         #endregion Member Methods

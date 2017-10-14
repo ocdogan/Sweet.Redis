@@ -215,7 +215,7 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual void DiscoverRole(RedisSocket socket)
+        protected virtual RedisRole DiscoverRole(RedisSocket socket)
         {
             if (!Disposed)
             {
@@ -273,7 +273,9 @@ namespace Sweet.Redis
                 }
 
                 socket.Role = role;
+                return role;
             }
+            return RedisRole.Undefined;
         }
 
         public override void ValidateNotDisposed()
