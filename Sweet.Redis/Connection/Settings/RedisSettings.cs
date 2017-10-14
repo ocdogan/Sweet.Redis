@@ -38,14 +38,14 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisSettings(string host = RedisConstants.IP4LocalHost, int port = RedisConstants.DefaultPort,
-            string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
             int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
             bool useAsyncCompleter = true, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base(host, port, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
+            : base(host, port, masterName, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
                    sslCertificateSelection, sslCertificateValidation)
         {
             Password = password;

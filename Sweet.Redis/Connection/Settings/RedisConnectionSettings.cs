@@ -32,7 +32,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisConnectionSettings(string host = RedisConstants.IP4LocalHost,
-            int port = RedisConstants.DefaultPort,
+            int port = RedisConstants.DefaultPort, string masterName = null,
             int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout,
@@ -42,6 +42,7 @@ namespace Sweet.Redis
         {
             Host = host;
             Port = port;
+            MasterName = masterName;
             UseSsl = useSsl;
             SslCertificateSelection = sslCertificateSelection;
             SslCertificateValidation = sslCertificateValidation;
@@ -57,6 +58,7 @@ namespace Sweet.Redis
         public int ConnectionTimeout { get; private set; }
         public string Host { get; private set; }
         public int Port { get; private set; }
+        public string MasterName { get; private set; }
         public int ReceiveTimeout { get; private set; }
         public int SendTimeout { get; private set; }
         public LocalCertificateSelectionCallback SslCertificateSelection { get; private set; }
