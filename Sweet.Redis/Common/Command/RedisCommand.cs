@@ -115,6 +115,14 @@ namespace Sweet.Redis
 
         #region IRedisConnection Execution Methods
 
+        public RedisBool ExpectOK(IRedisConnection connection, bool throwException = true)
+        {
+            var result = ExpectSimpleStringInternal(connection, throwException);
+            if (!String.IsNullOrEmpty(result))
+                return result.Equals(RedisConstants.OK, StringComparison.OrdinalIgnoreCase);
+            return false;
+        }
+
         public RedisBool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleStringInternal(connection, throwException);
@@ -220,6 +228,17 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisBool ExpectOne(IRedisConnection connection, bool throwException = true)
+        {
+            var result = ExpectNullableInteger(connection, throwException);
+            if (result != null)
+            {
+                var value = result.Value;
+                return value.HasValue && value.Value == RedisConstants.One;
+            }
+            return false;
+        }
+
         public RedisInteger ExpectInteger(IRedisConnection connection, bool throwException = true)
         {
             var result = ExpectNullableInteger(connection, throwException);
@@ -313,6 +332,14 @@ namespace Sweet.Redis
         #endregion IRedisConnection Execution Methods
 
         #region RedisSocket Execution Methods
+
+        public RedisBool ExpectOK(RedisSocketContext context, bool throwException = true)
+        {
+            var result = ExpectSimpleStringInternal(context, throwException);
+            if (!String.IsNullOrEmpty(result))
+                return result.Equals(RedisConstants.OK, StringComparison.OrdinalIgnoreCase);
+            return false;
+        }
 
         public RedisBool ExpectSimpleString(RedisSocketContext context, string expectedResult, bool throwException = true)
         {
@@ -417,6 +444,17 @@ namespace Sweet.Redis
                 }
                 return response.ReleaseData();
             }
+        }
+
+        public RedisBool ExpectOne(RedisSocketContext context, bool throwException = true)
+        {
+            var result = ExpectNullableInteger(context, throwException);
+            if (result != null)
+            {
+                var value = result.Value;
+                return (value.HasValue && value.Value == RedisConstants.One);
+            }
+            return false;
         }
 
         public RedisInteger ExpectInteger(RedisSocketContext context, bool throwException = true)
