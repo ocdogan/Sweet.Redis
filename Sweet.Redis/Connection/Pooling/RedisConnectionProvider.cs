@@ -397,7 +397,7 @@ namespace Sweet.Redis
 
             using (var connection = Connect(command.DbIndex, command.Role))
             {
-                return command.ExpectInteger(connection, throwException) == RedisConstants.One;
+                return command.ExpectOne(connection, throwException);
             }
         }
 

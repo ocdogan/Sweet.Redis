@@ -41,12 +41,12 @@ namespace Sweet.Redis
 
         public RedisBool BGRewriteAOF()
         {
-            return ExpectSimpleString(RedisCommands.BGRewriteAOF, RedisConstants.OK);
+            return ExpectOK(RedisCommands.BGRewriteAOF);
         }
 
         public RedisBool BGSave()
         {
-            return ExpectSimpleString(RedisCommands.BGSave, RedisConstants.OK);
+            return ExpectOK(RedisCommands.BGSave);
         }
 
         public RedisString ClientGetName()
@@ -146,22 +146,22 @@ namespace Sweet.Redis
 
         public RedisBool ClientPause(int timeout)
         {
-            return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.Pause, timeout.ToBytes());
+            return ExpectOK(RedisCommands.Client, RedisCommands.Pause, timeout.ToBytes());
         }
 
         public RedisBool ClientReplyOff()
         {
-            return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.Reply, RedisCommands.Off);
+            return ExpectOK(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Off);
         }
 
         public RedisBool ClientReplyOn()
         {
-            return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.Reply, RedisCommands.On);
+            return ExpectOK(RedisCommands.Client, RedisCommands.Reply, RedisCommands.On);
         }
 
         public RedisBool ClientReplySkip()
         {
-            return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.Reply, RedisCommands.Skip);
+            return ExpectOK(RedisCommands.Client, RedisCommands.Reply, RedisCommands.Skip);
         }
 
         public RedisBool ClientSetName(RedisParam connectionName)
@@ -169,7 +169,7 @@ namespace Sweet.Redis
             if (connectionName.IsNull)
                 throw new ArgumentNullException("connectionName");
 
-            return ExpectSimpleString(RedisCommands.Client, RedisConstants.OK, RedisCommands.SetName, connectionName.ToBytes());
+            return ExpectOK(RedisCommands.Client, RedisCommands.SetName, connectionName.ToBytes());
         }
 
         public RedisResult<IDictionary<string, string>> ConfigGet(RedisParam parameter)
@@ -198,12 +198,12 @@ namespace Sweet.Redis
 
         public RedisBool ConfigResetStat()
         {
-            return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.ResetStat);
+            return ExpectOK(RedisCommands.Config, RedisCommands.ResetStat);
         }
 
         public RedisBool ConfigRewrite()
         {
-            return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.Rewrite);
+            return ExpectOK(RedisCommands.Config, RedisCommands.Rewrite);
         }
 
         public RedisBool ConfigSet(RedisParam parameter, RedisParam value)
@@ -219,7 +219,7 @@ namespace Sweet.Redis
             if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            return ExpectSimpleString(RedisCommands.Config, RedisConstants.OK, RedisCommands.Set, parameter, value);
+            return ExpectOK(RedisCommands.Config, RedisCommands.Set, parameter, value);
         }
 
         public RedisInteger DbSize()
@@ -229,22 +229,22 @@ namespace Sweet.Redis
 
         public RedisBool FlushAll()
         {
-            return ExpectSimpleString(RedisCommands.FlushAll, RedisConstants.OK);
+            return ExpectOK(RedisCommands.FlushAll);
         }
 
         public RedisBool FlushAllAsync()
         {
-            return ExpectSimpleString(RedisCommands.FlushAll, RedisConstants.OK, RedisCommands.Async);
+            return ExpectOK(RedisCommands.FlushAll, RedisCommands.Async);
         }
 
         public RedisBool FlushDb()
         {
-            return ExpectSimpleString(RedisCommands.FlushDb, RedisConstants.OK);
+            return ExpectOK(RedisCommands.FlushDb);
         }
 
         public RedisBool FlushDbAsync()
         {
-            return ExpectSimpleString(RedisCommands.FlushDb, RedisConstants.OK, RedisCommands.Async);
+            return ExpectOK(RedisCommands.FlushDb, RedisCommands.Async);
         }
 
         public RedisResult<RedisServerInfo> Info(RedisParam? section = null)
@@ -282,7 +282,7 @@ namespace Sweet.Redis
 
         public RedisBool Save()
         {
-            return ExpectSimpleString(RedisCommands.Save, RedisConstants.OK);
+            return ExpectOK(RedisCommands.Save);
         }
 
         public RedisVoid ShutDown()
@@ -305,12 +305,12 @@ namespace Sweet.Redis
             if (port < 0 || port > ushort.MaxValue)
                 throw new ArgumentException("Invalid port number");
 
-            return ExpectSimpleString(RedisCommands.SlaveOf, RedisConstants.OK, host, port.ToBytes());
+            return ExpectOK(RedisCommands.SlaveOf, host, port.ToBytes());
         }
 
         public RedisBool SlaveOfNoOne()
         {
-            return ExpectSimpleString(RedisCommands.SlaveOf, RedisConstants.OK, RedisCommands.NoOne);
+            return ExpectOK(RedisCommands.SlaveOf, RedisCommands.NoOne);
         }
 
         public RedisResult<RedisSlowLogInfo[]> SlowLogGet(int count)
@@ -328,7 +328,7 @@ namespace Sweet.Redis
 
         public RedisBool SlowLogReset()
         {
-            return ExpectSimpleString(RedisCommands.SlowLog, RedisConstants.OK, RedisCommands.Reset);
+            return ExpectOK(RedisCommands.SlowLog, RedisCommands.Reset);
         }
 
         public RedisDate Time()

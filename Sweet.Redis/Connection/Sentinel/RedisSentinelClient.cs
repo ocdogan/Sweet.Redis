@@ -144,12 +144,16 @@ namespace Sweet.Redis
                     case RedisCommandExpect.NullableInteger:
                         return (T)(object)command.ExpectNullableInteger(connection, ThrowOnError);
                     case RedisCommandExpect.OK:
-                        return (T)(object)command.ExpectSimpleString(connection, RedisConstants.OK, ThrowOnError);
+                        return (T)(object)command.ExpectOK(connection, ThrowOnError);
                     case RedisCommandExpect.One:
-                        return (T)(object)(command.ExpectInteger(connection, ThrowOnError) == RedisConstants.One);
+                        return (T)(object)command.ExpectOne(connection, ThrowOnError);
                     case RedisCommandExpect.SimpleString:
+                        if (!String.IsNullOrEmpty(okIf))
+                            return (T)(object)command.ExpectSimpleString(connection, okIf, ThrowOnError);
                         return (T)(object)command.ExpectSimpleString(connection, ThrowOnError);
                     case RedisCommandExpect.SimpleStringBytes:
+                        if (!String.IsNullOrEmpty(okIf))
+                            return (T)(object)command.ExpectSimpleStringBytes(connection, okIf.ToBytes(), ThrowOnError);
                         return (T)(object)command.ExpectSimpleStringBytes(connection, ThrowOnError);
                     default:
                         throw new RedisException("Undefined exception");

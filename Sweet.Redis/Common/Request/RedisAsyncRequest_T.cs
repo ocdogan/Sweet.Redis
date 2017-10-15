@@ -454,14 +454,14 @@ namespace Sweet.Redis
                                     break;
                                 case RedisCommandExpect.OK:
                                     {
-                                        var result = command.ExpectSimpleString(context, RedisConstants.OK);
+                                        var result = command.ExpectOK(context);
                                         (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
                                     }
                                     break;
                                 case RedisCommandExpect.One:
                                     {
-                                        var result = command.ExpectInteger(context);
-                                        (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result == RedisConstants.One);
+                                        var result = command.ExpectOne(context);
+                                        (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
                                     }
                                     break;
                                 case RedisCommandExpect.SimpleString:

@@ -58,12 +58,12 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
 
-            return ExpectSimpleString(RedisCommands.Sentinel, RedisConstants.OK, RedisCommands.SentinelFailover, masterName.ToBytes());
+            return ExpectOK(RedisCommands.Sentinel, RedisCommands.SentinelFailover, masterName.ToBytes());
         }
 
         public RedisBool FlushConfig()
         {
-            return ExpectSimpleString(RedisCommands.Sentinel, RedisConstants.OK, RedisCommands.SentinelFlushConfig);
+            return ExpectOK(RedisCommands.Sentinel, RedisCommands.SentinelFlushConfig);
         }
 
         public RedisResult<RedisEndPoint> GetMasterAddrByName(string masterName)
@@ -210,7 +210,8 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(ipAddress))
                 throw new ArgumentNullException("ipAddress");
 
-            throw new NotImplementedException();
+            return ExpectOK(RedisCommands.Sentinel, RedisCommands.SentinelMonitor,
+                                      masterName.ToBytes(), ipAddress.ToBytes(), port.ToBytes(), quorum.ToBytes());
         }
 
         public RedisBool Remove(string masterName)
@@ -218,7 +219,7 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
 
-            throw new NotImplementedException();
+            return ExpectOK(RedisCommands.Sentinel, RedisCommands.SentinelRemove, masterName.ToBytes());
         }
 
         public RedisInteger Reset(RedisParam pattern)
@@ -288,7 +289,7 @@ namespace Sweet.Redis
             if (value.IsNull)
                 throw new ArgumentNullException("value");
 
-            return ExpectSimpleString(RedisCommands.Sentinel, RedisConstants.OK, RedisCommands.SentinelSet, parameter, value);
+            return ExpectOK(RedisCommands.Sentinel, RedisCommands.SentinelSet, parameter, value);
         }
 
         public RedisResult<RedisSentinelSlaveInfo[]> Slaves(string masterName)
