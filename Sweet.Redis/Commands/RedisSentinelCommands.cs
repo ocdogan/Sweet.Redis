@@ -77,13 +77,13 @@ namespace Sweet.Redis
                 var rawValue = raw.Value;
                 if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
                 {
-                    var list = rawValue.Items;
-                    if (list != null)
+                    var items = rawValue.Items;
+                    if (items != null)
                     {
-                        var count = list.Count;
+                        var count = items.Count;
                         if (count > 0)
                         {
-                            var rawIP = list[0];
+                            var rawIP = items[0];
                             if (!ReferenceEquals(rawIP, null) && rawIP.Type == RedisRawObjectType.BulkString)
                             {
                                 var ipAddress = rawIP.DataText;
@@ -92,7 +92,7 @@ namespace Sweet.Redis
                                     int port = 0;
                                     if (count > 1)
                                     {
-                                        var rawPort = list[1];
+                                        var rawPort = items[1];
                                         if (!ReferenceEquals(rawPort, null) && rawPort.Type == RedisRawObjectType.BulkString)
                                         {
                                             var data = rawPort.DataText;
@@ -176,25 +176,25 @@ namespace Sweet.Redis
                 var rawValue = raw.Value;
                 if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
                 {
-                    var list = rawValue.Items;
-                    if (list != null)
+                    var items = rawValue.Items;
+                    if (items != null)
                     {
-                        var count = list.Count;
+                        var count = items.Count;
                         if (count > 0)
                         {
-                            var items = new List<RedisSentinelMasterInfo>(count);
+                            var list = new List<RedisSentinelMasterInfo>(count);
                             for (var i = 0; i < count; i++)
                             {
-                                var item = list[i];
+                                var item = items[i];
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
                                 {
                                     var info = new RedisSentinelMasterInfo(item);
-                                    items.Add(info);
+                                    list.Add(info);
                                 }
                             }
 
-                            if (items.Count > 0)
-                                return new RedisResult<RedisSentinelMasterInfo[]>(items.ToArray());
+                            if (list.Count > 0)
+                                return new RedisResult<RedisSentinelMasterInfo[]>(list.ToArray());
                         }
                     }
                 }
@@ -210,7 +210,7 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(ipAddress))
                 throw new ArgumentNullException("ipAddress");
 
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public RedisBool Remove(string masterName)
@@ -218,7 +218,7 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
 
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public RedisInteger Reset(RedisParam pattern)
@@ -245,31 +245,31 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
 
-            var raw = ExpectArray(RedisCommands.Sentinel, RedisCommands.Sentinels);
+            var raw = ExpectArray(RedisCommands.Sentinel, RedisCommands.Sentinels, masterName.ToBytes());
             if (!ReferenceEquals(raw, null))
             {
                 var rawValue = raw.Value;
                 if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
                 {
-                    var list = rawValue.Items;
-                    if (list != null)
+                    var items = rawValue.Items;
+                    if (items != null)
                     {
-                        var count = list.Count;
+                        var count = items.Count;
                         if (count > 0)
                         {
-                            var items = new List<RedisSentinelNodeInfo>(count);
+                            var list = new List<RedisSentinelNodeInfo>(count);
                             for (var i = 0; i < count; i++)
                             {
-                                var item = list[i];
+                                var item = items[i];
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
                                 {
-                                    var info = new RedisSentinelNodeInfo(rawValue);
-                                    items.Add(info);
+                                    var info = new RedisSentinelNodeInfo(item);
+                                    list.Add(info);
                                 }
                             }
 
-                            if (items.Count > 0)
-                                return new RedisResult<RedisSentinelNodeInfo[]>(items.ToArray());
+                            if (list.Count > 0)
+                                return new RedisResult<RedisSentinelNodeInfo[]>(list.ToArray());
                         }
                     }
                 }
@@ -296,31 +296,31 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
 
-            var raw = ExpectArray(RedisCommands.Sentinel, RedisCommands.SentinelSlaves);
+            var raw = ExpectArray(RedisCommands.Sentinel, RedisCommands.SentinelSlaves, masterName.ToBytes());
             if (!ReferenceEquals(raw, null))
             {
                 var rawValue = raw.Value;
                 if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
                 {
-                    var list = rawValue.Items;
-                    if (list != null)
+                    var items = rawValue.Items;
+                    if (items != null)
                     {
-                        var count = list.Count;
+                        var count = items.Count;
                         if (count > 0)
                         {
-                            var items = new List<RedisSentinelSlaveInfo>(count);
+                            var list = new List<RedisSentinelSlaveInfo>(count);
                             for (var i = 0; i < count; i++)
                             {
-                                var item = list[i];
+                                var item = items[i];
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
                                 {
-                                    var info = new RedisSentinelSlaveInfo(rawValue);
-                                    items.Add(info);
+                                    var info = new RedisSentinelSlaveInfo(item);
+                                    list.Add(info);
                                 }
                             }
 
-                            if (items.Count > 0)
-                                return new RedisResult<RedisSentinelSlaveInfo[]>(items.ToArray());
+                            if (list.Count > 0)
+                                return new RedisResult<RedisSentinelSlaveInfo[]>(list.ToArray());
                         }
                     }
                 }
