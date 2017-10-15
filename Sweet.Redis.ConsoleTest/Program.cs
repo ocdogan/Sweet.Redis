@@ -74,11 +74,60 @@ namespace Sweet.Redis.ConsoleTest
             // SentinelTest4();
             // SentinelTest5();
             // SentinelTest6();
-            SentinelTest7();
+            // SentinelTest7();
             // SentinelTest8();
+            SentinelTest9();
         }
 
         #region Sentinel
+
+        static void SentinelTest9()
+        {
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        sw.Restart();
+
+                        var result = sentinelClient.Commands.Monitor("mymaster2", "127.0.0.1", 6379, 2);
+                        if (result == null)
+                            Console.WriteLine("(nil)");
+                        else
+                        {
+                            Console.WriteLine("Monitor: " + result.Value);
+                            if (result)
+                            {
+                                result = sentinelClient.Commands.Remove("mymaster2");
+                                if (result == null)
+                                    Console.WriteLine("(nil)");
+                                else
+                                    Console.WriteLine("Remove: " + result.Value);
+                            }
+
+                            Console.WriteLine();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
 
         static void SentinelTest8()
         {
