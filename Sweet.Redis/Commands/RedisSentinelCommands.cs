@@ -91,26 +91,15 @@ namespace Sweet.Redis
                                     int port = 0;
                                     if (count > 1)
                                     {
-                                        var rawPort = list[0];
-                                        if (!ReferenceEquals(rawPort, null))
+                                        var rawPort = list[1];
+                                        if (!ReferenceEquals(rawPort, null) && rawPort.Type == RedisRawObjectType.BulkString)
                                         {
-                                            if (rawPort.Type == RedisRawObjectType.Integer)
+                                            var data = rawPort.DataText;
+                                            if (!String.IsNullOrEmpty(data))
                                             {
-                                                var data = rawPort.Data;
-                                                if (data is long)
-                                                    port = (int)(long)data;
-                                                else if (data is int)
-                                                    port = (int)data;
-                                            }
-                                            else if (rawPort.Type == RedisRawObjectType.BulkString)
-                                            {
-                                                var data = rawPort.DataText;
-                                                if (!String.IsNullOrEmpty(data))
-                                                {
-                                                    long l;
-                                                    if (long.TryParse(data, out l))
-                                                        port = (int)l;
-                                                }
+                                                long l;
+                                                if (long.TryParse(data, out l))
+                                                    port = (int)l;
                                             }
                                         }
                                     }
@@ -137,12 +126,27 @@ namespace Sweet.Redis
             return new RedisResult<RedisServerInfo>(info);
         }
 
-        public RedisBool IsMasterDownByAddr(string ipAddress, int port)
+        public RedisResult<RedisIsMasterDownInfo> IsMasterDownByAddr(string ipAddress, int port, string runId)
         {
             if (String.IsNullOrEmpty(ipAddress))
                 throw new ArgumentNullException("ipAddress");
 
-            return ExpectSimpleString(RedisCommands.Sentinel, RedisConstants.OK, RedisCommands.SentinelIsMasterDownByAddr);
+            if (String.IsNullOrEmpty(runId))
+                throw new ArgumentNullException("runId");
+
+            var raw = ExpectArray(RedisCommands.Sentinel, RedisCommands.SentinelIsMasterDownByAddr,
+                                  ipAddress.ToBytes(), port.ToBytes(),
+                                  ((long)RedisCommon.EpochNow()).ToBytes(), runId.ToBytes());
+            if (!ReferenceEquals(raw, null))
+            {
+                var rawValue = raw.Value;
+                if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
+                {
+                    var info = RedisIsMasterDownInfo.Parse(rawValue);
+                    return new RedisResult<RedisIsMasterDownInfo>(info);
+                }
+            }
+            return new RedisResult<RedisIsMasterDownInfo>(RedisIsMasterDownInfo.Empty);
         }
 
         public RedisResult<RedisSentinelMasterInfo> Master(string masterName)

@@ -68,12 +68,68 @@ namespace Sweet.Redis.ConsoleTest
             // PipelineTest4();
             // PipelineTest5();
 
-            SentinelTest1();
+            // SentinelTest1();
+            // SentinelTest2();
+            // SentinelTest3();
+            SentinelTest4();
         }
 
         #region Sentinel
 
-        static void SentinelTest1()
+        static void SentinelTest4()
+        {
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        var runId = String.Empty;
+
+                        var masterResult = sentinelClient.Commands.Master("mymaster");
+                        if (masterResult != null)
+                        {
+                            var master = masterResult.Value;
+                            if (master != null)
+                                runId = master.RunId;
+                        }
+
+                        sw.Restart();
+
+                        var result = sentinelClient.Commands.IsMasterDownByAddr("127.0.0.1", 6379, runId);
+                        if (result == null)
+                            Console.WriteLine("(nil)");
+                        else
+                        {
+                            var isMasterDownInfo = result.Value;
+
+                            Console.WriteLine("IsDown: " + isMasterDownInfo.IsDown);
+                            Console.WriteLine("Leader: " + isMasterDownInfo.LeaderRunId);
+                            Console.WriteLine("Leader Epoch: " + isMasterDownInfo.LeaderEpoch);
+                            Console.WriteLine();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void SentinelTest3()
         {
             using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
@@ -87,20 +143,66 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var masters = sentinelClient.Commands.Masters();
-                        if (masters == null)
+                        var result = sentinelClient.Commands.GetMasterAddrByName("mymaster");
+                        if (result == null)
                             Console.WriteLine("(nil)");
                         else
                         {
-                            var masterInfos = masters.Value;
-
-                            if (masterInfos == null)
+                            var endpoint = result.Value;
+                            if (endpoint == null)
                                 Console.WriteLine("(nil)");
-                            else if (masterInfos.Length == 0)
+                            else
+                            {
+                                Console.WriteLine("IP address: " + endpoint.IPAddress);
+                                Console.WriteLine("Port: " + endpoint.Port);
+                                Console.WriteLine();
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void SentinelTest2()
+        {
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        sw.Restart();
+
+                        var result = sentinelClient.Commands.Masters();
+                        if (result == null)
+                            Console.WriteLine("(nil)");
+                        else
+                        {
+                            var mastersValue = result.Value;
+
+                            if (mastersValue == null)
+                                Console.WriteLine("(nil)");
+                            else if (mastersValue.Length == 0)
                                 Console.WriteLine("(empty)");
                             else
                             {
-                                foreach (var master in masterInfos)
+                                foreach (var master in mastersValue)
                                 {
                                     Console.WriteLine("IP address: " + master.Ip);
                                     Console.WriteLine("Port: " + master.Port);
@@ -119,6 +221,65 @@ namespace Sweet.Redis.ConsoleTest
                                     Console.WriteLine("Quorum: " + master.Quorum);
                                     Console.WriteLine();
                                 }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void SentinelTest1()
+        {
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        sw.Restart();
+
+                        var result = sentinelClient.Commands.Master("mymaster");
+                        if (result == null)
+                            Console.WriteLine("(nil)");
+                        else
+                        {
+                            var master = result.Value;
+                            if (master == null)
+                                Console.WriteLine("(nil)");
+                            else
+                            {
+                                Console.WriteLine("IP address: " + master.Ip);
+                                Console.WriteLine("Port: " + master.Port);
+                                Console.WriteLine("RunId: " + master.RunId);
+                                Console.WriteLine("Config epoch: " + master.ConfigEpoch);
+                                Console.WriteLine("Down after milliseconds: " + master.DownAfterMilliseconds);
+                                Console.WriteLine("Failover timeout: " + master.FailoverTimeOut);
+                                Console.WriteLine("Flags: " + master.Flags);
+                                Console.WriteLine("Last OK ping reply: " + master.LastOKPingReply);
+                                Console.WriteLine("Last ping reply: " + master.LastPingReply);
+                                Console.WriteLine("Last ping sent: " + master.LastPingSent);
+                                Console.WriteLine("Name: " + master.Name);
+                                Console.WriteLine("Number of other sentinels: " + master.NumberOfOtherSentinels);
+                                Console.WriteLine("Number of slaves: " + master.NumberOfSlaves);
+                                Console.WriteLine("Parallel syncs: " + master.ParallelSyncs);
+                                Console.WriteLine("Quorum: " + master.Quorum);
+                                Console.WriteLine();
                             }
                         }
                     }

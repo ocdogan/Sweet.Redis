@@ -226,6 +226,7 @@
     <Compile Include="Common\ServerInfo\RedisServerInfoCommandStatsSection.cs" />
     <Compile Include="Connection\RedisBidirectionalConnection.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelConnectionProvider.cs" />
+    <Compile Include="Common\RedisIsMasterDownInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

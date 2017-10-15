@@ -267,6 +267,16 @@ namespace Sweet.Redis
             }
         }
 
+        internal static double EpochNow()
+        {
+            return (DateTime.UtcNow - UnixBaseTimeStamp).TotalSeconds;
+        }
+
+        internal static double UnixTimeNow()
+        {
+            return EpochNow();
+        }
+
         internal static double ToUnixTimeStamp(this DateTime date)
         {
             if (date.Kind != DateTimeKind.Utc)

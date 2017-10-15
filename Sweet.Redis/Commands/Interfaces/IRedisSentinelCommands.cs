@@ -61,7 +61,7 @@ namespace Sweet.Redis
         RedisBool FlushConfig();
         RedisResult<RedisEndPoint> GetMasterAddrByName(string masterName);
         RedisResult<RedisServerInfo> Info(RedisParam? section = null);
-        RedisBool IsMasterDownByAddr(string ipAddress, int port);
+        RedisResult<RedisIsMasterDownInfo> IsMasterDownByAddr(string ipAddress, int port, string runId);
         RedisResult<RedisSentinelMasterInfo> Master(string masterName);
         RedisResult<RedisSentinelMasterInfo[]> Masters();
         RedisBool Monitor(string masterName, string ipAddress, int port, int quorum);
