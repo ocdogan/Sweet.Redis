@@ -182,7 +182,7 @@ namespace Sweet.Redis
             {
                 var rObj = (RedisParam)obj;
                 return (rObj.Data == m_Data);
-            }   
+            }
             return false;
         }
 
@@ -292,7 +292,7 @@ namespace Sweet.Redis
             return new RedisParam(data);
         }
 
-        public static implicit operator byte[](RedisParam param)  // implicit RedisParam to ? type conversion operator
+        public static implicit operator byte[] (RedisParam param)  // implicit RedisParam to ? type conversion operator
         {
             return param.Data;
         }
@@ -302,37 +302,37 @@ namespace Sweet.Redis
             return param.Data != null ? Encoding.UTF8.GetString(param.Data) : null;
         }
 
-        public static implicit operator DateTime?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator DateTime? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (DateTime?)(new DateTime(long.Parse(Encoding.UTF8.GetString(param.Data)))) : null;
         }
 
-        public static implicit operator byte?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator byte? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (byte?)param.Data[0] : null;
         }
 
-        public static implicit operator short?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator short? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (short?)short.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
-        public static implicit operator int?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator int? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (int?)int.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
-        public static implicit operator long?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator long? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (long?)long.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
-        public static implicit operator double?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator double? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (double?)double.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
-        public static implicit operator bool?(RedisParam param) // implicit RedisParam to ? type conversion operator
+        public static implicit operator bool? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
             return param.Data != null && param.Data.Length > 0 ? (bool?)bool.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
@@ -375,6 +375,44 @@ namespace Sweet.Redis
         #endregion Conversion Methods
 
         #region Operator Overloads
+
+        public static bool operator ==(object a, RedisParam b)
+        {
+            if (ReferenceEquals(a, null))
+                return ReferenceEquals(b, null);
+
+            if (ReferenceEquals(b, null))
+                return false;
+
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return b.m_Data.IsEqualTo(a);
+        }
+
+        public static bool operator !=(object a, RedisParam b)
+        {
+            return !(a == b);
+        }
+
+        public static bool operator ==(RedisParam a, object b)
+        {
+            if (ReferenceEquals(a, null))
+                return ReferenceEquals(b, null);
+
+            if (ReferenceEquals(b, null))
+                return false;
+
+            if (ReferenceEquals(a, b))
+                return true;
+
+            return a.m_Data.IsEqualTo(b);
+        }
+
+        public static bool operator !=(RedisParam a, object b)
+        {
+            return !(a == b);
+        }
 
         public static bool operator ==(RedisParam a, RedisParam b)
         {

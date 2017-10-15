@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -78,14 +79,39 @@ namespace Sweet.Redis
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
-                return false;
+                return ReferenceEquals(m_RawData, null);
 
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisString;
+            var sObj = obj as RedisString;
+            if (!ReferenceEquals(sObj, null))
+                return (sObj.m_Status == m_Status) && ((string)sObj.m_RawData == (string)m_RawData);
+
+            var str = obj as string;
+            if (!ReferenceEquals(str, null))
+                return ((string)m_RawData == str);
+
+            var eObj = obj as RedisError;
+            if (!ReferenceEquals(eObj, null))
+                return (eObj.Status == m_Status) && ((string)eObj.RawData == (string)m_RawData);
+
+            var rObj = obj as RedisResult<string>;
             if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
+                return (rObj.Status == m_Status) && ((string)rObj.RawData == (string)m_RawData);
+
+            var bytes = obj as byte[];
+            if (!ReferenceEquals(bytes, null))
+                return (Encoding.UTF8.GetBytes((string)m_RawData) == bytes);
+
+            var bObj = obj as RedisBytes;
+            if (!ReferenceEquals(bObj, null))
+                return (bObj.Status == m_Status) && ((byte[])bObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+
+            var rbObj = obj as RedisResult<byte[]>;
+            if (!ReferenceEquals(rbObj, null))
+                return (rbObj.Status == m_Status) && ((byte[])rbObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+
             return false;
         }
 
@@ -129,6 +155,38 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
+        public static bool operator ==(string a, RedisString b)
+        {
+            if (ReferenceEquals(a, null))
+                return ReferenceEquals(b, null);
+
+            if (ReferenceEquals(b, null))
+                return false;
+
+            return (b.m_Status == RedisResultStatus.Completed) && ((string)b.m_RawData == a);
+        }
+
+        public static bool operator !=(string a, RedisString b)
+        {
+            return b != a;
+        }
+
+        public static bool operator ==(RedisString a, string b)
+        {
+            if (ReferenceEquals(a, null))
+                return ReferenceEquals(b, null);
+
+            if (ReferenceEquals(b, null))
+                return false;
+
+            return (a.m_Status == RedisResultStatus.Completed) && ((string)a.m_RawData == b);
+        }
+
+        public static bool operator !=(RedisString a, string b)
+        {
+            return !(a == b);
+        }
+
         public static bool operator ==(RedisString a, RedisString b)
         {
             if (ReferenceEquals(a, null))
@@ -140,7 +198,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
+            return (a.m_Status == b.m_Status) && ((string)a.m_RawData == (string)b.m_RawData);
         }
 
         public static bool operator !=(RedisString a, RedisString b)

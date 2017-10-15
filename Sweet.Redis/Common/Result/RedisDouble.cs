@@ -57,9 +57,38 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisDouble;
+            var dObj = obj as RedisDouble;
+            if (!ReferenceEquals(dObj, null))
+                return (dObj.m_Status == m_Status) && ((double)m_RawData).Equals((double)dObj.m_RawData);
+
+            if (obj is double)
+            {
+                var d = (double)obj;
+                return (m_Status == RedisResultStatus.Completed) && ((double)m_RawData).Equals(d);
+            }
+
+            if (obj is long)
+            {
+                var l = (long)obj;
+                return (m_Status == RedisResultStatus.Completed) && ((double)m_RawData).Equals((double)l);
+            }
+
+            if (obj is int)
+            {
+                var i = (int)obj;
+                return (m_Status == RedisResultStatus.Completed) && ((double)m_RawData).Equals((double)i);
+            }
+
+            if (obj is DateTime)
+            {
+                var l = ((DateTime)obj).Ticks;
+                return (m_Status == RedisResultStatus.Completed) && ((double)m_RawData).Equals((double)l);
+            }
+
+            var rObj = obj as RedisResult<double>;
             if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && Object.Equals(rObj.m_RawData, m_RawData);
+                return (rObj.Status == m_Status) && ((double)m_RawData).Equals((double)rObj.RawData);
+
             return false;
         }
 
@@ -144,6 +173,118 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
+        public static bool operator ==(double a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status == RedisResultStatus.Completed) && a.Equals((double)b.m_RawData);
+        }
+
+        public static bool operator !=(double a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status != RedisResultStatus.Completed) || !a.Equals((double)b.m_RawData);
+        }
+
+        public static bool operator ==(RedisDouble a, double b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status == RedisResultStatus.Completed) && b.Equals((double)a.m_RawData);
+        }
+
+        public static bool operator !=(RedisDouble a, double b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status != RedisResultStatus.Completed) || !b.Equals((double)a.m_RawData);
+        }
+
+        public static bool operator ==(short a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status == RedisResultStatus.Completed) && ((double)b.m_RawData).Equals((double)a);
+        }
+
+        public static bool operator !=(short a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status != RedisResultStatus.Completed) || !((double)b.m_RawData).Equals((double)a);
+        }
+
+        public static bool operator ==(RedisDouble a, short b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status == RedisResultStatus.Completed) && ((double)a.m_RawData).Equals((double)b);
+        }
+
+        public static bool operator !=(RedisDouble a, short b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status != RedisResultStatus.Completed) || !((double)a.m_RawData).Equals((double)b);
+        }
+
+        public static bool operator ==(int a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status == RedisResultStatus.Completed) && ((double)b.m_RawData).Equals((double)a);
+        }
+
+        public static bool operator !=(int a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status != RedisResultStatus.Completed) || !((double)b.m_RawData).Equals((double)a);
+        }
+
+        public static bool operator ==(RedisDouble a, int b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status == RedisResultStatus.Completed) && ((double)a.m_RawData).Equals((double)b);
+        }
+
+        public static bool operator !=(RedisDouble a, int b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status != RedisResultStatus.Completed) || !((double)a.m_RawData).Equals((double)b);
+        }
+
+        public static bool operator ==(long a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status == RedisResultStatus.Completed) && ((double)b.m_RawData).Equals((double)a);
+        }
+
+        public static bool operator !=(long a, RedisDouble b)
+        {
+            if (ReferenceEquals(b, null) || ReferenceEquals(b.m_RawData, null))
+                return false;
+            return (b.m_Status != RedisResultStatus.Completed) || !((double)b.m_RawData).Equals((double)a);
+        }
+
+        public static bool operator ==(RedisDouble a, long b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status == RedisResultStatus.Completed) && !((double)a.m_RawData).Equals((double)b);
+        }
+
+        public static bool operator !=(RedisDouble a, long b)
+        {
+            if (ReferenceEquals(a, null) || ReferenceEquals(a.m_RawData, null))
+                return false;
+            return (a.m_Status != RedisResultStatus.Completed) || !((double)a.m_RawData).Equals((double)b);
+        }
+
         public static bool operator ==(RedisDouble a, RedisDouble b)
         {
             if (ReferenceEquals(a, null))
@@ -155,7 +296,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return (a.m_Status == b.m_Status) && Object.Equals(a.m_RawData, b.m_RawData);
+            return (a.m_Status == b.m_Status) && ((double)a.m_RawData).Equals((double)b.m_RawData);
         }
 
         public static bool operator !=(RedisDouble a, RedisDouble b)

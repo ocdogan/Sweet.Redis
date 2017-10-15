@@ -97,7 +97,7 @@ namespace Sweet.Redis
         public RedisResult<RedisClientInfo[]> ClientList()
         {
             var response = ExpectBulkString(RedisCommands.Client, RedisCommands.List);
-            if (response != null)
+            if (response != (string)null)
             {
                 var value = response.Value;
                 if (!String.IsNullOrEmpty(value))
@@ -122,7 +122,7 @@ namespace Sweet.Redis
         public RedisResult<IDictionary<string, string>[]> ClientListDictionary()
         {
             var response = ExpectBulkString(RedisCommands.Client, RedisCommands.List);
-            if (response != null)
+            if (response != (string)null)
             {
                 var value = response.Value;
                 if (!String.IsNullOrEmpty(value))

@@ -41,7 +41,8 @@ namespace Sweet.Redis
 
         public RedisBool Ping()
         {
-            return ExpectSimpleString(RedisCommands.Ping, RedisConstants.OK);
+            var pong = ExpectSimpleString(RedisCommands.Ping);
+            return pong == RedisConstants.PONG;
         }
 
         public RedisString CheckQuorum(string masterName)

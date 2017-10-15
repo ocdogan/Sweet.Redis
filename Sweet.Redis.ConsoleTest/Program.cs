@@ -71,10 +71,52 @@ namespace Sweet.Redis.ConsoleTest
             // SentinelTest1();
             // SentinelTest2();
             // SentinelTest3();
-            SentinelTest4();
+            // SentinelTest4();
+            SentinelTest5();
         }
 
         #region Sentinel
+
+        static void SentinelTest5()
+        {
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        var runId = String.Empty;
+
+                        sw.Restart();
+
+                        var result = sentinelClient.Commands.Ping();
+                        if (result == null)
+                            Console.WriteLine("(nil)");
+                        else
+                        {
+                            Console.WriteLine("Ping: " + result.Value);
+                            Console.WriteLine();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
 
         static void SentinelTest4()
         {
@@ -1058,7 +1100,7 @@ namespace Sweet.Redis.ConsoleTest
                         throw new Exception("can not set");
 
                     var g = db.Strings.Get(testKey);
-                    if (!transactional && (g == null || g.Value == null || g.Value.Length != (testText ?? "").Length))
+                    if (!transactional && (g == (byte[])null || g.Value == null || g.Value.Length != (testText ?? "").Length))
                         throw new Exception("can not get");
 
                     if (transactional)
@@ -1069,7 +1111,7 @@ namespace Sweet.Redis.ConsoleTest
                         if (!b)
                             throw new Exception("can not set");
 
-                        if (g == null || g.Value == null || g.Value.Length != (testText ?? "").Length)
+                        if (g == (byte[])null || g.Value == null || g.Value.Length != (testText ?? "").Length)
                             throw new Exception("can not get");
                     }
                 }

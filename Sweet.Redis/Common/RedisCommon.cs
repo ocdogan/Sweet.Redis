@@ -70,87 +70,137 @@ namespace Sweet.Redis
 
         #region Methods
 
-        #region Socket
+        #region General
 
-        internal static bool IsConnected(this Socket socket, int poll = -1)
+        internal static bool IsEqualTo(this byte[] data, object obj)
         {
-            if (socket == null || !socket.Connected)
+            if (ReferenceEquals(data, null))
+                return ReferenceEquals(obj, null);
+
+            if (ReferenceEquals(obj, null))
                 return false;
-            return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
-        }
 
-        internal static bool IsConnected(this RedisSocket socket, int poll = -1)
-        {
-            if (socket != null && socket.Connected)
-            {
-                if (poll > -1)
-                    return !(socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+            if (ReferenceEquals(data, obj))
                 return true;
+
+            if (obj is RedisParam)
+                return (data == ((RedisParam)obj).Data);
+
+            if (obj is string)
+                return (data == Encoding.UTF8.GetBytes((string)obj));
+
+            if (obj is byte[])
+                return (data == (byte[])obj);
+
+            if (obj is long)
+                return (data == BitConverter.GetBytes((long)obj));
+
+            if (obj is int)
+                return (data == BitConverter.GetBytes((int)obj));
+
+            if (obj is short)
+                return (data == BitConverter.GetBytes((short)obj));
+
+            if (obj is double)
+                return (data == BitConverter.GetBytes((double)obj));
+
+            if (obj is byte)
+                return (data == new byte[] { (byte)obj });
+
+            if (obj is ulong)
+                return (data == BitConverter.GetBytes((ulong)obj));
+
+            if (obj is uint)
+                return (data == BitConverter.GetBytes((uint)obj));
+
+            if (obj is ushort)
+                return (data == BitConverter.GetBytes((ushort)obj));
+
+            if (obj is DateTime)
+                return (data == BitConverter.GetBytes(((DateTime)obj).Ticks));
+
+            if (obj is TimeSpan)
+                return (data == BitConverter.GetBytes(((TimeSpan)obj).Ticks));
+
+            if (obj is char)
+                return (data == BitConverter.GetBytes((char)obj));
+
+            if (obj is bool)
+                return (data == BitConverter.GetBytes((bool)obj));
+
+            if (obj is long?)
+            {
+                var nullable = (long?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
             }
+
+            if (obj is int?)
+            {
+                var nullable = (int?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
+            if (obj is short?)
+            {
+                var nullable = (short?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
+            if (obj is double?)
+            {
+                var nullable = (long?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
+            if (obj is byte?)
+            {
+                var nullable = (byte?)obj;
+                return nullable.HasValue && (data == new byte[] { nullable.Value });
+            }
+
+            if (obj is ulong?)
+            {
+                var nullable = (ulong?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
+            if (obj is uint?)
+            {
+                var nullable = (uint?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
+            if (obj is ushort?)
+            {
+                var nullable = (ushort?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+            if (obj is DateTime?)
+            {
+                var nullable = (DateTime?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value.Ticks));
+            }
+
+            if (obj is TimeSpan?)
+            {
+                var nullable = (TimeSpan?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value.Ticks));
+            }
+
+            if (obj is char?)
+            {
+                var nullable = (char?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
+            if (obj is bool?)
+            {
+                var nullable = (bool?)obj;
+                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+            }
+
             return false;
         }
-
-        internal static void DisposeSocket(this Socket socket)
-        {
-            if (socket != null && socket.IsBound)
-            {
-                if (!socket.Connected)
-                {
-                    try
-                    {
-                        socket.Dispose();
-                    }
-                    catch (Exception)
-                    { }
-                }
-                else
-                {
-                    socket.DisconnectAsync(false).ContinueWith(_ =>
-                    {
-                        try
-                        {
-                            if (socket != null)
-                                socket.Dispose();
-                        }
-                        catch (Exception)
-                        { }
-                    });
-                }
-            }
-        }
-
-        internal static void DisposeSocket(this RedisSocket socket)
-        {
-            if (socket != null && socket.IsBound)
-            {
-                if (!socket.Connected)
-                {
-                    try
-                    {
-                        socket.Dispose();
-                    }
-                    catch (Exception)
-                    { }
-                }
-                else
-                {
-                    socket.DisconnectAsync(false).ContinueWith(_ =>
-                    {
-                        try
-                        {
-                            if (socket != null)
-                                socket.Dispose();
-                        }
-                        catch (Exception)
-                        { }
-                    });
-                }
-            }
-        }
-
-        #endregion Socket
-
-        #region General
 
         internal static int IndexOf(this byte[] data, byte b, int startPos = 0, int length = -1)
         {
@@ -1280,6 +1330,86 @@ namespace Sweet.Redis
         }
 
         #endregion Commands
+
+        #region Socket
+
+        internal static bool IsConnected(this Socket socket, int poll = -1)
+        {
+            if (socket == null || !socket.Connected)
+                return false;
+            return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+        }
+
+        internal static bool IsConnected(this RedisSocket socket, int poll = -1)
+        {
+            if (socket != null && socket.Connected)
+            {
+                if (poll > -1)
+                    return !(socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+                return true;
+            }
+            return false;
+        }
+
+        internal static void DisposeSocket(this Socket socket)
+        {
+            if (socket != null && socket.IsBound)
+            {
+                if (!socket.Connected)
+                {
+                    try
+                    {
+                        socket.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+                else
+                {
+                    socket.DisconnectAsync(false).ContinueWith(_ =>
+                    {
+                        try
+                        {
+                            if (socket != null)
+                                socket.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    });
+                }
+            }
+        }
+
+        internal static void DisposeSocket(this RedisSocket socket)
+        {
+            if (socket != null && socket.IsBound)
+            {
+                if (!socket.Connected)
+                {
+                    try
+                    {
+                        socket.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+                else
+                {
+                    socket.DisconnectAsync(false).ContinueWith(_ =>
+                    {
+                        try
+                        {
+                            if (socket != null)
+                                socket.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    });
+                }
+            }
+        }
+
+        #endregion Socket
 
         #endregion Methods
     }

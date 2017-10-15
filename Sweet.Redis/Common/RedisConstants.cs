@@ -157,6 +157,7 @@ namespace Sweet.Redis
 
         public const string OK = "OK";
         public const string QUEUED = "QUEUED";
+        public const string PONG = "PONG";
 
         public const string CRLF = "\r\n";
 

@@ -57,9 +57,32 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisDate;
+            var dObj = obj as RedisDate;
+            if (!ReferenceEquals(dObj, null))
+                return (dObj.m_Status == m_Status) && ((DateTime)dObj.m_RawData == (DateTime)m_RawData);
+
+            if (obj is DateTime)
+            {
+                var date = (DateTime)obj;
+                return (m_Status == RedisResultStatus.Completed) && (date == (DateTime)m_RawData);
+            }
+
+            if (obj is long)
+            {
+                var date = new DateTime((long)obj);
+                return (m_Status == RedisResultStatus.Completed) && (date == (DateTime)m_RawData);
+            }
+
+            if (obj is double)
+            {
+                var date = new DateTime((long)(double)obj);
+                return (m_Status == RedisResultStatus.Completed) && (date == (DateTime)m_RawData);
+            }
+
+            var rObj = obj as RedisResult<DateTime>;
             if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
+                return (rObj.Status == m_Status) && ((DateTime)rObj.RawData == (DateTime)m_RawData);
+
             return false;
         }
 
@@ -91,6 +114,30 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
+        public static bool operator ==(DateTime a, RedisDate b)
+        {
+            if (ReferenceEquals(a, null))
+                return false;
+            return (b.m_Status == RedisResultStatus.Completed) && ((DateTime)b.m_RawData == a);
+        }
+
+        public static bool operator !=(DateTime a, RedisDate b)
+        {
+            return b != a;
+        }
+
+        public static bool operator ==(RedisDate a, DateTime b)
+        {
+            if (ReferenceEquals(a, null))
+                return false;
+            return (a.m_Status == RedisResultStatus.Completed) && ((DateTime)a.m_RawData == b);
+        }
+
+        public static bool operator !=(RedisDate a, DateTime b)
+        {
+            return !(a == b);
+        }
+
         public static bool operator ==(RedisDate a, RedisDate b)
         {
             if (ReferenceEquals(a, null))
@@ -102,7 +149,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
+            return (a.m_Status == b.m_Status) && ((DateTime)a.m_RawData == (DateTime)b.m_RawData);
         }
 
         public static bool operator !=(RedisDate a, RedisDate b)

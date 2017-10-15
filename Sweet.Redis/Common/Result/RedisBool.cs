@@ -57,9 +57,14 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var rObj = obj as RedisBool;
+            var bObj = obj as RedisBool;
+            if (!ReferenceEquals(bObj, null))
+                return (bObj.m_Status == m_Status) && (bObj.m_RawData == m_RawData);
+
+            var rObj = obj as RedisResult<bool>;
             if (!ReferenceEquals(rObj, null))
-                return (rObj.m_Status == m_Status) && (rObj.m_RawData == m_RawData);
+                return (rObj.Status == m_Status) && (rObj.RawData == m_RawData);
+
             return false;
         }
 
@@ -186,10 +191,34 @@ namespace Sweet.Redis
         {
             return value.Value ? 1ul : 0ul;
         }
-        
+
         #endregion Conversion Methods
 
         #region Operator Overloads
+
+        public static bool operator ==(bool a, RedisBool b)
+        {
+            if (ReferenceEquals(a, null))
+                return false;
+            return (b.m_Status == RedisResultStatus.Completed) && ((bool)b.m_RawData == a);
+        }
+
+        public static bool operator !=(bool a, RedisBool b)
+        {
+            return b != a;
+        }
+
+        public static bool operator ==(RedisBool a, bool b)
+        {
+            if (ReferenceEquals(a, null))
+                return false;
+            return (a.m_Status == RedisResultStatus.Completed) && ((bool)a.m_RawData == b);
+        }
+
+        public static bool operator !=(RedisBool a, bool b)
+        {
+            return !(a == b);
+        }
 
         public static bool operator ==(RedisBool a, RedisBool b)
         {
@@ -202,7 +231,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return (a.m_Status == b.m_Status) && (a.m_RawData == b.m_RawData);
+            return (a.m_Status == b.m_Status) && ((bool)a.m_RawData == (bool)b.m_RawData);
         }
 
         public static bool operator !=(RedisBool a, RedisBool b)

@@ -139,7 +139,7 @@ namespace Sweet.Redis
         private string ExpectSimpleStringInternal(IRedisConnection connection, bool throwException = true)
         {
             var bytes = ExpectSimpleStringBytes(connection, throwException);
-            if (bytes == null)
+            if (bytes == (byte[])null)
                 return null;
             return Encoding.UTF8.GetString(bytes);
         }
@@ -194,7 +194,7 @@ namespace Sweet.Redis
         public RedisString ExpectBulkString(IRedisConnection connection, bool throwException = true)
         {
             var bytes = ExpectBulkStringBytes(connection, throwException);
-            if (bytes == null)
+            if (bytes == (byte[])null)
                 return null;
             return Encoding.UTF8.GetString(bytes);
         }
@@ -338,7 +338,7 @@ namespace Sweet.Redis
         private string ExpectSimpleStringInternal(RedisSocketContext context, bool throwException = true)
         {
             var bytes = ExpectSimpleStringBytes(context, throwException);
-            if (bytes == null)
+            if (bytes == (byte[])null)
                 return null;
             return Encoding.UTF8.GetString(bytes);
         }
@@ -393,7 +393,7 @@ namespace Sweet.Redis
         public RedisString ExpectBulkString(RedisSocketContext context, bool throwException = true)
         {
             var bytes = ExpectBulkStringBytes(context, throwException);
-            if (bytes == null)
+            if (bytes == (byte[])null)
                 return null;
             return Encoding.UTF8.GetString(bytes);
         }

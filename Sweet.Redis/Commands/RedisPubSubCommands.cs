@@ -52,7 +52,7 @@ namespace Sweet.Redis
         public RedisMultiString PubSubChannels(RedisParam? pattern = null)
         {
             RedisRaw response;
-            if (pattern != null && !pattern.Value.IsEmpty)
+            if (pattern.HasValue && !pattern.Value.IsEmpty)
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels, pattern);
             else
                 response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels);

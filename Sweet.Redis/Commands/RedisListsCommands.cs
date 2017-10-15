@@ -196,7 +196,7 @@ namespace Sweet.Redis
         public RedisBytes RPop(RedisParam key)
         {
             var result = RPopString(key);
-            if (result != null)
+            if (result != (object)null)
                 return Encoding.UTF8.GetBytes(result);
             return new RedisBytes(null);
         }
@@ -204,7 +204,7 @@ namespace Sweet.Redis
         public RedisBytes RPopLPush(RedisParam source, RedisParam destination)
         {
             var result = RPopLPushString(source, destination);
-            if (result != null)
+            if (result != (object)null)
                 return Encoding.UTF8.GetBytes(result);
             return new RedisBytes(null);
         }
