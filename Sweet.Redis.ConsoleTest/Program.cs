@@ -158,7 +158,7 @@ namespace Sweet.Redis.ConsoleTest
                             {
                                 foreach (var slave in slavesValue)
                                 {
-                                    Console.WriteLine("IP address: " + slave.Ip);
+                                    Console.WriteLine("IP address: " + slave.IPAddress);
                                     Console.WriteLine("Port: " + slave.Port);
                                     Console.WriteLine("RunId: " + slave.RunId);
                                     Console.WriteLine("Master Host: " + slave.MasterHost);
@@ -223,7 +223,7 @@ namespace Sweet.Redis.ConsoleTest
                             {
                                 foreach (var sentinel in sentinelsValue)
                                 {
-                                    Console.WriteLine("IP address: " + sentinel.Ip);
+                                    Console.WriteLine("IP address: " + sentinel.IPAddress);
                                     Console.WriteLine("Port: " + sentinel.Port);
                                     Console.WriteLine("RunId: " + sentinel.RunId);
                                     Console.WriteLine("Info Refresh: " + sentinel.InfoRefresh);
@@ -475,7 +475,7 @@ namespace Sweet.Redis.ConsoleTest
                             {
                                 foreach (var master in mastersValue)
                                 {
-                                    Console.WriteLine("IP address: " + master.Ip);
+                                    Console.WriteLine("IP address: " + master.IPAddress);
                                     Console.WriteLine("Port: " + master.Port);
                                     Console.WriteLine("RunId: " + master.RunId);
                                     Console.WriteLine("Config epoch: " + master.ConfigEpoch);
@@ -535,7 +535,7 @@ namespace Sweet.Redis.ConsoleTest
                                 Console.WriteLine("(nil)");
                             else
                             {
-                                Console.WriteLine("IP address: " + master.Ip);
+                                Console.WriteLine("IP address: " + master.IPAddress);
                                 Console.WriteLine("Port: " + master.Port);
                                 Console.WriteLine("RunId: " + master.RunId);
                                 Console.WriteLine("Config epoch: " + master.ConfigEpoch);

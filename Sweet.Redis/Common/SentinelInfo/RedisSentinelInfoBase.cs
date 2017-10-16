@@ -75,7 +75,7 @@ namespace Sweet.Redis
 
         public string Name { get { return Get("name"); } } // mymaster
 
-        public string Ip { get { return Get("ip"); } } // 127.0.0.1
+        public string IPAddress { get { return Get("ip"); } } // 127.0.0.1
 
         public long? Port { get { return GetInteger("port"); } } // 6379
 
