@@ -66,7 +66,7 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommands.Sentinel, RedisCommands.SentinelFlushConfig);
         }
 
-        public RedisResult<RedisEndPoint> GetMasterAddrByName(string masterName)
+        public RedisResult<RedisEndPointInfo> GetMasterAddrByName(string masterName)
         {
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
@@ -105,14 +105,14 @@ namespace Sweet.Redis
                                         }
                                     }
 
-                                    return new RedisResult<RedisEndPoint>(new RedisEndPoint(ipAddress, port));
+                                    return new RedisResult<RedisEndPointInfo>(new RedisEndPointInfo(ipAddress, port));
                                 }
                             }
                         }
                     }
                 }
             }
-            return new RedisResult<RedisEndPoint>(null);
+            return new RedisResult<RedisEndPointInfo>(null);
         }
 
         public RedisResult<RedisServerInfo> Info(RedisParam? section = null)

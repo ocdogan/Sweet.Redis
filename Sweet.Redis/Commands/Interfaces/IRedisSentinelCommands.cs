@@ -59,7 +59,7 @@ namespace Sweet.Redis
         RedisString CheckQuorum(string masterName);
         RedisBool Failover(string masterName);
         RedisBool FlushConfig();
-        RedisResult<RedisEndPoint> GetMasterAddrByName(string masterName);
+        RedisResult<RedisEndPointInfo> GetMasterAddrByName(string masterName);
         RedisResult<RedisServerInfo> Info(RedisParam? section = null);
         RedisResult<RedisIsMasterDownInfo> IsMasterDownByAddr(string ipAddress, int port, string runId);
         RedisResult<RedisSentinelMasterInfo> Master(string masterName);

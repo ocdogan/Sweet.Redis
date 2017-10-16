@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        public static readonly RedisConnectionSettings Default = new RedisConnectionSettings();
+        public static readonly RedisConnectionSettings Default = new RedisConnectionSettings((RedisEndPoint[])null);
 
         #endregion Static Members
 
@@ -46,9 +46,21 @@ namespace Sweet.Redis
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
+            : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
+                sendTimeout, useSsl, sslCertificateSelection, sslCertificateValidation)
+        { }
+
+        public RedisConnectionSettings(RedisEndPoint[] endPoints = null,    
+            string masterName = null, string password = null, string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            bool useSsl = false,
+            LocalCertificateSelectionCallback sslCertificateSelection = null,
+            RemoteCertificateValidationCallback sslCertificateValidation = null)
         {
-            Host = host;
-            Port = port;
+            EndPoints = (endPoints != null && endPoints.Length > 0) ? endPoints : 
+                new[] {  new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) };
             UseSsl = useSsl;
             Password = password;
             ClientName = clientName;
@@ -59,16 +71,14 @@ namespace Sweet.Redis
             ReceiveTimeout = Math.Max(RedisConstants.MinReceiveTimeout, Math.Min(RedisConstants.MaxReceiveTimeout, receiveTimeout));
             SendTimeout = Math.Max(RedisConstants.MinSendTimeout, Math.Min(RedisConstants.MaxSendTimeout, sendTimeout));
         }
-
         #endregion .Ctors
 
         #region Properties
 
         public string ClientName { get; private set; }
         public int ConnectionTimeout { get; private set; }
-        public string Host { get; private set; }
+        public RedisEndPoint[] EndPoints { get; private set; }
         public string Password { get; private set; }
-        public int Port { get; private set; }
         public string MasterName { get; private set; }
         public int ReceiveTimeout { get; private set; }
         public int SendTimeout { get; private set; }
@@ -82,7 +92,7 @@ namespace Sweet.Redis
 
         public virtual RedisConnectionSettings Clone(string host = null, int port = -1)
         {
-            return new RedisConnectionSettings(host ?? Host, port < 1 ? Port : port,
+            return new RedisConnectionSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
                 MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
                 UseSsl, SslCertificateSelection, SslCertificateValidation);
         }

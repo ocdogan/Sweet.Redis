@@ -52,7 +52,7 @@ namespace Sweet.Redis.ConsoleTest
 
             // SlowLogTest1();
 
-            InfoTest1();
+            // InfoTest1();
 
             // ShutdownTest1();
 
@@ -68,7 +68,7 @@ namespace Sweet.Redis.ConsoleTest
             // PipelineTest4();
             // PipelineTest5();
 
-            // SentinelTest1();
+            SentinelTest1();
             // SentinelTest2();
             // SentinelTest3();
             // SentinelTest4();

@@ -51,6 +51,7 @@
     <Compile Include="Common\Interfaces\IRedisIdentifiedObject.cs" />
     <Compile Include="Common\Interfaces\IRedisNamedObject.cs" />
     <Compile Include="Common\RedisEndPoint.cs" />
+    <Compile Include="Common\RedisEndPointInfo.cs" />
     <Compile Include="Common\RedisParam.cs" />
     <Compile Include="Common\RedisRole.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />

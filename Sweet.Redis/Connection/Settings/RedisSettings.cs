@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        public new static readonly RedisSettings Default = new RedisSettings();
+        public new static readonly RedisSettings Default = new RedisSettings((RedisEndPoint[])null);
 
         #endregion Static Members
 
@@ -45,7 +45,27 @@ namespace Sweet.Redis
             bool useAsyncCompleter = true, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base(host, port, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
+            : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
+                sendTimeout, maxCount, waitTimeout, idleTimeout, readBufferSize, writeBufferSize,
+                useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+        {
+            UseAsyncCompleter = useAsyncCompleter;
+            IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
+            MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
+            ReadBufferSize = Math.Max(0, readBufferSize);
+            WaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, waitTimeout));
+            WriteBufferSize = Math.Max(0, writeBufferSize);
+        }
+
+        public RedisSettings(RedisEndPoint[] endPoints = null,
+            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
+            int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
+            bool useAsyncCompleter = true, bool useSsl = false,
+            LocalCertificateSelectionCallback sslCertificateSelection = null,
+            RemoteCertificateValidationCallback sslCertificateValidation = null)
+            : base(endPoints, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
                    sslCertificateSelection, sslCertificateValidation)
         {
             UseAsyncCompleter = useAsyncCompleter;
@@ -73,7 +93,7 @@ namespace Sweet.Redis
 
         public override RedisConnectionSettings Clone(string host = null, int port = -1)
         {
-            return new RedisSettings(host ?? Host, port < 1 ? Port : port,
+            return new RedisSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
                 MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
                 MaxCount, WaitTimeout, IdleTimeout, ReadBufferSize, WriteBufferSize,
                 UseAsyncCompleter, UseSsl, SslCertificateSelection, SslCertificateValidation);

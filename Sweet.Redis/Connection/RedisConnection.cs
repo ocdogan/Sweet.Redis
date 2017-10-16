@@ -356,7 +356,9 @@ namespace Sweet.Redis
 
                     SetState((long)RedisConnectionState.Connecting);
 
-                    socket = CreateSocket();
+                    RedisEndPoint endPoint;
+                    socket = CreateSocket(out endPoint);
+
                     if (socket.IsConnected())
                         OnConnect(socket);
 
@@ -379,45 +381,56 @@ namespace Sweet.Redis
             return socket;
         }
 
-        private RedisSocket CreateSocket()
+        private RedisSocket CreateSocket(out RedisEndPoint endPoint)
         {
-            var ipAddresses = RedisAsyncEx.GetHostAddressesAsync(m_Settings.Host).Result;
-            if (ipAddresses == null)
-                throw new RedisFatalException("Can not resolve host address");
+            endPoint = null;
 
-            var length = ipAddresses.Length;
-            if (length == 0)
-                throw new RedisFatalException("Can not resolve host address");
-
-            if (length > 1)
+            var endPoints = m_Settings.EndPoints;
+            if (endPoints != null)
             {
-                ipAddresses = ipAddresses
-                    .OrderBy((addr) =>
-                        { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
-                    .ToArray();
-            }
-
-            for (var i = 0; i < length; i++)
-            {
-                try
+                foreach (var ep in endPoints)
                 {
-                    var socket = CreateSocket(ipAddresses[i]);
-                    if (socket.IsConnected())
-                        return socket;
+                    if (ep != null && !ep.IsEmpty)
+                    {
+                        try
+                        {
+                            var ipAddresses = RedisEndPoint.ResolveHost(ep.Host);
+                            if (ipAddresses != null)
+                            {
+                                var length = ipAddresses.Length;
+                                if (length > 0)
+                                {
+                                    for (var i = 0; i < length; i++)
+                                    {
+                                        try
+                                        {
+                                            var socket = CreateSocket(ep, ipAddresses[i]);
+                                            if (socket.IsConnected())
+                                            {
+                                                endPoint = ep;
+                                                return socket;
+                                            }
+                                        }
+                                        catch (Exception)
+                                        { }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        { }
+                    }
                 }
-                catch (Exception)
-                { }
             }
-
-            throw new RedisFatalException("Can not connect to host, " + m_Settings.Host);
+            throw new RedisFatalException("Can not resolve end-point address");
         }
 
-        private RedisSocket CreateSocket(IPAddress ipAddress)
+        private RedisSocket CreateSocket(RedisEndPoint endPoint, IPAddress ipAddress)
         {
             var socket = NewSocket(ipAddress);
             ConfigureInternal(socket);
 
-            socket.ConnectAsync(ipAddress, m_Settings.Port)
+            socket.ConnectAsync(ipAddress, endPoint.Port)
                 .ContinueWith(ca =>
                 {
                     if (ca.IsFaulted)

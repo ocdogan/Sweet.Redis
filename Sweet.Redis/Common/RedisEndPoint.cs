@@ -22,15 +22,79 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+
 namespace Sweet.Redis
 {
     public class RedisEndPoint
     {
+        #region RedisIPAddressEntry
+
+        private class RedisIPAddressEntry
+        {
+            #region .Ctors
+
+            public RedisIPAddressEntry(string host, IPAddress[] ipAddresses)
+            {
+                Host = host;
+                IPAddresses = ipAddresses;
+                CreationDate = DateTime.UtcNow;
+            }
+
+            #endregion .Ctors
+
+            #region Properties
+
+            public string Host { get; private set; }
+            
+            public IPAddress[] IPAddresses { get; private set; }
+
+            public DateTime CreationDate { get; private set; }
+
+            public bool Expired
+            {
+                get { return (DateTime.UtcNow - CreationDate).TotalSeconds >= 30d; }
+            }
+
+            #endregion Properties
+
+            #region Methods
+
+            public void SetIPAddresses(IPAddress[] ipAddresses)
+            {
+                IPAddresses = ipAddresses;
+                CreationDate = DateTime.UtcNow;
+            }
+
+            #endregion Methods
+        }
+
+        #endregion RedisIPAddressEntry
+
+        #region Static Members
+
+        private static readonly IPAddress[] EmptyAddresses = new IPAddress[0];
+
+        private static readonly ConcurrentDictionary<string, RedisIPAddressEntry> s_DnsEntries = 
+            new ConcurrentDictionary<string, RedisIPAddressEntry>();
+
+        #endregion Static Members
+
+        #region Field Members
+
+        private RedisIPAddressEntry m_Entry;
+
+        #endregion Field Members
+
         #region .Ctors
 
-        public RedisEndPoint(string ipAddress, int port)
+        internal RedisEndPoint(string host, int port)
         {
-            IPAddress = ipAddress;
+            Host = host;
             Port = port;
         }
 
@@ -38,10 +102,56 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public string IPAddress { get; private set; }
+        public string Host { get; private set; }
 
         public int Port { get; private set; }
 
+        public bool IsEmpty
+        {
+            get { return String.IsNullOrEmpty(Host) || Port < 1; }
+        }
+
         #endregion Properties
+
+        #region Methods
+
+        public IPAddress[] ResolveHost()
+        {
+            return RedisEndPoint.ResolveHost(Host);
+        }
+
+        internal static IPAddress[] ResolveHost(string host)
+        {
+            if (!String.IsNullOrEmpty(host))
+            {
+                RedisIPAddressEntry entry;
+                if (!s_DnsEntries.TryGetValue(host, out entry) || entry.Expired)
+                {
+                    lock (s_DnsEntries)
+                    {
+                        if (!s_DnsEntries.TryGetValue(host, out entry) || entry.Expired)
+                        {
+                            var ipAddresses = RedisAsyncEx.GetHostAddressesAsync(host).Result;
+                            if (ipAddresses != null && ipAddresses.Length > 1)
+                            {
+                                ipAddresses = ipAddresses
+                                    .OrderBy((addr) =>
+                                        { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
+                                    .ToArray();
+                            }
+
+                            if (entry != null)
+                                entry.SetIPAddresses(ipAddresses);
+                            else
+                                s_DnsEntries[host] = entry = new RedisIPAddressEntry(host, ipAddresses);
+                        }
+                    }
+                }
+                return entry.IPAddresses ?? EmptyAddresses;
+            }
+            return EmptyAddresses;
+        }
+
+        #endregion Methods
     }
 }
