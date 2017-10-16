@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    public interface IRedisConnection : IDisposable
+    public interface IRedisConnection : IRedisNamedObject, IDisposable
     {
         bool Connected { get; }
         bool Disposed { get; }

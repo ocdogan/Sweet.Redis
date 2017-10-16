@@ -43,7 +43,7 @@ namespace Sweet.Redis
     role-reported : master
     role-reported-time : 108592
     */
-    public class RedisSentinelInfoBase : RedisInfoBase
+    public class RedisSentinelInfoBase : RedisInfoBase, IRedisNamedObject
     {
         #region .Ctors
 

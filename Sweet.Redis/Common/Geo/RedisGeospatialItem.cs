@@ -26,7 +26,7 @@ using System;
 
 namespace Sweet.Redis
 {
-    public struct RedisGeospatialItem
+    public struct RedisGeospatialItem : IRedisNamedObject
     {
         #region Static Members
 

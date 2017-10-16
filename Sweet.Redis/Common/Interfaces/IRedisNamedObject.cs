@@ -22,46 +22,10 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    public class RedisGeoRadiusResult : IRedisNamedObject
+    public interface IRedisNamedObject
     {
-        #region .Ctors
-
-        public RedisGeoRadiusResult(string name, RedisGeoPosition? coord = null,
-                                    double? distance = null, long? hash = null)
-        {
-            Name = name;
-            Hash = hash;
-            Distance = distance;
-            Coord = coord;
-        }
-
-        #endregion .Ctors
-
-        #region Properties
-
-        public string Name { get; private set; }
-
-        public long? Hash { get; private set; }
-
-        public double? Distance { get; private set; }
-
-        public RedisGeoPosition? Coord { get; private set; }
-
-        #endregion Properties
-
-        #region Methods
-
-        public override string ToString()
-        {
-            return String.Format("[Name={0}, Hash={1}, Distance={2}, Coord={3}]",
-                                 Name ?? "(nil)", Hash.HasValue ? Hash.ToString() : "(nil)",
-                                 Distance.HasValue ? Distance.ToString() : "(nil)",
-                                 Coord.HasValue ? Coord.ToString() : "(nil)");
-        }
-        #endregion Methods
+        string Name { get; }
     }
 }

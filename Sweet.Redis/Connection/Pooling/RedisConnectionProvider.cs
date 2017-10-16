@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisConnectionProvider : RedisDisposable, IRedisConnectionProvider, IRedisCommandExecuter
+    public class RedisConnectionProvider : RedisDisposable, IRedisConnectionProvider, IRedisCommandExecuter, IRedisNamedObject
     {
         #region Constants
 
