@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    public interface IRedisConnectionProvider : IRedisDisposable
+    public interface IRedisConnectionProvider : IRedisDisposable, IRedisIdentifiedObject
     {
         int AvailableCount { get; }
         int InUseCount { get; }
