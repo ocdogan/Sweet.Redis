@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 
 namespace Sweet.Redis
 {
@@ -70,7 +71,10 @@ namespace Sweet.Redis
             get 
             {
                 if (m_Slaves == null)
-                    m_Slaves = m_SlavesList.ToArray();
+                {
+                    var list = Interlocked.Exchange(ref m_SlavesList, null);
+                    m_Slaves = list != null ? list.ToArray() : new RedisServerSlaveInfo[0];
+                }
                 return m_Slaves;
             }
         } 
@@ -105,10 +109,7 @@ namespace Sweet.Redis
                     {
                         int index;
                         if (int.TryParse(indexStr, out index))
-                        {
-                            var info = new RedisServerSlaveInfo(index, value);
-                            m_SlavesList.Add(info);
-                        }
+                            m_SlavesList.Add(new RedisServerSlaveInfo(index, value));
                     }
                 }
             }
