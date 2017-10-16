@@ -68,7 +68,7 @@ namespace Sweet.Redis.ConsoleTest
             // PipelineTest4();
             // PipelineTest5();
 
-            // SentinelTest1();
+            SentinelTest1();
             // SentinelTest2();
             // SentinelTest3();
             // SentinelTest4();
@@ -76,7 +76,7 @@ namespace Sweet.Redis.ConsoleTest
             // SentinelTest6();
             // SentinelTest7();
             // SentinelTest8();
-            SentinelTest9();
+            // SentinelTest9();
         }
 
         #region Sentinel
@@ -513,7 +513,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest1()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("127.0.0.1",
+            using (var sentinelClient = new RedisSentinelClient(new RedisSettings("localhost",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();

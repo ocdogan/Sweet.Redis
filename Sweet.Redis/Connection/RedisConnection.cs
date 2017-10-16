@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -46,7 +47,7 @@ namespace Sweet.Redis
 
         protected RedisSocket m_Socket;
         protected EndPoint m_EndPoint;
-        protected RedisSettings m_Settings;
+        protected RedisConnectionSettings m_Settings;
 
         private long m_LastError = (long)SocketError.Success;
         private long m_State = (long)RedisConnectionState.Idle;
@@ -58,7 +59,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisConnection(string name, RedisRole role, RedisSettings settings,
+        internal RedisConnection(string name, 
+            RedisRole role, RedisConnectionSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
@@ -70,7 +72,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("releaseAction"));
 
             m_DesiredRole = role;
-            m_Settings = settings ?? RedisSettings.Default;
+            m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
             m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N") : name;
@@ -154,7 +156,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisSettings Settings
+        public RedisConnectionSettings Settings
         {
             get { return m_Settings; }
         }
@@ -327,9 +329,10 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual RedisSocket NewSocket()
+        protected virtual RedisSocket NewSocket(IPAddress ipAddress)
         {
-            var socket = new RedisSocket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp, Settings.UseSsl);
+            var socket = new RedisSocket(ipAddress != null ? ipAddress.AddressFamily : AddressFamily.InterNetwork, 
+                SocketType.Stream, ProtocolType.Tcp, Settings.UseSsl);
 
             var onCreateSocket = m_CreateAction;
             if (onCreateSocket != null)
@@ -353,43 +356,7 @@ namespace Sweet.Redis
 
                     SetState((long)RedisConnectionState.Connecting);
 
-                    var task = RedisAsyncEx.GetHostAddressesAsync(m_Settings.Host);
-
-                    socket = NewSocket();
-                    ConfigureInternal(socket);
-
-                    var ipAddress = task.Result;
-                    if (ipAddress == null)
-                        throw new RedisFatalException("Can not resolce host address");
-
-                    socket.ConnectAsync(ipAddress, m_Settings.Port)
-                        .ContinueWith(ca =>
-                        {
-                            if (ca.IsFaulted)
-                            {
-                                SetState((long)RedisConnectionState.Failed);
-
-                                var exception = ca.Exception as Exception;
-                                while (exception != null)
-                                {
-                                    if (exception is SocketException)
-                                        break;
-                                    exception = exception.InnerException;
-                                }
-
-                                if (exception is SocketException)
-                                    SetLastError(((SocketException)exception).ErrorCode);
-                            }
-                            else if (ca.IsCompleted)
-                            {
-                                SetState((long)RedisConnectionState.Connected);
-
-                                var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
-                                if (prevSocket != null && prevSocket != socket)
-                                    prevSocket.DisposeSocket();
-                            }
-                        }).Wait();
-
+                    socket = CreateSocket();
                     if (socket.IsConnected())
                         OnConnect(socket);
 
@@ -409,6 +376,74 @@ namespace Sweet.Redis
 
                 throw new RedisFatalException(e);
             }
+            return socket;
+        }
+
+        private RedisSocket CreateSocket()
+        {
+            var ipAddresses = RedisAsyncEx.GetHostAddressesAsync(m_Settings.Host).Result;
+            if (ipAddresses == null)
+                throw new RedisFatalException("Can not resolve host address");
+
+            var length = ipAddresses.Length;
+            if (length == 0)
+                throw new RedisFatalException("Can not resolve host address");
+
+            if (length > 1)
+            {
+                ipAddresses = ipAddresses
+                    .OrderBy((addr) =>
+                        { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
+                    .ToArray();
+            }
+
+            for (var i = 0; i < length; i++)
+            {
+                try
+                {
+                    var socket = CreateSocket(ipAddresses[i]);
+                    if (socket.IsConnected())
+                        return socket;
+                }
+                catch (Exception)
+                { }
+            }
+
+            throw new RedisFatalException("Can not connect to host, " + m_Settings.Host);
+        }
+
+        private RedisSocket CreateSocket(IPAddress ipAddress)
+        {
+            var socket = NewSocket(ipAddress);
+            ConfigureInternal(socket);
+
+            socket.ConnectAsync(ipAddress, m_Settings.Port)
+                .ContinueWith(ca =>
+                {
+                    if (ca.IsFaulted)
+                    {
+                        SetState((long)RedisConnectionState.Failed);
+
+                        var exception = ca.Exception as Exception;
+                        while (exception != null)
+                        {
+                            if (exception is SocketException)
+                                break;
+                            exception = exception.InnerException;
+                        }
+
+                        if (exception is SocketException)
+                            SetLastError(((SocketException)exception).ErrorCode);
+                    }
+                    else if (ca.IsCompleted)
+                    {
+                        SetState((long)RedisConnectionState.Connected);
+
+                        var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
+                        if (prevSocket != null && prevSocket != socket)
+                            prevSocket.DisposeSocket();
+                    }
+                }).Wait();
             return socket;
         }
 

@@ -164,7 +164,9 @@ namespace Sweet.Redis
         public const int DefaultPort = 6379;
         public const int DefaultSentinelPort = 26379;
 
-        public const string IP4LocalHost = "127.0.0.1";
+        public const string LocalHost = "localhost";
+        public const string IP4Loopback = "127.0.0.1";
+        public const string IP6Loopback = "::1";
 
         public const long Zero = 0L;
         public const long One = 1L;

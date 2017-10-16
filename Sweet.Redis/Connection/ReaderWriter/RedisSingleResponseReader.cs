@@ -28,7 +28,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisSingleResponseReader(RedisSettings settings)
+        public RedisSingleResponseReader(RedisConnectionSettings settings)
             : base(settings, 16 * 1024)
         { }
 

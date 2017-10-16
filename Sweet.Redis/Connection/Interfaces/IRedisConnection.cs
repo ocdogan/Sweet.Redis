@@ -34,7 +34,7 @@ namespace Sweet.Redis
         long LastError { get; }
         string Name { get; }
         RedisRole Role { get; }
-        RedisSettings Settings { get; }
+        RedisConnectionSettings Settings { get; }
         RedisConnectionState State { get; }
 
         void ReleaseSocket();

@@ -31,16 +31,16 @@ namespace Sweet.Redis
         #region Field Members
 
         private RedisSocket m_Socket;
-        private RedisSettings m_Settings;
+        private RedisConnectionSettings m_Settings;
 
         #endregion Field Members
 
         #region .Ctors
 
-        internal RedisSocketContext(RedisSocket socket, RedisSettings settings)
+        internal RedisSocketContext(RedisSocket socket, RedisConnectionSettings settings)
         {
             m_Socket = socket;
-            m_Settings = settings ?? RedisSettings.Default;
+            m_Settings = settings ?? RedisConnectionSettings.Default;
         }
 
         #endregion .Ctors
@@ -59,9 +59,15 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public RedisSocket Socket { get { return m_Socket; } }
+        public RedisSocket Socket 
+        { 
+            get { return m_Socket; } 
+        }
 
-        public RedisSettings Settings { get { return m_Settings; } }
+        public RedisConnectionSettings Settings 
+        { 
+            get { return m_Settings; } 
+        }
 
         #endregion Properties
     }

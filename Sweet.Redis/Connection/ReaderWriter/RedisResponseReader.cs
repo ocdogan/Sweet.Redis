@@ -56,7 +56,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private int m_ReceiveTimeout;
-        private RedisSettings m_Settings;
+        private RedisConnectionSettings m_Settings;
 
         protected long m_ReadState;
         protected long m_ReceiveStarted;
@@ -71,9 +71,9 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        protected RedisResponseReader(RedisSettings settings, int bufferSize = -1)
+        protected RedisResponseReader(RedisConnectionSettings settings, int bufferSize = -1)
         {
-            m_Settings = settings ?? RedisSettings.Default;
+            m_Settings = settings ?? RedisConnectionSettings.Default;
             m_BufferSize = Math.Min(MaxBufferSize, Math.Max(DefaultBufferSize, Math.Max(0, bufferSize)));
             m_Buffer = new byte[m_BufferSize];
 
@@ -123,7 +123,7 @@ namespace Sweet.Redis
             get { return Math.Max(Beginning, Math.Min(BufferSize, m_ReadPosition)); }
         }
 
-        public RedisSettings Settings
+        public RedisConnectionSettings Settings
         {
             get { return m_Settings; }
         }

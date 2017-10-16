@@ -31,13 +31,13 @@ namespace Sweet.Redis
     {
         #region Static Members
 
-        public static readonly RedisSettings Default = new RedisSettings();
+        public new static readonly RedisSettings Default = new RedisSettings();
 
         #endregion Static Members
 
         #region .Ctors
 
-        public RedisSettings(string host = RedisConstants.IP4LocalHost, int port = RedisConstants.DefaultPort,
+        public RedisSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
@@ -45,11 +45,9 @@ namespace Sweet.Redis
             bool useAsyncCompleter = true, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base(host, port, masterName, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
+            : base(host, port, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
                    sslCertificateSelection, sslCertificateValidation)
         {
-            Password = password;
-            ClientName = clientName;
             UseAsyncCompleter = useAsyncCompleter;
             IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
             MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
@@ -62,10 +60,8 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public string ClientName { get; private set; }
         public int IdleTimeout { get; private set; }
         public int MaxCount { get; private set; }
-        public string Password { get; private set; }
         public int ReadBufferSize { get; private set; }
         public bool UseAsyncCompleter { get; private set; }
         public int WaitTimeout { get; private set; }

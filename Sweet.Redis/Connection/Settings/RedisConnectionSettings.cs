@@ -29,10 +29,17 @@ namespace Sweet.Redis
 {
     public class RedisConnectionSettings
     {
+        #region Static Members
+
+        public static readonly RedisConnectionSettings Default = new RedisConnectionSettings();
+
+        #endregion Static Members
+
         #region .Ctors
 
-        public RedisConnectionSettings(string host = RedisConstants.IP4LocalHost,
-            int port = RedisConstants.DefaultPort, string masterName = null,
+        public RedisConnectionSettings(string host = RedisConstants.LocalHost, 
+            int port = RedisConstants.DefaultPort,
+            string masterName = null, string password = null, string clientName = null, 
             int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout,
@@ -42,8 +49,10 @@ namespace Sweet.Redis
         {
             Host = host;
             Port = port;
-            MasterName = masterName;
             UseSsl = useSsl;
+            Password = password;
+            ClientName = clientName;
+            MasterName = masterName;
             SslCertificateSelection = sslCertificateSelection;
             SslCertificateValidation = sslCertificateValidation;
             ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
@@ -55,8 +64,10 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public string ClientName { get; private set; }
         public int ConnectionTimeout { get; private set; }
         public string Host { get; private set; }
+        public string Password { get; private set; }
         public int Port { get; private set; }
         public string MasterName { get; private set; }
         public int ReceiveTimeout { get; private set; }

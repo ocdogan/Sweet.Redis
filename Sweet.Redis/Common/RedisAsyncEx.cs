@@ -36,17 +36,16 @@ namespace Sweet.Redis
 
         #region Dns
 
-        public static Task<IPAddress> GetHostAddressesAsync(string host)
+        public static Task<IPAddress> GetHostAddressAsync(string host)
         {
             var tcs = new TaskCompletionSource<IPAddress>(null);
-
             Dns.BeginGetHostAddresses(host, ar =>
                 {
                     var innerTcs = ar.DiscoverTaskCompletionSource<IPAddress>();
                     try
                     {
-                        var addrs = Dns.EndGetHostAddresses(ar);
-                        innerTcs.TrySetResult((addrs != null && addrs.Length > 0) ? addrs[0] : null);
+                        var addresses = Dns.EndGetHostAddresses(ar);
+                        innerTcs.TrySetResult((addresses != null && addresses.Length > 0) ? addresses[0] : null);
                     }
                     catch (OperationCanceledException)
                     {
@@ -57,6 +56,29 @@ namespace Sweet.Redis
                         innerTcs.TrySetException(e);
                     }
                 }, tcs);
+            return tcs.Task;
+        }
+
+        public static Task<IPAddress[]> GetHostAddressesAsync(string host)
+        {
+            var tcs = new TaskCompletionSource<IPAddress[]>(null);
+            Dns.BeginGetHostAddresses(host, ar =>
+            {
+                var innerTcs = ar.DiscoverTaskCompletionSource<IPAddress[]>();
+                try
+                {
+                    var addresses = Dns.EndGetHostAddresses(ar);
+                    innerTcs.TrySetResult(addresses ?? new IPAddress[0]);
+                }
+                catch (OperationCanceledException)
+                {
+                    innerTcs.TrySetCanceled();
+                }
+                catch (Exception e)
+                {
+                    innerTcs.TrySetException(e);
+                }
+            }, tcs);
             return tcs.Task;
         }
 
