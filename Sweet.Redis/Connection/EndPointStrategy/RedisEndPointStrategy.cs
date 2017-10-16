@@ -31,7 +31,7 @@ namespace Sweet.Redis
 {
     internal class RedisEndPointStrategy : IRedisEndPointStrategy
     {
-        #region QueueItem
+        #region EPSocketPair
 
         private class EPSocketPair
         {
@@ -39,7 +39,7 @@ namespace Sweet.Redis
             public RedisSocket Socket;
         }
 
-        #endregion QueueItem
+        #endregion EPSocketPair
 
         #region Field Members
 
