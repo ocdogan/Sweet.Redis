@@ -31,121 +31,22 @@ namespace Sweet.Redis
 {
     internal class RedisEndPointStrategy : IRedisEndPointStrategy
     {
-        #region SocketSlot
+        #region QueueItem
 
-        private class SocketSlot
+        private class EPSocketPair
         {
-            #region QueueItem
-
-            private class QueueItem
-            {
-                public IPEndPoint EndPoint;
-                public RedisSocket Socket;
-            }
-
-            #endregion QueueItem
-
-            #region Field Members
-
-            private QueueItem[] m_Items;
-            private readonly object m_ItemsLock = new object();
-
-            private Func<IPEndPoint, RedisSocket> m_SocketFactory;
-
-            #endregion Field Members
-
-            #region .Ctors
-
-            public SocketSlot(IPEndPoint[] endPoints, Func<IPEndPoint, RedisSocket> socketFactory)
-            {
-                m_SocketFactory = socketFactory;
-                if (endPoints != null)
-                {
-                    var length = endPoints.Length;
-                    if (length > 0)
-                        m_Items = new QueueItem[0];
-                    else
-                    {
-                        var list = new List<QueueItem>(length);
-                        foreach (var endPoint in endPoints)
-                        {
-                            list.Add(new QueueItem { EndPoint = endPoint });
-                        }
-
-                        m_Items = list.ToArray();
-                    }
-                }
-            }
-
-            #endregion .Ctors
-
-            #region Methods
-
-            public RedisSocket Dequeue()
-            {
-                if (m_Items != null && m_Items.Length > 0)
-                {
-                    lock (m_ItemsLock)
-                    {
-                        foreach (var item in m_Items)
-                        {
-                            var socket = item.Socket;
-                            if (socket != null)
-                            {
-                                item.Socket = null;
-                                if (socket.IsConnected())
-                                    return socket;
-
-                                socket.DisposeSocket();
-                            }
-                        }
-
-                        foreach (var item in m_Items)
-                        {
-                            var socket = item.Socket;
-                            if (socket == null)
-                                return m_SocketFactory(item.EndPoint);
-                        }
-                    }
-                }
-
-                return null;
-            }
-
-            public void Enqueue(RedisSocket socket)
-            {
-                if (socket != null && socket.IsConnected())
-                {
-                    var endPoint = socket.RemoteEP;
-                    if (endPoint != null)
-                    {
-                        lock (m_ItemsLock)
-                        {
-                            foreach (var item in m_Items)
-                            {
-                                if (item.EndPoint == endPoint)
-                                {
-                                    var currSocket = item.Socket;
-                                    if (!ReferenceEquals(socket, currSocket))
-                                    {
-                                        item.Socket = socket;
-                                        currSocket.DisposeSocket();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            #endregion Methods
+            public IPEndPoint EndPoint;
+            public RedisSocket Socket;
         }
 
-        #endregion SocketSlot
+        #endregion QueueItem
 
         #region Field Members
 
-        private SocketSlot m_Slot;
+        private EPSocketPair[] m_Items;
+        private readonly object m_ItemsLock = new object();
+
+        private Func<IPEndPoint, RedisSocket> m_SocketFactory;
 
         #endregion Field Members
 
@@ -153,22 +54,46 @@ namespace Sweet.Redis
 
         public RedisEndPointStrategy(RedisEndPoint[] endPoints, Func<IPEndPoint, RedisSocket> socketFactory)
         {
+            m_SocketFactory = socketFactory;
+            Reload(endPoints);
+        }
+
+        private void Reload(RedisEndPoint[] endPoints)
+        {
             if (endPoints != null)
             {
                 var length = endPoints.Length;
                 if (length > 0)
                 {
-                    var addressList = new HashSet<IPEndPoint>();
+                    var endPointList = new HashSet<IPEndPoint>();
                     foreach (var endPoint in endPoints)
                     {
                         var addresses = endPoint.ResolveHost();
                         if (addresses != null)
                         {
                             foreach (var address in addresses)
-                                addressList.Add(new IPEndPoint(address, endPoint.Port));
+                                endPointList.Add(new IPEndPoint(address, endPoint.Port));
                         }
                     }
-                    m_Slot = new SocketSlot(addressList.ToArray(), socketFactory);
+
+                    if (endPointList.Count > 0)
+                    {
+                        var ipEndPoints = endPointList.ToArray();
+                        if (ipEndPoints != null)
+                        {
+                            length = ipEndPoints.Length;
+                            if (length > 0)
+                            {
+                                var list = new List<EPSocketPair>(length);
+                                foreach (var endPoint in ipEndPoints)
+                                {
+                                    list.Add(new EPSocketPair { EndPoint = endPoint });
+                                }
+
+                                m_Items = list.ToArray();
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -179,19 +104,58 @@ namespace Sweet.Redis
 
         public RedisSocket Dequeue()
         {
-            if (m_Slot != null)
+            if (m_Items != null && m_Items.Length > 0)
             {
-                var socket = m_Slot.Dequeue();
-                if (socket != null)
-                    return socket;
+                lock (m_ItemsLock)
+                {
+                    foreach (var item in m_Items)
+                    {
+                        var socket = item.Socket;
+                        if (socket != null)
+                        {
+                            item.Socket = null;
+                            if (socket.IsConnected())
+                                return socket;
+
+                            socket.DisposeSocket();
+                        }
+                    }
+
+                    foreach (var item in m_Items)
+                    {
+                        var socket = item.Socket;
+                        if (socket == null)
+                            return m_SocketFactory(item.EndPoint);
+                    }
+                }
             }
             throw new RedisFatalException("Cannot dequeue any socket");
         }
 
         public void Enqueue(RedisSocket socket)
         {
-            if (m_Slot != null)
-                m_Slot.Enqueue(socket);
+            if (socket != null && socket.IsConnected())
+            {
+                var endPoint = socket.RemoteEP;
+                if (endPoint != null)
+                {
+                    lock (m_ItemsLock)
+                    {
+                        foreach (var item in m_Items)
+                        {
+                            if (item.EndPoint == endPoint)
+                            {
+                                var currSocket = item.Socket;
+                                if (!ReferenceEquals(socket, currSocket))
+                                {
+                                    item.Socket = socket;
+                                    currSocket.DisposeSocket();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             throw new RedisFatalException("Cannot enqueue socket");
         }
 
