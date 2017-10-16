@@ -50,7 +50,7 @@ namespace Sweet.Redis
             #region Properties
 
             public string Host { get; private set; }
-            
+
             public IPAddress[] IPAddresses { get; private set; }
 
             public DateTime CreationDate { get; private set; }
@@ -79,7 +79,7 @@ namespace Sweet.Redis
 
         private static readonly IPAddress[] EmptyAddresses = new IPAddress[0];
 
-        private static readonly ConcurrentDictionary<string, RedisIPAddressEntry> s_DnsEntries = 
+        private static readonly ConcurrentDictionary<string, RedisIPAddressEntry> s_DnsEntries =
             new ConcurrentDictionary<string, RedisIPAddressEntry>();
 
         #endregion Static Members
@@ -117,10 +117,15 @@ namespace Sweet.Redis
 
         public IPAddress[] ResolveHost()
         {
-            return RedisEndPoint.ResolveHost(Host);
+            var entry = m_Entry;
+            if (entry == null || entry.Expired)
+                entry = m_Entry = GetEntry(Host);
+
+            return (entry == null) ? EmptyAddresses :
+                (entry.IPAddresses ?? EmptyAddresses);
         }
 
-        internal static IPAddress[] ResolveHost(string host)
+        private static RedisIPAddressEntry GetEntry(string host)
         {
             if (!String.IsNullOrEmpty(host))
             {
@@ -136,7 +141,7 @@ namespace Sweet.Redis
                             {
                                 ipAddresses = ipAddresses
                                     .OrderBy((addr) =>
-                                        { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
+                                    { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
                                     .ToArray();
                             }
 
@@ -147,9 +152,9 @@ namespace Sweet.Redis
                         }
                     }
                 }
-                return entry.IPAddresses ?? EmptyAddresses;
+                return entry;
             }
-            return EmptyAddresses;
+            return null;
         }
 
         #endregion Methods

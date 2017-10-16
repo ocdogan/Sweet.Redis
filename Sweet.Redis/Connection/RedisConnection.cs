@@ -59,7 +59,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisConnection(string name, 
+        internal RedisConnection(string name,
             RedisRole role, RedisConnectionSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket,
@@ -331,7 +331,7 @@ namespace Sweet.Redis
 
         protected virtual RedisSocket NewSocket(IPAddress ipAddress)
         {
-            var socket = new RedisSocket(ipAddress != null ? ipAddress.AddressFamily : AddressFamily.InterNetwork, 
+            var socket = new RedisSocket(ipAddress != null ? ipAddress.AddressFamily : AddressFamily.InterNetwork,
                 SocketType.Stream, ProtocolType.Tcp, Settings.UseSsl);
 
             var onCreateSocket = m_CreateAction;
@@ -394,7 +394,7 @@ namespace Sweet.Redis
                     {
                         try
                         {
-                            var ipAddresses = RedisEndPoint.ResolveHost(ep.Host);
+                            var ipAddresses = ep.ResolveHost();
                             if (ipAddresses != null)
                             {
                                 var length = ipAddresses.Length;

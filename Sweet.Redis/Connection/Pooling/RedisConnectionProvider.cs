@@ -52,7 +52,7 @@ namespace Sweet.Redis
         {
             m_Settings = settings ?? RedisSettings.Default;
 
-            Id = Guid.NewGuid();
+            m_Id = Guid.NewGuid();
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name :
@@ -92,7 +92,7 @@ namespace Sweet.Redis
             }
         }
 
-        public Guid Id { get; private set; }
+        public Guid Id { get { return m_Id; } }
 
         public virtual int InUseCount
         {

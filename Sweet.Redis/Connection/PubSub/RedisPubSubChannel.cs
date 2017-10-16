@@ -93,7 +93,7 @@ namespace Sweet.Redis
             if (String.IsNullOrEmpty(name))
                 name = String.Format("{0}, {1}", GetType().Name, id);
 
-            Name = name;
+            m_Name = name;
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, ResponseReceived);
@@ -114,7 +114,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public string Name { get; private set; }
+        public string Name { get { return m_Name; } }
 
         #endregion Properties
 
