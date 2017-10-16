@@ -77,5 +77,16 @@ namespace Sweet.Redis
         public bool UseSsl { get; private set; }
 
         #endregion Properties
+
+        #region Methods
+
+        public virtual RedisConnectionSettings Clone(string host = null, int port = -1)
+        {
+            return new RedisConnectionSettings(host ?? Host, port < 1 ? Port : port,
+                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
+                UseSsl, SslCertificateSelection, SslCertificateValidation);
+        }
+
+        #endregion Methods
     }
 }

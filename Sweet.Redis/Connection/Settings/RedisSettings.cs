@@ -39,7 +39,7 @@ namespace Sweet.Redis
 
         public RedisSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int sendTimeout = RedisConstants.DefaultSendTimeout, int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout, 
             int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
             int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
             bool useAsyncCompleter = true, bool useSsl = false,
@@ -68,5 +68,17 @@ namespace Sweet.Redis
         public int WriteBufferSize { get; private set; }
 
         # endregion Properties
+
+        #region Methods
+
+        public override RedisConnectionSettings Clone(string host = null, int port = -1)
+        {
+            return new RedisSettings(host ?? Host, port < 1 ? Port : port,
+                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
+                MaxCount, WaitTimeout, IdleTimeout, ReadBufferSize, WriteBufferSize,
+                UseAsyncCompleter, UseSsl, SslCertificateSelection, SslCertificateValidation);
+        }
+
+        #endregion Methods
     }
 }
