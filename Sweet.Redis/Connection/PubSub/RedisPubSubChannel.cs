@@ -69,7 +69,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private RedisConnectionPool m_Pool;
+        private string m_Name;
         private RedisContinuousConnectionProvider m_ConnectionProvider;
 
         private readonly object m_SubscriptionLock = new object();
@@ -85,10 +85,18 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisPubSubChannel(RedisConnectionPool pool)
+        internal RedisPubSubChannel(IRedisNamedObject namedObject)
         {
-            m_Pool = pool;
-            m_ConnectionProvider = new RedisContinuousConnectionProvider(pool.Name, ResponseReceived);
+            var id = RedisCommon.NewGuidID();
+
+            var name = !ReferenceEquals(namedObject, null) ? namedObject.Name : null;
+            if (String.IsNullOrEmpty(name))
+                name = String.Format("{0}, {1}", GetType().Name, id);
+
+            Name = name;
+
+            var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
+            m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, ResponseReceived);
         }
 
         #endregion .Ctors
@@ -97,14 +105,18 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Interlocked.Exchange(ref m_Pool, null);
-
             var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
             if (connectionProvider != null)
                 connectionProvider.Dispose();
         }
 
         #endregion Destructors
+
+        #region Properties
+
+        public string Name { get; private set; }
+
+        #endregion Properties
 
         #region Methods
 

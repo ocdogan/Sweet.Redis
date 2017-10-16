@@ -75,7 +75,7 @@ namespace Sweet.Redis
             m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
-            m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N") : name;
+            m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N").ToUpper() : name;
 
             if ((socket != null) && socket.Connected)
             {

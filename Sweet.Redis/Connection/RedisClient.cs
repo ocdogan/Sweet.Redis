@@ -27,7 +27,7 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    public class RedisClient : RedisDisposable, IRedisClient
+    public class RedisClient : RedisDisposable, IRedisClient, IRedisIdentifiedObject
     {
         #region Field Members
 
@@ -70,7 +70,7 @@ namespace Sweet.Redis
         public override void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N"));
+                throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N").ToUpper());
         }
 
         #endregion IRedisConnection Methods

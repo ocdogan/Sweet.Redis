@@ -52,7 +52,7 @@ namespace Sweet.Redis
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name :
-                String.Format("{0}, {1}", GetType().Name, Guid.NewGuid().ToString("N").ToUpper());
+                String.Format("{0}, {1}", GetType().Name, RedisCommon.NewGuidID());
 
             if (connectionLimiter == null)
                 connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);

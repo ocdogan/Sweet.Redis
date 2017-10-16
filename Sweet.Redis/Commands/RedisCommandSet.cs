@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisCommandSet : RedisInternalDisposable, IRedisCommandSet
+    internal class RedisCommandSet : RedisInternalDisposable, IRedisCommandSet, IRedisIdentifiedObject
     {
         #region Field Members
 
@@ -76,7 +76,7 @@ namespace Sweet.Redis
         public override void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N"));
+                throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N").ToUpper());
         }
 
         protected static void ValidateKeyAndValue(string key, byte[] value, string keyName = null, string valueName = null)
