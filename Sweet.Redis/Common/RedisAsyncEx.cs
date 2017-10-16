@@ -280,7 +280,7 @@ namespace Sweet.Redis
         {
             var tcs = new TaskCompletionSource<object>(socket);
 
-            socket.BeginConnect(endPoint, ar =>
+            socket.BeginConnect(endPoint.Address, endPoint.Port, ar =>
             {
                 var innerTcs = ar.DiscoverTaskCompletionSource<object>();
                 try
@@ -300,79 +300,10 @@ namespace Sweet.Redis
             return tcs.Task;
         }
 
-        public static Task ConnectAsync(this RedisSocket socket, EndPoint remoteEP)
-        {
-            var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(remoteEP, ar =>
-            {
-                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
-                try
-                {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
-                    innerTcs.TrySetResult(true);
-                }
-                catch (OperationCanceledException)
-                {
-                    innerTcs.TrySetCanceled();
-                }
-                catch (Exception e)
-                {
-                    innerTcs.TrySetException(e);
-                }
-            }, tcs);
-            return tcs.Task;
-        }
-
         public static Task ConnectAsync(this RedisSocket socket, IPAddress address, int port)
         {
             var tcs = new TaskCompletionSource<bool>(socket);
             socket.BeginConnect(address, port, ar =>
-            {
-                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
-                try
-                {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
-                    innerTcs.TrySetResult(true);
-                }
-                catch (OperationCanceledException)
-                {
-                    innerTcs.TrySetCanceled();
-                }
-                catch (Exception e)
-                {
-                    innerTcs.TrySetException(e);
-                }
-            }, tcs);
-            return tcs.Task;
-        }
-
-        public static Task ConnectAsync(this RedisSocket socket, IPAddress[] addresses, int port)
-        {
-            var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(addresses, port, ar =>
-            {
-                var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
-                try
-                {
-                    ((RedisSocket)innerTcs.Task.AsyncState).EndConnect(ar);
-                    innerTcs.TrySetResult(true);
-                }
-                catch (OperationCanceledException)
-                {
-                    innerTcs.TrySetCanceled();
-                }
-                catch (Exception e)
-                {
-                    innerTcs.TrySetException(e);
-                }
-            }, tcs);
-            return tcs.Task;
-        }
-
-        public static Task ConnectAsync(this RedisSocket socket, string host, int port)
-        {
-            var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(host, port, ar =>
             {
                 var innerTcs = ar.DiscoverTaskCompletionSource<bool>();
                 try

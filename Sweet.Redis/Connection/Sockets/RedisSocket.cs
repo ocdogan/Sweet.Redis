@@ -55,7 +55,7 @@ namespace Sweet.Redis
         private Action<RedisSocket> m_OnConnect;
         private Action<RedisSocket> m_OnDisconnect;
 
-        private object m_RemoteEP;
+        private IPEndPoint m_RemoteEP;
         private Stream m_RealStream;
         private BufferedStream m_BufferedStream;
 
@@ -230,6 +230,11 @@ namespace Sweet.Redis
             {
                 m_Socket.EnableBroadcast = value;
             }
+        }
+
+        public IPEndPoint RemoteEP
+        {
+            get { return m_RemoteEP; }
         }
 
         public bool ExclusiveAddressUse
@@ -493,28 +498,10 @@ namespace Sweet.Redis
             return m_Socket.BeginAccept(callback, new RedisAsyncStateWrapper(state));
         }
 
-        public IAsyncResult BeginConnect(EndPoint endPoint, AsyncCallback callback, object state)
-        {
-            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), endPoint);
-            return m_Socket.BeginConnect(endPoint, callback, new RedisAsyncStateWrapper(state, connState));
-        }
-
         public IAsyncResult BeginConnect(IPAddress address, int port, AsyncCallback callback, object state)
         {
-            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), address);
+            var connState = new Tuple<Socket, bool, IPEndPoint>(m_Socket, m_Socket.IsConnected(), new IPEndPoint(address, port));
             return m_Socket.BeginConnect(address, port, callback, new RedisAsyncStateWrapper(state, connState));
-        }
-
-        public IAsyncResult BeginConnect(IPAddress[] addresses, int port, AsyncCallback callback, object state)
-        {
-            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), addresses);
-            return m_Socket.BeginConnect(addresses, port, callback, new RedisAsyncStateWrapper(state, connState));
-        }
-
-        public IAsyncResult BeginConnect(string host, int port, AsyncCallback callback, object state)
-        {
-            var connState = new Tuple<Socket, bool, object>(m_Socket, m_Socket.IsConnected(), new DnsEndPoint(host, port));
-            return m_Socket.BeginConnect(host, port, callback, new RedisAsyncStateWrapper(state, connState));
         }
 
         public IAsyncResult BeginDisconnect(bool reuseSocket, AsyncCallback callback, object state)
@@ -615,22 +602,6 @@ namespace Sweet.Redis
                 onDisconnect(this);
         }
 
-        public void Connect(EndPoint remoteEP)
-        {
-            var onConnect = m_OnConnect;
-            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
-
-            m_Socket.Connect(remoteEP);
-
-            if (!m_Socket.IsConnected())
-                m_RemoteEP = null;
-            else
-            {
-                m_RemoteEP = remoteEP;
-                if (wasDisconnected && (onConnect != null))
-                    onConnect(this);
-            }
-        }
 
         public void Connect(IPAddress address, int port)
         {
@@ -643,41 +614,7 @@ namespace Sweet.Redis
                 m_RemoteEP = null;
             else
             {
-                m_RemoteEP = address;
-                if (wasDisconnected && (onConnect != null))
-                    onConnect(this);
-            }
-        }
-
-        public void Connect(IPAddress[] addresses, int port)
-        {
-            var onConnect = m_OnConnect;
-            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
-
-            m_Socket.Connect(addresses, port);
-
-            if (!m_Socket.IsConnected())
-                m_RemoteEP = null;
-            else
-            {
-                m_RemoteEP = addresses;
-                if (wasDisconnected && (onConnect != null))
-                    onConnect(this);
-            }
-        }
-
-        public void Connect(string host, int port)
-        {
-            var onConnect = m_OnConnect;
-            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
-
-            m_Socket.Connect(host, port);
-
-            if (!m_Socket.IsConnected())
-                m_RemoteEP = null;
-            else
-            {
-                m_RemoteEP = new DnsEndPoint(host, port);
+                m_RemoteEP = new IPEndPoint(address, port);
                 if (wasDisconnected && (onConnect != null))
                     onConnect(this);
             }
@@ -687,6 +624,14 @@ namespace Sweet.Redis
         {
             if (e == null)
                 throw new RedisFatalException(new ArgumentNullException("e"));
+
+            var endPoint = e.RemoteEndPoint;
+            if (endPoint == null)
+                throw new RedisFatalException(new ArgumentNullException("endPoint"));
+
+            if (!(endPoint is IPEndPoint))
+                throw new RedisFatalException(new ArgumentNullException("EndPoint is not in expected form"));
+
             e.Completed += OnConnectComplete;
 
             return m_Socket.ConnectAsync(e);
@@ -700,7 +645,7 @@ namespace Sweet.Redis
                 m_RemoteEP = null;
             else
             {
-                m_RemoteEP = e.RemoteEndPoint;
+                m_RemoteEP = e.RemoteEndPoint as IPEndPoint;
 
                 var onConnect = m_OnConnect;
                 if (onConnect != null)
@@ -759,11 +704,11 @@ namespace Sweet.Redis
 
         public void EndConnect(IAsyncResult asyncResult)
         {
-            Tuple<Socket, bool, object> connState = null;
+            Tuple<Socket, bool, IPEndPoint> connState = null;
 
             var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
             if (wrapper != null)
-                connState = wrapper.Tag as Tuple<Socket, bool, object>;
+                connState = wrapper.Tag as Tuple<Socket, bool, IPEndPoint>;
 
             m_Socket.EndConnect(asyncResult);
 
