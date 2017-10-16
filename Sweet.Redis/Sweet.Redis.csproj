@@ -231,6 +231,8 @@
     <Compile Include="Connection\RedisBidirectionalConnection.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelConnectionProvider.cs" />
     <Compile Include="Common\RedisIsMasterDownInfo.cs" />
+    <Compile Include="Connection\Interfaces\IRedisEndPointStrategy.cs" />
+    <Compile Include="Connection\EndPointStrategy\RedisEndPointStrategy.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -238,6 +240,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Connection\EndPointStrategy\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
