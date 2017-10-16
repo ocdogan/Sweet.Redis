@@ -55,6 +55,7 @@
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelClusterNodeInfo.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelNodeInfo.cs" />
+    <Compile Include="Common\ServerInfo\RedisServerSlaveInfo.cs" />
     <Compile Include="Connection\Continuous\RedisContinuousChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisCommandExecuter.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnectionProvider.cs" />

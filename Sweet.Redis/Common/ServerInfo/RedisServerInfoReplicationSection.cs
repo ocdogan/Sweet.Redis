@@ -44,6 +44,13 @@ namespace Sweet.Redis
     */
     public class RedisServerInfoReplicationSection : RedisServerInfoSection
     {
+        #region Field Members
+
+        private RedisServerSlaveInfo[] m_Slaves;
+        private List<RedisServerSlaveInfo> m_SlavesList = new List<RedisServerSlaveInfo>();
+
+        #endregion Field Members
+
         #region .Ctors
 
         internal RedisServerInfoReplicationSection(string sectionName)
@@ -58,43 +65,17 @@ namespace Sweet.Redis
 
         public long? ConnectedSlaves { get { return GetInteger("connected_slaves"); } } // 1
 
-        public IDictionary<string, string> Slave0 { get { return GetAttributes("slave0"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave1 { get { return GetAttributes("slave1"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave2 { get { return GetAttributes("slave2"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave3 { get { return GetAttributes("slave3"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave4 { get { return GetAttributes("slave4"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave5 { get { return GetAttributes("slave5"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave6 { get { return GetAttributes("slave6"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave7 { get { return GetAttributes("slave7"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave8 { get { return GetAttributes("slave8"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
-
-        public IDictionary<string, string> Slave9 { get { return GetAttributes("slave9"); } } // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        public RedisServerSlaveInfo[] Slaves // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
+        {
+            get 
+            {
+                if (m_Slaves == null)
+                    m_Slaves = m_SlavesList.ToArray();
+                return m_Slaves;
+            }
+        } 
 
         public string MasterReplId { get { return Get("master_replid"); } } // c11020e01bc557109082cb298de257f7c04e4914
-
-        public string MasterReplId2 { get { return Get("master_replid2"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId3 { get { return Get("master_replid3"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId4 { get { return Get("master_replid4"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId5 { get { return Get("master_replid5"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId6 { get { return Get("master_replid6"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId7 { get { return Get("master_replid7"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId8 { get { return Get("master_replid8"); } } // 0000000000000000000000000000000000000000
-
-        public string MasterReplId9 { get { return Get("master_replid9"); } } // 0000000000000000000000000000000000000000
 
         public long? MasterReplOffset { get { return GetInteger("master_repl_offset"); } } // 1748511
 
@@ -109,5 +90,31 @@ namespace Sweet.Redis
         public long? ReplBacklogHistLen { get { return GetInteger("repl_backlog_histlen"); } } // 1048576
 
         #endregion Properties
+
+        #region Methods
+
+        protected override string OnSetValue(string name, string value)
+        {
+            if (!String.IsNullOrEmpty(name))
+            {
+                var slaveLength = "slave".Length;
+                if ((name.Length > slaveLength) && name.StartsWith("slave", StringComparison.OrdinalIgnoreCase))
+                {
+                    var indexStr = name.Substring(slaveLength);
+                    if (!String.IsNullOrEmpty(indexStr))
+                    {
+                        int index;
+                        if (int.TryParse(indexStr, out index))
+                        {
+                            var info = new RedisServerSlaveInfo(index, value);
+                            m_SlavesList.Add(info);
+                        }
+                    }
+                }
+            }
+            return base.OnSetValue(name, value);
+        }
+
+        #endregion Methods
     }
 }

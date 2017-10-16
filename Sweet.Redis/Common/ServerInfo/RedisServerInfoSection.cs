@@ -54,7 +54,6 @@ namespace Sweet.Redis
 
         protected internal virtual void Parse(IList<string> lines)
         {
-
             if (lines != null)
             {
                 var length = lines.Count;
@@ -63,12 +62,12 @@ namespace Sweet.Redis
                     var line = (lines[index] ?? String.Empty);
                     if (!String.IsNullOrEmpty(line))
                     {
-                        int pos = line.IndexOf(':');
+                        var pos = line.IndexOf(':');
                         if (pos == -1)
                         {
                             var name = (ToItemName(line) ?? String.Empty).TrimEnd();
                             if (!String.IsNullOrEmpty(name))
-                                this[name] = null;
+                                this[name] = OnSetValue(name, null);
                         }
                         else
                         {
@@ -76,17 +75,22 @@ namespace Sweet.Redis
                             if (!String.IsNullOrEmpty(name))
                             {
                                 if (pos == line.Length - 1)
-                                    this[name] = null;
+                                    this[name] = OnSetValue(name, null);
                                 else
                                 {
                                     var value = (line.Substring(pos + 1, line.Length - pos - 1) ?? String.Empty).TrimEnd();
-                                    this[name] = value;
+                                    this[name] = OnSetValue(name, value);
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+
+        protected virtual string OnSetValue(string name, string value)
+        {
+            return value;
         }
 
         #endregion Methods
