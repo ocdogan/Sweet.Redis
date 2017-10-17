@@ -68,7 +68,7 @@ namespace Sweet.Redis.ConsoleTest
             // PipelineTest4();
             // PipelineTest5();
 
-            SentinelTest1();
+            // SentinelTest1();
             // SentinelTest2();
             // SentinelTest3();
             // SentinelTest4();
@@ -77,7 +77,20 @@ namespace Sweet.Redis.ConsoleTest
             // SentinelTest7();
             // SentinelTest8();
             // SentinelTest9();
+
+            ManagerTest1();
         }
+
+        #region Manager
+
+        static void ManagerTest1()
+        {
+            using (var manager = new RedisManager("My Manager", new RedisSettings("127.0.0.1",
+                       RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
+            { }
+        }
+
+        #endregion Manager
 
         #region Sentinel
 
