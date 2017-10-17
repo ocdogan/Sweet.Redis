@@ -31,7 +31,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal abstract class RedisConnection : RedisDisposable, IRedisConnection
+    internal abstract class RedisConnection : RedisDisposable, IRedisConnection, IRedisNamedObject, IRedisIdentifiedObject
     {
         #region Constants
 
@@ -41,6 +41,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private Guid m_Id;
         private string m_Name;
 
         private RedisRole m_DesiredRole = RedisRole.Undefined;
@@ -71,11 +72,13 @@ namespace Sweet.Redis
             if (onReleaseSocket == null)
                 throw new RedisFatalException(new ArgumentNullException("releaseAction"));
 
+            m_Id = Guid.NewGuid();
+
             m_DesiredRole = role;
             m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
-            m_Name = String.IsNullOrEmpty(name) ? Guid.NewGuid().ToString("N").ToUpper() : name;
+            m_Name = !String.IsNullOrEmpty(name) ? name : m_Id.ToString("N").ToUpper();
 
             if ((socket != null) && socket.Connected)
             {
@@ -135,6 +138,11 @@ namespace Sweet.Redis
         public RedisRole DesiredRole
         {
             get { return m_DesiredRole; }
+        }
+
+        public Guid Id
+        {
+            get { return m_Id; }
         }
 
         public long LastError
