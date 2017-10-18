@@ -291,7 +291,7 @@ namespace Sweet.Redis
                                 var repInfo = serverInfo.Replication;
                                 if (!ReferenceEquals(repInfo, null))
                                 {
-                                    var roleStr = (repInfo.Role ?? String.Empty).ToLower();
+                                    var roleStr = (repInfo.Role ?? String.Empty).ToLowerInvariant();
                                     switch (roleStr)
                                     {
                                         case "master":

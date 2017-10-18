@@ -33,7 +33,7 @@ namespace Sweet.Redis
 
         internal RedisRoleInfo(string role)
         {
-            RoleName = role;
+            RoleName = (role ?? String.Empty).ToLowerInvariant();
             switch (role)
             {
                 case "master":
