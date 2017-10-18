@@ -124,7 +124,7 @@ namespace Sweet.Redis
             return NextPool(readOnly).GetDb(dbIndex);
         }
 
-        public IRedisPubSubChannel GetPubSubChannel(Func<RedisNodeInfo, bool> nodeSelector)
+        public IRedisPubSubChannel GetPubSubChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             if (nodeSelector != null)
             {
@@ -142,7 +142,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public IRedisMonitorChannel GetMonitorChannel(Func<RedisNodeInfo, bool> nodeSelector)
+        public IRedisMonitorChannel GetMonitorChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             if (nodeSelector != null)
             {
@@ -160,7 +160,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private RedisConnectionPool SelectPool(RedisManagedNodesGroup group, Func<RedisNodeInfo, bool> nodeSelector)
+        private RedisConnectionPool SelectPool(RedisManagedNodesGroup group, Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             if (group != null)
             {
@@ -172,7 +172,7 @@ namespace Sweet.Redis
                         if (node != null && !node.Disposed)
                         {
                             var pool = node.Pool;
-                            if (pool != null && !pool.Disposed && 
+                            if (pool != null && !pool.Disposed &&
                                 nodeSelector(node.GetNodeInfo()))
                                 return pool;
                         }
@@ -306,10 +306,10 @@ namespace Sweet.Redis
                     pool.Dispose();
                 else
                 {
-                    if (role == RedisRole.SlaveOrMaster) 
+                    if (role == RedisRole.SlaveOrMaster)
                         role = RedisRole.Slave;
                     return new RedisManagedNode(pool, role);
-                }               
+                }
             }
             catch (Exception)
             { }

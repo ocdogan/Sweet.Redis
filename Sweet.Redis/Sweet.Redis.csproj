@@ -69,7 +69,7 @@
     <Compile Include="Connection\Manager\RedisManagedNode.cs" />
     <Compile Include="Connection\Interfaces\IRedisPubSubChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisMonitorChannel.cs" />
-    <Compile Include="Connection\Manager\RedisNodeInfo.cs" />
+    <Compile Include="Connection\Manager\RedisManagedNodeInfo.cs" />
     <Compile Include="Connection\RedisClient.cs" />
     <Compile Include="Connection\RedisSingleConnectionProvider.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelClient.cs" />

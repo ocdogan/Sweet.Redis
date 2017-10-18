@@ -24,11 +24,11 @@
 
 namespace Sweet.Redis
 {
-    public struct RedisNodeInfo
+    public struct RedisManagedNodeInfo
     {
         #region .Ctors
 
-        public RedisNodeInfo(RedisEndPoint endPoint, RedisRole role)
+        public RedisManagedNodeInfo(RedisEndPoint endPoint, RedisRole role)
             : this()
         {
             Role = role;

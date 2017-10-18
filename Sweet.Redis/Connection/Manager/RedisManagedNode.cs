@@ -69,9 +69,9 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisNodeInfo GetNodeInfo()
+        public RedisManagedNodeInfo GetNodeInfo()
         {
-            return new RedisNodeInfo(m_EndPoint, Role);
+            return new RedisManagedNodeInfo(m_EndPoint, Role);
         }
 
         #endregion Methods

@@ -92,7 +92,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisEndPoint(string host, int port)
+        public RedisEndPoint(string host, int port)
         {
             Host = host;
             Port = port;
