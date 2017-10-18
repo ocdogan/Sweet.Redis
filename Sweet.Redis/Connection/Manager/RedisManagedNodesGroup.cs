@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisClusterGroup : RedisDisposable
+    internal class RedisManagedNodesGroup : RedisDisposable
     {
         #region Field Members
 
@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisClusterGroup(RedisRole role, RedisConnectionPool[] nodes)
+        public RedisManagedNodesGroup(RedisRole role, RedisConnectionPool[] nodes)
         {
             Role = role;
             m_Nodes = nodes;
@@ -51,12 +51,6 @@ namespace Sweet.Redis
 
         #endregion .Ctors
 
-        #region Properties
-
-        public RedisRole Role { get; private set; }
-
-        #endregion Properties
-
         #region Destructors
 
         protected override void OnDispose(bool disposing)
@@ -66,6 +60,12 @@ namespace Sweet.Redis
         }
 
         #endregion Destructors
+
+        #region Properties
+
+        public RedisRole Role { get; private set; }
+
+        #endregion Properties
 
         #region Methods
 

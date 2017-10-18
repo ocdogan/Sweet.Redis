@@ -61,8 +61,8 @@ namespace Sweet.Redis
             if (connectionLimiter == null)
                 connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);
 
-            m_ConnectionLimiter = connectionLimiter(settings.MaxCount) ??
-                                                   new RedisConnectionLimiter(settings.MaxCount);
+            m_ConnectionLimiter = connectionLimiter(settings.MaxConnectionCount) ??
+                                                   new RedisConnectionLimiter(settings.MaxConnectionCount);
         }
 
         #endregion .Ctors
@@ -158,10 +158,10 @@ namespace Sweet.Redis
             var connectionTimeout = settings.ConnectionTimeout;
             connectionTimeout = connectionTimeout <= 0 ? RedisConstants.MaxConnectionTimeout : connectionTimeout;
 
-            var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.WaitTimeout / spinStepTimeoutMs),
+            var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.ConnectionWaitTimeout / spinStepTimeoutMs),
                 spinStepTimeoutMs, connectionTimeout, connectionTimeout);
 
-            var limiterWait = (settings.MaxCount < 2) ? 0 : retryInfo.SpinStepTimeoutMs;
+            var limiterWait = (settings.MaxConnectionCount < 2) ? 0 : retryInfo.SpinStepTimeoutMs;
 
             while (retryInfo.RemainingTime > 0)
             {

@@ -30,7 +30,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisManager : RedisDisposable, IRedisNamedObject, IRedisIdentifiedObject
+    public class RedisManager : RedisDisposable, IRedisManager, IRedisNamedObject, IRedisIdentifiedObject
     {
         #region InitializationState
 
@@ -43,38 +43,13 @@ namespace Sweet.Redis
 
         #endregion InitializationState
 
-        #region RedisClusterNode
-
-        private class RedisClusterNode
-        {
-            #region .Ctors
-
-            public RedisClusterNode(RedisConnectionPool pool, RedisRole role)
-            {
-                Pool = pool;
-                Role = role;
-            }
-
-            #endregion .Ctors
-
-            #region Properties
-
-            public RedisConnectionPool Pool { get; private set; }
-
-            public RedisRole Role { get; private set; }
-
-            #endregion Properties
-        }
-
-        #endregion RedisClusterNode
-
         #region Field Members
 
         private Guid m_Id;
         private string m_Name;
 
         private RedisSettings m_Settings;
-        private RedisClusterGroup[] m_Groups;
+        private RedisCluster m_ManagedCluster;
 
         private long m_InitializationState;
         private readonly object m_SyncRoot = new object();
@@ -103,8 +78,9 @@ namespace Sweet.Redis
 
             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
 
-            var groups = Interlocked.Exchange(ref m_Groups, null);
-            DisposeGroups(groups);
+            var cluster = Interlocked.Exchange(ref m_ManagedCluster, null);
+            if (cluster != null)
+                cluster.Dispose();
         }
 
         #endregion Destructors
@@ -130,7 +106,44 @@ namespace Sweet.Redis
 
         #region Methods
 
-        private static void DisposeGroups(RedisClusterGroup[] groups)
+        public IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            return NextPool(readOnly).BeginTransaction(dbIndex);
+        }
+
+        public IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            return NextPool(readOnly).CreatePipeline(dbIndex);
+        }
+
+        public IRedisDb GetDb(bool readOnly, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            return NextPool(readOnly).GetDb(dbIndex);
+        }
+
+        private RedisConnectionPool NextPool(bool readOnly)
+        {
+            InitializeNodes();
+
+            var cluster = m_ManagedCluster;
+            if (cluster == null)
+                throw new RedisFatalException("Can not discover cluster");
+
+            var group = readOnly ? (cluster.Slaves ?? cluster.Masters) : cluster.Masters;
+            if (group == null)
+                throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"));
+
+            var pool = group.Next();
+            if (pool == null)
+                throw new RedisFatalException(String.Format("No {0} found", readOnly ? "slave" : "master"));
+
+            return pool;
+        }
+
+        private static void DisposeGroups(RedisManagedNodesGroup[] groups)
         {
             if (groups != null)
             {
@@ -151,8 +164,6 @@ namespace Sweet.Redis
 
         private void InitializeNodes()
         {
-            ValidateNotDisposed();
-
             if (Interlocked.CompareExchange(ref m_InitializationState, (long)InitializationState.Initializing, (long)InitializationState.Undefined) !=
                 (long)InitializationState.Initialized)
             {
@@ -160,65 +171,89 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_InitializationState) != (long)InitializationState.Initialized)
                     {
-                        var newGroups = CreateGroups();
-
-                        RedisClusterGroup[] oldGroups = null;
+                        var newCluster = CreateCluster();
+                        var oldCluster = (RedisCluster)null;
                         try
                         {
-                            oldGroups = Interlocked.Exchange(ref m_Groups, newGroups ?? new RedisClusterGroup[0]);
+                            oldCluster = Interlocked.Exchange(ref m_ManagedCluster, newCluster);
                             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
                         }
                         catch (Exception)
                         {
                             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
+                            if (newCluster != null)
+                                newCluster.Dispose();
                             throw;
                         }
-
-                        DisposeGroups(oldGroups);
+                        finally
+                        {
+                            if (oldCluster != null)
+                                oldCluster.Dispose();
+                        }
                     }
                 }
             }
         }
 
-        private RedisClusterGroup[] CreateGroups()
+        private RedisCluster CreateCluster()
         {
             var ipEPSettings = SplitToIPEndPoints(m_Settings);
-            if (ipEPSettings.Length == 1)
+            if (ipEPSettings != null && ipEPSettings.Length > 0)
             {
-                var node = CreateNode(Name, ipEPSettings[0]);
-                if (node != null)
-                    return new[] { new RedisClusterGroup(node.Role, new[] { node.Pool }) };
-            }
-            else if (ipEPSettings.Length > 1)
-            {
-                var nodes = new List<RedisClusterNode>();
-                foreach (var setting in ipEPSettings)
-                {
-                    var node = CreateNode(Name, setting);
-                    if (node != null)
-                        nodes.Add(node);
-                }
+                var groups = ipEPSettings
+                    .Select(setting => CreateNode(Name, setting))
+                    .Where(node => node != null)
+                    .GroupBy(
+                            node => node.Role,
+                            node => node.Pool,
+                            (role, group) => new RedisManagedNodesGroup(role, group.ToArray()))
+                    .ToList();
 
-                if (nodes.Count > 0)
-                    return nodes.GroupBy(
-                        node => node.Role,
-                        node => node.Pool,
-                        (role, group) => new RedisClusterGroup(role, group.ToArray())).ToArray();
+                if (groups != null && groups.Count > 0)
+                {
+                    // 0: Masters, 1: Slaves, 2: Sentinels
+                    const int MastersPos = 0, SlavesPos = 1, SentinelsPos = 2;
+
+                    var result = new RedisManagedNodesGroup[3];
+                    foreach (var group in groups)
+                    {
+                        switch (group.Role)
+                        {
+                            case RedisRole.Master:
+                                result[MastersPos] = group;
+                                break;
+                            case RedisRole.Slave:
+                                result[SlavesPos] = group;
+                                break;
+                            case RedisRole.Sentinel:
+                                result[SentinelsPos] = group;
+                                break;
+                        }
+                    }
+
+                    return new RedisCluster(result[MastersPos], result[SlavesPos], result[SentinelsPos]);
+                }
             }
-            return null;
+            return new RedisCluster(null);
         }
 
-        private static RedisClusterNode CreateNode(string name, RedisSettings settings)
+        private static RedisManagedNode CreateNode(string name, RedisSettings settings)
         {
             try
             {
                 var pool = new RedisConnectionPool(name, settings);
 
                 var role = DiscoverNodeRole(pool);
-                if (role != RedisRole.Undefined)
-                    return new RedisClusterNode(pool, role);
+                if (role == RedisRole.Undefined)
+                    pool.Dispose();
+                else
+                {
+                    if (role == RedisRole.SlaveOrMaster) 
+                        role = RedisRole.Slave;
+                    return new RedisManagedNode(pool, role);
+                }
 
-                pool.Dispose();
+                
             }
             catch (Exception)
             { }

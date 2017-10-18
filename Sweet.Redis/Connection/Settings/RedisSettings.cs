@@ -40,52 +40,41 @@ namespace Sweet.Redis
         public RedisSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout, 
-            int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
-            int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
+            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
             bool useAsyncCompleter = true, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, maxCount, waitTimeout, idleTimeout, readBufferSize, writeBufferSize,
+                sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
                 useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
-        {
-            UseAsyncCompleter = useAsyncCompleter;
-            IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
-            MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
-            ReadBufferSize = Math.Max(0, readBufferSize);
-            WaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, waitTimeout));
-            WriteBufferSize = Math.Max(0, writeBufferSize);
-        }
+        { }
 
         public RedisSettings(RedisEndPoint[] endPoints = null,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxCount = RedisConstants.DefaultMaxConnectionCount, int waitTimeout = RedisConstants.DefaultWaitTimeout,
-            int idleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
+            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
             bool useAsyncCompleter = true, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base(endPoints, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, useSsl,
-                   sslCertificateSelection, sslCertificateValidation)
+            : base(endPoints, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, 
+                   readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         {
             UseAsyncCompleter = useAsyncCompleter;
-            IdleTimeout = idleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, idleTimeout));
-            MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
-            ReadBufferSize = Math.Max(0, readBufferSize);
-            WaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, waitTimeout));
-            WriteBufferSize = Math.Max(0, writeBufferSize);
+            ConnectionIdleTimeout = connectionIdleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, connectionIdleTimeout));
+            MaxConnectionCount = Math.Max(Math.Min(maxConnectionCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
+            ConnectionWaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, connectionWaitTimeout));
         }
 
         #endregion .Ctors
 
         #region Properties
 
-        public int IdleTimeout { get; private set; }
-        public int MaxCount { get; private set; }
-        public int ReadBufferSize { get; private set; }
+        public int ConnectionIdleTimeout { get; private set; }
+        public int ConnectionWaitTimeout { get; private set; }
+        public int MaxConnectionCount { get; private set; }
         public bool UseAsyncCompleter { get; private set; }
-        public int WaitTimeout { get; private set; }
-        public int WriteBufferSize { get; private set; }
 
         # endregion Properties
 
@@ -95,7 +84,7 @@ namespace Sweet.Redis
         {
             return new RedisSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
                 MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
-                MaxCount, WaitTimeout, IdleTimeout, ReadBufferSize, WriteBufferSize,
+                MaxConnectionCount, ConnectionWaitTimeout, ConnectionIdleTimeout, ReadBufferSize, WriteBufferSize,
                 UseAsyncCompleter, UseSsl, SslCertificateSelection, SslCertificateValidation);
         }
 

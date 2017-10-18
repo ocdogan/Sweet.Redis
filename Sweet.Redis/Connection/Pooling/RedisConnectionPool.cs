@@ -251,16 +251,19 @@ namespace Sweet.Redis
 
         public IRedisTransaction BeginTransaction(int dbIndex = 0)
         {
+            ValidateNotDisposed();
             return new RedisTransaction(this, dbIndex);
         }
 
         public IRedisPipeline CreatePipeline(int dbIndex = 0)
         {
+            ValidateNotDisposed();
             return new RedisPipeline(this, dbIndex);
         }
 
         public IRedisDb GetDb(int dbIndex = 0)
         {
+            ValidateNotDisposed();
             return new RedisDb(this, dbIndex);
         }
 
@@ -469,7 +472,7 @@ namespace Sweet.Redis
             try
             {
                 var now = DateTime.UtcNow;
-                var idleTimeout = (GetSettings() ?? RedisSettings.Default).IdleTimeout;
+                var idleTimeout = (GetSettings() ?? RedisSettings.Default).ConnectionIdleTimeout;
 
                 lock (m_MemberStoreLock)
                 {
