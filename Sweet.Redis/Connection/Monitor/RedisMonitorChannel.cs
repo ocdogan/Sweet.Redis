@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisMonitorChannel : RedisContinuousChannel<RedisMonitorMessage>
+    public class RedisMonitorChannel : RedisContinuousChannel<RedisMonitorMessage>, IRedisMonitorChannel
     {
         #region .Ctors
 

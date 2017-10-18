@@ -175,7 +175,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public RedisMonitorChannel MonitorChannel
+        public IRedisMonitorChannel MonitorChannel
         {
             get
             {
@@ -198,7 +198,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisPubSubChannel PubSubChannel
+        public IRedisPubSubChannel PubSubChannel
         {
             get
             {

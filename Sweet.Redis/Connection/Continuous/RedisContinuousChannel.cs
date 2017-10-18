@@ -253,7 +253,6 @@ namespace Sweet.Redis
         protected virtual void OnUnsubscribe(Action<T> callback)
         { }
 
-
         public void Quit()
         {
             if (!Disposed)

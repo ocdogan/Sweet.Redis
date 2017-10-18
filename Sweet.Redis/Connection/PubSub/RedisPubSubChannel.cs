@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisPubSubChannel : RedisInternalDisposable
+    public class RedisPubSubChannel : RedisInternalDisposable, IRedisPubSubChannel
     {
         #region RedisPubSubSubscriptions
 

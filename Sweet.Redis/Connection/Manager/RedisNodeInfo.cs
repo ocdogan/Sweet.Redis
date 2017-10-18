@@ -22,58 +22,27 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System.Threading;
-
 namespace Sweet.Redis
 {
-    internal class RedisManagedNode : RedisInternalDisposable
+    public struct RedisNodeInfo
     {
-        #region Field Members
-
-        private RedisEndPoint m_EndPoint;
-        private RedisConnectionPool m_Pool;
-
-        #endregion Field Members
-
         #region .Ctors
 
-        public RedisManagedNode(RedisConnectionPool pool, RedisRole role)
+        public RedisNodeInfo(RedisEndPoint endPoint, RedisRole role)
+            : this()
         {
             Role = role;
-            m_Pool = pool;
-            m_EndPoint = pool.Settings.EndPoints[0];
+            EndPoint = endPoint;
         }
 
         #endregion .Ctors
 
-        #region Destructors
-
-        protected override void OnDispose(bool disposing)
-        {
-            base.OnDispose(disposing);
-
-            var pool = Interlocked.Exchange(ref m_Pool, null);
-            if (pool != null)
-                pool.Dispose();
-        }
-
-        #endregion Destructors
-
         #region Properties
 
-        public RedisConnectionPool Pool { get { return m_Pool; } }
+        public RedisEndPoint EndPoint { get; private set; }
 
         public RedisRole Role { get; private set; }
 
         #endregion Properties
-
-        #region Methods
-
-        public RedisNodeInfo GetNodeInfo()
-        {
-            return new RedisNodeInfo(m_EndPoint, Role);
-        }
-
-        #endregion Methods
     }
 }

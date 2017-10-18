@@ -34,13 +34,13 @@ namespace Sweet.Redis
         private int m_NodeIndex;
         private readonly object m_SyncRoot = new object();
 
-        private RedisConnectionPool[] m_Nodes;
+        private RedisManagedNode[] m_Nodes;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisManagedNodesGroup(RedisRole role, RedisConnectionPool[] nodes)
+        public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes)
         {
             Role = role;
             m_Nodes = nodes;
@@ -64,6 +64,21 @@ namespace Sweet.Redis
         #region Properties
 
         public RedisRole Role { get; private set; }
+
+        internal RedisManagedNode[] Nodes
+        {
+            get
+            {
+                var nodes = m_Nodes;
+                if (nodes != null)
+                {
+                    var result = new RedisManagedNode[nodes.Length];
+                    Array.Copy(nodes, result, result.Length);
+                    return result;
+                }
+                return null;
+            }
+        }
 
         #endregion Properties
 
@@ -101,7 +116,7 @@ namespace Sweet.Redis
                     var nodes = m_Nodes;
                     if (m_NodeIndex >= nodes.Length)
                         m_NodeIndex = 0;
-                    return nodes[m_NodeIndex++];
+                    return nodes[m_NodeIndex++].Pool;
                 }
             }
             return null;

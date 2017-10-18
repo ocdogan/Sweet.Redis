@@ -31,8 +31,8 @@ namespace Sweet.Redis
         IRedisDb GetDb(int dbIndex = 0);
         IRedisTransaction BeginTransaction(int dbIndex = 0);
 
-        RedisMonitorChannel MonitorChannel { get; }
-        RedisPubSubChannel PubSubChannel { get; }
+        IRedisMonitorChannel MonitorChannel { get; }
+        IRedisPubSubChannel PubSubChannel { get; }
         RedisSettings Settings { get; }
     }
 }

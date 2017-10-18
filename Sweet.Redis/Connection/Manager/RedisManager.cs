@@ -124,6 +124,64 @@ namespace Sweet.Redis
             return NextPool(readOnly).GetDb(dbIndex);
         }
 
+        public IRedisPubSubChannel GetPubSubChannel(Func<RedisNodeInfo, bool> nodeSelector)
+        {
+            if (nodeSelector != null)
+            {
+                var cluster = m_ManagedCluster;
+                if (cluster != null && !cluster.Disposed)
+                {
+                    var pool = SelectPool(cluster.Slaves, nodeSelector);
+                    if (pool == null)
+                        pool = SelectPool(cluster.Masters, nodeSelector);
+
+                    if (pool != null && !pool.Disposed)
+                        return pool.PubSubChannel;
+                }
+            }
+            return null;
+        }
+
+        public IRedisMonitorChannel GetMonitorChannel(Func<RedisNodeInfo, bool> nodeSelector)
+        {
+            if (nodeSelector != null)
+            {
+                var cluster = m_ManagedCluster;
+                if (cluster != null && !cluster.Disposed)
+                {
+                    var pool = SelectPool(cluster.Slaves, nodeSelector);
+                    if (pool == null)
+                        pool = SelectPool(cluster.Masters, nodeSelector);
+
+                    if (pool != null && !pool.Disposed)
+                        return pool.MonitorChannel;
+                }
+            }
+            return null;
+        }
+
+        private RedisConnectionPool SelectPool(RedisManagedNodesGroup group, Func<RedisNodeInfo, bool> nodeSelector)
+        {
+            if (group != null)
+            {
+                var nodes = group.Nodes;
+                if (nodes != null)
+                {
+                    foreach (var node in nodes)
+                    {
+                        if (node != null && !node.Disposed)
+                        {
+                            var pool = node.Pool;
+                            if (pool != null && !pool.Disposed && 
+                                nodeSelector(node.GetNodeInfo()))
+                                return pool;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         private RedisConnectionPool NextPool(bool readOnly)
         {
             InitializeNodes();
@@ -205,7 +263,7 @@ namespace Sweet.Redis
                     .Where(node => node != null)
                     .GroupBy(
                             node => node.Role,
-                            node => node.Pool,
+                            node => new RedisManagedNode(node.Pool, node.Role),
                             (role, group) => new RedisManagedNodesGroup(role, group.ToArray()))
                     .ToList();
 
@@ -251,9 +309,7 @@ namespace Sweet.Redis
                     if (role == RedisRole.SlaveOrMaster) 
                         role = RedisRole.Slave;
                     return new RedisManagedNode(pool, role);
-                }
-
-                
+                }               
             }
             catch (Exception)
             { }
