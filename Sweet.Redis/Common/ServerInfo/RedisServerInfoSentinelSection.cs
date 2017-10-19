@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 
 namespace Sweet.Redis
 {
@@ -39,6 +40,13 @@ namespace Sweet.Redis
     */
     public class RedisServerInfoSentinelSection : RedisServerInfoSection
     {
+        #region Field Members
+
+        private RedisServerMasterInfo[] m_Masters;
+        private List<RedisServerMasterInfo> m_MastersList = new List<RedisServerMasterInfo>();
+
+        #endregion Field Members
+
         #region .Ctors
 
         internal RedisServerInfoSentinelSection(string sectionName)
@@ -48,6 +56,19 @@ namespace Sweet.Redis
         #endregion .Ctors
 
         #region Properties
+
+        public RedisServerMasterInfo[] Masters // name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
+        {
+            get
+            {
+                if (m_Masters == null)
+                {
+                    var list = Interlocked.Exchange(ref m_MastersList, null);
+                    m_Masters = list != null ? list.ToArray() : new RedisServerMasterInfo[0];
+                }
+                return m_Masters;
+            }
+        }
 
         public long? SentinelMasters { get { return GetInteger("sentinel_masters"); } } // 1
 
@@ -59,26 +80,29 @@ namespace Sweet.Redis
 
         public long? SentinelSimulateFailureFlags { get { return GetInteger("sentinel_simulate_failure_flags"); } } // 0
 
-        public IDictionary<string, string> Master0 { get { return GetAttributes("master0"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master1 { get { return GetAttributes("master1"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master2 { get { return GetAttributes("master2"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master3 { get { return GetAttributes("master3"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master4 { get { return GetAttributes("master4"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master5 { get { return GetAttributes("master5"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master6 { get { return GetAttributes("master6"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master7 { get { return GetAttributes("master7"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master8 { get { return GetAttributes("master8"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-
-        public IDictionary<string, string> Master9 { get { return GetAttributes("master9"); } } // master0:name=mymaster,status=ok,address=127.0.0.1:6379,slaves=2,sentinels=1
-        
         #endregion Properties
+
+        #region Methods
+
+        protected override string OnSetValue(string name, string value)
+        {
+            if (!String.IsNullOrEmpty(name))
+            {
+                var masterLength = "master".Length;
+                if ((name.Length > masterLength) && name.StartsWith("master", StringComparison.OrdinalIgnoreCase))
+                {
+                    var indexStr = name.Substring(masterLength);
+                    if (!String.IsNullOrEmpty(indexStr))
+                    {
+                        int index;
+                        if (int.TryParse(indexStr, out index))
+                            m_MastersList.Add(new RedisServerMasterInfo(index, value));
+                    }
+                }
+            }
+            return base.OnSetValue(name, value);
+        }
+
+        #endregion Methods
     }
 }

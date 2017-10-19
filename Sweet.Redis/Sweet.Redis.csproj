@@ -244,6 +244,7 @@
     <Compile Include="Connection\EndPointStrategy\RedisEndPointStrategy.cs" />
     <Compile Include="Connection\Manager\RedisManager.cs" />
     <Compile Include="Connection\Manager\RedisManagedNodesGroup.cs" />
+    <Compile Include="Common\ServerInfo\RedisServerMasterInfo.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
