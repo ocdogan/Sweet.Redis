@@ -37,7 +37,7 @@ namespace Sweet.Redis
             : base(command, expectation, okIf, requestType)
         {
             if (requestType - RedisConstants.RedisBatchBase < 0)
-                throw new RedisException("Request type must be one of batch types");
+                throw new RedisException("Request type must be one of batch types", RedisErrorCode.InvalidParameter);
         }
 
         #endregion .Ctors
@@ -63,7 +63,7 @@ namespace Sweet.Redis
                     {
                         var queueResult = command.ExpectSimpleString(context, RedisConstants.QUEUED);
                         if (!queueResult)
-                            throw new RedisException("An error occured in transaction queue");
+                            throw new RedisException("An error occured in transaction queue", RedisErrorCode.CorruptResponse);
                         return;
                     }
 

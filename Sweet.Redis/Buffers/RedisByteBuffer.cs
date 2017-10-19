@@ -305,7 +305,7 @@ namespace Sweet.Redis
 
             var currLength = Interlocked.Read(ref m_Length);
             if (currLength + dataLength > int.MaxValue)
-                throw new RedisException("Buffer size exceeded maximum possible size");
+                throw new RedisException("Buffer size exceeded maximum possible size", RedisErrorCode.CorruptData);
 
             var chunks = GetChunks();
 
@@ -365,7 +365,7 @@ namespace Sweet.Redis
                     {
                         copyLength = int.MaxValue - (int)currLength;
                         if (copyLength <= 0)
-                            throw new RedisException("Buffer size exceeded maximum possible size");
+                            throw new RedisException("Buffer size exceeded maximum possible size", RedisErrorCode.CorruptData);
                     }
 
                     chunk = new byte[copyLength];
@@ -384,7 +384,7 @@ namespace Sweet.Redis
                         {
                             copyLength = int.MaxValue - (int)currLength;
                             if (copyLength <= 0)
-                                throw new RedisException("Buffer size exceeded maximum possible size");
+                                throw new RedisException("Buffer size exceeded maximum possible size", RedisErrorCode.CorruptData);
                         }
 
                         var oldChunk = Interlocked.Exchange(ref chunk, new byte[copyLength + chunkLength]);
@@ -403,7 +403,7 @@ namespace Sweet.Redis
                         {
                             copyLength = int.MaxValue - (int)currLength;
                             if (copyLength <= 0)
-                                throw new RedisException("Buffer size exceeded maximum possible size");
+                                throw new RedisException("Buffer size exceeded maximum possible size", RedisErrorCode.CorruptData);
                         }
 
                         chunk = new byte[copyLength];

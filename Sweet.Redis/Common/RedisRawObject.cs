@@ -123,7 +123,7 @@ namespace Sweet.Redis
 
             var type = response.Type;
             if (type == RedisRawObjectType.Undefined)
-                throw new RedisException("Undefined redis response");
+                throw new RedisException("Undefined redis response", RedisErrorCode.CorruptResponse);
 
             object data = null;
             var bytes = response.Data;
@@ -141,11 +141,11 @@ namespace Sweet.Redis
                         break;
                     case RedisRawObjectType.Integer:
                         if (bytes.Length == 0)
-                            throw new RedisException("Invalid integer value");
+                            throw new RedisException("Invalid integer value", RedisErrorCode.CorruptResponse);
 
                         long l;
                         if (!long.TryParse(Encoding.UTF8.GetString(bytes), out l))
-                            throw new RedisException("Invalid integer value");
+                            throw new RedisException("Invalid integer value", RedisErrorCode.CorruptResponse);
 
                         data = l;
                         break;

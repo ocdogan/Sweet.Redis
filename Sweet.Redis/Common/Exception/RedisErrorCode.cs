@@ -22,21 +22,25 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    interface IRedisConnectionPool
+    public class RedisErrorCode
     {
-        int IdleCount { get; }
-        int InUseCount { get; }
-        int AvailableCount { get; }
+        #region Constants
 
-        IRedisDb GetDb(int dbIndex = 0);
-        IRedisTransaction BeginTransaction(int dbIndex = 0);
+        public const int GenericError = 0; 
+        public const int ConnectionError = 1;
+        public const int SocketError = 2;
+        public const int ExecutionError = 3;
+        public const int CommandError = 4;
+        public const int CorruptData = 5;
+        public const int CorruptResponse = 6;
+        public const int MissingParameter = 7;
+        public const int ObjectDisposed = 8;
+        public const int NotSupported = 9;
+        public const int InvalidParameter = 10;
+        public const int UncompleteTransaction = 10;
 
-        IRedisMonitorChannel MonitorChannel { get; }
-        IRedisPubSubChannel PubSubChannel { get; }
-        RedisSettings Settings { get; }
+        #endregion Constants
     }
 }

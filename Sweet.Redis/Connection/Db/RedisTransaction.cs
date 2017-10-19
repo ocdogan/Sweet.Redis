@@ -75,7 +75,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (Interlocked.Read(ref m_State) == (long)RedisBatchState.Executing)
-                throw new RedisException("Transaction is being executed");
+                throw new RedisException("Transaction is being executed", RedisErrorCode.ExecutionError);
 
             var queue = m_WatchQ;
             if (queue == null)
@@ -171,7 +171,7 @@ namespace Sweet.Redis
                         catch (SocketException e)
                         {
                             Discard(requests, context, e);
-                            throw new RedisFatalException(e);
+                            throw new RedisFatalException(e, RedisErrorCode.SocketError);
                         }
                         catch (Exception e)
                         {

@@ -129,7 +129,7 @@ namespace Sweet.Redis
                     }
                 }
             }
-            throw new RedisFatalException("Cannot dequeue any socket");
+            throw new RedisFatalException("Cannot dequeue any socket", RedisErrorCode.SocketError);
         }
 
         public void Enqueue(RedisSocket socket)
@@ -156,7 +156,7 @@ namespace Sweet.Redis
                     }
                 }
             }
-            throw new RedisFatalException("Cannot enqueue socket");
+            throw new RedisWarnException("Cannot enqueue socket");
         }
 
         #endregion Methods

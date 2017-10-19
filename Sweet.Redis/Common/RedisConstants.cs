@@ -153,6 +153,7 @@ namespace Sweet.Redis
 
         public const int RedisBatchBase = 1000;
 
+        public const string Warning = "Warning";
         public const string FatalException = "Fatal exception";
 
         public const string OK = "OK";

@@ -70,7 +70,7 @@ namespace Sweet.Redis
         public override void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N").ToUpper());
+                throw new RedisFatalException(new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N").ToUpper()), RedisErrorCode.ObjectDisposed);
         }
 
         #endregion IRedisConnection Methods
@@ -183,7 +183,7 @@ namespace Sweet.Redis
         protected internal virtual T Expect<T>(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
             where T : RedisResult
         {
-            throw new RedisException("Undefined exception");
+            throw new RedisException("Undefined exception", RedisErrorCode.NotSupported);
         }
 
         #endregion Execution Methods

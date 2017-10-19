@@ -102,7 +102,7 @@ namespace Sweet.Redis
         private void ValidateNotCompleted()
         {
             if (Completed)
-                throw new RedisException("Buffer capacity exceeded");
+                throw new RedisException("Buffer capacity exceeded", RedisErrorCode.CorruptData);
         }
 
         public void Write(char val)

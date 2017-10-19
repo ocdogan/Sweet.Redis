@@ -294,7 +294,7 @@ namespace Sweet.Redis
                         if (!task.IsCompleted &&
                             (DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
                         {
-                            tcs.TrySetException(new RedisException("Request Timeout"));
+                            tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
                             return true;
                         }
                     }
@@ -331,7 +331,7 @@ namespace Sweet.Redis
                             timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
                             if ((DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
                             {
-                                tcs.TrySetException(new RedisException("Request Timeout"));
+                                tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
                                 return;
                             }
                         }
@@ -368,7 +368,7 @@ namespace Sweet.Redis
                             timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
                             if ((DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
                             {
-                                tcs.TrySetException(new RedisException("Request Timeout"));
+                                tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
                                 return;
                             }
                         }

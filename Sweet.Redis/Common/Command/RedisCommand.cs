@@ -185,14 +185,14 @@ namespace Sweet.Redis
                 if (response == null)
                 {
                     if (throwException)
-                        throw new RedisException("No data returned");
+                        throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
 
                 if (response.Type != RedisRawObjectType.SimpleString)
                 {
                     if (throwException)
-                        throw new RedisException("Invalid data returned");
+                        throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
                 return response.ReleaseData();
@@ -214,14 +214,14 @@ namespace Sweet.Redis
                 if (response == null)
                 {
                     if (throwException)
-                        throw new RedisException("No data returned");
+                        throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
 
                 if (response.Type != RedisRawObjectType.BulkString)
                 {
                     if (throwException)
-                        throw new RedisException("Invalid data returned");
+                        throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
                 return response.ReleaseData();
@@ -278,7 +278,7 @@ namespace Sweet.Redis
                 if (response == null)
                 {
                     if (throwException)
-                        throw new RedisException("No data returned");
+                        throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
                 return new RedisRaw(RedisRawObject.ToObject(response));
@@ -312,7 +312,7 @@ namespace Sweet.Redis
             if (connection == null)
             {
                 if (throwException)
-                    throw new ArgumentNullException("connection");
+                    throw new RedisFatalException(new ArgumentNullException("connection"), RedisErrorCode.MissingParameter);
                 return null;
             }
 
@@ -323,7 +323,7 @@ namespace Sweet.Redis
             {
                 response = connection.SendReceive(this);
                 if (ReferenceEquals(response, null) && throwException)
-                    throw new RedisException("Corrupted redis response data");
+                    throw new RedisException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
                 response.HandleError();
             }
             return response;
@@ -403,14 +403,14 @@ namespace Sweet.Redis
                 if (response == null)
                 {
                     if (throwException)
-                        throw new RedisException("No data returned");
+                        throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
 
                 if (response.Type != RedisRawObjectType.SimpleString)
                 {
                     if (throwException)
-                        throw new RedisException("Invalid data returned");
+                        throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
                 return response.ReleaseData();
@@ -432,14 +432,14 @@ namespace Sweet.Redis
                 if (response == null)
                 {
                     if (throwException)
-                        throw new RedisException("No data returned");
+                        throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
 
                 if (response.Type != RedisRawObjectType.BulkString)
                 {
                     if (throwException)
-                        throw new RedisException("Invalid data returned");
+                        throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
                 return response.ReleaseData();
@@ -496,7 +496,7 @@ namespace Sweet.Redis
                 if (response == null)
                 {
                     if (throwException)
-                        throw new RedisException("No data returned");
+                        throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                     return null;
                 }
                 return new RedisRaw(RedisRawObject.ToObject(response));
@@ -530,7 +530,7 @@ namespace Sweet.Redis
             if (context == null)
             {
                 if (throwException)
-                    throw new ArgumentNullException("context");
+                    throw new RedisFatalException(new ArgumentNullException("context"), RedisErrorCode.MissingParameter);
                 return null;
             }
 
@@ -538,7 +538,7 @@ namespace Sweet.Redis
             if (socket == null)
             {
                 if (throwException)
-                    throw new ArgumentNullException("socket");
+                    throw new RedisFatalException(new ArgumentNullException("socket"), RedisErrorCode.MissingParameter);
                 return null;
             }
 
@@ -552,7 +552,7 @@ namespace Sweet.Redis
                     response = reader.Execute(socket);
 
                 if (ReferenceEquals(response, null) && throwException)
-                    throw new RedisException("Corrupted redis response data");
+                    throw new RedisException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
                 response.HandleError();
             }
             return response;
@@ -567,7 +567,7 @@ namespace Sweet.Redis
             if (response == null)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return double.MinValue;
             }
 
@@ -575,7 +575,7 @@ namespace Sweet.Redis
                 response.Type == RedisRawObjectType.Undefined)
             {
                 if (throwException)
-                    throw new RedisException("Invalid data returned");
+                    throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                 return double.MinValue;
             }
 
@@ -583,7 +583,7 @@ namespace Sweet.Redis
             if (data == null || data.Length == 0)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return double.MinValue;
             }
 
@@ -592,7 +592,7 @@ namespace Sweet.Redis
                 return result;
 
             if (throwException)
-                throw new RedisException("Not a double result");
+                throw new RedisException("Not a double result", RedisErrorCode.CorruptResponse);
 
             return double.MinValue;
         }
@@ -602,14 +602,14 @@ namespace Sweet.Redis
             if (response == null)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
             if (response.Type != RedisRawObjectType.Integer)
             {
                 if (throwException)
-                    throw new RedisException("Invalid data returned");
+                    throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -617,7 +617,7 @@ namespace Sweet.Redis
             if (data == null || data.Length == 0)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -629,7 +629,7 @@ namespace Sweet.Redis
                 return result;
 
             if (throwException)
-                throw new RedisException("Not an integer result");
+                throw new RedisException("Not an integer result", RedisErrorCode.CorruptResponse);
 
             return null;
         }
@@ -640,7 +640,7 @@ namespace Sweet.Redis
             if (response == null)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -648,7 +648,7 @@ namespace Sweet.Redis
                 response.Type == RedisRawObjectType.Undefined)
             {
                 if (throwException)
-                    throw new RedisException("Invalid data returned");
+                    throw new RedisException("Invalid data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -659,7 +659,7 @@ namespace Sweet.Redis
             if (data.Length == 0)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -671,7 +671,7 @@ namespace Sweet.Redis
                 return result;
 
             if (throwException)
-                throw new RedisException("Not a double result");
+                throw new RedisException("Not a double result", RedisErrorCode.CorruptResponse);
 
             return null;
         }
@@ -681,7 +681,7 @@ namespace Sweet.Redis
             if (response == null)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -696,11 +696,11 @@ namespace Sweet.Redis
                     {
                         if (!throwException)
                             return data != null ? new string[] { Encoding.UTF8.GetString(data) } : null;
-                        throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
+                        throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
                     }
                 case RedisRawObjectType.Undefined:
                     if (throwException)
-                        throw new RedisException("Undefined respone data");
+                        throw new RedisException("Undefined respone data", RedisErrorCode.CorruptResponse);
                     return null;
                 case RedisRawObjectType.Array:
                     {
@@ -726,14 +726,14 @@ namespace Sweet.Redis
                                     if (item.Type == RedisRawObjectType.Undefined)
                                     {
                                         if (throwException)
-                                            throw new RedisException("Undefined respone data");
+                                            throw new RedisException("Undefined respone data", RedisErrorCode.CorruptResponse);
                                         return null;
                                     }
 
                                     if (item.Type == RedisRawObjectType.Array)
                                     {
                                         if (throwException)
-                                            throw new RedisException("Multi-array is not allowed for multi-data respone");
+                                            throw new RedisException("Multi-array is not allowed for multi-data respone", RedisErrorCode.CorruptResponse);
                                         return null;
                                     }
 
@@ -755,7 +755,7 @@ namespace Sweet.Redis
             if (response == null)
             {
                 if (throwException)
-                    throw new RedisException("No data returned");
+                    throw new RedisException("No data returned", RedisErrorCode.CorruptResponse);
                 return null;
             }
 
@@ -770,11 +770,11 @@ namespace Sweet.Redis
                     {
                         if (!throwException)
                             return data != null ? new byte[1][] { data } : null;
-                        throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
+                        throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
                     }
                 case RedisRawObjectType.Undefined:
                     if (throwException)
-                        throw new RedisException("Undefined respone data");
+                        throw new RedisException("Undefined respone data", RedisErrorCode.CorruptResponse);
                     return null;
                 case RedisRawObjectType.Array:
                     {
@@ -800,14 +800,14 @@ namespace Sweet.Redis
                                     if (item.Type == RedisRawObjectType.Undefined)
                                     {
                                         if (throwException)
-                                            throw new RedisException("Undefined respone data");
+                                            throw new RedisException("Undefined respone data", RedisErrorCode.CorruptResponse);
                                         return null;
                                     }
 
                                     if (item.Type == RedisRawObjectType.Array)
                                     {
                                         if (throwException)
-                                            throw new RedisException("Multi-array is not allowed for multi-data respone");
+                                            throw new RedisException("Multi-array is not allowed for multi-data respone", RedisErrorCode.CorruptResponse);
                                         return null;
                                     }
 

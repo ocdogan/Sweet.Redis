@@ -52,7 +52,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected), RedisErrorCode.ConnectionError);
             }
 
             var task = socket.SendAsync(data, 0, data.Length)
@@ -69,7 +69,7 @@ namespace Sweet.Redis
         public override RedisRawResponse SendReceive(IRedisCommand cmd)
         {
             if (cmd == null)
-                throw new RedisFatalException(new ArgumentNullException("cmd"));
+                throw new RedisFatalException(new ArgumentNullException("cmd"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();
             ValidateRole();

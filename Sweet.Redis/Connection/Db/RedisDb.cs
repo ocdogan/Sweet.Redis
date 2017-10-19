@@ -265,7 +265,7 @@ namespace Sweet.Redis
                 case RedisCommandExpect.SimpleStringBytes:
                     return (T)(object)Pool.ExpectSimpleStringBytes(command, ThrowOnError);
                 default:
-                    throw new RedisException("Undefined exception");
+                    throw new RedisException(String.Format("Undefined expectation type, {0}", expectation.ToString("F")), RedisErrorCode.NotSupported);
             }
         }
 

@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="Commands\Interfaces\IRedisSentinelCommands.cs" />
     <Compile Include="Commands\RedisSentinelCommands.cs" />
+    <Compile Include="Common\Exception\RedisErrorCode.cs" />
     <Compile Include="Common\Interfaces\IRedisIdentifiedObject.cs" />
     <Compile Include="Common\Interfaces\IRedisNamedObject.cs" />
     <Compile Include="Common\RedisEndPoint.cs" />

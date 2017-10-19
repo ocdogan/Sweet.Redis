@@ -245,7 +245,7 @@ namespace Sweet.Redis
         protected virtual void ValidateCompleted()
         {
             if (!IsCompleted)
-                throw new RedisException("Result is not completed");
+                throw new RedisException("Result is not completed", RedisErrorCode.UncompleteTransaction);
         }
 
         internal void SetCompleted()

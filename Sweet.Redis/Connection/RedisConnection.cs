@@ -221,7 +221,7 @@ namespace Sweet.Redis
                 if (role != m_DesiredRole &&
                     (role == RedisRole.Sentinel || m_DesiredRole == RedisRole.Sentinel ||
                      (role == RedisRole.Master && !(m_DesiredRole == RedisRole.Slave || m_DesiredRole == RedisRole.SlaveOrMaster))))
-                    throw new RedisException("Connected node does not satisfy the desired role");
+                    throw new RedisException("Connected node does not satisfy the desired role", RedisErrorCode.NotSupported);
             }
         }
 
@@ -293,7 +293,7 @@ namespace Sweet.Redis
             if (Disposed)
             {
                 if (!String.IsNullOrEmpty(Name))
-                    throw new RedisFatalException(new ObjectDisposedException(Name));
+                    throw new RedisFatalException(new ObjectDisposedException(Name), RedisErrorCode.ObjectDisposed);
                 base.ValidateNotDisposed();
             }
         }
@@ -384,7 +384,7 @@ namespace Sweet.Redis
                 Interlocked.CompareExchange(ref m_Socket, null, socket);
                 socket.DisposeSocket();
 
-                throw new RedisFatalException(e);
+                throw new RedisFatalException(e, RedisErrorCode.ConnectionError);
             }
             return socket;
         }
@@ -430,7 +430,7 @@ namespace Sweet.Redis
                     }
                 }
             }
-            throw new RedisFatalException("Can not resolve end-point address");
+            throw new RedisFatalException("Can not resolve end-point address", RedisErrorCode.ConnectionError);
         }
 
         private RedisSocket CreateSocket(RedisEndPoint endPoint, IPAddress ipAddress)
@@ -559,13 +559,13 @@ namespace Sweet.Redis
         public virtual RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
-            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending data.");
+            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending data.", RedisErrorCode.NotSupported);
         }
 
         public virtual RedisRawResponse SendReceive(IRedisCommand cmd)
         {
             ValidateNotDisposed();
-            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending command.");
+            throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending command.", RedisErrorCode.NotSupported);
         }
 
         public void Send(byte[] data)
@@ -588,7 +588,7 @@ namespace Sweet.Redis
         public void Send(IRedisCommand cmd)
         {
             if (cmd == null)
-                throw new RedisFatalException(new ArgumentNullException("cmd"));
+                throw new RedisFatalException(new ArgumentNullException("cmd"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();
             ValidateRole();
@@ -599,7 +599,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected), RedisErrorCode.ConnectionError);
             }
 
             cmd.WriteTo(socket);
@@ -616,7 +616,7 @@ namespace Sweet.Redis
                 SetLastError((long)SocketError.NotConnected);
                 SetState((long)RedisConnectionState.Failed);
 
-                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
+                throw new RedisFatalException(new SocketException((int)SocketError.NotConnected), RedisErrorCode.ConnectionError);
             }
             return socket.SendAsync(data, 0, data.Length);
         }
@@ -624,7 +624,7 @@ namespace Sweet.Redis
         public Task SendAsync(IRedisCommand cmd)
         {
             if (cmd == null)
-                throw new RedisFatalException(new ArgumentNullException("cmd"));
+                throw new RedisFatalException(new ArgumentNullException("cmd"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();
             ValidateRole();

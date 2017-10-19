@@ -127,13 +127,13 @@ namespace Sweet.Redis
 
                                     var execResult = reader.Execute(socket);
                                     if (ReferenceEquals(execResult, null))
-                                        throw new RedisFatalException("Corrupted redis response data");
+                                        throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
 
                                     execResult.HandleError();
 
                                     var rawObj = RedisRawObject.ToObject(execResult);
                                     if (ReferenceEquals(rawObj, null))
-                                        throw new RedisFatalException("Corrupted redis response data");
+                                        throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
 
                                     ProcessRequest(request, rawObj);
                                 }

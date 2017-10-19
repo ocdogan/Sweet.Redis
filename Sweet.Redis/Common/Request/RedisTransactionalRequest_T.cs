@@ -57,7 +57,7 @@ namespace Sweet.Redis
 
                     var queueResult = command.ExpectSimpleString(context, RedisConstants.QUEUED);
                     if (!queueResult)
-                        throw new RedisException("An error occured in transaction queue");
+                        throw new RedisException("An error occured in transaction queue", RedisErrorCode.CorruptResponse);
                 }
             }
             catch (Exception e)

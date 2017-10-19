@@ -33,6 +33,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private string m_Prefix;
+        private int m_ErrorCode;
 
         #endregion Field Members
 
@@ -42,33 +43,48 @@ namespace Sweet.Redis
             : base()
         { }
 
-        public RedisException(string message)
-            : base(message)
-        { }
+        public RedisException(int errorCode)
+            : base()
+        {
+            m_ErrorCode = errorCode;
+        }
 
-        public RedisException(string prefix, string message)
+        public RedisException(string message, int errorCode = RedisErrorCode.GenericError)
             : base(message)
         {
+            m_ErrorCode = errorCode;
+        }
+
+        public RedisException(string prefix, string message, int errorCode = RedisErrorCode.GenericError)
+            : base(message)
+        {
+            m_ErrorCode = errorCode;
             Prefix = prefix;
         }
 
-        public RedisException(string message, Exception innerException)
-            : base(message, innerException)
-        { }
-
-        public RedisException(string prefix, string message, Exception innerException)
+        public RedisException(string message, Exception innerException, int errorCode = RedisErrorCode.GenericError)
             : base(message, innerException)
         {
+            m_ErrorCode = errorCode;
+        }
+
+        public RedisException(string prefix, string message, Exception innerException, int errorCode = RedisErrorCode.GenericError)
+            : base(message, innerException)
+        {
+            m_ErrorCode = errorCode;
             Prefix = prefix;
         }
 
-        public RedisException(string message, Exception innerException, params object[] args)
-            : base(string.Format(message, args), innerException)
-        { }
-
-        public RedisException(string prefix, string message, Exception innerException, params object[] args)
+        public RedisException(string message, Exception innerException, int errorCode, params object[] args)
             : base(string.Format(message, args), innerException)
         {
+            m_ErrorCode = errorCode;
+        }
+
+        public RedisException(string prefix, string message, Exception innerException, int errorCode, params object[] args)
+            : base(string.Format(message, args), innerException)
+        {
+            m_ErrorCode = errorCode;
             Prefix = prefix;
         }
 
@@ -79,6 +95,11 @@ namespace Sweet.Redis
         #endregion .Ctors
 
         #region Properties
+
+        public int ErrorCode
+        {
+            get { return m_ErrorCode; }
+        }
 
         public virtual RedisExceptionType ExceptionType
         {

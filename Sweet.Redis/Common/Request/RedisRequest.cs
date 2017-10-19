@@ -156,7 +156,7 @@ namespace Sweet.Redis
         public virtual void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new RedisException(GetType().Name + " is disposed");
+                throw new RedisException(GetType().Name + " is disposed", RedisErrorCode.ObjectDisposed);
         }
 
         public abstract void Cancel();

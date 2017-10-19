@@ -360,7 +360,7 @@ namespace Sweet.Redis
             if (Type == RedisRawObjectType.Error)
             {
                 var data = m_Data;
-                throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned");
+                throw new RedisException(data != null && data.Length > 0 ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
             }
 
             var items = m_List;

@@ -36,38 +36,42 @@ namespace Sweet.Redis
             : base()
         { }
 
-        public RedisFatalException(string message)
-            : base(message)
+        public RedisFatalException(int errorCode)
+            : base(errorCode)
         { }
 
-        public RedisFatalException(string prefix, string message)
-            : base(message)
+        public RedisFatalException(string message, int errorCode = RedisErrorCode.GenericError)
+            : base(message, errorCode)
+        { }
+
+        public RedisFatalException(string prefix, string message, int errorCode = RedisErrorCode.GenericError)
+            : base(message, errorCode)
         {
             Prefix = prefix;
         }
 
-        public RedisFatalException(string message, Exception innerException)
-            : base(message, innerException)
+        public RedisFatalException(string message, Exception innerException, int errorCode = RedisErrorCode.GenericError)
+            : base(message, innerException, errorCode)
         { }
 
-        public RedisFatalException(string prefix, string message, Exception innerException)
-            : base(message, innerException)
+        public RedisFatalException(string prefix, string message, Exception innerException, int errorCode = RedisErrorCode.GenericError)
+            : base(message, innerException, errorCode)
         {
             Prefix = prefix;
         }
 
-        public RedisFatalException(string message, Exception innerException, params object[] args)
-            : base(string.Format(message, args), innerException)
+        public RedisFatalException(string message, Exception innerException, int errorCode, params object[] args)
+            : base(String.Format(message, args), innerException, errorCode)
         { }
 
-        public RedisFatalException(string prefix, string message, Exception innerException, params object[] args)
-            : base(string.Format(message, args), innerException)
+        public RedisFatalException(string prefix, string message, Exception innerException, int errorCode, params object[] args)
+            : base(String.Format(message, args), innerException, errorCode)
         {
             Prefix = prefix;
         }
 
-        public RedisFatalException(Exception innerException)
-            : base(RedisConstants.FatalException, innerException)
+        public RedisFatalException(Exception innerException, int errorCode = RedisErrorCode.GenericError)
+            : base(RedisConstants.FatalException, innerException, errorCode)
         { }
 
         protected RedisFatalException(SerializationInfo info, StreamingContext context)

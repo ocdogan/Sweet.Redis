@@ -593,63 +593,90 @@ namespace Sweet.Redis
 
         public void Close(int timeout)
         {
-            var onDisconnect = m_OnDisconnect;
-            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
+            try
+            {
+                var onDisconnect = m_OnDisconnect;
+                var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
 
-            m_Socket.Close(timeout);
+                m_Socket.Close(timeout);
 
-            if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
-                onDisconnect(this);
+                if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
+                    onDisconnect(this);
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
+            }
         }
-
 
         public void Connect(IPAddress address, int port)
         {
-            var onConnect = m_OnConnect;
-            var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
-
-            m_Socket.Connect(address, port);
-
-            if (!m_Socket.IsConnected())
-                m_RemoteEP = null;
-            else
+            try
             {
-                m_RemoteEP = new IPEndPoint(address, port);
-                if (wasDisconnected && (onConnect != null))
-                    onConnect(this);
+                var onConnect = m_OnConnect;
+                var wasDisconnected = (onConnect != null) && !m_Socket.IsConnected();
+
+                m_Socket.Connect(address, port);
+
+                if (!m_Socket.IsConnected())
+                    m_RemoteEP = null;
+                else
+                {
+                    m_RemoteEP = new IPEndPoint(address, port);
+                    if (wasDisconnected && (onConnect != null))
+                        onConnect(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
             }
         }
 
         public bool ConnectAsync(SocketAsyncEventArgs e)
         {
             if (e == null)
-                throw new RedisFatalException(new ArgumentNullException("e"));
+                throw new RedisFatalException(new ArgumentNullException("e"), RedisErrorCode.ConnectionError);
 
             var endPoint = e.RemoteEndPoint;
             if (endPoint == null)
-                throw new RedisFatalException(new ArgumentNullException("endPoint"));
+                throw new RedisFatalException(new ArgumentNullException("endPoint"), RedisErrorCode.ConnectionError);
 
             if (!(endPoint is IPEndPoint))
-                throw new RedisFatalException(new ArgumentNullException("EndPoint is not in expected form"));
+                throw new RedisFatalException(new ArgumentNullException("EndPoint is not in expected form"), RedisErrorCode.ConnectionError);
 
             e.Completed += OnConnectComplete;
 
-            return m_Socket.ConnectAsync(e);
+            try
+            {
+                return m_Socket.ConnectAsync(e);
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
+            }
         }
 
         private void OnConnectComplete(object sender, SocketAsyncEventArgs e)
         {
-            e.Completed -= OnConnectComplete;
-
-            if (!e.ConnectSocket.IsConnected())
-                m_RemoteEP = null;
-            else
+            try
             {
-                m_RemoteEP = e.RemoteEndPoint as IPEndPoint;
+                e.Completed -= OnConnectComplete;
 
-                var onConnect = m_OnConnect;
-                if (onConnect != null)
-                    onConnect(this);
+                if (!e.ConnectSocket.IsConnected())
+                    m_RemoteEP = null;
+                else
+                {
+                    m_RemoteEP = e.RemoteEndPoint as IPEndPoint;
+
+                    var onConnect = m_OnConnect;
+                    if (onConnect != null)
+                        onConnect(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
             }
         }
 
@@ -658,28 +685,49 @@ namespace Sweet.Redis
             var onDisconnect = m_OnDisconnect;
             var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
 
-            m_Socket.Disconnect(reuseSocket);
+            try
+            {
+                m_Socket.Disconnect(reuseSocket);
 
-            if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
-                onDisconnect(this);
+                if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
+                    onDisconnect(this);
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
+            }
         }
 
         public bool DisconnectAsync(SocketAsyncEventArgs e)
         {
             if (e == null)
-                throw new RedisFatalException(new ArgumentNullException("e"));
+                throw new RedisFatalException(new ArgumentNullException("e"), RedisErrorCode.ConnectionError);
             e.Completed += OnDisconnectComplete;
 
-            return m_Socket.DisconnectAsync(e);
+            try
+            {
+                return m_Socket.DisconnectAsync(e);
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
+            }
         }
 
         private void OnDisconnectComplete(object sender, SocketAsyncEventArgs e)
         {
-            e.Completed -= OnDisconnectComplete;
+            try
+            {
+                e.Completed -= OnDisconnectComplete;
 
-            var onDisconnect = m_OnDisconnect;
-            if ((onDisconnect != null) && !e.ConnectSocket.IsConnected())
-                onDisconnect(this);
+                var onDisconnect = m_OnDisconnect;
+                if ((onDisconnect != null) && !e.ConnectSocket.IsConnected())
+                    onDisconnect(this);
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
+            }
         }
 
         public SocketInformation DuplicateAndClose(int targetProcessId)
@@ -704,42 +752,56 @@ namespace Sweet.Redis
 
         public void EndConnect(IAsyncResult asyncResult)
         {
-            Tuple<Socket, bool, IPEndPoint> connState = null;
-
-            var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
-            if (wrapper != null)
-                connState = wrapper.Tag as Tuple<Socket, bool, IPEndPoint>;
-
-            m_Socket.EndConnect(asyncResult);
-
-            if ((connState == null) || !connState.Item1.IsConnected())
-                m_RemoteEP = null;
-            else
+            try
             {
-                m_RemoteEP = connState.Item3;
-                if (!connState.Item2)
+                Tuple<Socket, bool, IPEndPoint> connState = null;
+
+                var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
+                if (wrapper != null)
+                    connState = wrapper.Tag as Tuple<Socket, bool, IPEndPoint>;
+
+                m_Socket.EndConnect(asyncResult);
+
+                if ((connState == null) || !connState.Item1.IsConnected())
+                    m_RemoteEP = null;
+                else
                 {
-                    var onConnect = m_OnConnect;
-                    if (onConnect != null)
-                        onConnect(this);
+                    m_RemoteEP = connState.Item3;
+                    if (!connState.Item2)
+                    {
+                        var onConnect = m_OnConnect;
+                        if (onConnect != null)
+                            onConnect(this);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
             }
         }
 
         public void EndDisconnect(IAsyncResult asyncResult)
         {
-            Tuple<Socket, bool> connState = null;
+            try
+            {
+                Tuple<Socket, bool> connState = null;
 
-            var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
-            if (wrapper != null)
-                connState = wrapper.Tag as Tuple<Socket, bool>;
+                var wrapper = asyncResult.AsyncState as RedisAsyncStateWrapper;
+                if (wrapper != null)
+                    connState = wrapper.Tag as Tuple<Socket, bool>;
 
-            m_Socket.EndDisconnect(asyncResult);
+                m_Socket.EndDisconnect(asyncResult);
 
-            var onDisconnect = m_OnDisconnect;
-            if ((onDisconnect != null) && (connState != null) &&
-                connState.Item2 && !connState.Item1.IsConnected())
-                onDisconnect(this);
+                var onDisconnect = m_OnDisconnect;
+                if ((onDisconnect != null) && (connState != null) &&
+                    connState.Item2 && !connState.Item1.IsConnected())
+                    onDisconnect(this);
+            }
+            catch (Exception ex)
+            {
+                throw new RedisFatalException(ex, RedisErrorCode.ConnectionError);
+            }
         }
 
         public int EndReceive(IAsyncResult asyncResult)
@@ -819,13 +881,13 @@ namespace Sweet.Redis
                 {
                     var host = GetConnectedHost();
                     if (String.IsNullOrEmpty(host))
-                        throw new RedisFatalException("Remote end-point can not be defined for ssl usage");
+                        throw new RedisFatalException("Remote end-point can not be defined for ssl usage", RedisErrorCode.ConnectionError);
 
                     var ssl = new SslStream(rs, false, m_SslCertificateValidation, m_SslCertificateSelection);
 
                     ssl.AuthenticateAsClient(host);
                     if (!ssl.IsEncrypted)
-                        throw new Exception("Cannot create encrypted connection, end-point: " + host);
+                        throw new RedisFatalException("Cannot create encrypted connection, end-point: " + host, RedisErrorCode.ConnectionError);
 
                     rs = ssl;
                 }

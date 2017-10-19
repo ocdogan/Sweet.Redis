@@ -183,14 +183,14 @@ namespace Sweet.Redis
                 if (!Receiving)
                     return null;
 
-                throw new RedisException("Unexpected byte for redis response type");
+                throw new RedisException("Unexpected byte for redis response type", RedisErrorCode.CorruptResponse);
             }
 
             var item = new RedisRawResponse();
 
             item.SetTypeByte(b);
             if (item.Type == RedisRawObjectType.Undefined)
-                throw new RedisException("Undefined redis response type");
+                throw new RedisException("Undefined redis response type", RedisErrorCode.CorruptResponse);
 
             var data = ReadLine(socket);
             if (data == null && !Receiving)
@@ -208,11 +208,11 @@ namespace Sweet.Redis
                     {
                         var lenStr = Encoding.UTF8.GetString(data);
                         if (String.IsNullOrEmpty(lenStr))
-                            throw new RedisException("Corrupted redis response, empty length for bulk string");
+                            throw new RedisException("Corrupted redis response, empty length for bulk string", RedisErrorCode.CorruptResponse);
 
                         int msgLength;
                         if (!int.TryParse(lenStr, out msgLength))
-                            throw new RedisException("Corrupted redis response, not an integer value for bulk string");
+                            throw new RedisException("Corrupted redis response, not an integer value for bulk string", RedisErrorCode.CorruptResponse);
 
                         item.SetLength(Math.Max(-1, msgLength));
                         if (item.Length == -1)
@@ -242,11 +242,11 @@ namespace Sweet.Redis
                     {
                         var lenStr = Encoding.UTF8.GetString(data);
                         if (String.IsNullOrEmpty(lenStr))
-                            throw new RedisException("Corrupted redis response, empty length for array");
+                            throw new RedisException("Corrupted redis response, empty length for array", RedisErrorCode.CorruptResponse);
 
                         int arrayLen;
                         if (!int.TryParse(lenStr, out arrayLen))
-                            throw new RedisException("Corrupted redis response, not an integer value for array");
+                            throw new RedisException("Corrupted redis response, not an integer value for array", RedisErrorCode.CorruptResponse);
 
                         arrayLen = Math.Max(-1, arrayLen);
                         item.SetLength(arrayLen);
@@ -261,7 +261,7 @@ namespace Sweet.Redis
                                     if (!Receiving)
                                         return null;
 
-                                    throw new RedisException("Unexpected response data, not valid data for array item");
+                                    throw new RedisException("Unexpected response data, not valid data for array item", RedisErrorCode.CorruptResponse);
                                 }
 
                                 item.Add(child);
@@ -294,7 +294,7 @@ namespace Sweet.Redis
             {
                 if (!Receiving)
                     return false;
-                throw new RedisException("Corrupted redis response, not a line end");
+                throw new RedisException("Corrupted redis response, not a line end", RedisErrorCode.CorruptResponse);
             }
             return true;
         }
