@@ -202,7 +202,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("cluster", out section))
+                if (!TryGetValue("cluster", out section))
                     base["cluster"] = section = new RedisServerInfoClusterSection("cluster");
                 return section as RedisServerInfoClusterSection;
             }
@@ -213,7 +213,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("commandstats", out section))
+                if (!TryGetValue("commandstats", out section))
                     base["commandstats"] = section = new RedisServerInfoCommandStatsSection("commandstats");
                 return section as RedisServerInfoCommandStatsSection;
             }
@@ -224,7 +224,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("cpu", out section))
+                if (!TryGetValue("cpu", out section))
                     base["cpu"] = section = new RedisServerInfoClientsSection("cpu");
                 return section as RedisServerInfoCpuSection;
             }
@@ -235,7 +235,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("keyspace", out section))
+                if (!TryGetValue("keyspace", out section))
                     base["keyspace"] = section = new RedisServerInfoKeyspaceSection("keyspace");
                 return section as RedisServerInfoKeyspaceSection;
             }
@@ -246,7 +246,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("memory", out section))
+                if (!TryGetValue("memory", out section))
                     base["memory"] = section = new RedisServerInfoMemorySection("memory");
                 return section as RedisServerInfoMemorySection;
             }
@@ -257,7 +257,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("persistence", out section))
+                if (!TryGetValue("persistence", out section))
                     base["persistence"] = section = new RedisServerInfoPersistenceSection("persistence");
                 return section as RedisServerInfoPersistenceSection;
             }
@@ -268,7 +268,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("sentinel", out section))
+                if (!TryGetValue("sentinel", out section))
                     base["sentinel"] = section = new RedisServerInfoSentinelSection("sentinel");
                 return section as RedisServerInfoSentinelSection;
             }
@@ -279,7 +279,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("server", out section))
+                if (!TryGetValue("server", out section))
                     base["server"] = section = new RedisServerInfoServerSection("server");
                 return section as RedisServerInfoServerSection;
             }
@@ -290,7 +290,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("stats", out section))
+                if (!TryGetValue("stats", out section))
                     base["stats"] = section = new RedisServerInfoStatsSection("stats");
                 return section as RedisServerInfoStatsSection;
             }
@@ -301,7 +301,7 @@ namespace Sweet.Redis
             get
             {
                 RedisServerInfoSection section;
-                if (TryGetValue("replication", out section))
+                if (!TryGetValue("replication", out section))
                     base["replication"] = section = new RedisServerInfoReplicationSection("replication");
                 return section as RedisServerInfoReplicationSection;
             }
@@ -368,7 +368,7 @@ namespace Sweet.Redis
                                 {
                                     var section = ParseSection(sectionName, sectionLines);
                                     if (section != null)
-                                        result[sectionName] = section;
+                                        result[sectionName.ToLowerInvariant()] = section;
                                 }
                             }
                         }
