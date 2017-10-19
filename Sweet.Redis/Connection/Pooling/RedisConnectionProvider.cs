@@ -86,7 +86,8 @@ namespace Sweet.Redis
         {
             get
             {
-                ValidateNotDisposed();
+                if (Disposed)
+                    return 0;
                 var connectionLimiter = m_ConnectionLimiter;
                 return (connectionLimiter != null) ? connectionLimiter.AvailableCount : 0;
             }
@@ -98,7 +99,8 @@ namespace Sweet.Redis
         {
             get
             {
-                ValidateNotDisposed();
+                if (Disposed)
+                    return 0;
                 var connectionLimiter = m_ConnectionLimiter;
                 return (connectionLimiter != null) ? connectionLimiter.InUseCount : 0;
             }
@@ -177,14 +179,14 @@ namespace Sweet.Redis
                 {
                     OnConnectionLimitExceed(retryInfo);
                     if (retryInfo.ThrowError)
-                        throw new RedisException("Wait retry count exited the given maximum limit");
+                        throw new RedisFatalException("Wait retry count exited the given maximum limit", RedisErrorCode.ConnectionError);
                     return null;
                 }
             }
 
             OnConnectionTimeout(retryInfo);
             if (retryInfo.ThrowError)
-                throw new RedisException("Connection timeout occured while trying to connect");
+                throw new RedisFatalException("Connection timeout occured while trying to connect", RedisErrorCode.ConnectionError);
             return null;
         }
 
