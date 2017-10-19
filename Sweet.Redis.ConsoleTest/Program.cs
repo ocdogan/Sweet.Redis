@@ -79,10 +79,62 @@ namespace Sweet.Redis.ConsoleTest
             // SentinelTest9();
 
             // ManagerTest1();
-            ManagerTest2();
+            // ManagerTest2();
+            ManagerTest3();
         }
 
         #region Manager
+
+        static void ManagerTest3()
+        {
+            using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                new[] { new RedisEndPoint("localhost", RedisConstants.DefaultSentinelPort) },
+                masterName: "mymaster")))
+            {
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        var runId = String.Empty;
+
+                        sw.Restart();
+                        using (var db = manager.GetDb(true))
+                        {
+                            var result = db.Connection.Ping();
+
+                            if (result == (string)null)
+                                Console.WriteLine("(nil)");
+                            else
+                            {
+                                var value = result.Value;
+                                if (value == null)
+                                    Console.WriteLine("(nil)");
+                                else
+                                {
+                                    Console.WriteLine("Response: " + value);
+                                    Console.WriteLine();
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
 
         static void ManagerTest2()
         {
