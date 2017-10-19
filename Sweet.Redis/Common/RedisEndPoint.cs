@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -136,13 +137,27 @@ namespace Sweet.Redis
                     {
                         if (!s_DnsEntries.TryGetValue(host, out entry) || entry.Expired)
                         {
-                            var ipAddresses = RedisAsyncEx.GetHostAddressesAsync(host).Result;
-                            if (ipAddresses != null && ipAddresses.Length > 1)
+                            IPAddress[] ipAddresses;
+                            if (host.Equals(RedisConstants.LocalHost, StringComparison.OrdinalIgnoreCase))
                             {
-                                ipAddresses = ipAddresses
-                                    .OrderBy((addr) =>
-                                    { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
-                                    .ToArray();
+                                var list = new List<IPAddress>();
+                                if (RedisSocket.OSSupportsIPv4)
+                                    list.Add(IPAddress.Parse(RedisConstants.IP4Loopback));
+                                else if (RedisSocket.OSSupportsIPv6)
+                                    list.Add(IPAddress.Parse(RedisConstants.IP6Loopback));
+
+                                ipAddresses = list.ToArray();
+                            }
+                            else
+                            {
+                                ipAddresses = RedisAsyncEx.GetHostAddressesAsync(host).Result;
+                                if (ipAddresses != null && ipAddresses.Length > 1)
+                                {
+                                    ipAddresses = ipAddresses
+                                        .OrderBy((addr) =>
+                                        { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
+                                        .ToArray();
+                                }
                             }
 
                             if (entry != null)
