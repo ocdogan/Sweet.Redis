@@ -63,7 +63,7 @@ namespace Sweet.Redis
         public RedisManager(string name, RedisSettings settings = null)
         {
             if (settings == null)
-                throw new RedisFatalException(new ArgumentNullException("settings"));
+                throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
 
             m_Id = Guid.NewGuid();
             m_Settings = settings;
@@ -190,15 +190,15 @@ namespace Sweet.Redis
 
             var cluster = m_Cluster;
             if (cluster == null)
-                throw new RedisFatalException("Can not discover cluster");
+                throw new RedisFatalException("Can not discover cluster", RedisErrorCode.ConnectionError);
 
             var group = readOnly ? (cluster.Slaves ?? cluster.Masters) : cluster.Masters;
             if (group == null)
-                throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"));
+                throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
             var pool = group.Next();
             if (pool == null)
-                throw new RedisFatalException(String.Format("No {0} found", readOnly ? "slave" : "master"));
+                throw new RedisFatalException(String.Format("No {0} found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
             return pool;
         }
@@ -346,7 +346,10 @@ namespace Sweet.Redis
                     }
                 }
                 catch (Exception)
-                { }
+                {
+                    if (pool.IdleCount == 0)
+                        return RedisRole.Undefined;
+                }
 
                 if (role == RedisRole.Undefined)
                 {

@@ -175,6 +175,27 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public int IdleCount
+        {
+            get
+            {
+                if (Disposed)
+                    return 0;
+
+                lock (m_MemberStoreLock)
+                {
+                    var result = 0;
+                    if (m_MemberStoreTail != null) 
+                        result++;
+
+                    if (m_MemberStore != null) 
+                        result += m_MemberStore.Count;
+
+                    return result;
+                }
+            }
+        }
+
         public IRedisMonitorChannel MonitorChannel
         {
             get
@@ -244,7 +265,7 @@ namespace Sweet.Redis
             if (Disposed)
             {
                 if (!String.IsNullOrEmpty(Name))
-                    throw new ObjectDisposedException(Name);
+                    throw new RedisFatalException(new ObjectDisposedException(Name), RedisErrorCode.ObjectDisposed);
                 base.ValidateNotDisposed();
             }
         }
