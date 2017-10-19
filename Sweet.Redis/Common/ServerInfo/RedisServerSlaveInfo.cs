@@ -43,7 +43,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public int Index { get; private set; } // 127.0.0.1
+        public int Index { get; private set; } // 0
 
         public string IPAddress { get; private set; } // 127.0.0.1
 
