@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -345,10 +346,21 @@ namespace Sweet.Redis
                             role = roleInfo.Role;
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    if (pool.IdleCount == 0)
-                        return RedisRole.Undefined;
+                    var exception = e;
+                    while (exception != null)
+                    {
+                        if (exception is SocketException)
+                            return RedisRole.Undefined;
+
+                        var re = e as RedisException;
+                        if (re != null && (re.ErrorCode == RedisErrorCode.ConnectionError ||
+                            re.ErrorCode == RedisErrorCode.SocketError))
+                            return RedisRole.Undefined;
+
+                        exception = exception.InnerException;
+                    }
                 }
 
                 if (role == RedisRole.Undefined)

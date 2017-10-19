@@ -88,7 +88,7 @@ namespace Sweet.Redis.ConsoleTest
         {
             using (var manager = new RedisManager("My Manager", new RedisSettings(
                 new[] { new RedisEndPoint("localhost", RedisConstants.DefaultPort),
-                        new RedisEndPoint("localhost", 6381)},
+                        new RedisEndPoint("localhost", 6380)},
                 masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
