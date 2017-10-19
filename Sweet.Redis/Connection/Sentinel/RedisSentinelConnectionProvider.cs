@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisSentinelConnectionProvider(RedisSettings settings = null)
+        public RedisSentinelConnectionProvider(RedisPoolSettings settings = null)
             : base(String.Format("{0}, {1}", typeof(RedisSentinelConnectionProvider).Name, RedisCommon.NewGuidID()), settings)
         { }
 
@@ -41,7 +41,7 @@ namespace Sweet.Redis
 
         protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
-            var settings = GetSettings() ?? RedisSettings.Default;
+            var settings = GetSettings() ?? RedisPoolSettings.Default;
             return new RedisSentinelConnection(Name, settings,
                 null,
                 OnReleaseSocket,

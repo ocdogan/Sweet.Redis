@@ -49,7 +49,7 @@ namespace Sweet.Redis
 
             public ProcessParameters(RedisAsyncRequestQProcessor processor,
                                      Thread thread, RedisAsyncRequestQ queue,
-                                     RedisSettings settings)
+                                     RedisPoolSettings settings)
             {
                 Me = thread;
                 Processor = processor;
@@ -67,7 +67,7 @@ namespace Sweet.Redis
 
             public RedisAsyncRequestQ Queue { get; private set; }
 
-            public RedisSettings Settings { get; private set; }
+            public RedisPoolSettings Settings { get; private set; }
 
             #endregion Properties
         }
@@ -91,7 +91,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisAsyncRequestQProcessor(RedisAsyncRequestQ queue, RedisSettings settings)
+        public RedisAsyncRequestQProcessor(RedisAsyncRequestQ queue, RedisPoolSettings settings)
         {
             Queue = queue;
             Settings = settings;
@@ -121,7 +121,7 @@ namespace Sweet.Redis
 
         public RedisAsyncRequestQ Queue { get; private set; }
 
-        public RedisSettings Settings { get; private set; }
+        public RedisPoolSettings Settings { get; private set; }
 
         #endregion Properties
 

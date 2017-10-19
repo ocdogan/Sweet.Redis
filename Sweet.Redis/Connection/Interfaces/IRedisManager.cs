@@ -24,8 +24,10 @@
 
 namespace Sweet.Redis
 {
-    public interface IRedisManager
+    public interface IRedisManager : IRedisNamedObject, IRedisIdentifiedObject
     {
+        RedisManagerSettings Settings { get; }
+
         IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0);
         IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0);
         IRedisDb GetDb(bool readOnly, int dbIndex = 0);

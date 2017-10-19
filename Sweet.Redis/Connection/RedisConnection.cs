@@ -323,7 +323,7 @@ namespace Sweet.Redis
         {
             if (socket.IsConnected())
             {
-                var settings = (Settings ?? RedisSettings.Default);
+                var settings = (Settings ?? RedisPoolSettings.Default);
 
                 if (!String.IsNullOrEmpty(settings.Password) &&
                     Auth(socket, settings.Password))

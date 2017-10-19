@@ -38,10 +38,10 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisContinuousConnectionProvider(string name, Action<IRedisRawResponse> onReceiveResponse)
-            : this(name, RedisSettings.Default, onReceiveResponse)
+            : this(name, RedisPoolSettings.Default, onReceiveResponse)
         { }
 
-        public RedisContinuousConnectionProvider(string name, RedisSettings settings, Action<IRedisRawResponse> onReceiveResponse)
+        public RedisContinuousConnectionProvider(string name, RedisPoolSettings settings, Action<IRedisRawResponse> onReceiveResponse)
             : base(name, settings)
         {
             m_OnReceiveResponse = onReceiveResponse;
@@ -59,7 +59,7 @@ namespace Sweet.Redis
 
         protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
-            var settings = GetSettings() ?? RedisSettings.Default;
+            var settings = GetSettings() ?? RedisPoolSettings.Default;
             return new RedisContinuousReaderConnection(Name, RedisRole.Master, settings,
                 (response) =>
                 {

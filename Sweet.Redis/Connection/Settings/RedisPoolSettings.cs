@@ -27,17 +27,17 @@ using System.Net.Security;
 
 namespace Sweet.Redis
 {
-    public class RedisSettings : RedisConnectionSettings
+    public class RedisPoolSettings : RedisConnectionSettings
     {
         #region Static Members
 
-        public new static readonly RedisSettings Default = new RedisSettings((RedisEndPoint[])null);
+        public new static readonly RedisPoolSettings Default = new RedisPoolSettings((RedisEndPoint[])null);
 
         #endregion Static Members
 
         #region .Ctors
 
-        public RedisSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
+        public RedisPoolSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout, 
             int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
@@ -50,7 +50,7 @@ namespace Sweet.Redis
                 useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
-        public RedisSettings(RedisEndPoint[] endPoints = null,
+        public RedisPoolSettings(RedisEndPoint[] endPoints = null,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
             int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
@@ -82,7 +82,7 @@ namespace Sweet.Redis
 
         public override RedisConnectionSettings Clone(string host = null, int port = -1)
         {
-            return new RedisSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
+            return new RedisPoolSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
                 MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
                 MaxConnectionCount, ConnectionWaitTimeout, ConnectionIdleTimeout, ReadBufferSize, WriteBufferSize,
                 UseAsyncCompleter, UseSsl, SslCertificateSelection, SslCertificateValidation);

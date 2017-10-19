@@ -22,21 +22,11 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    interface IRedisConnectionPool
+    public enum RedisManagerType
     {
-        int IdleCount { get; }
-        int InUseCount { get; }
-        int AvailableCount { get; }
-
-        IRedisDb GetDb(int dbIndex = 0);
-        IRedisTransaction BeginTransaction(int dbIndex = 0);
-
-        IRedisMonitorChannel MonitorChannel { get; }
-        IRedisPubSubChannel PubSubChannel { get; }
-        RedisPoolSettings Settings { get; }
+        MasterSlave,
+        Sentinel
     }
 }

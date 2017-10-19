@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private RedisSettings m_Settings;
+        private RedisPoolSettings m_Settings;
         private IRedisSentinelCommands m_Commands;
 
         private IRedisConnectionProvider m_ConnectionProvider;
@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisSentinelClient(RedisSettings settings, bool throwOnError = true)
+        public RedisSentinelClient(RedisPoolSettings settings, bool throwOnError = true)
             : base(throwOnError)
         {
             if (settings == null)
@@ -80,7 +80,7 @@ namespace Sweet.Redis
             get { return RedisRole.Sentinel; }
         }
 
-        public RedisSettings Settings
+        public RedisPoolSettings Settings
         {
             get { return m_Settings; }
         }

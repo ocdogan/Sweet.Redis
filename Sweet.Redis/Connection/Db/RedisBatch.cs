@@ -109,7 +109,7 @@ namespace Sweet.Redis
 
                         try
                         {
-                            var context = new RedisSocketContext(socket, connection.Settings ?? RedisSettings.Default);
+                            var context = new RedisSocketContext(socket, connection.Settings ?? RedisPoolSettings.Default);
 
                             OnFlush(requests, context, out success);
 

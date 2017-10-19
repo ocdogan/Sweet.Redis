@@ -138,7 +138,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisConnectionPool(string name, RedisSettings settings = null)
+        public RedisConnectionPool(string name, RedisPoolSettings settings = null)
             : base(name, settings)
         {
             Register(this);
@@ -251,7 +251,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisSettings Settings
+        public RedisPoolSettings Settings
         {
             get { return GetSettings(); }
         }
@@ -319,7 +319,7 @@ namespace Sweet.Redis
 
         protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
-            var settings = GetSettings() ?? RedisSettings.Default;
+            var settings = GetSettings() ?? RedisPoolSettings.Default;
             return new RedisDbConnection(Name, role, settings, null, OnReleaseSocket, dbIndex,
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
@@ -331,7 +331,7 @@ namespace Sweet.Redis
 
         protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         {
-            var settings = GetSettings() ?? RedisSettings.Default;
+            var settings = GetSettings() ?? RedisPoolSettings.Default;
             if (settings.UseAsyncCompleter)
             {
                 e.ThrowError = true;
@@ -493,7 +493,7 @@ namespace Sweet.Redis
             try
             {
                 var now = DateTime.UtcNow;
-                var idleTimeout = (GetSettings() ?? RedisSettings.Default).ConnectionIdleTimeout;
+                var idleTimeout = (GetSettings() ?? RedisPoolSettings.Default).ConnectionIdleTimeout;
 
                 lock (m_MemberStoreLock)
                 {
@@ -554,7 +554,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -580,7 +580,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -606,7 +606,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -632,7 +632,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -658,7 +658,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -684,7 +684,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -710,7 +710,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -736,7 +736,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -762,7 +762,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -788,7 +788,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -814,7 +814,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -840,7 +840,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -866,7 +866,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -892,7 +892,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -918,7 +918,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -966,7 +966,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
@@ -992,7 +992,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             IRedisConnection connection = null;
-            if ((GetSettings() ?? RedisSettings.Default).UseAsyncCompleter)
+            if ((GetSettings() ?? RedisPoolSettings.Default).UseAsyncCompleter)
             {
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)

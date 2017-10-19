@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        internal RedisSentinelConnection(string name, RedisSettings settings,
+        internal RedisSentinelConnection(string name, RedisPoolSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
             : base(name, RedisRole.Sentinel, settings, onCreateSocket, onReleaseSocket, socket, connectImmediately)

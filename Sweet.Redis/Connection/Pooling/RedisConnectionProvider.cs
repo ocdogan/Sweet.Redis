@@ -40,17 +40,17 @@ namespace Sweet.Redis
         private Guid m_Id;
         private string m_Name;
 
-        private RedisSettings m_Settings;
+        private RedisPoolSettings m_Settings;
         private RedisConnectionLimiter m_ConnectionLimiter;
 
         #endregion Field Members
 
         #region .Ctors
 
-        protected RedisConnectionProvider(string name, RedisSettings settings = null,
+        protected RedisConnectionProvider(string name, RedisPoolSettings settings = null,
             Func<int, RedisConnectionLimiter> connectionLimiter = null)
         {
-            m_Settings = settings ?? RedisSettings.Default;
+            m_Settings = settings ?? RedisPoolSettings.Default;
 
             m_Id = Guid.NewGuid();
 
@@ -119,7 +119,7 @@ namespace Sweet.Redis
 
         #region IRedisConnectionProvider Methods
 
-        protected virtual RedisSettings GetSettings()
+        protected virtual RedisPoolSettings GetSettings()
         {
             return m_Settings;
         }
@@ -153,7 +153,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var settings = (GetSettings() ?? RedisSettings.Default);
+            var settings = (GetSettings() ?? RedisPoolSettings.Default);
 
             var spinStepTimeoutMs = GetConnectionSpinStepTimeout();
 

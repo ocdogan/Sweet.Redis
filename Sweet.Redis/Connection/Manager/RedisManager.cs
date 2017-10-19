@@ -49,7 +49,7 @@ namespace Sweet.Redis
         private Guid m_Id;
         private string m_Name;
 
-        private RedisSettings m_Settings;
+        private RedisManagerSettings m_Settings;
 
         private RedisCluster m_Cluster;
         private RedisManagedNodesGroup m_Sentinels;
@@ -61,7 +61,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManager(string name, RedisSettings settings = null)
+        public RedisManager(string name, RedisManagerSettings settings = null)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
@@ -100,7 +100,7 @@ namespace Sweet.Redis
             get { return m_Name; }
         }
 
-        public RedisSettings Settings
+        public RedisManagerSettings Settings
         {
             get { return m_Settings; }
         }
@@ -232,9 +232,20 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_InitializationState) != (long)InitializationState.Initialized)
                     {
-                        RedisCluster cluster;
-                        RedisManagedNodesGroup sentinels;
-                        CreateCluster(out cluster, out sentinels);
+                        RedisCluster cluster = null;
+                        RedisManagedNodesGroup sentinels = null;
+                        try
+                        {
+                            CreateCluster(out cluster, out sentinels);
+                        }
+                        catch (Exception)
+                        {
+                            if (cluster != null)
+                                cluster.Dispose();
+                            if (sentinels != null)
+                                sentinels.Dispose();
+                            throw;
+                        }
 
                         var oldCluster = (RedisCluster)null;
                         var oldSentinels = (RedisManagedNodesGroup)null;
@@ -310,7 +321,7 @@ namespace Sweet.Redis
             }
         }
 
-        private static RedisManagedNode CreateNode(string name, RedisSettings settings)
+        private static RedisManagedNode CreateNode(string name, RedisPoolSettings settings)
         {
             try
             {
@@ -400,7 +411,7 @@ namespace Sweet.Redis
             return role;
         }
 
-        private static RedisSettings[] SplitToIPEndPoints(RedisSettings settings)
+        private static RedisPoolSettings[] SplitToIPEndPoints(RedisPoolSettings settings)
         {
             var endPoints = settings.EndPoints;
             if (endPoints != null && endPoints.Length > 0)
@@ -429,7 +440,7 @@ namespace Sweet.Redis
                 }
 
                 return ipList
-                    .Select(ep => (RedisSettings)settings.Clone(ep.Address.ToString(), ep.Port))
+                    .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
                     .ToArray();
             }
             return null;
