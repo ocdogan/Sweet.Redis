@@ -240,10 +240,8 @@ namespace Sweet.Redis
                         }
                         catch (Exception)
                         {
-                            if (cluster != null)
-                                cluster.Dispose();
-                            if (sentinels != null)
-                                sentinels.Dispose();
+                            if (cluster != null) cluster.Dispose();
+                            if (sentinels != null) sentinels.Dispose();
                             throw;
                         }
 
@@ -267,10 +265,8 @@ namespace Sweet.Redis
                         }
                         finally
                         {
-                            if (oldCluster != null)
-                                oldCluster.Dispose();
-                            if (oldSentinels != null)
-                                oldSentinels.Dispose();
+                            if (oldCluster != null) oldCluster.Dispose();
+                            if (oldSentinels != null) oldSentinels.Dispose();
                         }
                     }
                 }
@@ -282,59 +278,104 @@ namespace Sweet.Redis
             cluster = null;
             sentinels = null;
 
-            var ipEPSettings = SplitToIPEndPoints(m_Settings);
-            if (ipEPSettings != null && ipEPSettings.Length > 0)
+            var settings = m_Settings;
+            var ipList = SplitToIPEndPoints(settings.EndPoints);
+
+            if (ipList != null && ipList.Count > 0)
             {
-                var groups = ipEPSettings
-                    .Select(setting => CreateNode(Name, setting))
-                    .Where(node => node != null)
-                    .GroupBy(
-                            node => node.Role,
-                            node => new RedisManagedNode(node.Pool, node.Role),
-                            (role, group) => new RedisManagedNodesGroup(role, group.ToArray()))
-                    .ToList();
+                var ipEPSettings = ipList
+                        .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
+                        .ToArray();
 
-                if (groups != null && groups.Count > 0)
+                if (ipEPSettings != null && ipEPSettings.Length > 0)
                 {
-                    // 0: Masters, 1: Slaves
-                    const int MastersPos = 0, SlavesPos = 1;
+                    var groups = ipEPSettings
+                        .SelectMany(setting => CreateNodes(Name, setting))
+                        .Where(node => node != null)
+                        .GroupBy(
+                                tuple => tuple.Item2,
+                                tuple => new RedisManagedNode(tuple.Item1, tuple.Item2),
+                                (role, group) => new RedisManagedNodesGroup(role, group.ToArray()))
+                        .ToList();
 
-                    var result = new RedisManagedNodesGroup[2];
-                    foreach (var group in groups)
+                    if (groups != null && groups.Count > 0)
                     {
-                        switch (group.Role)
-                        {
-                            case RedisRole.Master:
-                                result[MastersPos] = group;
-                                break;
-                            case RedisRole.Slave:
-                                result[SlavesPos] = group;
-                                break;
-                            case RedisRole.Sentinel:
-                                sentinels = group;
-                                break;
-                        }
-                    }
+                        // 0: Masters, 1: Slaves
+                        const int MastersPos = 0, SlavesPos = 1;
 
-                    cluster = new RedisCluster(result[MastersPos], result[SlavesPos]);
+                        var result = new RedisManagedNodesGroup[2];
+                        foreach (var group in groups)
+                        {
+                            switch (group.Role)
+                            {
+                                case RedisRole.Master:
+                                    result[MastersPos] = group;
+                                    break;
+                                case RedisRole.Slave:
+                                    result[SlavesPos] = group;
+                                    break;
+                                case RedisRole.Sentinel:
+                                    sentinels = group;
+                                    break;
+                            }
+                        }
+
+                        cluster = new RedisCluster(result[MastersPos], result[SlavesPos]);
+                    }
                 }
             }
         }
 
-        private static RedisManagedNode CreateNode(string name, RedisPoolSettings settings)
+        private static Tuple<RedisConnectionPool, RedisRole>[] CreateNodes(string name, RedisPoolSettings settings)
         {
             try
             {
+                var dispose = false;
                 var pool = new RedisConnectionPool(name, settings);
-
-                var role = DiscoverNodeRole(pool);
-                if (role == RedisRole.Undefined)
-                    pool.Dispose();
-                else
+                try
                 {
-                    if (role == RedisRole.SlaveOrMaster)
-                        role = RedisRole.Slave;
-                    return new RedisManagedNode(pool, role);
+                    RedisRole role;
+                    RedisRoleInfo roleInfo;
+                    RedisServerInfo serverInfo;
+
+                    GetNodeInfo(pool, out role, out roleInfo, out serverInfo);
+
+                    if (role == RedisRole.Undefined)
+                        dispose = true;
+                    else
+                    {
+                        switch (role)
+                        {
+                            case RedisRole.Master:
+                                {
+                                    var slaveList = new List<RedisManagedNode>();
+                                    if (!ReferenceEquals(serverInfo, null))
+                                    {
+                                        var slaves = serverInfo.Replication.Slaves;
+                                        if (slaves != null)
+                                        {
+                                        }
+                                    }
+                                }
+                                break;
+                            case RedisRole.Sentinel:
+                                {
+                                    dispose = true;
+                                    if (!ReferenceEquals(serverInfo, null))
+                                    {
+                                    }
+                                }
+                                break;
+                            default:
+                                return new[] { new Tuple<RedisConnectionPool, RedisRole>(pool, 
+                                    (role == RedisRole.SlaveOrMaster) ? RedisRole.Slave : role) };
+                        }
+                    }
+                }
+                finally
+                {
+                    if (dispose)
+                        pool.Dispose();
                 }
             }
             catch (Exception)
@@ -342,9 +383,12 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static RedisRole DiscoverNodeRole(RedisConnectionPool pool)
+        private static void GetNodeInfo(RedisConnectionPool pool, out RedisRole role, out RedisRoleInfo roleInfo, out RedisServerInfo serverInfo)
         {
-            var role = RedisRole.Undefined;
+            roleInfo = null;
+            serverInfo = null;
+            role = RedisRole.Undefined;
+
             using (var db = pool.GetDb())
             {
                 try
@@ -352,7 +396,7 @@ namespace Sweet.Redis
                     var rawInfo = db.Server.Role();
                     if (!ReferenceEquals(rawInfo, null))
                     {
-                        var roleInfo = rawInfo.Value;
+                        roleInfo = rawInfo.Value;
                         if (!ReferenceEquals(roleInfo, null))
                             role = roleInfo.Role;
                     }
@@ -363,25 +407,27 @@ namespace Sweet.Redis
                     while (exception != null)
                     {
                         if (exception is SocketException)
-                            return RedisRole.Undefined;
+                            return;
 
                         var re = e as RedisException;
                         if (re != null && (re.ErrorCode == RedisErrorCode.ConnectionError ||
                             re.ErrorCode == RedisErrorCode.SocketError))
-                            return RedisRole.Undefined;
+                            return;
 
                         exception = exception.InnerException;
                     }
                 }
 
-                if (role == RedisRole.Undefined)
+                if (role == RedisRole.Undefined || 
+                    role == RedisRole.Master || 
+                    role == RedisRole.Sentinel)
                 {
                     try
                     {
                         var rawInfo = db.Server.Info();
                         if (!ReferenceEquals(rawInfo, null))
                         {
-                            var serverInfo = rawInfo.Value;
+                            serverInfo = rawInfo.Value;
                             if (!ReferenceEquals(serverInfo, null))
                             {
                                 var repInfo = serverInfo.Replication;
@@ -408,12 +454,10 @@ namespace Sweet.Redis
                     { }
                 }
             }
-            return role;
         }
 
-        private static RedisPoolSettings[] SplitToIPEndPoints(RedisPoolSettings settings)
+        private static HashSet<IPEndPoint> SplitToIPEndPoints(RedisEndPoint[] endPoints)
         {
-            var endPoints = settings.EndPoints;
             if (endPoints != null && endPoints.Length > 0)
             {
                 var ipList = new HashSet<IPEndPoint>();
@@ -439,9 +483,7 @@ namespace Sweet.Redis
                     }
                 }
 
-                return ipList
-                    .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
-                    .ToArray();
+                return ipList;
             }
             return null;
         }

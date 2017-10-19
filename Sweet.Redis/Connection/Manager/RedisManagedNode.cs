@@ -30,6 +30,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
+        private bool m_OwnsPool;
         private RedisEndPoint m_EndPoint;
         private RedisConnectionPool m_Pool;
 
@@ -37,10 +38,11 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNode(RedisConnectionPool pool, RedisRole role)
+        public RedisManagedNode(RedisConnectionPool pool, RedisRole role, bool ownsPool = true)
         {
             Role = role;
             m_Pool = pool;
+            m_OwnsPool = ownsPool;
             m_EndPoint = pool.Settings.EndPoints[0];
         }
 
@@ -53,13 +55,15 @@ namespace Sweet.Redis
             base.OnDispose(disposing);
 
             var pool = Interlocked.Exchange(ref m_Pool, null);
-            if (pool != null)
+            if (m_OwnsPool && pool != null)
                 pool.Dispose();
         }
 
         #endregion Destructors
 
         #region Properties
+
+        public bool OwnsPool { get { return m_OwnsPool; } }
 
         public RedisConnectionPool Pool { get { return m_Pool; } }
 
