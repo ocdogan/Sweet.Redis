@@ -32,18 +32,15 @@ namespace Sweet.Redis
 
         private RedisManagedNodesGroup m_Masters; 
         private RedisManagedNodesGroup m_Slaves;
-        private RedisManagedNodesGroup m_Sentinels;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisCluster(RedisManagedNodesGroup masters, 
-            RedisManagedNodesGroup slaves = null, RedisManagedNodesGroup sentinels = null)
+        public RedisCluster(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null)
         {
             m_Masters = masters;
             m_Slaves = slaves;
-            m_Sentinels = sentinels;
         }
 
         #endregion .Ctors
@@ -56,11 +53,9 @@ namespace Sweet.Redis
 
             var masters = Interlocked.Exchange(ref m_Masters, null);
             var slaves = Interlocked.Exchange(ref m_Slaves, null);
-            var sentinels = Interlocked.Exchange(ref m_Sentinels, null);
 
             if (masters != null) masters.Dispose();
             if (slaves != null) slaves.Dispose();
-            if (sentinels != null) sentinels.Dispose();
         }
 
         #endregion Destructors
@@ -70,8 +65,6 @@ namespace Sweet.Redis
         public RedisManagedNodesGroup Masters { get { return m_Masters; } }
 
         public RedisManagedNodesGroup Slaves { get { return m_Slaves; } }
-
-        public RedisManagedNodesGroup Sentinels { get { return m_Sentinels; } } 
 
         #endregion Properties
     }

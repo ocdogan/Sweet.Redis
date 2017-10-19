@@ -49,7 +49,9 @@ namespace Sweet.Redis
         private string m_Name;
 
         private RedisSettings m_Settings;
-        private RedisCluster m_ManagedCluster;
+
+        private RedisCluster m_Cluster;
+        private RedisManagedNodesGroup m_Sentinels;
 
         private long m_InitializationState;
         private readonly object m_SyncRoot = new object();
@@ -78,7 +80,7 @@ namespace Sweet.Redis
 
             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
 
-            var cluster = Interlocked.Exchange(ref m_ManagedCluster, null);
+            var cluster = Interlocked.Exchange(ref m_Cluster, null);
             if (cluster != null)
                 cluster.Dispose();
         }
@@ -128,7 +130,7 @@ namespace Sweet.Redis
         {
             if (nodeSelector != null)
             {
-                var cluster = m_ManagedCluster;
+                var cluster = m_Cluster;
                 if (cluster != null && !cluster.Disposed)
                 {
                     var pool = SelectPool(cluster.Slaves, nodeSelector);
@@ -146,7 +148,7 @@ namespace Sweet.Redis
         {
             if (nodeSelector != null)
             {
-                var cluster = m_ManagedCluster;
+                var cluster = m_Cluster;
                 if (cluster != null && !cluster.Disposed)
                 {
                     var pool = SelectPool(cluster.Slaves, nodeSelector);
@@ -186,7 +188,7 @@ namespace Sweet.Redis
         {
             InitializeNodes();
 
-            var cluster = m_ManagedCluster;
+            var cluster = m_Cluster;
             if (cluster == null)
                 throw new RedisFatalException("Can not discover cluster");
 
@@ -229,32 +231,45 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_InitializationState) != (long)InitializationState.Initialized)
                     {
-                        var newCluster = CreateCluster();
+                        RedisCluster cluster;
+                        RedisManagedNodesGroup sentinels;
+                        CreateCluster(out cluster, out sentinels);
+
                         var oldCluster = (RedisCluster)null;
+                        var oldSentinels = (RedisManagedNodesGroup)null;
                         try
                         {
-                            oldCluster = Interlocked.Exchange(ref m_ManagedCluster, newCluster);
+                            oldCluster = Interlocked.Exchange(ref m_Cluster, cluster);
+                            oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
+
                             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
                         }
                         catch (Exception)
                         {
                             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
-                            if (newCluster != null)
-                                newCluster.Dispose();
+                            if (cluster != null)
+                                cluster.Dispose();
+                            if (sentinels != null)
+                                sentinels.Dispose();
                             throw;
                         }
                         finally
                         {
                             if (oldCluster != null)
                                 oldCluster.Dispose();
+                            if (oldSentinels != null)
+                                oldSentinels.Dispose();
                         }
                     }
                 }
             }
         }
 
-        private RedisCluster CreateCluster()
+        private void CreateCluster(out RedisCluster cluster, out RedisManagedNodesGroup sentinels)
         {
+            cluster = null;
+            sentinels = null;
+
             var ipEPSettings = SplitToIPEndPoints(m_Settings);
             if (ipEPSettings != null && ipEPSettings.Length > 0)
             {
@@ -269,10 +284,10 @@ namespace Sweet.Redis
 
                 if (groups != null && groups.Count > 0)
                 {
-                    // 0: Masters, 1: Slaves, 2: Sentinels
-                    const int MastersPos = 0, SlavesPos = 1, SentinelsPos = 2;
+                    // 0: Masters, 1: Slaves
+                    const int MastersPos = 0, SlavesPos = 1;
 
-                    var result = new RedisManagedNodesGroup[3];
+                    var result = new RedisManagedNodesGroup[2];
                     foreach (var group in groups)
                     {
                         switch (group.Role)
@@ -284,15 +299,14 @@ namespace Sweet.Redis
                                 result[SlavesPos] = group;
                                 break;
                             case RedisRole.Sentinel:
-                                result[SentinelsPos] = group;
+                                sentinels = group;
                                 break;
                         }
                     }
 
-                    return new RedisCluster(result[MastersPos], result[SlavesPos], result[SentinelsPos]);
+                    cluster = new RedisCluster(result[MastersPos], result[SlavesPos]);
                 }
             }
-            return new RedisCluster(null);
         }
 
         private static RedisManagedNode CreateNode(string name, RedisSettings settings)
