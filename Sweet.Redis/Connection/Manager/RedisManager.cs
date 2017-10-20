@@ -293,7 +293,7 @@ namespace Sweet.Redis
                     var emptyTuple = new Tuple<RedisConnectionPool, RedisRole>[0];
 
                     var groups = ipEPSettings
-                        .SelectMany(setting => CreateNodes(Name, setting, discoveredIPList) ?? emptyTuple)
+                        .SelectMany(setting => CreateNodes(discoveredIPList, Name, setting) ?? emptyTuple)
                         .Where(node => node != null)
                         .GroupBy(
                                 tuple => tuple.Item2,
@@ -329,8 +329,8 @@ namespace Sweet.Redis
             }
         }
 
-        private static Tuple<RedisConnectionPool, RedisRole>[] CreateNodes(string name,
-             RedisPoolSettings settings, HashSet<IPEndPoint> discoveredIPList)
+        private static Tuple<RedisConnectionPool, RedisRole>[] CreateNodes(HashSet<IPEndPoint> discoveredEndPoints, 
+            string name, RedisPoolSettings settings)
         {
             try
             {
@@ -343,102 +343,61 @@ namespace Sweet.Redis
                     return null;
 
                 var nodeEndPoint = new IPEndPoint(ipAddresses[0], endPoints[0].Port);
-                if (discoveredIPList.Contains(nodeEndPoint))
-                {
-                    discoveredIPList.Add(nodeEndPoint);
+                if (discoveredEndPoints.Contains(nodeEndPoint))
                     return null;
-                }
 
-                discoveredIPList.Add(nodeEndPoint);
+                discoveredEndPoints.Add(nodeEndPoint);
 
                 var dispose = false;
-                var pool = new RedisConnectionPool(name, settings);
+                var connectionPool = new RedisConnectionPool(name, settings);
                 try
                 {
-                    RedisRole role;
-                    RedisRoleInfo roleInfo;
-                    RedisServerInfo serverInfo;
+                    var nodeInfo = GetNodeInfo(connectionPool);
 
-                    GetNodeInfo(pool, out role, out roleInfo, out serverInfo);
-
-                    if (role == RedisRole.Undefined)
+                    if (nodeInfo == null || nodeInfo.Item1 == RedisRole.Undefined)
                         dispose = true;
                     else
                     {
-                        switch (role)
+                        var role = nodeInfo.Item1;
+                        var siblingEndPoints = nodeInfo.Item2;
+
+                        var list = new List<Tuple<RedisConnectionPool, RedisRole>>();
+                        if (role == RedisRole.Master || role == RedisRole.Sentinel)
                         {
-                            case RedisRole.Master:
+                            dispose = (role == RedisRole.Sentinel);
+
+                            if (siblingEndPoints == null || siblingEndPoints.Length == 0)
+                                return role == RedisRole.Master ? new[] { new Tuple<RedisConnectionPool, RedisRole>(connectionPool, role) } : null;
+
+                            if (role == RedisRole.Master)
+                                list.Add(new Tuple<RedisConnectionPool, RedisRole>(connectionPool, role));
+
+                            foreach (var siblingEndPoint in siblingEndPoints)
+                            {
+                                try
                                 {
-                                    if (ReferenceEquals(serverInfo, null))
-                                        return new[] { new Tuple<RedisConnectionPool, RedisRole>(pool, role) };
-
-                                    var list = new List<Tuple<RedisConnectionPool, RedisRole>>();
-                                    list.Add(new Tuple<RedisConnectionPool, RedisRole>(pool, role));
-
-                                    var slaves = serverInfo.Replication.Slaves;
-                                    if (slaves != null)
+                                    if (siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
                                     {
-                                        foreach (var slave in slaves)
-                                        {
-                                            try
-                                            {
-                                                if (slave.Port.HasValue && !String.IsNullOrEmpty(slave.IPAddress))
-                                                {
-                                                    var slaveSettings = (RedisPoolSettings)settings.Clone(slave.IPAddress, slave.Port.Value);
+                                        var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
 
-                                                    var slaveNodes = CreateNodes(name, slaveSettings, discoveredIPList);
-                                                    if (slaveNodes != null)
-                                                        list.AddRange(slaveNodes);
-                                                }
-                                            }
-                                            catch (Exception)
-                                            { }
-                                        }
-                                    }
-
-                                    return list.ToArray();
-                                }
-                            case RedisRole.Sentinel:
-                                {
-                                    dispose = true;
-                                    if (!ReferenceEquals(serverInfo, null))
-                                    {
-                                        var list = new List<Tuple<RedisConnectionPool, RedisRole>>();
-
-                                        var masters = serverInfo.Sentinel.Masters;
-                                        if (masters != null)
-                                        {
-                                            foreach (var master in masters)
-                                            {
-                                                try
-                                                {
-                                                    if (master.Port.HasValue && !String.IsNullOrEmpty(master.IPAddress))
-                                                    {
-                                                        var masterSettings = (RedisPoolSettings)settings.Clone(master.IPAddress, master.Port.Value);
-
-                                                        var masterNodes = CreateNodes(name, masterSettings, discoveredIPList);
-                                                        if (masterNodes != null)
-                                                            list.AddRange(masterNodes);
-                                                    }
-                                                }
-                                                catch (Exception)
-                                                { }
-                                            }
-                                        }
-
-                                        return list.ToArray();
+                                        var otherNodes = CreateNodes(discoveredEndPoints, name, siblingSettings);
+                                        if (otherNodes != null)
+                                            list.AddRange(otherNodes);
                                     }
                                 }
-                                break;
-                            default:
-                                return new[] { new Tuple<RedisConnectionPool, RedisRole>(pool, role) };
+                                catch (Exception)
+                                { }
+                            }
+
+                            return list.ToArray();
                         }
+                        return new[] { new Tuple<RedisConnectionPool, RedisRole>(connectionPool, role) };
                     }
                 }
                 finally
                 {
                     if (dispose)
-                        pool.Dispose();
+                        connectionPool.Dispose();
                 }
             }
             catch (Exception)
@@ -446,78 +405,117 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static void GetNodeInfo(RedisConnectionPool pool, out RedisRole role,
-                                        out RedisRoleInfo roleInfo, out RedisServerInfo serverInfo)
+        private static Tuple<RedisRole, RedisEndPoint[]> GetNodeInfo(RedisConnectionPool pool)
         {
-            roleInfo = null;
-            serverInfo = null;
-            role = RedisRole.Undefined;
-
             using (var db = pool.GetDb(-1))
             {
                 try
                 {
-                    var rawInfo = db.Server.Role();
-                    if (!ReferenceEquals(rawInfo, null))
+                    var serverInfoRaw = db.Server.Info();
+                    if (!ReferenceEquals(serverInfoRaw, null))
                     {
-                        roleInfo = rawInfo.Value;
-                        if (!ReferenceEquals(roleInfo, null))
-                            role = roleInfo.Role;
-                    }
-                }
-                catch (Exception e)
-                {
-                    var exception = e;
-                    while (exception != null)
-                    {
-                        if (exception is SocketException)
-                            return;
-
-                        var re = e as RedisException;
-                        if (re != null && (re.ErrorCode == RedisErrorCode.ConnectionError ||
-                            re.ErrorCode == RedisErrorCode.SocketError))
-                            return;
-
-                        exception = exception.InnerException;
-                    }
-                }
-
-                if (role == RedisRole.Undefined ||
-                    role == RedisRole.Master ||
-                    role == RedisRole.Sentinel)
-                {
-                    try
-                    {
-                        var rawInfo = db.Server.Info();
-                        if (!ReferenceEquals(rawInfo, null))
+                        var serverInfo = serverInfoRaw.Value;
+                        if (serverInfo != null)
                         {
-                            serverInfo = rawInfo.Value;
-                            if (!ReferenceEquals(serverInfo, null))
+                            var serverSection = serverInfo.Server;
+                            if (serverSection != null)
                             {
-                                var repInfo = serverInfo.Replication;
-                                if (!ReferenceEquals(repInfo, null))
+                                var role = RedisRole.Undefined;
+
+                                var redisMode = (serverSection.RedisMode ?? String.Empty).Trim().ToLowerInvariant();
+                                if (redisMode == "sentinel")
+                                    role = RedisRole.Sentinel;
+                                else
                                 {
-                                    var roleStr = (repInfo.Role ?? String.Empty).ToLowerInvariant();
-                                    switch (roleStr)
+                                    var replicationSection = serverInfo.Replication;
+                                    if (replicationSection != null)
                                     {
-                                        case "master":
-                                            role = RedisRole.Master;
-                                            break;
-                                        case "slave":
-                                            role = RedisRole.Slave;
-                                            break;
-                                        case "sentinel":
-                                            role = RedisRole.Sentinel;
-                                            break;
+                                        var roleStr = (replicationSection.Role ?? String.Empty).ToLowerInvariant();
+                                        switch (roleStr)
+                                        {
+                                            case "master":
+                                                role = RedisRole.Master;
+                                                break;
+                                            case "slave":
+                                                role = RedisRole.Slave;
+                                                break;
+                                            case "sentinel":
+                                                role = RedisRole.Sentinel;
+                                                break;
+                                        }
                                     }
+
+                                    if (role == RedisRole.Undefined)
+                                        return null;
+                                }
+
+                                switch (role)
+                                {
+                                    case RedisRole.Slave:
+                                        return new Tuple<RedisRole, RedisEndPoint[]>(role, null);
+                                    case RedisRole.Master:
+                                        {
+                                            var slaveEndPoints = new List<RedisEndPoint>();
+
+                                            var replicationSection = serverInfo.Replication;
+                                            if (replicationSection != null)
+                                            {
+                                                var slaves = replicationSection.Slaves;
+                                                if (slaves != null)
+                                                {
+                                                    foreach (var slave in slaves)
+                                                    {
+                                                        try
+                                                        {
+                                                            if (slave.Port.HasValue && !String.IsNullOrEmpty(slave.IPAddress))
+                                                            {
+                                                                var endPoint = new RedisEndPoint(slave.IPAddress, slave.Port.Value);
+                                                                slaveEndPoints.Add(endPoint);
+                                                            }
+                                                        }
+                                                        catch (Exception)
+                                                        { }
+                                                    }
+                                                }
+                                            }
+                                            return new Tuple<RedisRole, RedisEndPoint[]>(role, slaveEndPoints.ToArray());
+                                        }
+                                    case RedisRole.Sentinel:
+                                        {
+                                            var masterEndPoints = new List<RedisEndPoint>();
+
+                                            var sentinelSection = serverInfo.Sentinel;
+                                            if (sentinelSection != null)
+                                            {
+                                                var masters = sentinelSection.Masters;
+                                                if (masters != null)
+                                                {
+                                                    foreach (var master in masters)
+                                                    {
+                                                        try
+                                                        {
+                                                            if (master.Port.HasValue && !String.IsNullOrEmpty(master.IPAddress))
+                                                            {
+                                                                var endPoint = new RedisEndPoint(master.IPAddress, master.Port.Value);
+                                                                masterEndPoints.Add(endPoint);
+                                                            }
+                                                        }
+                                                        catch (Exception)
+                                                        { }
+                                                    }
+                                                }
+                                            }
+                                            return new Tuple<RedisRole, RedisEndPoint[]>(role, masterEndPoints.ToArray());
+                                        }
                                 }
                             }
                         }
                     }
-                    catch (Exception)
-                    { }
                 }
+                catch (Exception)
+                { }
             }
+            return null;
         }
 
         private static HashSet<IPEndPoint> SplitToIPEndPoints(RedisEndPoint[] endPoints)
