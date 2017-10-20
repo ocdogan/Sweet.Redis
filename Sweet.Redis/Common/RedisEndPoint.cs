@@ -78,6 +78,14 @@ namespace Sweet.Redis
 
         #region Static Members
 
+        public static readonly RedisEndPoint LocalHostEndPoint = new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort);
+        public static readonly RedisEndPoint IP4LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP4Loopback, RedisConstants.DefaultPort);
+        public static readonly RedisEndPoint IP6LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP6Loopback, RedisConstants.DefaultPort);
+
+        public static readonly RedisEndPoint SentinelLocalHostEndPoint = new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultSentinelPort);
+        public static readonly RedisEndPoint SentinelIP4LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP4Loopback, RedisConstants.DefaultSentinelPort);
+        public static readonly RedisEndPoint SentinelIP6LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP6Loopback, RedisConstants.DefaultSentinelPort);
+
         private static readonly IPAddress[] EmptyAddresses = new IPAddress[0];
 
         private static readonly ConcurrentDictionary<string, RedisIPAddressEntry> s_DnsEntries =
