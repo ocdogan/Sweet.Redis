@@ -46,7 +46,7 @@ namespace Sweet.Redis
         public static readonly byte[] ZeroBytes = "0".ToBytes();
 
         // Commands that do not require DB
-        public static readonly HashSet<byte[]> CommandsForAnyRole = new HashSet<byte[]> {
+        public static readonly HashSet<RedisByteArray> CommandsForAnyRole = new HashSet<RedisByteArray> {
             "ROLE".ToBytes() ,
             "INFO".ToBytes() ,
             "PING".ToBytes() ,
@@ -60,7 +60,7 @@ namespace Sweet.Redis
             "UNSUBSCRIBE".ToBytes() 
         };
 
-        public static readonly HashSet<byte[]> CommandsNotRequireDB = new HashSet<byte[]> {
+        public static readonly HashSet<RedisByteArray> CommandsNotRequireDB = new HashSet<RedisByteArray> {
             "AUTH".ToBytes(),
             "BGREWRITEAOF".ToBytes(),
             "BGSAVE".ToBytes(),
@@ -91,7 +91,7 @@ namespace Sweet.Redis
             "UNSUBSCRIBE".ToBytes(),
             "UNWATCH".ToBytes()        };
 
-        public static readonly HashSet<byte[]> CommandsThatUpdate = new HashSet<byte[]> {
+        public static readonly HashSet<RedisByteArray> CommandsThatUpdate = new HashSet<RedisByteArray> {
             "APPEND".ToBytes(),
             "BITOP".ToBytes(),
             "BLPOP".ToBytes(),

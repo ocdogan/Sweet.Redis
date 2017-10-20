@@ -30,7 +30,7 @@ using System.Text;
 namespace Sweet.Redis
 {
     public static class RedisCommon
-    {
+    {      
         #region Static Members
 
         private static readonly DateTime UnixBaseTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
