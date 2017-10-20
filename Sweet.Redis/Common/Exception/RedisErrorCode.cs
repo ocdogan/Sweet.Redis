@@ -40,6 +40,7 @@ namespace Sweet.Redis
         public const int NotSupported = 9;
         public const int InvalidParameter = 10;
         public const int UncompleteTransaction = 10;
+        public const int ReturnedError = 10;
 
         #endregion Constants
     }
