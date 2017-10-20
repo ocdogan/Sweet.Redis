@@ -88,7 +88,7 @@ namespace Sweet.Redis.ConsoleTest
         static void ManagerTest3()
         {
             using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
-                new[] { new RedisEndPoint("localhost", RedisConstants.DefaultSentinelPort) },
+                new[] { RedisEndPoint.SentinelLocalHostEndPoint },
                 masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -139,8 +139,7 @@ namespace Sweet.Redis.ConsoleTest
         static void ManagerTest2()
         {
             using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
-                new[] { new RedisEndPoint("localhost", RedisConstants.DefaultPort),
-                        new RedisEndPoint("localhost", 6380)},
+                new[] { RedisEndPoint.LocalHostEndPoint, new RedisEndPoint("localhost", 6380)},
                 masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -190,8 +189,8 @@ namespace Sweet.Redis.ConsoleTest
 
         static void ManagerTest1()
         {
-            using (var manager = new RedisManager("My Manager", new RedisManagerSettings("127.0.0.1",
-                       RedisConstants.DefaultPort, masterName: "mymaster")))
+            using (var manager = new RedisManager("My Manager", 
+                new RedisManagerSettings(new[] { RedisEndPoint.LocalHostEndPoint }, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
                 do
