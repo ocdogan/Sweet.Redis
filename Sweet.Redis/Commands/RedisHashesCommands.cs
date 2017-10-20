@@ -56,9 +56,9 @@ namespace Sweet.Redis
                                     .Join(field)
                                     .Join(fields);
 
-                return ExpectInteger(RedisCommands.HDel, parameters);
+                return ExpectInteger(RedisCommandList.HDel, parameters);
             }
-            return ExpectInteger(RedisCommands.HDel, key, field);
+            return ExpectInteger(RedisCommandList.HDel, key, field);
         }
 
         public RedisBool HExists(RedisParam key, RedisParam field)
@@ -69,7 +69,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectGreaterThanZero(RedisCommands.HExists, key, field);
+            return ExpectGreaterThanZero(RedisCommandList.HExists, key, field);
         }
 
         public RedisBytes HGet(RedisParam key, RedisParam field)
@@ -80,7 +80,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectBulkStringBytes(RedisCommands.HGet, key, field);
+            return ExpectBulkStringBytes(RedisCommandList.HGet, key, field);
         }
 
         public RedisMultiBytes HGetAll(RedisParam key)
@@ -88,7 +88,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.HGetAll, key);
+            return ExpectMultiDataBytes(RedisCommandList.HGetAll, key);
         }
 
         public RedisMultiString HGetAllString(RedisParam key)
@@ -96,7 +96,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.HGetAll, key);
+            return ExpectMultiDataStrings(RedisCommandList.HGetAll, key);
         }
 
         public RedisResult<Dictionary<string, string>> HGetAllDictionary(RedisParam key)
@@ -104,7 +104,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            var result = ExpectMultiDataStrings(RedisCommands.HGetAll, key);
+            var result = ExpectMultiDataStrings(RedisCommandList.HGetAll, key);
             if (result != null)
             {
                 var length = result.Length;
@@ -123,7 +123,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            var result = ExpectMultiDataStrings(RedisCommands.HGetAll, key);
+            var result = ExpectMultiDataStrings(RedisCommandList.HGetAll, key);
             if (result != null)
             {
                 var length = result.Length;
@@ -145,7 +145,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectBulkString(RedisCommands.HGet, key, field.ToBytes());
+            return ExpectBulkString(RedisCommandList.HGet, key, field.ToBytes());
         }
 
         public RedisInteger HIncrBy(RedisParam key, RedisParam field, int increment)
@@ -156,7 +156,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectInteger(RedisCommands.HIncrBy, key, field, increment.ToBytes());
+            return ExpectInteger(RedisCommandList.HIncrBy, key, field, increment.ToBytes());
         }
 
         public RedisInteger HIncrBy(RedisParam key, RedisParam field, long increment)
@@ -167,7 +167,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectInteger(RedisCommands.HIncrBy, key, field, increment.ToBytes());
+            return ExpectInteger(RedisCommandList.HIncrBy, key, field, increment.ToBytes());
         }
 
         public RedisDouble HIncrByFloat(RedisParam key, RedisParam field, double increment)
@@ -178,7 +178,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectDouble(RedisCommands.HIncrByFloat, key, field, increment.ToBytes());
+            return ExpectDouble(RedisCommandList.HIncrByFloat, key, field, increment.ToBytes());
         }
 
         public RedisMultiBytes HKeys(RedisParam key)
@@ -186,7 +186,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.HKeys, key);
+            return ExpectMultiDataBytes(RedisCommandList.HKeys, key);
         }
 
         public RedisMultiString HKeyStrings(RedisParam key)
@@ -194,7 +194,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.HKeys, key);
+            return ExpectMultiDataStrings(RedisCommandList.HKeys, key);
         }
 
         public RedisInteger HLen(RedisParam key)
@@ -202,7 +202,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.HLen, key);
+            return ExpectInteger(RedisCommandList.HLen, key);
         }
 
         public RedisMultiBytes HMGet(RedisParam key, RedisParam field, params RedisParam[] fields)
@@ -221,9 +221,9 @@ namespace Sweet.Redis
                                     .Join(field)
                                     .Join(fields);
 
-                return ExpectMultiDataBytes(RedisCommands.HMGet, parameters);
+                return ExpectMultiDataBytes(RedisCommandList.HMGet, parameters);
             }
-            return ExpectMultiDataBytes(RedisCommands.HMGet, key, field);
+            return ExpectMultiDataBytes(RedisCommandList.HMGet, key, field);
         }
 
         public RedisMultiString HMGetStrings(RedisParam key, RedisParam field, params RedisParam[] fields)
@@ -242,9 +242,9 @@ namespace Sweet.Redis
                                     .Join(field)
                                     .Join(fields);
 
-                return ExpectMultiDataStrings(RedisCommands.HMGet, parameters);
+                return ExpectMultiDataStrings(RedisCommandList.HMGet, parameters);
             }
-            return ExpectMultiDataStrings(RedisCommands.HMGet, key, field.ToBytes());
+            return ExpectMultiDataStrings(RedisCommandList.HMGet, key, field.ToBytes());
         }
 
         public RedisBool HMSet(RedisParam key, RedisParam field, RedisParam value, RedisParam[] fields = null, RedisParam[] values = null)
@@ -270,9 +270,9 @@ namespace Sweet.Redis
                                     .Join(value)
                                     .Join(fields.Merge(values));
 
-                return ExpectOK(RedisCommands.HMSet, parameters);
+                return ExpectOK(RedisCommandList.HMSet, parameters);
             }
-            return ExpectOK(RedisCommands.HMSet, key, field, value);
+            return ExpectOK(RedisCommandList.HMSet, key, field, value);
         }
 
         public RedisBool HMSet(RedisParam key, Hashtable values)
@@ -294,7 +294,7 @@ namespace Sweet.Redis
                 parameters[i++] = de.Key.ToBytes();
                 parameters[i++] = de.Value.ToBytes();
             }
-            return ExpectOK(RedisCommands.HMSet, parameters);
+            return ExpectOK(RedisCommandList.HMSet, parameters);
         }
 
         public RedisBool HMSet(RedisParam key, IDictionary<string, string> values)
@@ -316,7 +316,7 @@ namespace Sweet.Redis
                 parameters[i++] = kvp.Key.ToBytes();
                 parameters[i++] = kvp.Value.ToBytes();
             }
-            return ExpectOK(RedisCommands.HMSet, parameters);
+            return ExpectOK(RedisCommandList.HMSet, parameters);
         }
 
         public RedisBool HMSet(RedisParam key, IDictionary<RedisParam, RedisParam> values)
@@ -338,7 +338,7 @@ namespace Sweet.Redis
                 parameters[i++] = kvp.Key;
                 parameters[i++] = kvp.Value;
             }
-            return ExpectOK(RedisCommands.HMSet, parameters);
+            return ExpectOK(RedisCommandList.HMSet, parameters);
         }
 
         public RedisMultiBytes HScan(RedisParam key, int count = 10, RedisParam? match = null)
@@ -362,7 +362,7 @@ namespace Sweet.Redis
             if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            return ExpectGreaterThanZero(RedisCommands.HSet, key, field, value);
+            return ExpectGreaterThanZero(RedisCommandList.HSet, key, field, value);
         }
 
         public RedisBool HSetNx(RedisParam key, RedisParam field, RedisParam value)
@@ -378,7 +378,7 @@ namespace Sweet.Redis
             if (value.Length > RedisConstants.MaxValueLength)
                 throw new ArgumentException("value is limited to 1GB", "value");
 
-            return ExpectGreaterThanZero(RedisCommands.HSetNx, key, field, value);
+            return ExpectGreaterThanZero(RedisCommandList.HSetNx, key, field, value);
         }
 
         public RedisInteger HStrLen(RedisParam key, RedisParam field)
@@ -389,7 +389,7 @@ namespace Sweet.Redis
             if (field.IsEmpty)
                 throw new ArgumentNullException("field");
 
-            return ExpectInteger(RedisCommands.HStrLen, key, field);
+            return ExpectInteger(RedisCommandList.HStrLen, key, field);
         }
 
         public RedisMultiBytes HVals(RedisParam key)
@@ -397,7 +397,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.HVals, key);
+            return ExpectMultiDataBytes(RedisCommandList.HVals, key);
         }
 
         public RedisMultiString HValStrings(RedisParam key)
@@ -405,7 +405,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.HVals, key);
+            return ExpectMultiDataStrings(RedisCommandList.HVals, key);
         }
 
         #endregion Methods

@@ -100,7 +100,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             if (dbIndex > RedisConstants.MinDbIndex && dbIndex <= RedisConstants.MaxDbIndex)
             {
-                using (var cmd = new RedisCommand(dbIndex, RedisCommands.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
+                using (var cmd = new RedisCommand(dbIndex, RedisCommandList.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
                 {
                     return cmd.ExpectOK(new RedisSocketContext(socket, Settings), throwException);
                 }

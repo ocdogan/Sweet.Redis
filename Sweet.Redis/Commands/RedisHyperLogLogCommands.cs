@@ -52,9 +52,9 @@ namespace Sweet.Redis
             if (length > 0)
             {
                 var parameters = key.Join(element).Join(elements);
-                return ExpectOne(RedisCommands.PfAdd, parameters);
+                return ExpectOne(RedisCommandList.PfAdd, parameters);
             }
-            return ExpectOne(RedisCommands.PfAdd, key, element);
+            return ExpectOne(RedisCommandList.PfAdd, key, element);
         }
 
         public RedisInteger PfCount(RedisParam key, params RedisParam[] keys)
@@ -68,9 +68,9 @@ namespace Sweet.Redis
             if (length > 0)
             {
                 var parameters = key.Join(keys);
-                return ExpectInteger(RedisCommands.PfAdd, parameters);
+                return ExpectInteger(RedisCommandList.PfAdd, parameters);
             }
-            return ExpectInteger(RedisCommands.PfAdd, key);
+            return ExpectInteger(RedisCommandList.PfAdd, key);
         }
 
         public RedisBool PfMerge(RedisParam destKey, RedisParam sourceKey, params RedisParam[] sourceKeys)
@@ -87,9 +87,9 @@ namespace Sweet.Redis
             if (length > 0)
             {
                 var parameters = destKey.Join(sourceKey).Join(sourceKeys);
-                return ExpectOK(RedisCommands.Quit, parameters);
+                return ExpectOK(RedisCommandList.Quit, parameters);
             }
-            return ExpectOK(RedisCommands.Quit, destKey, sourceKey);
+            return ExpectOK(RedisCommandList.Quit, destKey, sourceKey);
         }
 
         #endregion Methods

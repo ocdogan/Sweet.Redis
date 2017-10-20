@@ -57,18 +57,18 @@ namespace Sweet.Redis
                 switch (updateOption)
                 {
                     case RedisUpdateOption.OnlyExistings:
-                        parameters = parameters.Join(RedisCommands.XX);
+                        parameters = parameters.Join(RedisCommandList.XX);
                         break;
                     case RedisUpdateOption.OnlyNotExistings:
-                        parameters = parameters.Join(RedisCommands.NX);
+                        parameters = parameters.Join(RedisCommandList.NX);
                         break;
                 }
 
                 if (changed)
-                    parameters = parameters.Join(RedisCommands.CH);
+                    parameters = parameters.Join(RedisCommandList.CH);
 
                 if (increment)
-                    parameters = parameters.Join(RedisCommands.Incr);
+                    parameters = parameters.Join(RedisCommandList.Incr);
 
                 parameters = parameters.Join(score.ToBytes())
                                        .Join(member);
@@ -86,10 +86,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                return ExpectDouble(RedisCommands.ZAdd, parameters);
+                return ExpectDouble(RedisCommandList.ZAdd, parameters);
             }
 
-            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
+            return ExpectDouble(RedisCommandList.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public RedisDouble ZAdd(RedisParam key, long score, RedisParam member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -110,18 +110,18 @@ namespace Sweet.Redis
                 switch (updateOption)
                 {
                     case RedisUpdateOption.OnlyExistings:
-                        parameters = parameters.Join(RedisCommands.XX);
+                        parameters = parameters.Join(RedisCommandList.XX);
                         break;
                     case RedisUpdateOption.OnlyNotExistings:
-                        parameters = parameters.Join(RedisCommands.NX);
+                        parameters = parameters.Join(RedisCommandList.NX);
                         break;
                 }
 
                 if (changed)
-                    parameters = parameters.Join(RedisCommands.CH);
+                    parameters = parameters.Join(RedisCommandList.CH);
 
                 if (increment)
-                    parameters = parameters.Join(RedisCommands.Incr);
+                    parameters = parameters.Join(RedisCommandList.Incr);
 
                 parameters = parameters.Join(score.ToBytes())
                                        .Join(member);
@@ -139,10 +139,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                return ExpectDouble(RedisCommands.ZAdd, parameters);
+                return ExpectDouble(RedisCommandList.ZAdd, parameters);
             }
 
-            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
+            return ExpectDouble(RedisCommandList.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public RedisDouble ZAdd(RedisParam key, double score, RedisParam member, RedisUpdateOption updateOption = RedisUpdateOption.Default,
@@ -163,18 +163,18 @@ namespace Sweet.Redis
                 switch (updateOption)
                 {
                     case RedisUpdateOption.OnlyExistings:
-                        parameters = parameters.Join(RedisCommands.XX);
+                        parameters = parameters.Join(RedisCommandList.XX);
                         break;
                     case RedisUpdateOption.OnlyNotExistings:
-                        parameters = parameters.Join(RedisCommands.NX);
+                        parameters = parameters.Join(RedisCommandList.NX);
                         break;
                 }
 
                 if (changed)
-                    parameters = parameters.Join(RedisCommands.CH);
+                    parameters = parameters.Join(RedisCommandList.CH);
 
                 if (increment)
-                    parameters = parameters.Join(RedisCommands.Incr);
+                    parameters = parameters.Join(RedisCommandList.Incr);
 
                 parameters = parameters.Join(score.ToBytes())
                                        .Join(member);
@@ -192,10 +192,10 @@ namespace Sweet.Redis
                     parameters = parameters.Join(sams);
                 }
 
-                return ExpectDouble(RedisCommands.ZAdd, parameters);
+                return ExpectDouble(RedisCommandList.ZAdd, parameters);
             }
 
-            return ExpectDouble(RedisCommands.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
+            return ExpectDouble(RedisCommandList.ZAdd, keyBytes, score.ToBytes(), member.ToBytes());
         }
 
         public RedisInteger ZCard(RedisParam key)
@@ -203,7 +203,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZCard, key);
+            return ExpectInteger(RedisCommandList.ZCard, key);
         }
 
         public RedisInteger ZCount(RedisParam key, int min, int max)
@@ -211,7 +211,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZCount, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZCount, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZCount(RedisParam key, long min, long max)
@@ -219,7 +219,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZCount, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZCount, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZCount(RedisParam key, double min, double max)
@@ -227,7 +227,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZCount, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZCount, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZCount(RedisParam key, RedisParam min, RedisParam max)
@@ -235,7 +235,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZCount, key, min, max);
+            return ExpectInteger(RedisCommandList.ZCount, key, min, max);
         }
 
         public RedisDouble ZIncrBy(RedisParam key, double increment, RedisParam member)
@@ -246,7 +246,7 @@ namespace Sweet.Redis
             if (member.IsNull)
                 throw new ArgumentNullException("member");
 
-            return ExpectInteger(RedisCommands.ZIncrBy, key, increment.ToBytes(), member);
+            return ExpectInteger(RedisCommandList.ZIncrBy, key, increment.ToBytes(), member);
         }
 
         public RedisDouble ZIncrBy(RedisParam key, int increment, RedisParam member)
@@ -257,7 +257,7 @@ namespace Sweet.Redis
             if (member.IsNull)
                 throw new ArgumentNullException("member");
 
-            return ExpectInteger(RedisCommands.ZIncrBy, key, increment.ToBytes(), member);
+            return ExpectInteger(RedisCommandList.ZIncrBy, key, increment.ToBytes(), member);
         }
 
         public RedisDouble ZIncrBy(RedisParam key, long increment, RedisParam member)
@@ -268,7 +268,7 @@ namespace Sweet.Redis
             if (member.IsNull)
                 throw new ArgumentNullException("member");
 
-            return ExpectInteger(RedisCommands.ZIncrBy, key, increment.ToBytes(), member);
+            return ExpectInteger(RedisCommandList.ZIncrBy, key, increment.ToBytes(), member);
         }
 
         public RedisInteger ZInterStore(RedisParam destination, int numkeys, RedisParam key, int weight,
@@ -310,20 +310,20 @@ namespace Sweet.Redis
                 switch (aggregate)
                 {
                     case RedisAggregate.Sum:
-                        parameters = parameters.Join(RedisCommands.Sum);
+                        parameters = parameters.Join(RedisCommandList.Sum);
                         break;
                     case RedisAggregate.Min:
-                        parameters = parameters.Join(RedisCommands.Min);
+                        parameters = parameters.Join(RedisCommandList.Min);
                         break;
                     case RedisAggregate.Max:
-                        parameters = parameters.Join(RedisCommands.Max);
+                        parameters = parameters.Join(RedisCommandList.Max);
                         break;
                 }
 
-                return ExpectInteger(RedisCommands.ZInterStore, parameters);
+                return ExpectInteger(RedisCommandList.ZInterStore, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
+            return ExpectInteger(RedisCommandList.ZInterStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
         }
 
         public RedisInteger ZInterStore(RedisParam destination, int numkeys, RedisParam key, long weight,
@@ -365,20 +365,20 @@ namespace Sweet.Redis
                 switch (aggregate)
                 {
                     case RedisAggregate.Sum:
-                        parameters = parameters.Join(RedisCommands.Sum);
+                        parameters = parameters.Join(RedisCommandList.Sum);
                         break;
                     case RedisAggregate.Min:
-                        parameters = parameters.Join(RedisCommands.Min);
+                        parameters = parameters.Join(RedisCommandList.Min);
                         break;
                     case RedisAggregate.Max:
-                        parameters = parameters.Join(RedisCommands.Max);
+                        parameters = parameters.Join(RedisCommandList.Max);
                         break;
                 }
 
-                return ExpectInteger(RedisCommands.ZInterStore, parameters);
+                return ExpectInteger(RedisCommandList.ZInterStore, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
+            return ExpectInteger(RedisCommandList.ZInterStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
         }
 
         public RedisInteger ZInterStore(RedisParam destination, int numkeys, RedisParam key, double weight,
@@ -420,20 +420,20 @@ namespace Sweet.Redis
                 switch (aggregate)
                 {
                     case RedisAggregate.Sum:
-                        parameters = parameters.Join(RedisCommands.Sum);
+                        parameters = parameters.Join(RedisCommandList.Sum);
                         break;
                     case RedisAggregate.Min:
-                        parameters = parameters.Join(RedisCommands.Min);
+                        parameters = parameters.Join(RedisCommandList.Min);
                         break;
                     case RedisAggregate.Max:
-                        parameters = parameters.Join(RedisCommands.Max);
+                        parameters = parameters.Join(RedisCommandList.Max);
                         break;
                 }
 
-                return ExpectInteger(RedisCommands.ZInterStore, parameters);
+                return ExpectInteger(RedisCommandList.ZInterStore, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZInterStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
+            return ExpectInteger(RedisCommandList.ZInterStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
         }
 
         public RedisInteger ZLexCount(RedisParam key, double min, double max)
@@ -441,7 +441,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZLexCount, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZLexCount, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZLexCount(RedisParam key, int min, int max)
@@ -449,7 +449,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZLexCount, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZLexCount, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZLexCount(RedisParam key, long min, long max)
@@ -457,7 +457,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZLexCount, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZLexCount, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZLexCount(RedisParam key, RedisParam min, RedisParam max)
@@ -465,7 +465,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectInteger(RedisCommands.ZLexCount, key, min, max);
+            return ExpectInteger(RedisCommandList.ZLexCount, key, min, max);
         }
 
         public RedisMultiBytes ZRange(RedisParam key, double start, double stop)
@@ -473,7 +473,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.ZRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiBytes ZRange(RedisParam key, int start, int stop)
@@ -481,7 +481,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.ZRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiBytes ZRange(RedisParam key, long start, long stop)
@@ -489,7 +489,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataBytes(RedisCommands.ZRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiBytes ZRange(RedisParam key, RedisParam start, RedisParam stop)
@@ -501,9 +501,9 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("start");
 
             if (stop.IsEmpty)
-                return ExpectMultiDataBytes(RedisCommands.ZRange, key, start);
+                return ExpectMultiDataBytes(RedisCommandList.ZRange, key, start);
 
-            return ExpectMultiDataBytes(RedisCommands.ZRange, key, start, stop);
+            return ExpectMultiDataBytes(RedisCommandList.ZRange, key, start, stop);
         }
 
         public RedisMultiBytes ZRangeByLex(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -546,12 +546,12 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            return ExpectMultiDataBytes(RedisCommands.ZRangeByLex, parameters);
+            return ExpectMultiDataBytes(RedisCommandList.ZRangeByLex, parameters);
         }
 
         public RedisMultiString ZRangeByLexString(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -594,12 +594,12 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            return ExpectMultiDataStrings(RedisCommands.ZRangeByLex, parameters);
+            return ExpectMultiDataStrings(RedisCommandList.ZRangeByLex, parameters);
         }
 
         public RedisMultiBytes ZRangeByScore(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -642,12 +642,12 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            return ExpectMultiDataBytes(RedisCommands.ZRangeByScore, parameters);
+            return ExpectMultiDataBytes(RedisCommandList.ZRangeByScore, parameters);
         }
 
         public RedisMultiString ZRangeByScoreString(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -690,12 +690,12 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            return ExpectMultiDataStrings(RedisCommands.ZRangeByScore, parameters);
+            return ExpectMultiDataStrings(RedisCommandList.ZRangeByScore, parameters);
         }
 
         public RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, double start, double stop,
@@ -742,14 +742,14 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRangeByScore, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRangeByScore, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -823,14 +823,14 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRangeByScore, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRangeByScore, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -869,7 +869,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.ZRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataStrings(RedisCommandList.ZRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiString ZRangeString(RedisParam key, int start, int stop)
@@ -877,7 +877,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.ZRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataStrings(RedisCommandList.ZRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiString ZRangeString(RedisParam key, long start, long stop)
@@ -885,7 +885,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            return ExpectMultiDataStrings(RedisCommands.ZRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataStrings(RedisCommandList.ZRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiString ZRangeString(RedisParam key, RedisParam start, RedisParam stop)
@@ -897,9 +897,9 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("start");
 
             if (stop.IsEmpty)
-                return ExpectMultiDataStrings(RedisCommands.ZRange, key, start);
+                return ExpectMultiDataStrings(RedisCommandList.ZRange, key, start);
 
-            return ExpectMultiDataStrings(RedisCommands.ZRange, key, start, stop);
+            return ExpectMultiDataStrings(RedisCommandList.ZRange, key, start, stop);
         }
 
         public RedisResult<RedisKeyValue<byte[], double>[]> ZRangeWithScores(RedisParam key, double start, double stop)
@@ -940,9 +940,9 @@ namespace Sweet.Redis
             if (!stop.IsEmpty)
                 parameters = parameters.Join(stop);
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRange, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRange, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -1010,9 +1010,9 @@ namespace Sweet.Redis
             if (!stop.IsEmpty)
                 parameters = parameters.Join(stop);
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRange, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRange, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -1054,7 +1054,7 @@ namespace Sweet.Redis
             if (member.IsNull)
                 throw new ArgumentNullException("member");
 
-            return ExpectNullableInteger(RedisCommands.ZRank, key, member);
+            return ExpectNullableInteger(RedisCommandList.ZRank, key, member);
         }
 
         public RedisInteger ZRem(RedisParam key, RedisParam member, params RedisParam[] members)
@@ -1071,10 +1071,10 @@ namespace Sweet.Redis
             if (length > 0)
             {
                 var parameters = key.Join(member).Join(members);
-                return ExpectInteger(RedisCommands.ZRem, parameters);
+                return ExpectInteger(RedisCommandList.ZRem, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZRem, key, member);
+            return ExpectInteger(RedisCommandList.ZRem, key, member);
         }
 
         public RedisInteger ZRemRangeByLex(RedisParam key, double min, double max)
@@ -1083,7 +1083,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectInteger(RedisCommands.ZRemRangeByLex, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZRemRangeByLex, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZRemRangeByLex(RedisParam key, int min, int max)
@@ -1092,7 +1092,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectInteger(RedisCommands.ZRemRangeByLex, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZRemRangeByLex, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZRemRangeByLex(RedisParam key, long min, long max)
@@ -1101,7 +1101,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectInteger(RedisCommands.ZRemRangeByLex, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZRemRangeByLex, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZRemRangeByLex(RedisParam key, RedisParam min, RedisParam max)
@@ -1115,9 +1115,9 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (!max.IsEmpty)
-                return ExpectInteger(RedisCommands.ZRemRangeByLex, key, min, max);
+                return ExpectInteger(RedisCommandList.ZRemRangeByLex, key, min, max);
 
-            return ExpectInteger(RedisCommands.ZRemRangeByLex, key, min);
+            return ExpectInteger(RedisCommandList.ZRemRangeByLex, key, min);
         }
 
         public RedisInteger ZRemRangeByRank(RedisParam key, RedisParam start, RedisParam stop)
@@ -1131,9 +1131,9 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (!stop.IsEmpty)
-                return ExpectInteger(RedisCommands.ZRemRangeByRank, key, start, stop);
+                return ExpectInteger(RedisCommandList.ZRemRangeByRank, key, start, stop);
 
-            return ExpectInteger(RedisCommands.ZRemRangeByRank, key, start);
+            return ExpectInteger(RedisCommandList.ZRemRangeByRank, key, start);
         }
 
         public RedisInteger ZRemRangeByScore(RedisParam key, double min, double max)
@@ -1142,7 +1142,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectInteger(RedisCommands.ZRemRangeByScore, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZRemRangeByScore, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZRemRangeByScore(RedisParam key, int min, int max)
@@ -1151,7 +1151,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectInteger(RedisCommands.ZRemRangeByScore, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZRemRangeByScore, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZRemRangeByScore(RedisParam key, long min, long max)
@@ -1160,7 +1160,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectInteger(RedisCommands.ZRemRangeByScore, key, min.ToBytes(), max.ToBytes());
+            return ExpectInteger(RedisCommandList.ZRemRangeByScore, key, min.ToBytes(), max.ToBytes());
         }
 
         public RedisInteger ZRemRangeByScore(RedisParam key, RedisParam min, RedisParam max)
@@ -1174,9 +1174,9 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (!max.IsEmpty)
-                return ExpectInteger(RedisCommands.ZRemRangeByScore, key, min, max);
+                return ExpectInteger(RedisCommandList.ZRemRangeByScore, key, min, max);
 
-            return ExpectInteger(RedisCommands.ZRemRangeByScore, key, min);
+            return ExpectInteger(RedisCommandList.ZRemRangeByScore, key, min);
         }
 
         public RedisMultiBytes ZRevRange(RedisParam key, double start, double stop)
@@ -1185,7 +1185,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectMultiDataBytes(RedisCommands.ZRevRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZRevRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiBytes ZRevRange(RedisParam key, int start, int stop)
@@ -1194,7 +1194,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectMultiDataBytes(RedisCommands.ZRevRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZRevRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiBytes ZRevRange(RedisParam key, long start, long stop)
@@ -1203,7 +1203,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
-            return ExpectMultiDataBytes(RedisCommands.ZRevRange, key, start.ToBytes(), stop.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZRevRange, key, start.ToBytes(), stop.ToBytes());
         }
 
         public RedisMultiBytes ZRevRange(RedisParam key, RedisParam start, RedisParam stop)
@@ -1217,9 +1217,9 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (!stop.IsEmpty)
-                return ExpectMultiDataBytes(RedisCommands.ZRevRange, key, start, stop);
+                return ExpectMultiDataBytes(RedisCommandList.ZRevRange, key, start, stop);
 
-            return ExpectMultiDataBytes(RedisCommands.ZRevRange, key, start);
+            return ExpectMultiDataBytes(RedisCommandList.ZRevRange, key, start);
         }
 
         public RedisMultiBytes ZRevRangeByScore(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -1253,12 +1253,12 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            return ExpectMultiDataBytes(RedisCommands.ZRevRangeByScore, parameters);
+            return ExpectMultiDataBytes(RedisCommandList.ZRevRangeByScore, parameters);
         }
 
         public RedisMultiString ZRevRangeByScoreString(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -1292,12 +1292,12 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            return ExpectMultiDataStrings(RedisCommands.ZRevRangeByScore, parameters);
+            return ExpectMultiDataStrings(RedisCommandList.ZRevRangeByScore, parameters);
         }
 
         public RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeByScoreWithScores(RedisParam key, double start, double stop, int? offset = null, int? count = null)
@@ -1331,14 +1331,14 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRangeByScore, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRevRangeByScore, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -1399,14 +1399,14 @@ namespace Sweet.Redis
 
             if (offset != null && count != null)
             {
-                parameters = parameters.Join(RedisCommands.Limit)
+                parameters = parameters.Join(RedisCommandList.Limit)
                                        .Join(offset.Value.ToBytes())
                                        .Join(count.Value.ToBytes());
             }
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRangeByScore, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRevRangeByScore, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -1466,9 +1466,9 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             if (!stop.IsEmpty)
-                return ExpectMultiDataStrings(RedisCommands.ZRevRange, key, start, stop);
+                return ExpectMultiDataStrings(RedisCommandList.ZRevRange, key, start, stop);
 
-            return ExpectMultiDataStrings(RedisCommands.ZRevRange, key, start);
+            return ExpectMultiDataStrings(RedisCommandList.ZRevRange, key, start);
         }
 
         public RedisResult<RedisKeyValue<byte[], double>[]> ZRevRangeWithScores(RedisParam key, double start, double stop)
@@ -1500,9 +1500,9 @@ namespace Sweet.Redis
             if (!stop.IsEmpty)
                 parameters = parameters.Join(stop);
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRange, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRevRange, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -1561,9 +1561,9 @@ namespace Sweet.Redis
             if (!stop.IsEmpty)
                 parameters = parameters.Join(stop);
 
-            parameters = parameters.Join(RedisCommands.WithScores);
+            parameters = parameters.Join(RedisCommandList.WithScores);
 
-            var bytes = ExpectMultiDataBytes(RedisCommands.ZRevRange, parameters);
+            var bytes = ExpectMultiDataBytes(RedisCommandList.ZRevRange, parameters);
             if (bytes != null)
             {
                 var bLength = bytes.Length;
@@ -1605,7 +1605,7 @@ namespace Sweet.Redis
             if (member.IsNull)
                 throw new ArgumentNullException("member");
 
-            return ExpectNullableInteger(RedisCommands.ZRevRank, key, member);
+            return ExpectNullableInteger(RedisCommandList.ZRevRank, key, member);
         }
 
         public RedisMultiBytes ZScan(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null)
@@ -1620,15 +1620,15 @@ namespace Sweet.Redis
                 var parameters = key.Join(cursor.ToBytes());
 
                 if (matchPattern.HasValue && !matchPattern.Value.IsEmpty)
-                    parameters = parameters.Join(RedisCommands.Match).Join(matchPattern.ToBytes());
+                    parameters = parameters.Join(RedisCommandList.Match).Join(matchPattern.ToBytes());
 
                 if (count != null)
-                    parameters = parameters.Join(RedisCommands.Count).Join(count.ToBytes());
+                    parameters = parameters.Join(RedisCommandList.Count).Join(count.ToBytes());
 
-                return ExpectMultiDataBytes(RedisCommands.ZScan, parameters);
+                return ExpectMultiDataBytes(RedisCommandList.ZScan, parameters);
             }
 
-            return ExpectMultiDataBytes(RedisCommands.ZScan, key, cursor.ToBytes());
+            return ExpectMultiDataBytes(RedisCommandList.ZScan, key, cursor.ToBytes());
         }
 
         public RedisKeyValue<byte[], byte[]>[] ZScanKeyValue(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null)
@@ -1707,15 +1707,15 @@ namespace Sweet.Redis
                 var parameters = key.Join(cursor.ToBytes());
 
                 if (matchPattern.HasValue && !matchPattern.Value.IsEmpty)
-                    parameters = parameters.Join(RedisCommands.Match).Join(matchPattern.ToBytes());
+                    parameters = parameters.Join(RedisCommandList.Match).Join(matchPattern.ToBytes());
 
                 if (count != null)
-                    parameters = parameters.Join(RedisCommands.Count).Join(count.ToBytes());
+                    parameters = parameters.Join(RedisCommandList.Count).Join(count.ToBytes());
 
-                return ExpectMultiDataStrings(RedisCommands.ZScan, parameters);
+                return ExpectMultiDataStrings(RedisCommandList.ZScan, parameters);
             }
 
-            return ExpectMultiDataStrings(RedisCommands.ZScan, key, cursor.ToBytes());
+            return ExpectMultiDataStrings(RedisCommandList.ZScan, key, cursor.ToBytes());
         }
 
         public RedisDouble ZScore(RedisParam key, RedisParam member)
@@ -1728,7 +1728,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            return ExpectDouble(RedisCommands.ZScore, key, member.ToBytes());
+            return ExpectDouble(RedisCommandList.ZScore, key, member.ToBytes());
         }
 
         public RedisInteger ZUnionStore(RedisParam destination, int numkeys, RedisParam key, int weight,
@@ -1770,20 +1770,20 @@ namespace Sweet.Redis
                 switch (aggregate)
                 {
                     case RedisAggregate.Sum:
-                        parameters = parameters.Join(RedisCommands.Sum);
+                        parameters = parameters.Join(RedisCommandList.Sum);
                         break;
                     case RedisAggregate.Min:
-                        parameters = parameters.Join(RedisCommands.Min);
+                        parameters = parameters.Join(RedisCommandList.Min);
                         break;
                     case RedisAggregate.Max:
-                        parameters = parameters.Join(RedisCommands.Max);
+                        parameters = parameters.Join(RedisCommandList.Max);
                         break;
                 }
 
-                return ExpectInteger(RedisCommands.ZUnionStore, parameters);
+                return ExpectInteger(RedisCommandList.ZUnionStore, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
+            return ExpectInteger(RedisCommandList.ZUnionStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
         }
 
         public RedisInteger ZUnionStore(RedisParam destination, int numkeys, RedisParam key, long weight,
@@ -1825,20 +1825,20 @@ namespace Sweet.Redis
                 switch (aggregate)
                 {
                     case RedisAggregate.Sum:
-                        parameters = parameters.Join(RedisCommands.Sum);
+                        parameters = parameters.Join(RedisCommandList.Sum);
                         break;
                     case RedisAggregate.Min:
-                        parameters = parameters.Join(RedisCommands.Min);
+                        parameters = parameters.Join(RedisCommandList.Min);
                         break;
                     case RedisAggregate.Max:
-                        parameters = parameters.Join(RedisCommands.Max);
+                        parameters = parameters.Join(RedisCommandList.Max);
                         break;
                 }
 
-                return ExpectInteger(RedisCommands.ZUnionStore, parameters);
+                return ExpectInteger(RedisCommandList.ZUnionStore, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
+            return ExpectInteger(RedisCommandList.ZUnionStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
         }
 
         public RedisInteger ZUnionStore(RedisParam destination, int numkeys, RedisParam key, double weight,
@@ -1880,20 +1880,20 @@ namespace Sweet.Redis
                 switch (aggregate)
                 {
                     case RedisAggregate.Sum:
-                        parameters = parameters.Join(RedisCommands.Sum);
+                        parameters = parameters.Join(RedisCommandList.Sum);
                         break;
                     case RedisAggregate.Min:
-                        parameters = parameters.Join(RedisCommands.Min);
+                        parameters = parameters.Join(RedisCommandList.Min);
                         break;
                     case RedisAggregate.Max:
-                        parameters = parameters.Join(RedisCommands.Max);
+                        parameters = parameters.Join(RedisCommandList.Max);
                         break;
                 }
 
-                return ExpectInteger(RedisCommands.ZUnionStore, parameters);
+                return ExpectInteger(RedisCommandList.ZUnionStore, parameters);
             }
 
-            return ExpectInteger(RedisCommands.ZUnionStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
+            return ExpectInteger(RedisCommandList.ZUnionStore, destinationBytes, numkeys.ToBytes(), key, weight.ToBytes());
         }
 
         #endregion Methods

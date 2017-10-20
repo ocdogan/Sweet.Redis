@@ -273,7 +273,7 @@ namespace Sweet.Redis
                     }
 
                     if (newItems.Count > 0)
-                        SendAsync(RedisCommands.PSubscribe, newItems.ToArray());
+                        SendAsync(RedisCommandList.PSubscribe, newItems.ToArray());
                 }
             }
         }
@@ -296,9 +296,9 @@ namespace Sweet.Redis
         public void PUnsubscribe(params RedisParam[] patterns)
         {
             if (patterns.Length == 0)
-                SendAsync(RedisCommands.PUnsubscribe);
+                SendAsync(RedisCommandList.PUnsubscribe);
             else
-                SendAsync(RedisCommands.PUnsubscribe, patterns.ToBytesArray());
+                SendAsync(RedisCommandList.PUnsubscribe, patterns.ToBytesArray());
         }
 
         public void Subscribe(Action<RedisPubSubMessage> callback, RedisParam channel, params RedisParam[] channels)
@@ -345,7 +345,7 @@ namespace Sweet.Redis
                     }
 
                     if (newItems.Count > 0)
-                        SendAsync(RedisCommands.Subscribe, newItems.ToArray());
+                        SendAsync(RedisCommandList.Subscribe, newItems.ToArray());
                 }
             }
         }
@@ -353,9 +353,9 @@ namespace Sweet.Redis
         public void Unsubscribe(params string[] channels)
         {
             if (channels.Length == 0)
-                SendAsync(RedisCommands.Unsubscribe);
+                SendAsync(RedisCommandList.Unsubscribe);
             else
-                SendAsync(RedisCommands.Unsubscribe, channels.ToBytesArray());
+                SendAsync(RedisCommandList.Unsubscribe, channels.ToBytesArray());
         }
 
         public void UnregisterPSubscription(Action<RedisPubSubMessage> callback)

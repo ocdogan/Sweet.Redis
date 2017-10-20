@@ -48,7 +48,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("member");
 
             if (members.Length == 0)
-                return ExpectInteger(RedisCommands.GeoAdd, key, member.Longitude.ToBytes(),
+                return ExpectInteger(RedisCommandList.GeoAdd, key, member.Longitude.ToBytes(),
                                 member.Latitude.ToBytes(), member.Name.ToBytes());
 
             var parameters = key
@@ -64,7 +64,7 @@ namespace Sweet.Redis
                                 .Join(m.Name.ToBytes());
             }
 
-            return ExpectInteger(RedisCommands.GeoAdd, parameters);
+            return ExpectInteger(RedisCommandList.GeoAdd, parameters);
         }
 
         public RedisNullableDouble GeoDistance(RedisParam key, RedisParam member1, RedisParam member2, RedisGeoDistanceUnit unit = RedisGeoDistanceUnit.Default)
@@ -79,9 +79,9 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("member2");
 
             if (unit == RedisGeoDistanceUnit.Default)
-                return ExpectNullableDouble(RedisCommands.GeoDist, key, member1, member2);
+                return ExpectNullableDouble(RedisCommandList.GeoDist, key, member1, member2);
 
-            return ExpectNullableDouble(RedisCommands.GeoDist, key, member1, member2, ToBytes(unit));
+            return ExpectNullableDouble(RedisCommandList.GeoDist, key, member1, member2, ToBytes(unit));
         }
 
         private static byte[] ToBytes(RedisGeoDistanceUnit unit)
@@ -89,15 +89,15 @@ namespace Sweet.Redis
             switch (unit)
             {
                 case RedisGeoDistanceUnit.Meters:
-                    return RedisCommands.Meters;
+                    return RedisCommandList.Meters;
                 case RedisGeoDistanceUnit.Kilometers:
-                    return RedisCommands.Kilometers;
+                    return RedisCommandList.Kilometers;
                 case RedisGeoDistanceUnit.Feet:
-                    return RedisCommands.Feet;
+                    return RedisCommandList.Feet;
                 case RedisGeoDistanceUnit.Miles:
-                    return RedisCommands.Miles;
+                    return RedisCommandList.Miles;
                 default:
-                    return RedisCommands.Meters;
+                    return RedisCommandList.Meters;
             }
         }
 
@@ -110,7 +110,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("member");
 
             if (members.Length == 0)
-                return ExpectMultiDataBytes(RedisCommands.GeoHash, key, member);
+                return ExpectMultiDataBytes(RedisCommandList.GeoHash, key, member);
 
             var parameters = key.Join(member);
 
@@ -120,7 +120,7 @@ namespace Sweet.Redis
                     parameters = parameters.Join(m);
             }
 
-            return ExpectMultiDataBytes(RedisCommands.GeoHash, parameters);
+            return ExpectMultiDataBytes(RedisCommandList.GeoHash, parameters);
         }
 
 
@@ -139,7 +139,7 @@ namespace Sweet.Redis
                     parameters = parameters.Join(m);
             }
 
-            return ToGeoPosition(ExpectArray(RedisCommands.GeoPos, parameters));
+            return ToGeoPosition(ExpectArray(RedisCommandList.GeoPos, parameters));
         }
 
         private static RedisResult<RedisGeoPosition[]> ToGeoPosition(RedisRaw array)
@@ -180,29 +180,29 @@ namespace Sweet.Redis
                                 .Join(ToBytes(unit));
 
             if (withCoord)
-                parameters = parameters.Join(RedisCommands.WithCoord);
+                parameters = parameters.Join(RedisCommandList.WithCoord);
 
             if (withDist)
-                parameters = parameters.Join(RedisCommands.WithDist);
+                parameters = parameters.Join(RedisCommandList.WithDist);
 
             if (withHash)
-                parameters = parameters.Join(RedisCommands.WithHash);
+                parameters = parameters.Join(RedisCommandList.WithHash);
 
             if (count > -1)
-                parameters = parameters.Join(RedisCommands.Count).Join(count.ToBytes());
+                parameters = parameters.Join(RedisCommandList.Count).Join(count.ToBytes());
 
             if (sort == RedisSortDirection.Ascending)
-                parameters = parameters.Join(RedisCommands.Ascending);
+                parameters = parameters.Join(RedisCommandList.Ascending);
             else if (sort == RedisSortDirection.Descending)
-                parameters = parameters.Join(RedisCommands.Descending);
+                parameters = parameters.Join(RedisCommandList.Descending);
 
             if (storeKey.HasValue && !storeKey.Value.IsEmpty)
-                parameters = parameters.Join(RedisCommands.Store).Join(storeKey.ToBytes());
+                parameters = parameters.Join(RedisCommandList.Store).Join(storeKey.ToBytes());
 
             if (storeDistanceKey.HasValue && !storeDistanceKey.Value.IsEmpty)
-                parameters = parameters.Join(RedisCommands.StoreDist).Join(storeDistanceKey.ToBytes());
+                parameters = parameters.Join(RedisCommandList.StoreDist).Join(storeDistanceKey.ToBytes());
 
-            return ToGeoRadiusArray(ExpectArray(RedisCommands.GeoRadius, parameters));
+            return ToGeoRadiusArray(ExpectArray(RedisCommandList.GeoRadius, parameters));
         }
 
         public RedisResult<RedisGeoRadiusResult[]> GeoRadiusByMember(RedisParam key, RedisParam member, double radius,
@@ -222,29 +222,29 @@ namespace Sweet.Redis
                                 .Join(ToBytes(unit));
 
             if (withCoord)
-                parameters = parameters.Join(RedisCommands.WithCoord);
+                parameters = parameters.Join(RedisCommandList.WithCoord);
 
             if (withDist)
-                parameters = parameters.Join(RedisCommands.WithDist);
+                parameters = parameters.Join(RedisCommandList.WithDist);
 
             if (withHash)
-                parameters = parameters.Join(RedisCommands.WithHash);
+                parameters = parameters.Join(RedisCommandList.WithHash);
 
             if (count > -1)
-                parameters = parameters.Join(RedisCommands.Count).Join(count.ToBytes());
+                parameters = parameters.Join(RedisCommandList.Count).Join(count.ToBytes());
 
             if (sort == RedisSortDirection.Ascending)
-                parameters = parameters.Join(RedisCommands.Ascending);
+                parameters = parameters.Join(RedisCommandList.Ascending);
             else if (sort == RedisSortDirection.Descending)
-                parameters = parameters.Join(RedisCommands.Descending);
+                parameters = parameters.Join(RedisCommandList.Descending);
 
             if (storeKey.HasValue && !storeKey.Value.IsEmpty)
-                parameters = parameters.Join(RedisCommands.Store).Join(storeKey.ToBytes());
+                parameters = parameters.Join(RedisCommandList.Store).Join(storeKey.ToBytes());
 
             if (storeDistanceKey.HasValue && !storeDistanceKey.Value.IsEmpty)
-                parameters = parameters.Join(RedisCommands.StoreDist).Join(storeDistanceKey.ToBytes());
+                parameters = parameters.Join(RedisCommandList.StoreDist).Join(storeDistanceKey.ToBytes());
 
-            return ToGeoRadiusArray(ExpectArray(RedisCommands.GeoRadiusByMember, parameters));
+            return ToGeoRadiusArray(ExpectArray(RedisCommandList.GeoRadiusByMember, parameters));
         }
 
         private static RedisResult<RedisGeoRadiusResult[]> ToGeoRadiusArray(RedisRaw array)

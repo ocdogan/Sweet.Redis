@@ -188,7 +188,7 @@ namespace Sweet.Redis
             if (!String.IsNullOrEmpty(password))
             {
                 ValidateNotDisposed();
-                using (var cmd = new RedisCommand(-1, RedisCommands.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
+                using (var cmd = new RedisCommand(-1, RedisCommandList.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
                 {
                     return cmd.ExpectOK(new RedisSocketContext(socket, Settings), true);
                 }
@@ -202,7 +202,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("clientName");
 
             ValidateNotDisposed();
-            using (var cmd = new RedisCommand(-1, RedisCommands.Client, RedisCommandType.SendAndReceive, RedisCommands.SetName, clientName.ToBytes()))
+            using (var cmd = new RedisCommand(-1, RedisCommandList.Client, RedisCommandType.SendAndReceive, RedisCommandList.SetName, clientName.ToBytes()))
             {
                 return cmd.ExpectOK(new RedisSocketContext(socket, Settings), true);
             }
@@ -232,7 +232,7 @@ namespace Sweet.Redis
                 var role = RedisRole.Undefined;
                 try
                 {
-                    using (var cmd = new RedisCommand(-1, RedisCommands.Role, RedisCommandType.SendAndReceive))
+                    using (var cmd = new RedisCommand(-1, RedisCommandList.Role, RedisCommandType.SendAndReceive))
                     {
                         var raw = cmd.ExpectArray(new RedisSocketContext(socket, Settings), true);
                         if (!ReferenceEquals(raw, null) && raw.IsCompleted)
@@ -250,7 +250,7 @@ namespace Sweet.Redis
                 {
                     try
                     {
-                        using (var cmd = new RedisCommand(-1, RedisCommands.Info, RedisCommandType.SendAndReceive, RedisCommands.Replication))
+                        using (var cmd = new RedisCommand(-1, RedisCommandList.Info, RedisCommandType.SendAndReceive, RedisCommandList.Replication))
                         {
                             string lines = cmd.ExpectBulkString(new RedisSocketContext(socket, Settings), true);
 

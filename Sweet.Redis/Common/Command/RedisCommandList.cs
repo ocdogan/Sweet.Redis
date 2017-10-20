@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    public static class RedisCommands
+    public static class RedisCommandList
     {
         public static readonly byte[] EmptyString = "".ToBytes();
 

@@ -43,7 +43,7 @@ namespace Sweet.Redis
             if (password.IsEmpty)
                 throw new ArgumentNullException("password");
 
-            return ExpectOK(RedisCommands.Auth, password);
+            return ExpectOK(RedisCommandList.Auth, password);
         }
 
         public RedisString Echo(RedisParam msg)
@@ -51,24 +51,24 @@ namespace Sweet.Redis
             if (msg.IsNull)
                 throw new ArgumentNullException("msg");
 
-            return ExpectBulkString(RedisCommands.Echo, msg);
+            return ExpectBulkString(RedisCommandList.Echo, msg);
         }
 
         public RedisString Ping()
         {
-            return ExpectSimpleString(RedisCommands.Ping);
+            return ExpectSimpleString(RedisCommandList.Ping);
         }
 
         public RedisString Ping(RedisParam msg)
         {
             if (msg.IsEmpty)
-                return ExpectSimpleString(RedisCommands.Ping);
-            return ExpectBulkString(RedisCommands.Ping, msg);
+                return ExpectSimpleString(RedisCommandList.Ping);
+            return ExpectBulkString(RedisCommandList.Ping, msg);
         }
 
         public RedisBool Quit()
         {
-            return ExpectOK(RedisCommands.Quit);
+            return ExpectOK(RedisCommandList.Quit);
         }
 
         #endregion Methods

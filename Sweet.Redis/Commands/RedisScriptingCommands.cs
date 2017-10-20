@@ -63,7 +63,7 @@ namespace Sweet.Redis
             if (script.IsEmpty)
                 throw new ArgumentNullException("script");
 
-            return Eval(RedisCommands.Eval, script, args);
+            return Eval(RedisCommandList.Eval, script, args);
         }
 
         public RedisRaw EvalSHA(RedisParam sha1, params RedisKeyValue<RedisParam, RedisParam>[] args)
@@ -71,7 +71,7 @@ namespace Sweet.Redis
             if (sha1.IsEmpty)
                 throw new ArgumentNullException("sha1");
 
-            return Eval(RedisCommands.EvalSha, sha1, args);
+            return Eval(RedisCommandList.EvalSha, sha1, args);
         }
 
         public RedisRaw EvalSHA(ref RedisParam sha1, RedisParam script, params RedisKeyValue<RedisParam, RedisParam>[] args)
@@ -80,7 +80,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("sha1");
 
             if (script.IsEmpty)
-                return Eval(RedisCommands.EvalSha, sha1, args);
+                return Eval(RedisCommandList.EvalSha, sha1, args);
 
             var response = ScriptExists(sha1);
             var exists = (response != null && response.Length > 0) ? response[0] == RedisConstants.One : false;
@@ -96,7 +96,7 @@ namespace Sweet.Redis
 
             try
             {
-                return Eval(RedisCommands.EvalSha, sha1, args);
+                return Eval(RedisCommandList.EvalSha, sha1, args);
             }
             catch (RedisException e)
             {
@@ -108,7 +108,7 @@ namespace Sweet.Redis
                     sha1 = new RedisParam(sha1S);
 
                     if (!sha1.IsEmpty)
-                        return Eval(RedisCommands.EvalSha, sha1, args);
+                        return Eval(RedisCommandList.EvalSha, sha1, args);
                 }
                 throw;
             }
@@ -116,17 +116,17 @@ namespace Sweet.Redis
 
         public RedisBool ScriptDebugNo()
         {
-            return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.No);
+            return ExpectOK(RedisCommandList.Script, RedisCommandList.Debug, RedisCommandList.No);
         }
 
         public RedisBool ScriptDebugSync()
         {
-            return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.Sync);
+            return ExpectOK(RedisCommandList.Script, RedisCommandList.Debug, RedisCommandList.Sync);
         }
 
         public RedisBool ScriptDebugYes()
         {
-            return ExpectOK(RedisCommands.Script, RedisCommands.Debug, RedisCommands.Yes);
+            return ExpectOK(RedisCommandList.Script, RedisCommandList.Debug, RedisCommandList.Yes);
         }
 
         public RedisMultiInteger ScriptExists(RedisParam sha1, params RedisParam[] sha1s)
@@ -136,14 +136,14 @@ namespace Sweet.Redis
 
             RedisRaw response = null;
             if (sha1s.Length == 0)
-                response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1);
+                response = ExpectArray(RedisCommandList.Script, RedisCommandList.Exists, sha1);
             else
             {
-                var parameters = RedisCommands.Exists
+                var parameters = RedisCommandList.Exists
                                               .Join(sha1)
                                               .Join(sha1s);
 
-                response = ExpectArray(RedisCommands.Script, RedisCommands.Exists, sha1);
+                response = ExpectArray(RedisCommandList.Script, RedisCommandList.Exists, sha1);
             }
 
             var resultLength = sha1.Length + 1;
@@ -180,12 +180,12 @@ namespace Sweet.Redis
 
         public RedisBool ScriptFush()
         {
-            return ExpectOK(RedisCommands.Script, RedisCommands.Flush);
+            return ExpectOK(RedisCommandList.Script, RedisCommandList.Flush);
         }
 
         public RedisBool ScriptKill()
         {
-            return ExpectOK(RedisCommands.Script, RedisCommands.Kill);
+            return ExpectOK(RedisCommandList.Script, RedisCommandList.Kill);
         }
 
         public RedisString ScriptLoad(RedisParam script)
@@ -193,7 +193,7 @@ namespace Sweet.Redis
             if (script.IsEmpty)
                 throw new ArgumentNullException("script");
 
-            return ExpectBulkString(RedisCommands.Script, RedisCommands.Load, script);
+            return ExpectBulkString(RedisCommandList.Script, RedisCommandList.Load, script);
         }
 
         #endregion Methods

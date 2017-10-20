@@ -1329,7 +1329,7 @@ namespace Sweet.Redis
         {
             if (cmd == null || cmd.Length == 0)
                 return RedisRole.Undefined;
-            if (cmd == RedisCommands.Sentinel)
+            if (cmd == RedisCommandList.Sentinel)
                 return RedisRole.Sentinel;
             if (cmd.IsAnyRoleCommand())
                 return RedisRole.Any;

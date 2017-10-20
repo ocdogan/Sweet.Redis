@@ -177,7 +177,7 @@
     <Compile Include="Commands\Interfaces\IRedisStringsCommands.cs" />
     <Compile Include="Common\Command\RedisCommand.cs" />
     <Compile Include="Common\Command\RedisCommandExpect.cs" />
-    <Compile Include="Common\Command\RedisCommands.cs" />
+    <Compile Include="Common\Command\RedisCommandList.cs" />
     <Compile Include="Common\Command\RedisCommandType.cs" />
     <Compile Include="Connection\Interfaces\IRedisCommandSet.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnection.cs" />

@@ -183,7 +183,7 @@ namespace Sweet.Redis
                                 connection.SendAsync(command)
                                     .ContinueWith(t =>
                                     {
-                                        var quitMessage = (command.Command == RedisCommands.Quit);
+                                        var quitMessage = (command.Command == RedisCommandList.Quit);
                                         command.Dispose();
 
                                         if (quitMessage)
@@ -262,7 +262,7 @@ namespace Sweet.Redis
                 if (provider != null &&
                     !provider.Disposed &&
                     provider.SpareCount > 0)
-                    SendAsync(RedisCommands.Quit);
+                    SendAsync(RedisCommandList.Quit);
             }
         }
 

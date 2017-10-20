@@ -46,16 +46,16 @@ namespace Sweet.Redis
             if (message.IsNull)
                 throw new ArgumentNullException("message");
 
-            return ExpectInteger(RedisCommands.Publish, channel, message);
+            return ExpectInteger(RedisCommandList.Publish, channel, message);
         }
 
         public RedisMultiString PubSubChannels(RedisParam? pattern = null)
         {
             RedisRaw response;
             if (pattern.HasValue && !pattern.Value.IsEmpty)
-                response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels, pattern);
+                response = ExpectArray(RedisCommandList.PubSub, RedisCommandList.Channels, pattern);
             else
-                response = ExpectArray(RedisCommands.PubSub, RedisCommands.Channels);
+                response = ExpectArray(RedisCommandList.PubSub, RedisCommandList.Channels);
 
             if (response != null)
             {
@@ -92,9 +92,9 @@ namespace Sweet.Redis
         {
             RedisRaw response;
             if (channels.Length > 0)
-                response = ExpectArray(RedisCommands.PubSub, RedisCommands.NumSub.Join(channels.ToBytesArray()));
+                response = ExpectArray(RedisCommandList.PubSub, RedisCommandList.NumSub.Join(channels.ToBytesArray()));
             else
-                response = ExpectArray(RedisCommands.PubSub, RedisCommands.NumSub);
+                response = ExpectArray(RedisCommandList.PubSub, RedisCommandList.NumSub);
 
             if (response != null)
             {
@@ -139,7 +139,7 @@ namespace Sweet.Redis
 
         public RedisInteger PubSubNumerOfSubscriptionsToPatterns()
         {
-            return ExpectInteger(RedisCommands.PubSub, RedisCommands.NumPat);
+            return ExpectInteger(RedisCommandList.PubSub, RedisCommandList.NumPat);
         }
 
         #endregion Methods

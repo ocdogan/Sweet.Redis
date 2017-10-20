@@ -109,7 +109,7 @@ namespace Sweet.Redis
             var queue = Interlocked.Exchange(ref m_WatchQ, null);
             if (queue != null && queue.Count > 0)
             {
-                var watchCommand = new RedisCommand(DbIndex, RedisCommands.Watch,
+                var watchCommand = new RedisCommand(DbIndex, RedisCommandList.Watch,
                                                     RedisCommandType.SendAndReceive, queue.ToArray().ToBytesArray());
                 var watchResult = watchCommand.ExpectOK(context);
 
@@ -120,7 +120,7 @@ namespace Sweet.Redis
                 }
             }
 
-            var multiCommand = new RedisCommand(DbIndex, RedisCommands.Multi);
+            var multiCommand = new RedisCommand(DbIndex, RedisCommandList.Multi);
             var multiResult = multiCommand.ExpectOK(context);
 
             success = multiResult;
@@ -194,7 +194,7 @@ namespace Sweet.Redis
             finally
             {
                 if (context.Socket.IsConnected())
-                    (new RedisCommand(DbIndex, RedisCommands.Discard)).ExpectOK(context);
+                    (new RedisCommand(DbIndex, RedisCommandList.Discard)).ExpectOK(context);
             }
         }
 
@@ -202,7 +202,7 @@ namespace Sweet.Redis
         {
             if (requests != null)
             {
-                var exec = new RedisCommand(DbIndex, RedisCommands.Exec);
+                var exec = new RedisCommand(DbIndex, RedisCommandList.Exec);
 
                 var execResult = exec.ExpectArray(context);
                 if (!ReferenceEquals(execResult, null))

@@ -42,7 +42,7 @@ namespace Sweet.Redis
 
         protected override bool CanBeginReceive(byte[] cmd)
         {
-            return cmd == RedisCommands.Monitor;
+            return cmd == RedisCommandList.Monitor;
         }
 
         protected override bool TryConvertResponse(IRedisRawResponse response, out RedisMonitorMessage value)
@@ -53,13 +53,13 @@ namespace Sweet.Redis
 
         protected override void OnSubscribe()
         {
-            SendAsync(RedisCommands.Monitor);
+            SendAsync(RedisCommandList.Monitor);
         }
 
         public void Monitor()
         {
             ValidateNotDisposed();
-            SendAsync(RedisCommands.Monitor);
+            SendAsync(RedisCommandList.Monitor);
         }
 
         #endregion Methods
