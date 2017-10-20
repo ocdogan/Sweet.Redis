@@ -289,15 +289,15 @@ namespace Sweet.Redis
 
                 if (ipEPSettings != null && ipEPSettings.Length > 0)
                 {
-                    var discoveredIPList = new HashSet<IPEndPoint>();
-                    var emptyTuple = new Tuple<RedisConnectionPool, RedisRole>[0];
+                    var discoveredEndPoints = new HashSet<IPEndPoint>();
+                    var emptyTuple = new Tuple<RedisRole, RedisConnectionPool>[0];
 
                     var groups = ipEPSettings
-                        .SelectMany(setting => CreateNodes(discoveredIPList, Name, setting) ?? emptyTuple)
+                        .SelectMany(setting => CreateNodes(discoveredEndPoints, Name, setting) ?? emptyTuple)
                         .Where(node => node != null)
                         .GroupBy(
-                                tuple => tuple.Item2,
-                                tuple => new RedisManagedNode(tuple.Item1, tuple.Item2),
+                                tuple => tuple.Item1,
+                                tuple => new RedisManagedNode(tuple.Item2, tuple.Item1),
                                 (role, group) => new RedisManagedNodesGroup(role, group.ToArray()))
                         .ToList();
 
@@ -329,7 +329,7 @@ namespace Sweet.Redis
             }
         }
 
-        private static Tuple<RedisConnectionPool, RedisRole>[] CreateNodes(HashSet<IPEndPoint> discoveredEndPoints, 
+        private static Tuple<RedisRole, RedisConnectionPool>[] CreateNodes(HashSet<IPEndPoint> discoveredEndPoints, 
             string name, RedisPoolSettings settings)
         {
             try
@@ -361,16 +361,16 @@ namespace Sweet.Redis
                         var role = nodeInfo.Item1;
                         var siblingEndPoints = nodeInfo.Item2;
 
-                        var list = new List<Tuple<RedisConnectionPool, RedisRole>>();
+                        var list = new List<Tuple<RedisRole, RedisConnectionPool>>();
                         if (role == RedisRole.Master || role == RedisRole.Sentinel)
                         {
                             dispose = (role == RedisRole.Sentinel);
 
                             if (siblingEndPoints == null || siblingEndPoints.Length == 0)
-                                return role == RedisRole.Master ? new[] { new Tuple<RedisConnectionPool, RedisRole>(connectionPool, role) } : null;
+                                return role == RedisRole.Master ? new[] { new Tuple<RedisRole, RedisConnectionPool>(role, connectionPool) } : null;
 
                             if (role == RedisRole.Master)
-                                list.Add(new Tuple<RedisConnectionPool, RedisRole>(connectionPool, role));
+                                list.Add(new Tuple<RedisRole, RedisConnectionPool>(role, connectionPool));
 
                             foreach (var siblingEndPoint in siblingEndPoints)
                             {
@@ -391,7 +391,7 @@ namespace Sweet.Redis
 
                             return list.ToArray();
                         }
-                        return new[] { new Tuple<RedisConnectionPool, RedisRole>(connectionPool, role) };
+                        return new[] { new Tuple<RedisRole, RedisConnectionPool>(role, connectionPool) };
                     }
                 }
                 finally
