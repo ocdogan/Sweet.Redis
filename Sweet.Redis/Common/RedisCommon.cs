@@ -1307,14 +1307,21 @@ namespace Sweet.Redis
         internal static bool IsDbRequiredCommand(this byte[] cmd)
         {
             if (cmd != null && cmd.Length > 0)
-                return !RedisConstants.CommandsNotRequireDB.ContainsKey(cmd);
+                return !RedisConstants.CommandsNotRequireDB.Contains(cmd);
             return false;
         }
 
         internal static bool IsUpdateCommand(this byte[] cmd)
         {
             if (cmd != null && cmd.Length > 0)
-                return RedisConstants.CommandsThatUpdate.ContainsKey(cmd);
+                return RedisConstants.CommandsThatUpdate.Contains(cmd);
+            return false;
+        }
+
+        internal static bool IsAnyRoleCommand(this byte[] cmd)
+        {
+            if (cmd != null && cmd.Length > 0)
+                return RedisConstants.CommandsForAnyRole.Contains(cmd);
             return false;
         }
 
@@ -1324,9 +1331,11 @@ namespace Sweet.Redis
                 return RedisRole.Undefined;
             if (cmd == RedisCommands.Sentinel)
                 return RedisRole.Sentinel;
+            if (cmd.IsAnyRoleCommand())
+                return RedisRole.Any;
             if (cmd.IsUpdateCommand())
                 return RedisRole.Master;
-            return RedisRole.SlaveOrMaster;
+            return RedisRole.Slave;
         }
 
         #endregion Commands
