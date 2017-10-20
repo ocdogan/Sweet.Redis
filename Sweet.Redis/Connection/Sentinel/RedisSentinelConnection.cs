@@ -44,7 +44,7 @@ namespace Sweet.Redis
         protected override RedisRole DiscoverRole(RedisSocket socket)
         {
             var role = base.DiscoverRole(socket);
-            ValidateRole();
+            ValidateRole(RedisRole.Sentinel);
             return role;
         }
 

@@ -44,7 +44,7 @@ namespace Sweet.Redis
         public override RedisRawResponse SendReceive(byte[] data)
         {
             ValidateNotDisposed();
-            ValidateRole();
+            ValidateRole(DesiredRole);
 
             var socket = Connect();
             if (socket == null)
@@ -72,7 +72,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();
-            ValidateRole();
+            ValidateRole(cmd.Role);
 
             var socket = Connect();
             if (socket == null)
