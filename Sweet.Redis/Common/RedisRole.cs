@@ -27,9 +27,9 @@ namespace Sweet.Redis
     public enum RedisRole
     {
         Undefined,
+        Any,
         Master,
         Slave,
-        SlaveOrMaster,
         Sentinel
     }
 }
