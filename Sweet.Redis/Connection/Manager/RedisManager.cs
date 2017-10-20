@@ -431,8 +431,7 @@ namespace Sweet.Redis
                                 }
                                 break;
                             default:
-                                return new[] { new Tuple<RedisConnectionPool, RedisRole>(pool,
-                                    (role == RedisRole.SlaveOrMaster) ? RedisRole.Slave : role) };
+                                return new[] { new Tuple<RedisConnectionPool, RedisRole>(pool, role) };
                         }
                     }
                 }
@@ -454,7 +453,7 @@ namespace Sweet.Redis
             serverInfo = null;
             role = RedisRole.Undefined;
 
-            using (var db = pool.GetDb())
+            using (var db = pool.GetDb(-1))
             {
                 try
                 {

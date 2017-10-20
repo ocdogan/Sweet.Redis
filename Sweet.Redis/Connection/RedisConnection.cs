@@ -213,14 +213,14 @@ namespace Sweet.Redis
             return m_DesiredRole != RedisRole.Undefined;
         }
 
-        protected virtual void ValidateRole()
+        protected virtual void ValidateRole(RedisRole desiredRole)
         {
-            if (m_DesiredRole != RedisRole.Undefined)
+            if (!(desiredRole == RedisRole.Undefined || desiredRole == RedisRole.Any))
             {
                 var role = Role;
-                if (role != m_DesiredRole &&
-                    (role == RedisRole.Sentinel || m_DesiredRole == RedisRole.Sentinel ||
-                     (role == RedisRole.Master && !(m_DesiredRole == RedisRole.Slave || m_DesiredRole == RedisRole.SlaveOrMaster))))
+                if (role != desiredRole &&
+                    (role == RedisRole.Sentinel || desiredRole == RedisRole.Sentinel ||
+                     (role == RedisRole.Master && desiredRole != RedisRole.Slave)))
                     throw new RedisException("Connected node does not satisfy the desired role", RedisErrorCode.NotSupported);
             }
         }
@@ -571,7 +571,7 @@ namespace Sweet.Redis
         public void Send(byte[] data)
         {
             ValidateNotDisposed();
-            ValidateRole();
+            ValidateRole(DesiredRole);
 
             var socket = Connect();
             if (socket == null)
@@ -591,7 +591,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();
-            ValidateRole();
+            ValidateRole(cmd.Role);
 
             var socket = Connect();
             if (socket == null)
@@ -608,7 +608,7 @@ namespace Sweet.Redis
         public Task SendAsync(byte[] data)
         {
             ValidateNotDisposed();
-            ValidateRole();
+            ValidateRole(DesiredRole);
 
             var socket = Connect();
             if (socket == null)
@@ -627,7 +627,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("cmd"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();
-            ValidateRole();
+            ValidateRole(cmd.Role);
 
             var socket = Connect();
             if (socket == null)
