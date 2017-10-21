@@ -103,13 +103,18 @@ namespace Sweet.Redis.ConsoleTest
                         Console.Clear();
 
                         var ch = (char)('0' + (i++ % 10));
-                        var text = new string(ch, 10);
+                        var text = i.ToString() + "-" + new string(ch, 10);
 
                         sw.Restart();
                         using (var db = manager.GetDb())
                         {
                             Ping(db);
                             SetGet(db, "tinytext", text);
+                        }
+
+                        using (var db = manager.GetDb(true))
+                        {
+                            Get(db, "tinytext");
                         }
                     }
                     catch (Exception e)
