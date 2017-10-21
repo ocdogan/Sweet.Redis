@@ -81,11 +81,52 @@ namespace Sweet.Redis.ConsoleTest
             // ManagerTest1();
             // ManagerTest2();
             // ManagerTest3();
-            ManagerTest4();
+            // ManagerTest4();
             // ManagerTest5();
+            ManagerTest6();
         }
 
         #region Manager
+
+        static void ManagerTest6()
+        {
+            var i = 0;
+            var sw = new Stopwatch();
+            do
+            {
+                using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                    new[] { RedisEndPoint.SentinelLocalHostEndPoint },
+                    masterName: "mymaster")))
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        var ch = (char)('0' + (i++ % 10));
+                        var text = new string(ch, 10);
+
+                        sw.Restart();
+                        using (var db = manager.GetDb())
+                        {
+                            Ping(db);
+                            SetGet(db, "tinytext", text);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue, ESC to escape ...");
+            }
+            while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+        }
 
         static void ManagerTest5()
         {
