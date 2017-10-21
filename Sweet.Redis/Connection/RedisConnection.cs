@@ -60,7 +60,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisConnection(string name,
-            RedisRole role, RedisConnectionSettings settings,
+            RedisRole expectedRole, RedisConnectionSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket,
             Action<RedisConnection, RedisSocket> onReleaseSocket,
             RedisSocket socket = null, bool connectImmediately = false)
@@ -73,7 +73,7 @@ namespace Sweet.Redis
 
             m_Id = Guid.NewGuid();
 
-            m_ExpectedRole = role;
+            m_ExpectedRole = expectedRole;
             m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
@@ -212,7 +212,8 @@ namespace Sweet.Redis
 
         protected virtual bool NeedsToDiscoverRole()
         {
-            return m_ExpectedRole != RedisRole.Undefined;
+            return !(m_ExpectedRole == RedisRole.Any ||
+                     m_ExpectedRole == RedisRole.Undefined);
         }
 
         protected virtual void ValidateRole(RedisRole commandRole)
@@ -285,18 +286,33 @@ namespace Sweet.Redis
                 {
                     try
                     {
-                        using (var cmd = new RedisCommand(-1, RedisCommandList.Info, RedisCommandType.SendAndReceive, RedisCommandList.Replication))
+                        var serverInfo = GetServerInfo();
+                        if (serverInfo != null)
                         {
-                            string lines = cmd.ExpectBulkString(new RedisSocketContext(socket, Settings), true);
-
-                            var info = RedisServerInfo.Parse(lines);
-                            if (!ReferenceEquals(info, null))
+                            var serverSection = serverInfo.Server;
+                            if (serverSection != null)
                             {
-                                var section = info.Replication;
-                                if (!ReferenceEquals(section, null))
+                                var roleStr = (serverSection.RedisMode ?? String.Empty).Trim().ToLowerInvariant();
+                                switch (roleStr)
                                 {
-                                    var roleStr = (section.Role ?? String.Empty).Trim().ToLowerInvariant();
+                                    case "master":
+                                        role = RedisRole.Master;
+                                        break;
+                                    case "slave":
+                                        role = RedisRole.Slave;
+                                        break;
+                                    case "sentinel":
+                                        role = RedisRole.Sentinel;
+                                        break;
+                                }
+                            }
 
+                            if (role == RedisRole.Undefined)
+                            {
+                                var replicationSection = serverInfo.Replication;
+                                if (replicationSection != null)
+                                {
+                                    var roleStr = (replicationSection.Role ?? String.Empty).Trim().ToLowerInvariant();
                                     switch (roleStr)
                                     {
                                         case "master":
@@ -309,6 +325,16 @@ namespace Sweet.Redis
                                             role = RedisRole.Sentinel;
                                             break;
                                     }
+                                }
+
+                                if (role == RedisRole.Undefined)
+                                {
+                                    var sentinelSection = serverInfo.Sentinel;
+                                    if (sentinelSection != null && sentinelSection.SentinelMasters.HasValue)
+                                        role = RedisRole.Sentinel;
+
+                                    if (role == RedisRole.Undefined)
+                                        role = RedisRole.Master;
                                 }
                             }
                         }
@@ -368,7 +394,10 @@ namespace Sweet.Redis
                     SetClientName(socket, settings.ClientName);
 
                 if (NeedsToDiscoverRole())
-                    DiscoverRole(socket);
+                {
+                    var role = DiscoverRole(socket);
+                    ValidateRole(role);
+                }
             }
         }
 
