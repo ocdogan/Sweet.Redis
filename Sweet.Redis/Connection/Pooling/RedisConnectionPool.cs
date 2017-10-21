@@ -185,10 +185,10 @@ namespace Sweet.Redis
                 lock (m_MemberStoreLock)
                 {
                     var result = 0;
-                    if (m_MemberStoreTail != null) 
+                    if (m_MemberStoreTail != null)
                         result++;
 
-                    if (m_MemberStore != null) 
+                    if (m_MemberStore != null)
                         result += m_MemberStore.Count;
 
                     return result;
@@ -350,7 +350,7 @@ namespace Sweet.Redis
 
         protected void EnqueueSocket(RedisSocket socket)
         {
-            if (socket != null)
+            if (socket != null && !socket.Disposed)
             {
                 var member = new RedisConnectionPoolMember(socket, socket.DbIndex);
                 lock (m_MemberStoreLock)

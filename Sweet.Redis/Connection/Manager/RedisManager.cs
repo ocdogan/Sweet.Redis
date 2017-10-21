@@ -26,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -50,6 +49,7 @@ namespace Sweet.Redis
         private string m_Name;
 
         private RedisManagerSettings m_Settings;
+        private RedisEndPointResolver m_EndPointResolver;
 
         private RedisCluster m_Cluster;
         private RedisManagedNodesGroup m_Sentinels;
@@ -69,6 +69,8 @@ namespace Sweet.Redis
             m_Id = Guid.NewGuid();
             m_Settings = settings;
             m_Name = !String.IsNullOrEmpty(name) ? name : m_Id.ToString("N").ToUpper();
+
+            m_EndPointResolver = new RedisEndPointResolver(m_Name, settings);
         }
 
         #endregion .Ctors
@@ -78,6 +80,10 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
+
+            var endPointResolver = Interlocked.Exchange(ref m_EndPointResolver, null);
+            if (endPointResolver != null)
+                endPointResolver.Dispose();
 
             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
 
@@ -231,323 +237,47 @@ namespace Sweet.Redis
                 lock (m_SyncRoot)
                 {
                     if (Interlocked.Read(ref m_InitializationState) != (long)InitializationState.Initialized)
-                    {
-                        RedisCluster cluster = null;
-                        RedisManagedNodesGroup sentinels = null;
-                        try
-                        {
-                            CreateCluster(out cluster, out sentinels);
-                        }
-                        catch (Exception)
-                        {
-                            if (cluster != null) cluster.Dispose();
-                            if (sentinels != null) sentinels.Dispose();
-                            throw;
-                        }
-
-                        var oldCluster = (RedisCluster)null;
-                        var oldSentinels = (RedisManagedNodesGroup)null;
-                        try
-                        {
-                            oldCluster = Interlocked.Exchange(ref m_Cluster, cluster);
-                            oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
-
-                            Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
-                        }
-                        catch (Exception)
-                        {
-                            Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
-                            if (cluster != null)
-                                cluster.Dispose();
-                            if (sentinels != null)
-                                sentinels.Dispose();
-                            throw;
-                        }
-                        finally
-                        {
-                            if (oldCluster != null) oldCluster.Dispose();
-                            if (oldSentinels != null) oldSentinels.Dispose();
-                        }
-                    }
+                        RefreshNodes();
                 }
             }
         }
 
-        private void CreateCluster(out RedisCluster cluster, out RedisManagedNodesGroup sentinels)
+        private void RefreshNodes()
         {
-            cluster = null;
-            sentinels = null;
+            var endPointResolver = m_EndPointResolver;
+            if (endPointResolver == null || endPointResolver.Disposed)
+                return;
 
-            var settings = m_Settings;
-            var ipList = SplitToIPEndPoints(settings.EndPoints);
-
-            if (ipList != null && ipList.Count > 0)
+            var tuple = endPointResolver.CreateCluster();
+            if (tuple != null)
             {
-                var ipEPSettings = ipList
-                        .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
-                        .ToArray();
+                var cluster = tuple.Item1;
+                var sentinels = tuple.Item2;
 
-                if (ipEPSettings != null && ipEPSettings.Length > 0)
-                {
-                    var discoveredEndPoints = new HashSet<IPEndPoint>();
-                    var emptyTuple = new Tuple<RedisRole, RedisConnectionPool>[0];
-
-                    var groups = ipEPSettings
-                        .SelectMany(setting => CreateNodes(discoveredEndPoints, Name, setting) ?? emptyTuple)
-                        .Where(node => node != null)
-                        .GroupBy(
-                                tuple => tuple.Item1,
-                                tuple => new RedisManagedNode(tuple.Item2, tuple.Item1),
-                                (role, group) => new RedisManagedNodesGroup(role, group.ToArray()))
-                        .ToList();
-
-                    if (groups != null && groups.Count > 0)
-                    {
-                        // 0: Masters, 1: Slaves
-                        const int MastersPos = 0, SlavesPos = 1;
-
-                        var result = new RedisManagedNodesGroup[2];
-                        foreach (var group in groups)
-                        {
-                            switch (group.Role)
-                            {
-                                case RedisRole.Master:
-                                    result[MastersPos] = group;
-                                    break;
-                                case RedisRole.Slave:
-                                    result[SlavesPos] = group;
-                                    break;
-                                case RedisRole.Sentinel:
-                                    sentinels = group;
-                                    break;
-                            }
-                        }
-
-                        cluster = new RedisCluster(result[MastersPos], result[SlavesPos]);
-                    }
-                }
-            }
-        }
-
-        private static Tuple<RedisRole, RedisConnectionPool>[] CreateNodes(HashSet<IPEndPoint> discoveredEndPoints, 
-            string name, RedisPoolSettings settings)
-        {
-            try
-            {
-                var endPoints = settings.EndPoints;
-                if (endPoints == null || endPoints.Length == 0)
-                    return null;
-
-                var ipAddresses = endPoints[0].ResolveHost();
-                if (ipAddresses == null || ipAddresses.Length == 0)
-                    return null;
-
-                var nodeEndPoint = new IPEndPoint(ipAddresses[0], endPoints[0].Port);
-                if (discoveredEndPoints.Contains(nodeEndPoint))
-                    return null;
-
-                discoveredEndPoints.Add(nodeEndPoint);
-
-                var dispose = false;
-                var connectionPool = new RedisConnectionPool(name, settings);
+                var oldCluster = (RedisCluster)null;
+                var oldSentinels = (RedisManagedNodesGroup)null;
                 try
                 {
-                    var nodeInfo = GetNodeInfo(connectionPool);
+                    oldCluster = Interlocked.Exchange(ref m_Cluster, cluster);
+                    oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
 
-                    if (nodeInfo == null || nodeInfo.Item1 == RedisRole.Undefined)
-                        dispose = true;
-                    else
-                    {
-                        var role = nodeInfo.Item1;
-                        var siblingEndPoints = nodeInfo.Item2;
+                    Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
+                }
+                catch (Exception)
+                {
+                    Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
 
-                        var list = new List<Tuple<RedisRole, RedisConnectionPool>>();
-                        if (role == RedisRole.Master || role == RedisRole.Sentinel)
-                        {
-                            dispose = (role == RedisRole.Sentinel);
+                    if (cluster != null) cluster.Dispose();
+                    if (sentinels != null) sentinels.Dispose();
 
-                            if (siblingEndPoints == null || siblingEndPoints.Length == 0)
-                                return role == RedisRole.Master ? new[] { new Tuple<RedisRole, RedisConnectionPool>(role, connectionPool) } : null;
-
-                            if (role == RedisRole.Master)
-                                list.Add(new Tuple<RedisRole, RedisConnectionPool>(role, connectionPool));
-
-                            foreach (var siblingEndPoint in siblingEndPoints)
-                            {
-                                try
-                                {
-                                    if (siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
-                                    {
-                                        var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
-
-                                        var otherNodes = CreateNodes(discoveredEndPoints, name, siblingSettings);
-                                        if (otherNodes != null)
-                                            list.AddRange(otherNodes);
-                                    }
-                                }
-                                catch (Exception)
-                                { }
-                            }
-
-                            return list.ToArray();
-                        }
-                        return new[] { new Tuple<RedisRole, RedisConnectionPool>(role, connectionPool) };
-                    }
+                    throw;
                 }
                 finally
                 {
-                    if (dispose)
-                        connectionPool.Dispose();
+                    if (oldCluster != null) oldCluster.Dispose();
+                    if (oldSentinels != null) oldSentinels.Dispose();
                 }
             }
-            catch (Exception)
-            { }
-            return null;
-        }
-
-        private static Tuple<RedisRole, RedisEndPoint[]> GetNodeInfo(RedisConnectionPool pool)
-        {
-            using (var db = pool.GetDb(-1))
-            {
-                try
-                {
-                    var serverInfoRaw = db.Server.Info();
-                    if (!ReferenceEquals(serverInfoRaw, null))
-                    {
-                        var serverInfo = serverInfoRaw.Value;
-                        if (serverInfo != null)
-                        {
-                            var serverSection = serverInfo.Server;
-                            if (serverSection != null)
-                            {
-                                var role = RedisRole.Undefined;
-
-                                var redisMode = (serverSection.RedisMode ?? String.Empty).Trim().ToLowerInvariant();
-                                if (redisMode == "sentinel")
-                                    role = RedisRole.Sentinel;
-                                else
-                                {
-                                    var replicationSection = serverInfo.Replication;
-                                    if (replicationSection != null)
-                                    {
-                                        var roleStr = (replicationSection.Role ?? String.Empty).ToLowerInvariant();
-                                        switch (roleStr)
-                                        {
-                                            case "master":
-                                                role = RedisRole.Master;
-                                                break;
-                                            case "slave":
-                                                role = RedisRole.Slave;
-                                                break;
-                                            case "sentinel":
-                                                role = RedisRole.Sentinel;
-                                                break;
-                                        }
-                                    }
-
-                                    if (role == RedisRole.Undefined)
-                                        return null;
-                                }
-
-                                switch (role)
-                                {
-                                    case RedisRole.Slave:
-                                        return new Tuple<RedisRole, RedisEndPoint[]>(role, null);
-                                    case RedisRole.Master:
-                                        {
-                                            var slaveEndPoints = new List<RedisEndPoint>();
-
-                                            var replicationSection = serverInfo.Replication;
-                                            if (replicationSection != null)
-                                            {
-                                                var slaves = replicationSection.Slaves;
-                                                if (slaves != null)
-                                                {
-                                                    foreach (var slave in slaves)
-                                                    {
-                                                        try
-                                                        {
-                                                            if (slave.Port.HasValue && !String.IsNullOrEmpty(slave.IPAddress))
-                                                            {
-                                                                var endPoint = new RedisEndPoint(slave.IPAddress, slave.Port.Value);
-                                                                slaveEndPoints.Add(endPoint);
-                                                            }
-                                                        }
-                                                        catch (Exception)
-                                                        { }
-                                                    }
-                                                }
-                                            }
-                                            return new Tuple<RedisRole, RedisEndPoint[]>(role, slaveEndPoints.ToArray());
-                                        }
-                                    case RedisRole.Sentinel:
-                                        {
-                                            var masterEndPoints = new List<RedisEndPoint>();
-
-                                            var sentinelSection = serverInfo.Sentinel;
-                                            if (sentinelSection != null)
-                                            {
-                                                var masters = sentinelSection.Masters;
-                                                if (masters != null)
-                                                {
-                                                    foreach (var master in masters)
-                                                    {
-                                                        try
-                                                        {
-                                                            if (master.Port.HasValue && !String.IsNullOrEmpty(master.IPAddress))
-                                                            {
-                                                                var endPoint = new RedisEndPoint(master.IPAddress, master.Port.Value);
-                                                                masterEndPoints.Add(endPoint);
-                                                            }
-                                                        }
-                                                        catch (Exception)
-                                                        { }
-                                                    }
-                                                }
-                                            }
-                                            return new Tuple<RedisRole, RedisEndPoint[]>(role, masterEndPoints.ToArray());
-                                        }
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                { }
-            }
-            return null;
-        }
-
-        private static HashSet<IPEndPoint> SplitToIPEndPoints(RedisEndPoint[] endPoints)
-        {
-            if (endPoints != null && endPoints.Length > 0)
-            {
-                var ipList = new HashSet<IPEndPoint>();
-                foreach (var ep in endPoints)
-                {
-                    if (ep != null && !ep.IsEmpty)
-                    {
-                        try
-                        {
-                            var ipAddresses = ep.ResolveHost();
-                            if (ipAddresses != null)
-                            {
-                                var length = ipAddresses.Length;
-                                if (length > 0)
-                                {
-                                    for (var i = 0; i < length; i++)
-                                        ipList.Add(new IPEndPoint(ipAddresses[i], ep.Port));
-                                }
-                            }
-                        }
-                        catch (Exception)
-                        { }
-                    }
-                }
-
-                return ipList;
-            }
-            return null;
         }
 
         #endregion Initialization Methods

@@ -47,7 +47,6 @@ namespace Sweet.Redis
         private RedisRole m_DesiredRole = RedisRole.Undefined;
 
         protected RedisSocket m_Socket;
-        protected EndPoint m_EndPoint;
         protected RedisConnectionSettings m_Settings;
 
         private long m_LastError = (long)SocketError.Success;
@@ -83,7 +82,6 @@ namespace Sweet.Redis
             if ((socket != null) && socket.Connected)
             {
                 m_Socket = socket;
-                m_EndPoint = socket.RemoteEndPoint;
                 m_State = (int)RedisConnectionState.Connected;
             }
 
@@ -102,22 +100,26 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_Settings, null);
             Interlocked.Exchange(ref m_CreateAction, null);
 
-            var disposeSocket = disposing;
             var socket = Interlocked.Exchange(ref m_Socket, null);
-            try
+            var onReleaseSocket = Interlocked.Exchange(ref m_ReleaseAction, null);
+
+            if (socket != null)
             {
-                var onReleaseSocket = Interlocked.Exchange(ref m_ReleaseAction, null);
-                if (onReleaseSocket != null)
-                    onReleaseSocket(this, socket);
-            }
-            catch (Exception)
-            {
-                disposeSocket = true;
-            }
-            finally
-            {
-                if (!disposeSocket)
-                    socket.DisposeSocket();
+                var disposeSocket = disposing;
+                try
+                {
+                    if (onReleaseSocket != null)
+                        onReleaseSocket(this, socket);
+                }
+                catch (Exception)
+                {
+                    disposeSocket = true;
+                }
+                finally
+                {
+                    if (!disposeSocket)
+                        socket.DisposeSocket();
+                }
             }
         }
 
@@ -225,6 +227,25 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisServerInfo GetServerInfo()
+        {
+            try
+            {
+                var socket = m_Socket;
+                if (socket.IsConnected())
+                {
+                    using (var cmd = new RedisCommand(-1, RedisCommandList.Info, RedisCommandType.SendAndReceive))
+                    {
+                        string lines = cmd.ExpectBulkString(new RedisSocketContext(socket, Settings), true);
+                        return RedisServerInfo.Parse(lines);
+                    }
+                }
+            }
+            catch (Exception)
+            { }
+            return null;
+        }
+
         protected virtual RedisRole DiscoverRole(RedisSocket socket)
         {
             if (!Disposed)
@@ -243,8 +264,22 @@ namespace Sweet.Redis
                         }
                     }
                 }
-                catch (Exception)
-                { }
+                catch (Exception e)
+                {
+                    var exception = e;
+                    while (exception != null)
+                    {
+                        if (exception is SocketException)
+                            return RedisRole.Undefined;
+
+                        var re = e as RedisException;
+                        if (re != null && (re.ErrorCode == RedisErrorCode.ConnectionError ||
+                            re.ErrorCode == RedisErrorCode.SocketError))
+                            return RedisRole.Undefined;
+
+                        exception = exception.InnerException;
+                    }
+                }
 
                 if (role == RedisRole.Undefined)
                 {
@@ -466,6 +501,11 @@ namespace Sweet.Redis
                     }
                 }).Wait();
             return socket;
+        }
+
+        public RedisSocket RemoveSocket()
+        {
+            return Interlocked.Exchange(ref m_Socket, null);
         }
 
         public virtual void ReleaseSocket()

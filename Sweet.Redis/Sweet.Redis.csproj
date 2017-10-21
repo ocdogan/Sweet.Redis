@@ -53,7 +53,6 @@
     <Compile Include="Common\Interfaces\IRedisNamedObject.cs" />
     <Compile Include="Common\RedisByteArray.cs" />
     <Compile Include="Common\RedisEndPoint.cs" />
-    <Compile Include="Common\RedisEndPointInfo.cs" />
     <Compile Include="Common\RedisParam.cs" />
     <Compile Include="Common\RedisRole.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
@@ -246,6 +245,8 @@
     <Compile Include="Connection\Manager\RedisManager.cs" />
     <Compile Include="Connection\Manager\RedisManagedNodesGroup.cs" />
     <Compile Include="Common\ServerInfo\RedisServerMasterInfo.cs" />
+    <Compile Include="Common\RedisEndPointInfo.cs" />
+    <Compile Include="Connection\RedisEndPointResolver.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

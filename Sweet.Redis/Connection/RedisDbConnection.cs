@@ -43,7 +43,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisDbConnection(string name, RedisRole role, RedisPoolSettings settings,
+        internal RedisDbConnection(string name, RedisRole role, RedisConnectionSettings settings,
             Action<RedisConnection, RedisSocket> onCreateSocket, Action<RedisConnection, RedisSocket> onReleaseSocket,
             int dbIndex, RedisSocket socket = null, bool connectImmediately = false)
             : base(name, role, settings, onCreateSocket, onReleaseSocket, socket, false)

@@ -200,6 +200,11 @@ namespace Sweet.Redis
             return null;
         }
 
+        internal void ReuseSocket(RedisSocket socket)
+        {
+            OnReleaseSocket(null, socket);
+        }
+
         protected void Release()
         {
             var connectionLimiter = m_ConnectionLimiter;
