@@ -144,12 +144,12 @@ namespace Sweet.Redis
         protected virtual void OnConnectionTimeout(RedisConnectionRetryEventArgs e)
         { }
 
-        IRedisConnection IRedisConnectionProvider.Connect(int dbIndex, RedisRole role)
+        IRedisConnection IRedisConnectionProvider.Connect(int dbIndex, RedisRole expectedRole)
         {
-            return this.Connect(dbIndex, role);
+            return this.Connect(dbIndex, expectedRole);
         }
 
-        protected internal virtual IRedisConnection Connect(int dbIndex, RedisRole role)
+        protected internal virtual IRedisConnection Connect(int dbIndex, RedisRole expectedRole)
         {
             ValidateNotDisposed();
 
@@ -169,7 +169,7 @@ namespace Sweet.Redis
             {
                 var signaled = m_ConnectionLimiter.Wait(limiterWait);
                 if (signaled)
-                    return NewConnection(DequeueSocket(dbIndex, role), dbIndex, role, true);
+                    return NewConnection(DequeueSocket(dbIndex, expectedRole), dbIndex, expectedRole, true);
 
                 retryInfo.Entered();
                 OnConnectionRetry(retryInfo);
@@ -190,12 +190,12 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected virtual IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
+        protected virtual IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole expectedRole, bool connectImmediately = true)
         {
             return null;
         }
 
-        protected virtual RedisSocket DequeueSocket(int dbIndex, RedisRole role)
+        protected virtual RedisSocket DequeueSocket(int dbIndex, RedisRole expectedRole)
         {
             return null;
         }

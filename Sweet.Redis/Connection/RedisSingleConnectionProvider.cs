@@ -90,7 +90,7 @@ namespace Sweet.Redis
             return new RedisConnectionLimiter(1);
         }
 
-        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
+        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole expectedRole, bool connectImmediately = true)
         {
             var connection = m_Connection;
             if (connection == null || connection.Disposed)
@@ -100,7 +100,7 @@ namespace Sweet.Redis
                     connection = m_Connection;
                     if (connection == null || connection.Disposed)
                     {
-                        m_Connection = connection = OnNewConnection(socket, dbIndex, role, connectImmediately);
+                        m_Connection = connection = OnNewConnection(socket, dbIndex, expectedRole, connectImmediately);
                     }
                 }
             }

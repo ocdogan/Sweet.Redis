@@ -30,6 +30,6 @@ namespace Sweet.Redis
         int InUseCount { get; }
         int SpareCount { get; }
 
-        IRedisConnection Connect(int dbIndex, RedisRole role);
+        IRedisConnection Connect(int dbIndex, RedisRole expectedRole);
     }
 }

@@ -317,10 +317,10 @@ namespace Sweet.Redis
 
         #region Connection Methods
 
-        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
+        protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole expectedRole, bool connectImmediately = true)
         {
             var settings = GetSettings() ?? RedisPoolSettings.Default;
-            return new RedisDbConnection(Name, role, settings, null, OnReleaseSocket, dbIndex,
+            return new RedisDbConnection(Name, expectedRole, settings, null, OnReleaseSocket, dbIndex,
                                            socket.IsConnected() ? socket : null, connectImmediately);
         }
 
@@ -368,9 +368,9 @@ namespace Sweet.Redis
             }
         }
 
-        protected override RedisSocket DequeueSocket(int dbIndex, RedisRole role)
+        protected override RedisSocket DequeueSocket(int dbIndex, RedisRole expectedRole)
         {
-            var hasAnyMember = false;
+            var storeHasMember = false;
             lock (m_MemberStoreLock)
             {
                 var member = m_MemberStoreTail;
@@ -380,8 +380,10 @@ namespace Sweet.Redis
                     {
                         if (member.DbIndex == dbIndex)
                         {
-                            hasAnyMember = true;
-                            if (role == RedisRole.Undefined || member.Role == role)
+                            storeHasMember = true;
+                            if (expectedRole == RedisRole.Any ||
+                                expectedRole == RedisRole.Undefined ||
+                                member.Role == expectedRole)
                             {
                                 var socket = member.ReleaseSocket();
 
@@ -417,8 +419,10 @@ namespace Sweet.Redis
                                 member = node.Value;
                                 if (member.DbIndex == dbIndex)
                                 {
-                                    hasAnyMember = true;
-                                    if (role == RedisRole.Undefined || member.Role == role)
+                                    storeHasMember = true;
+                                    if (expectedRole == RedisRole.Any ||
+                                        expectedRole == RedisRole.Undefined ||
+                                        member.Role == expectedRole)
                                     {
                                         socket = member.ReleaseSocket();
 
@@ -441,7 +445,7 @@ namespace Sweet.Redis
                 }
             }
 
-            if (hasAnyMember && role == RedisRole.Slave)
+            if (storeHasMember && expectedRole == RedisRole.Slave)
                 return DequeueSocket(dbIndex, RedisRole.Master);
             return null;
         }
