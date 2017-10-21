@@ -42,6 +42,25 @@ namespace Sweet.Redis
     repl_backlog_size:1048576
     repl_backlog_first_byte_offset:699936
     repl_backlog_histlen:1048576
+    -------------------------------------
+    role:slave
+    master_host:127.0.0.1
+    master_port:6379
+    master_link_status:up
+    master_last_io_seconds_ago:0
+    master_sync_in_progress:0
+    slave_repl_offset:3847578
+    slave_priority:100
+    slave_read_only:1
+    connected_slaves:0
+    master_replid:ce80d75328fc6dd234187750f02758ef61d3d2d0
+    master_replid2:0000000000000000000000000000000000000000
+    master_repl_offset:3847578
+    second_repl_offset:-1
+    repl_backlog_active:1
+    repl_backlog_size:1048576
+    repl_backlog_first_byte_offset:2799003
+    repl_backlog_histlen:1048576
     */
     public class RedisServerInfoReplicationSection : RedisServerInfoSection
     {
@@ -66,9 +85,11 @@ namespace Sweet.Redis
 
         public long? ConnectedSlaves { get { return GetInteger("connected_slaves"); } } // 1
 
+        #region Master Role Properties
+
         public RedisServerSlaveInfo[] Slaves // ip=127.0.0.1,port=6381,state=online,offset=1748378,lag=0
         {
-            get 
+            get
             {
                 if (m_Slaves == null)
                 {
@@ -77,7 +98,7 @@ namespace Sweet.Redis
                 }
                 return m_Slaves;
             }
-        } 
+        }
 
         public string MasterReplId { get { return Get("master_replid"); } } // c11020e01bc557109082cb298de257f7c04e4914
 
@@ -92,6 +113,28 @@ namespace Sweet.Redis
         public long? ReplBacklogFirstByteOfset { get { return GetInteger("repl_backlog_first_byte_offset"); } } // 699936
 
         public long? ReplBacklogHistLen { get { return GetInteger("repl_backlog_histlen"); } } // 1048576
+
+        #endregion Master Role Properties
+
+        #region Slave Role Properties
+
+        public string MasterHost { get { return Get("master_host"); } } // 127.0.0.1
+
+        public long? MasterPort { get { return GetInteger("master_port"); } } // 6379
+
+        public string MasterLinkStatus { get { return Get("master_link_status"); } } // up
+
+        public long? MasterLastIOSecondsAgo { get { return GetInteger("master_last_io_seconds_ago"); } } // 0
+
+        public long? MasterSyncInProgress { get { return GetInteger("master_sync_in_progress"); } } // 0
+
+        public long? SlaveReplOffset { get { return GetInteger("slave_repl_offset"); } } // 3847578
+
+        public long? SlavePriority { get { return GetInteger("slave_priority"); } } // 100
+
+        public long? SlaveReadOnly { get { return GetInteger("slave_read_only"); } } // 1
+
+        #endregion Slave Role Properties
 
         #endregion Properties
 
