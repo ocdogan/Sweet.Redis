@@ -96,7 +96,7 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Methods        		
+        #region Methods
 
         public Tuple<RedisManagedMSGroup, RedisManagedNodesGroup> CreateGroups()
         {
