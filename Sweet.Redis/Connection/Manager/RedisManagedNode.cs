@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNode(RedisConnectionPool pool, RedisRole role, bool ownsPool = true)
+        public RedisManagedNode(RedisRole role, RedisConnectionPool pool, bool ownsPool = true)
         {
             Role = role;
             m_Pool = pool;

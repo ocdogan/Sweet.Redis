@@ -73,15 +73,15 @@ namespace Sweet.Redis
 
         #region Methods        		
 
-        public Tuple<RedisCluster, RedisManagedNodesGroup> CreateCluster()
+        public Tuple<RedisManagedMSGroup, RedisManagedNodesGroup> CreateGroups()
         {
             ValidateNotDisposed();
 
-            var tuple = GenerateClusterSockets();
+            var tuple = CreateGroupSockets();
             if (tuple != null)
             {
-                RedisCluster cluster = null;
                 RedisManagedNodesGroup sentinels = null;
+                RedisManagedMSGroup mastersAndSlaves = null;
 
                 RedisManagedNodesGroup slaves = null;
                 RedisManagedNodesGroup masters = null;
@@ -125,8 +125,8 @@ namespace Sweet.Redis
                     throw;
                 }
 
-                cluster = new RedisCluster(masters, slaves);
-                return new Tuple<RedisCluster, RedisManagedNodesGroup>(cluster, sentinels);
+                mastersAndSlaves = new RedisManagedMSGroup(masters, slaves);
+                return new Tuple<RedisManagedMSGroup, RedisManagedNodesGroup>(mastersAndSlaves, sentinels);
             }
             return null;
         }
@@ -148,7 +148,7 @@ namespace Sweet.Redis
                             var pool = new RedisConnectionPool(m_Name, settings);
                             pool.ReuseSocket(socket);
 
-                            nodeList.Add(new RedisManagedNode(pool, role));
+                            nodeList.Add(new RedisManagedNode(role, pool));
                         }
                     }
                     catch (Exception)
@@ -158,12 +158,12 @@ namespace Sweet.Redis
                 }
 
                 if (nodeList.Count > 0)
-                    return new RedisManagedNodesGroup(RedisRole.Master, nodeList.ToArray());
+                    return new RedisManagedNodesGroup(role, nodeList.ToArray());
             }
             return null;
         }
 
-        private Tuple<RedisSocket[], RedisSocket[], RedisSocket[]> GenerateClusterSockets()
+        private Tuple<RedisSocket[], RedisSocket[], RedisSocket[]> CreateGroupSockets()
         {
             var settings = m_Settings;
             var ipEPList = SplitToIPEndPoints(settings.EndPoints);

@@ -66,7 +66,7 @@
     <Compile Include="Connection\Interfaces\IRedisClient.cs" />
     <Compile Include="Connection\Interfaces\IRedisManager.cs" />
     <Compile Include="Connection\Interfaces\IRedisSentinelClient.cs" />
-    <Compile Include="Connection\Manager\RedisCluster.cs" />
+    <Compile Include="Connection\Manager\RedisManagedMSGroup.cs" />
     <Compile Include="Connection\Manager\RedisManagedNode.cs" />
     <Compile Include="Connection\Interfaces\IRedisPubSubChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisMonitorChannel.cs" />

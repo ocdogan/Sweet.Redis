@@ -41,10 +41,10 @@ namespace Sweet.Redis
 
         #region Member Methods
 
-        public override RedisRawResponse SendReceive(byte[] data)
+        public override RedisRawResponse SendReceive(byte[] data, RedisRole commandRole)
         {
             ValidateNotDisposed();
-            ValidateRole(DesiredRole);
+            ValidateRole(commandRole);
 
             var socket = Connect();
             if (socket == null)

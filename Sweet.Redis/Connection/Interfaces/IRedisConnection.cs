@@ -32,7 +32,7 @@ namespace Sweet.Redis
         bool Connected { get; }
         bool Disposed { get; }
         long LastError { get; }
-        RedisRole Role { get; }
+        RedisRole ServerRole { get; }
         RedisConnectionSettings Settings { get; }
         RedisConnectionState State { get; }
 
@@ -43,14 +43,14 @@ namespace Sweet.Redis
         RedisSocket Connect();
         Task<RedisSocket> ConnectAsync();
 
-        void Send(byte[] data);
         void Send(IRedisCommand cmd);
+        void Send(byte[] data, RedisRole commandRole);
 
-        Task SendAsync(byte[] data);
         Task SendAsync(IRedisCommand cmd);
+        Task SendAsync(byte[] data, RedisRole commandRole);
 
-        RedisRawResponse SendReceive(byte[] data);
         RedisRawResponse SendReceive(IRedisCommand cmd);
+        RedisRawResponse SendReceive(byte[] data, RedisRole commandRole);
     }
 }
 

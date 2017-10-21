@@ -80,11 +80,137 @@ namespace Sweet.Redis.ConsoleTest
 
             // ManagerTest1();
             // ManagerTest2();
-            ManagerTest3();
+            // ManagerTest3();
+            ManagerTest4();
+            // ManagerTest5();
         }
 
         #region Manager
 
+        static void ManagerTest5()
+        {
+            using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                new[] { RedisEndPoint.SentinelLocalHostEndPoint },
+                masterName: "mymaster")))
+            {
+                var i = 0;
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        var ch = (char)('0' + (i++ % 10));
+                        var text = new string(ch, 10);
+
+                        sw.Restart();
+                        using (var db = manager.GetDb(true))
+                        {
+                            Ping(db);
+                            SetGet(db, "tinytext", text);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void ManagerTest4()
+        {
+            using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                new[] { RedisEndPoint.SentinelLocalHostEndPoint },
+                masterName: "mymaster")))
+            {
+                var i = 0;
+                var sw = new Stopwatch();
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        var ch = (char)('0' + (i++ % 10));
+                        var text = new string(ch, 10);
+
+                        sw.Restart();
+                        using (var db = manager.GetDb())
+                        {
+                            Ping(db);
+                            SetGet(db, "tinytext", text);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void Ping(IRedisDb db)
+        {
+            var result = db.Connection.Ping();
+
+            if (result == (string)null)
+                Console.WriteLine("(nil)");
+            else
+            {
+                var value = result.Value;
+                if (value == null)
+                    Console.WriteLine("(nil)");
+                else
+                {
+                    Console.WriteLine("Response: " + value);
+                    Console.WriteLine();
+                }
+            }
+        }
+
+        static void SetGet(IRedisDb db, string key, string value)
+        {
+            var result = db.Strings.Set(key, value);
+            if (result)
+                Get(db, key);
+        }
+
+        static void Get(IRedisDb db, string key)
+        {
+            var result = db.Strings.Get(key);
+
+            if (result == (string)null)
+                Console.WriteLine("(nil)");
+            else
+            {
+                var value = result.Value;
+                if (value == null)
+                    Console.WriteLine("(nil)");
+                else
+                {
+                    Console.WriteLine("Response: " + Encoding.UTF8.GetString(value));
+                    Console.WriteLine();
+                }
+            }
+        }
         static void ManagerTest3()
         {
             using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
@@ -103,21 +229,7 @@ namespace Sweet.Redis.ConsoleTest
                         sw.Restart();
                         using (var db = manager.GetDb(true))
                         {
-                            var result = db.Connection.Ping();
-
-                            if (result == (string)null)
-                                Console.WriteLine("(nil)");
-                            else
-                            {
-                                var value = result.Value;
-                                if (value == null)
-                                    Console.WriteLine("(nil)");
-                                else
-                                {
-                                    Console.WriteLine("Response: " + value);
-                                    Console.WriteLine();
-                                }
-                            }
+                            Ping(db);
                         }
                     }
                     catch (Exception e)
@@ -139,7 +251,7 @@ namespace Sweet.Redis.ConsoleTest
         static void ManagerTest2()
         {
             using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
-                new[] { RedisEndPoint.LocalHostEndPoint, new RedisEndPoint("localhost", 6380)},
+                new[] { RedisEndPoint.LocalHostEndPoint, new RedisEndPoint("localhost", 6380) },
                 masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -154,21 +266,7 @@ namespace Sweet.Redis.ConsoleTest
                         sw.Restart();
                         using (var db = manager.GetDb(true))
                         {
-                            var result = db.Connection.Ping();
-
-                            if (result == (string)null)
-                                Console.WriteLine("(nil)");
-                            else
-                            {
-                                var value = result.Value;
-                                if (value == null)
-                                    Console.WriteLine("(nil)");
-                                else
-                                {
-                                    Console.WriteLine("Response: " + value);
-                                    Console.WriteLine();
-                                }
-                            }
+                            Ping(db);
                         }
                     }
                     catch (Exception e)
@@ -189,7 +287,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void ManagerTest1()
         {
-            using (var manager = new RedisManager("My Manager", 
+            using (var manager = new RedisManager("My Manager",
                 new RedisManagerSettings(new[] { RedisEndPoint.LocalHostEndPoint }, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -204,21 +302,7 @@ namespace Sweet.Redis.ConsoleTest
                         sw.Restart();
                         using (var db = manager.GetDb(true))
                         {
-                            var result = db.Connection.Ping();
-
-                            if (result == (string)null)
-                                Console.WriteLine("(nil)");
-                            else
-                            {
-                                var value = result.Value;
-                                if (value == null)
-                                    Console.WriteLine("(nil)");
-                                else
-                                {
-                                    Console.WriteLine("Response: " + value);
-                                    Console.WriteLine();
-                                }
-                            }
+                            Ping(db);
                         }
                     }
                     catch (Exception e)

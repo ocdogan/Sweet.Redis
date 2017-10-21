@@ -44,7 +44,7 @@ namespace Sweet.Redis
         private Guid m_Id;
         private string m_Name;
 
-        private RedisRole m_DesiredRole = RedisRole.Undefined;
+        private RedisRole m_ExpectedRole = RedisRole.Undefined;
 
         protected RedisSocket m_Socket;
         protected RedisConnectionSettings m_Settings;
@@ -73,7 +73,7 @@ namespace Sweet.Redis
 
             m_Id = Guid.NewGuid();
 
-            m_DesiredRole = role;
+            m_ExpectedRole = role;
             m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
@@ -137,9 +137,9 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisRole DesiredRole
+        public RedisRole ExpectedRole
         {
-            get { return m_DesiredRole; }
+            get { return m_ExpectedRole; }
         }
 
         public Guid Id
@@ -157,7 +157,7 @@ namespace Sweet.Redis
             get { return m_Name; }
         }
 
-        public RedisRole Role
+        public RedisRole ServerRole
         {
             get
             {
@@ -212,18 +212,18 @@ namespace Sweet.Redis
 
         protected virtual bool NeedsToDiscoverRole()
         {
-            return m_DesiredRole != RedisRole.Undefined;
+            return m_ExpectedRole != RedisRole.Undefined;
         }
 
-        protected virtual void ValidateRole(RedisRole desiredRole)
+        protected virtual void ValidateRole(RedisRole commandRole)
         {
-            if (!(desiredRole == RedisRole.Undefined || desiredRole == RedisRole.Any))
+            if (!(commandRole == RedisRole.Undefined || commandRole == RedisRole.Any))
             {
-                var role = Role;
-                if (role != desiredRole &&
-                    (role == RedisRole.Sentinel || desiredRole == RedisRole.Sentinel ||
-                     (role == RedisRole.Master && desiredRole != RedisRole.Slave)))
-                    throw new RedisException("Connected node does not satisfy the desired role", RedisErrorCode.NotSupported);
+                var serverRole = ServerRole;
+                if (serverRole != commandRole &&
+                    (serverRole == RedisRole.Sentinel || commandRole == RedisRole.Sentinel ||
+                     (serverRole == RedisRole.Slave && commandRole == RedisRole.Master)))
+                    throw new RedisException("Connected server does not satisfy the command's desired role", RedisErrorCode.NotSupported);
             }
         }
 
@@ -596,7 +596,7 @@ namespace Sweet.Redis
             }
         }
 
-        public virtual RedisRawResponse SendReceive(byte[] data)
+        public virtual RedisRawResponse SendReceive(byte[] data, RedisRole commandRole)
         {
             ValidateNotDisposed();
             throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending data.", RedisErrorCode.NotSupported);
@@ -608,10 +608,10 @@ namespace Sweet.Redis
             throw new RedisFatalException("SendAndReceive is not supported by base connection. Use Send method for sending command.", RedisErrorCode.NotSupported);
         }
 
-        public void Send(byte[] data)
+        public void Send(byte[] data, RedisRole commandRole)
         {
             ValidateNotDisposed();
-            ValidateRole(DesiredRole);
+            ValidateRole(commandRole);
 
             var socket = Connect();
             if (socket == null)
@@ -645,10 +645,10 @@ namespace Sweet.Redis
             cmd.WriteTo(socket);
         }
 
-        public Task SendAsync(byte[] data)
+        public Task SendAsync(byte[] data, RedisRole commandRole)
         {
             ValidateNotDisposed();
-            ValidateRole(DesiredRole);
+            ValidateRole(commandRole);
 
             var socket = Connect();
             if (socket == null)

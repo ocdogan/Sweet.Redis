@@ -26,7 +26,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisCluster : RedisDisposable
+    internal class RedisManagedMSGroup : RedisDisposable
     {
         #region Field Members
 
@@ -37,7 +37,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisCluster(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null)
+        public RedisManagedMSGroup(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null)
         {
             m_Masters = masters;
             m_Slaves = slaves;

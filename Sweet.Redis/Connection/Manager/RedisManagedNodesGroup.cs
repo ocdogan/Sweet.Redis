@@ -114,9 +114,20 @@ namespace Sweet.Redis
                 lock (m_SyncRoot)
                 {
                     var nodes = m_Nodes;
-                    if (m_NodeIndex >= nodes.Length)
-                        m_NodeIndex = 0;
-                    return nodes[m_NodeIndex++].Pool;
+                    if (nodes != null)
+                    {
+                        var maxLength = nodes.Length;
+                        if (maxLength > 0)
+                        {
+                            var index = Interlocked.Add(ref m_NodeIndex, 1);
+                            if (index > maxLength - 1)
+                            {
+                                index = 0;
+                                Interlocked.Exchange(ref m_NodeIndex, 0);
+                            }
+                            return nodes[index].Pool;
+                        }
+                    }
                 }
             }
             return null;

@@ -51,7 +51,7 @@ namespace Sweet.Redis
         private RedisManagerSettings m_Settings;
         private RedisEndPointResolver m_EndPointResolver;
 
-        private RedisCluster m_Cluster;
+        private RedisManagedMSGroup m_MSGroup;
         private RedisManagedNodesGroup m_Sentinels;
 
         private long m_InitializationState;
@@ -87,7 +87,7 @@ namespace Sweet.Redis
 
             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
 
-            var cluster = Interlocked.Exchange(ref m_Cluster, null);
+            var cluster = Interlocked.Exchange(ref m_MSGroup, null);
             if (cluster != null)
                 cluster.Dispose();
         }
@@ -115,19 +115,19 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0)
+        public IRedisTransaction BeginTransaction(bool readOnly = false, int dbIndex = 0)
         {
             ValidateNotDisposed();
             return NextPool(readOnly).BeginTransaction(dbIndex);
         }
 
-        public IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0)
+        public IRedisPipeline CreatePipeline(bool readOnly = false, int dbIndex = 0)
         {
             ValidateNotDisposed();
             return NextPool(readOnly).CreatePipeline(dbIndex);
         }
 
-        public IRedisDb GetDb(bool readOnly, int dbIndex = 0)
+        public IRedisDb GetDb(bool readOnly = false, int dbIndex = 0)
         {
             ValidateNotDisposed();
             return NextPool(readOnly).GetDb(dbIndex);
@@ -137,12 +137,12 @@ namespace Sweet.Redis
         {
             if (nodeSelector != null)
             {
-                var cluster = m_Cluster;
-                if (cluster != null && !cluster.Disposed)
+                var msGroup = m_MSGroup;
+                if (msGroup != null && !msGroup.Disposed)
                 {
-                    var pool = SelectPool(cluster.Slaves, nodeSelector);
+                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
                     if (pool == null)
-                        pool = SelectPool(cluster.Masters, nodeSelector);
+                        pool = SelectPool(msGroup.Masters, nodeSelector);
 
                     if (pool != null && !pool.Disposed)
                         return pool.PubSubChannel;
@@ -155,12 +155,12 @@ namespace Sweet.Redis
         {
             if (nodeSelector != null)
             {
-                var cluster = m_Cluster;
-                if (cluster != null && !cluster.Disposed)
+                var msGroup = m_MSGroup;
+                if (msGroup != null && !msGroup.Disposed)
                 {
-                    var pool = SelectPool(cluster.Slaves, nodeSelector);
+                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
                     if (pool == null)
-                        pool = SelectPool(cluster.Masters, nodeSelector);
+                        pool = SelectPool(msGroup.Masters, nodeSelector);
 
                     if (pool != null && !pool.Disposed)
                         return pool.MonitorChannel;
@@ -169,11 +169,11 @@ namespace Sweet.Redis
             return null;
         }
 
-        private RedisConnectionPool SelectPool(RedisManagedNodesGroup group, Func<RedisManagedNodeInfo, bool> nodeSelector)
+        private RedisConnectionPool SelectPool(RedisManagedNodesGroup nodesGroup, Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
-            if (group != null)
+            if (nodesGroup != null)
             {
-                var nodes = group.Nodes;
+                var nodes = nodesGroup.Nodes;
                 if (nodes != null)
                 {
                     foreach (var node in nodes)
@@ -195,31 +195,31 @@ namespace Sweet.Redis
         {
             InitializeNodes();
 
-            var cluster = m_Cluster;
-            if (cluster == null)
-                throw new RedisFatalException("Can not discover cluster", RedisErrorCode.ConnectionError);
+            var msGroup = m_MSGroup;
+            if (msGroup == null)
+                throw new RedisFatalException("Can not discover masters and slaves", RedisErrorCode.ConnectionError);
 
-            var group = readOnly ? (cluster.Slaves ?? cluster.Masters) : cluster.Masters;
+            var group = readOnly ? (msGroup.Slaves ?? msGroup.Masters) : msGroup.Masters;
             if (group == null)
                 throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
             var pool = group.Next();
             if (pool == null)
-                throw new RedisFatalException(String.Format("No {0} found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
+                throw new RedisFatalException(String.Format("No {0} node found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
             return pool;
         }
 
-        private static void DisposeGroups(RedisManagedNodesGroup[] groups)
+        private static void DisposeGroups(RedisManagedNodesGroup[] nodeGroups)
         {
-            if (groups != null)
+            if (nodeGroups != null)
             {
-                foreach (var group in groups)
+                foreach (var nodeGroup in nodeGroups)
                 {
                     try
                     {
-                        if (group != null)
-                            group.Dispose();
+                        if (nodeGroup != null)
+                            nodeGroup.Dispose();
                     }
                     catch (Exception)
                     { }
@@ -248,17 +248,17 @@ namespace Sweet.Redis
             if (endPointResolver == null || endPointResolver.Disposed)
                 return;
 
-            var tuple = endPointResolver.CreateCluster();
+            var tuple = endPointResolver.CreateGroups();
             if (tuple != null)
             {
-                var cluster = tuple.Item1;
+                var msGroup = tuple.Item1;
                 var sentinels = tuple.Item2;
 
-                var oldCluster = (RedisCluster)null;
+                var oldMSGroup = (RedisManagedMSGroup)null;
                 var oldSentinels = (RedisManagedNodesGroup)null;
                 try
                 {
-                    oldCluster = Interlocked.Exchange(ref m_Cluster, cluster);
+                    oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
                     oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
 
                     Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
@@ -267,14 +267,14 @@ namespace Sweet.Redis
                 {
                     Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
 
-                    if (cluster != null) cluster.Dispose();
+                    if (msGroup != null) msGroup.Dispose();
                     if (sentinels != null) sentinels.Dispose();
 
                     throw;
                 }
                 finally
                 {
-                    if (oldCluster != null) oldCluster.Dispose();
+                    if (oldMSGroup != null) oldMSGroup.Dispose();
                     if (oldSentinels != null) oldSentinels.Dispose();
                 }
             }

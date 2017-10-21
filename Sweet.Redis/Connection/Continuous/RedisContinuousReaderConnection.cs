@@ -83,7 +83,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public override RedisRawResponse SendReceive(byte[] data)
+        public override RedisRawResponse SendReceive(byte[] data, RedisRole commandRole)
         {
             ValidateNotDisposed();
             throw new NotImplementedException("SendAndReceive is not supported by continuous reader connections. Use Send method for sending data.");
