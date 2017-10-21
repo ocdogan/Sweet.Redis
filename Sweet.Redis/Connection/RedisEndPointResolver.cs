@@ -326,16 +326,16 @@ namespace Sweet.Redis
                     var serverInfo = connection.GetServerInfo();
                     if (serverInfo != null)
                     {
-                        var role = DiscoverNodeRole(serverInfo);
+                        var role = DiscoverRoleOfNode(serverInfo);
 
                         switch (role)
                         {
                             case RedisRole.Slave:
                                 return new NodeRoleAndSiblings(role, null);
                             case RedisRole.Master:
-                                return GetMasterNodeInfo(masterName, serverInfo);
+                                return GetSlavesOfMaster(serverInfo);
                             case RedisRole.Sentinel:
-                                return GetSentinelNodeInfo(masterName, serverInfo);
+                                return GetMastersOfSentinel(masterName, serverInfo);
                         }
                     }
                 }
@@ -345,7 +345,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static RedisRole DiscoverNodeRole(RedisServerInfo serverInfo)
+        private static RedisRole DiscoverRoleOfNode(RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
@@ -375,7 +375,7 @@ namespace Sweet.Redis
             return RedisRole.Undefined;
         }
 
-        private static NodeRoleAndSiblings GetMasterNodeInfo(string masterName, RedisServerInfo serverInfo)
+        private static NodeRoleAndSiblings GetSlavesOfMaster(RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
@@ -408,7 +408,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static NodeRoleAndSiblings GetSentinelNodeInfo(string masterName, RedisServerInfo serverInfo)
+        private static NodeRoleAndSiblings GetMastersOfSentinel(string masterName, RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
