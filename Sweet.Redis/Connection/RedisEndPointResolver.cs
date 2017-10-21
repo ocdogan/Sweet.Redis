@@ -283,29 +283,26 @@ namespace Sweet.Redis
                         var siblingEndPoints = nodeInfo.Siblings;
 
                         var list = new List<Tuple<RedisRole, RedisSocket>>();
-                        if (role == RedisRole.Slave)
-                            return new[] { new Tuple<RedisRole, RedisSocket>(role, connection.RemoveSocket()) };
-
-                        if (siblingEndPoints == null || siblingEndPoints.Length == 0)
-                            return role == RedisRole.Master ? new[] { new Tuple<RedisRole, RedisSocket>(role, connection.RemoveSocket()) } : null;
-
                         list.Add(new Tuple<RedisRole, RedisSocket>(role, connection.RemoveSocket()));
 
-                        foreach (var siblingEndPoint in siblingEndPoints)
+                        if (siblingEndPoints != null && siblingEndPoints.Length > 0)
                         {
-                            try
+                            foreach (var siblingEndPoint in siblingEndPoints)
                             {
-                                if (siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
+                                try
                                 {
-                                    var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
+                                    if (siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
+                                    {
+                                        var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
 
-                                    var otherNodes = CreateNodes(discoveredEndPoints, name, siblingSettings);
-                                    if (otherNodes != null)
-                                        list.AddRange(otherNodes);
+                                        var otherNodes = CreateNodes(discoveredEndPoints, name, siblingSettings);
+                                        if (otherNodes != null)
+                                            list.AddRange(otherNodes);
+                                    }
                                 }
+                                catch (Exception)
+                                { }
                             }
-                            catch (Exception)
-                            { }
                         }
 
                         return list.ToArray();
@@ -331,11 +328,11 @@ namespace Sweet.Redis
                         switch (role)
                         {
                             case RedisRole.Slave:
-                                return new NodeRoleAndSiblings(role, null);
+                                return GetMasterOfSlave(serverInfo) ?? new NodeRoleAndSiblings(role, null);
                             case RedisRole.Master:
-                                return GetSlavesOfMaster(serverInfo);
+                                return GetSlavesOfMaster(serverInfo) ?? new NodeRoleAndSiblings(role, null);
                             case RedisRole.Sentinel:
-                                return GetMastersOfSentinel(masterName, serverInfo);
+                                return GetMastersOfSentinel(masterName, serverInfo) ?? new NodeRoleAndSiblings(role, null);
                         }
                     }
                 }
@@ -373,6 +370,31 @@ namespace Sweet.Redis
                 }
             }
             return RedisRole.Undefined;
+        }
+
+        private static NodeRoleAndSiblings GetMasterOfSlave(RedisServerInfo serverInfo)
+        {
+            if (serverInfo != null)
+            {
+                var replicationSection = serverInfo.Replication;
+                if (replicationSection != null)
+                {
+                    try
+                    {
+                        if (replicationSection.MasterPort.HasValue &&
+                            !String.IsNullOrEmpty(replicationSection.MasterHost))
+                        {
+                            var endPoint = new RedisEndPoint(replicationSection.MasterHost,
+                                                             (int)replicationSection.MasterPort.Value);
+                            return new NodeRoleAndSiblings(RedisRole.Slave, new[] { endPoint });
+
+                        }
+                    }
+                    catch (Exception)
+                    { }
+                }
+            }
+            return null;
         }
 
         private static NodeRoleAndSiblings GetSlavesOfMaster(RedisServerInfo serverInfo)
