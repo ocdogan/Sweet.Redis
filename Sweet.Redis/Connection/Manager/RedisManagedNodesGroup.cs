@@ -65,31 +65,25 @@ namespace Sweet.Redis
 
         public RedisRole Role { get; private set; }
 
-        internal RedisManagedNode[] Nodes
-        {
-            get
-            {
-                var nodes = m_Nodes;
-                if (nodes != null)
-                {
-                    var result = new RedisManagedNode[nodes.Length];
-                    Array.Copy(nodes, result, result.Length);
-                    return result;
-                }
-                return null;
-            }
-        }
+        internal RedisManagedNode[] Nodes { get { return m_Nodes; } }
 
         #endregion Properties
 
         #region Methods
 
+        internal RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
+        {
+            ValidateNotDisposed();
+            return Interlocked.Exchange(ref m_Nodes, nodes);
+        }
+
         private void DisposeNodes()
         {
+            Interlocked.Exchange(ref m_NodeIndex, -1);
+
             var nodes = Interlocked.Exchange(ref m_Nodes, null);
             if (nodes != null)
             {
-                Interlocked.Exchange(ref m_NodeIndex, -1);
                 lock (m_SyncRoot)
                 {
                     foreach (var node in nodes)
