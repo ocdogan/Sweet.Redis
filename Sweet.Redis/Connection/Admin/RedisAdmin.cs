@@ -22,10 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Threading;
-using System.Text;
-
 namespace Sweet.Redis
 {
     internal class RedisAdmin : RedisCommandExecuterClient, IRedisAdmin, IRedisCommandExecuterClient
