@@ -337,16 +337,33 @@ namespace Sweet.Redis
                     }
                     else
                     {
-                        RearrangeGroup(msGroup.Masters, currMSGroup.Masters,
-                                       (newGroup) => m_MSGroup.ExchangeMasters(newGroup),
-                                       disposeList);
-                        RearrangeGroup(msGroup.Slaves, currMSGroup.Slaves,
-                                       (newGroup) => m_MSGroup.ExchangeSlaves(newGroup),
-                                       disposeList);
+                        disposeList.Add(msGroup);
+
+                        try
+                        {
+                            RearrangeGroup(msGroup.Masters, currMSGroup.Masters,
+                                           (newMasters) => m_MSGroup.ExchangeMasters(newMasters),
+                                           disposeList);
+                        }
+                        finally
+                        {
+                            msGroup.ExchangeMasters(null);
+                        }
+
+                        try
+                        {
+                            RearrangeGroup(msGroup.Slaves, currMSGroup.Slaves,
+                                           (newSlaves) => m_MSGroup.ExchangeSlaves(newSlaves),
+                                           disposeList);
+                        }
+                        finally
+                        {
+                            msGroup.ExchangeSlaves(null);
+                        }
                     }
 
                     RearrangeGroup(sentinels, m_Sentinels,
-                                   (ng) => Interlocked.Exchange(ref m_Sentinels, ng),
+                                   (newSentinels) => Interlocked.Exchange(ref m_Sentinels, newSentinels),
                                    disposeList);
                 }
                 finally
@@ -360,8 +377,13 @@ namespace Sweet.Redis
                                     Func<RedisManagedNodesGroup, RedisManagedNodesGroup> exchangeFunction,
                                     IList<IRedisDisposable> disposeList)
         {
-            if (newGroup == null || newGroup.Nodes == null || newGroup.Nodes.Length == 0 ||
-                currGroup == null || currGroup.Nodes == null || currGroup.Nodes.Length == 0)
+            var newNodes = (newGroup != null) ? newGroup.Nodes : null;
+            var currNodes = (currGroup != null) ? currGroup.Nodes : null;
+
+            var newLength = (newNodes != null) ? newNodes.Length : 0;
+
+            if (newNodes == null || newLength == 0 ||
+                currNodes == null || currNodes.Length == 0)
             {
                 var oldGroup = exchangeFunction(newGroup);
                 if (oldGroup != null)
@@ -369,11 +391,7 @@ namespace Sweet.Redis
             }
             else
             {
-                var currNodes = currGroup.Nodes.ToDictionary(n => n.EndPoint);
-
-                var newNodes = newGroup.Nodes;
-                var newLength = newNodes.Length;
-
+                var currNodesList = currNodes.ToDictionary(n => n.EndPoint);
                 var nodesToKeep = new Dictionary<RedisEndPoint, RedisManagedNode>();
 
                 for (var i = 0; i < newLength; i++)
@@ -381,7 +399,7 @@ namespace Sweet.Redis
                     var newNode = newNodes[i];
 
                     RedisManagedNode currNode;
-                    if (currNodes.TryGetValue(newNode.EndPoint, out currNode))
+                    if (currNodesList.TryGetValue(newNode.EndPoint, out currNode))
                     {
                         nodesToKeep[currNode.EndPoint] = currNode;
 
