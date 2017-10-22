@@ -124,6 +124,38 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region Overrides
+
+        public override string ToString()
+        {
+            return String.Format("[RedisEndPoint: Host={0}, Port={1}, IsEmpty={2}]", Host, Port, IsEmpty);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = 13;
+            hash = (hash * 7) + (Host ?? String.Empty).GetHashCode();
+            hash = (hash * 7) + Port.GetHashCode();
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null))
+                return false;
+
+            if (ReferenceEquals(obj, this))
+                return true;
+
+            var other = obj as RedisEndPoint;
+            if (!ReferenceEquals(obj, null))
+                return Port == other.Port && Host == other.Host;
+
+            return false;
+        }
+
+        #endregion Overrides
+
         public IPAddress[] ResolveHost()
         {
             var entry = m_Entry;
