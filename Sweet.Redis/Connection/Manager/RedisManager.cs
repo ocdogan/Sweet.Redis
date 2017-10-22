@@ -123,19 +123,9 @@ namespace Sweet.Redis
         public IRedisTransaction BeginTransaction(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0)
         {
             ValidateNotDisposed();
-            if (nodeSelector != null)
-            {
-                var msGroup = m_MSGroup;
-                if (msGroup != null && !msGroup.Disposed)
-                {
-                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
-                    if (pool == null)
-                        pool = SelectPool(msGroup.Masters, nodeSelector);
-
-                    if (pool != null && !pool.Disposed)
-                        return pool.BeginTransaction(dbIndex);
-                }
-            }
+            var pool = SelectMasterOrSlavePool(nodeSelector);
+            if (pool != null && !pool.Disposed)
+                return pool.BeginTransaction(dbIndex);
             return null;
         }
 
@@ -148,38 +138,18 @@ namespace Sweet.Redis
         public IRedisPipeline CreatePipeline(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0)
         {
             ValidateNotDisposed();
-            if (nodeSelector != null)
-            {
-                var msGroup = m_MSGroup;
-                if (msGroup != null && !msGroup.Disposed)
-                {
-                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
-                    if (pool == null)
-                        pool = SelectPool(msGroup.Masters, nodeSelector);
-
-                    if (pool != null && !pool.Disposed)
-                        return pool.CreatePipeline(dbIndex);
-                }
-            }
+            var pool = SelectMasterOrSlavePool(nodeSelector);
+            if (pool != null && !pool.Disposed)
+                return pool.CreatePipeline(dbIndex);
             return null;
         }
 
         public IRedisAdmin GetAdmin(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             ValidateNotDisposed();
-            if (nodeSelector != null)
-            {
-                var msGroup = m_MSGroup;
-                if (msGroup != null && !msGroup.Disposed)
-                {
-                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
-                    if (pool == null)
-                        pool = SelectPool(msGroup.Masters, nodeSelector);
-
-                    if (pool != null && !pool.Disposed)
-                        return pool.GetAdmin();
-                }
-            }
+            var pool = SelectMasterOrSlavePool(nodeSelector);
+            if (pool != null && !pool.Disposed)
+                return pool.GetAdmin();
             return null;
         }
 
@@ -192,44 +162,37 @@ namespace Sweet.Redis
         public IRedisDb GetDb(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0)
         {
             ValidateNotDisposed();
-            if (nodeSelector != null)
-            {
-                var msGroup = m_MSGroup;
-                if (msGroup != null && !msGroup.Disposed)
-                {
-                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
-                    if (pool == null)
-                        pool = SelectPool(msGroup.Masters, nodeSelector);
-
-                    if (pool != null && !pool.Disposed)
-                        return pool.GetDb(dbIndex);
-                }
-            }
+            var pool = SelectMasterOrSlavePool(nodeSelector);
+            if (pool != null && !pool.Disposed)
+                return pool.GetDb(dbIndex);
             return null;
         }
 
         public IRedisMonitorChannel GetMonitorChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             ValidateNotDisposed();
-            if (nodeSelector != null)
-            {
-                var msGroup = m_MSGroup;
-                if (msGroup != null && !msGroup.Disposed)
-                {
-                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
-                    if (pool == null)
-                        pool = SelectPool(msGroup.Masters, nodeSelector);
-
-                    if (pool != null && !pool.Disposed)
-                        return pool.MonitorChannel;
-                }
-            }
+            var pool = SelectMasterOrSlavePool(nodeSelector);
+            if (pool != null && !pool.Disposed)
+                return pool.MonitorChannel;
             return null;
         }
 
         public IRedisPubSubChannel GetPubSubChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             ValidateNotDisposed();
+            var pool = SelectMasterOrSlavePool(nodeSelector);
+            if (pool != null && !pool.Disposed)
+                return pool.PubSubChannel;
+            return null;
+        }
+
+        public void Refresh()
+        {
+            RefreshNodes(true);
+        }
+
+        private RedisConnectionPool SelectMasterOrSlavePool(Func<RedisManagedNodeInfo, bool> nodeSelector)
+        {
             if (nodeSelector != null)
             {
                 var msGroup = m_MSGroup;
@@ -239,16 +202,10 @@ namespace Sweet.Redis
                     if (pool == null)
                         pool = SelectPool(msGroup.Masters, nodeSelector);
 
-                    if (pool != null && !pool.Disposed)
-                        return pool.PubSubChannel;
+                    return pool;
                 }
             }
             return null;
-        }
-
-        public void Refresh()
-        {
-            RefreshNodes(true);
         }
 
         private RedisConnectionPool SelectPool(RedisManagedNodesGroup nodesGroup, Func<RedisManagedNodeInfo, bool> nodeSelector)
