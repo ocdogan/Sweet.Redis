@@ -1327,14 +1327,14 @@ namespace Sweet.Redis.ConsoleTest
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: 1)))
             {
-                using (var db = pool.GetDb())
+                using (var admin = pool.GetAdmin())
                 {
                     do
                     {
                         try
                         {
                             Console.Clear();
-                            db.Server.ShutDown();
+                            admin.Commands.ShutDown();
                         }
                         catch (Exception e)
                         {
@@ -1358,7 +1358,7 @@ namespace Sweet.Redis.ConsoleTest
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: 1)))
             {
-                using (var db = pool.GetDb())
+                using (var admin = pool.GetAdmin())
                 {
                     do
                     {
@@ -1366,7 +1366,7 @@ namespace Sweet.Redis.ConsoleTest
                         {
                             Console.Clear();
 
-                            var infoResult = db.Server.Info();
+                            var infoResult = admin.Commands.Info();
 
                             if (infoResult == null || infoResult.Value == null)
                                 Console.WriteLine("(nil)");
@@ -1411,7 +1411,7 @@ namespace Sweet.Redis.ConsoleTest
             using (var pool = new RedisConnectionPool("My redis pool",
                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: 1)))
             {
-                using (var db = pool.GetDb())
+                using (var admin = pool.GetAdmin())
                 {
                     do
                     {
@@ -1419,14 +1419,14 @@ namespace Sweet.Redis.ConsoleTest
                         {
                             Console.Clear();
 
-                            var lenResult = db.Server.SlowLogLen();
+                            var lenResult = admin.Commands.SlowLogLen();
 
                             Console.WriteLine("SLOWLOG LEN");
                             Console.WriteLine(lenResult);
 
                             if (lenResult > 0)
                             {
-                                var getResult = db.Server.SlowLogGet(lenResult);
+                                var getResult = admin.Commands.SlowLogGet(lenResult);
 
                                 Console.WriteLine("SLOWLOG GET " + lenResult);
                                 Console.WriteLine(getResult);

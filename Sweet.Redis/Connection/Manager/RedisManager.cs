@@ -23,9 +23,6 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -160,6 +157,25 @@ namespace Sweet.Redis
 
                     if (pool != null && !pool.Disposed)
                         return pool.CreatePipeline(dbIndex);
+                }
+            }
+            return null;
+        }
+
+        public IRedisAdmin GetAdmin(Func<RedisManagedNodeInfo, bool> nodeSelector)
+        {
+            ValidateNotDisposed();
+            if (nodeSelector != null)
+            {
+                var msGroup = m_MSGroup;
+                if (msGroup != null && !msGroup.Disposed)
+                {
+                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
+                    if (pool == null)
+                        pool = SelectPool(msGroup.Masters, nodeSelector);
+
+                    if (pool != null && !pool.Disposed)
+                        return pool.GetAdmin();
                 }
             }
             return null;

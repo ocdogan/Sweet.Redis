@@ -28,161 +28,32 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    internal class RedisDb : RedisPoolClient, IRedisDb, IRedisPoolClient
+    internal class RedisAdmin : RedisPoolClient, IRedisAdmin, IRedisPoolClient
     {
         #region Field Members
 
-        private int m_DbIndex;
-
-        private IRedisConnectionCommands m_Connection;
-        private IRedisGeoCommands m_Geo;
-        private IRedisHashesCommands m_Hashes;
-        private IRedisHyperLogLogCommands m_HyperLogLogCommands;
-        private IRedisKeysCommands m_Keys;
-        private IRedisListsCommands m_Lists;
-        private IRedisPubSubCommands m_PubSubs;
-        private IRedisScriptingCommands m_Scripting;
-        private IRedisSetsCommands m_Sets;
-        private IRedisSortedSetsCommands m_SortedSets;
-        private IRedisStringsCommands m_Strings;
+        private IRedisServerCommands m_Commands;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisDb(RedisConnectionPool pool, int dbIndex, bool throwOnError = true)
+        public RedisAdmin(RedisConnectionPool pool, bool throwOnError = true)
             : base(pool, throwOnError)
-        {
-            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
-        }
+        { }
 
         #endregion .Ctors
 
         #region Properties
 
-        public IRedisConnectionCommands Connection
+        public IRedisServerCommands Commands
         {
             get
             {
                 ValidateNotDisposed();
-                if (m_Connection == null)
-                    m_Connection = new RedisConnectionCommands(this);
-                return m_Connection;
-            }
-        }
-
-        public override int DbIndex
-        {
-            get { return m_DbIndex; }
-        }
-
-        public IRedisGeoCommands Geo
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Geo == null)
-                    m_Geo = new RedisGeoCommands(this);
-                return m_Geo;
-            }
-        }
-
-        public IRedisHashesCommands Hashes
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Hashes == null)
-                    m_Hashes = new RedisHashesCommands(this);
-                return m_Hashes;
-            }
-        }
-
-        public IRedisHyperLogLogCommands HyperLogLogCommands
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_HyperLogLogCommands == null)
-                    m_HyperLogLogCommands = new RedisHyperLogLogCommands(this);
-                return m_HyperLogLogCommands;
-            }
-        }
-
-        public IRedisKeysCommands Keys
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Keys == null)
-                    m_Keys = new RedisKeysCommands(this);
-                return m_Keys;
-            }
-        }
-
-        public IRedisListsCommands Lists
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Lists == null)
-                    m_Lists = new RedisListsCommands(this);
-                return m_Lists;
-            }
-        }
-
-        public IRedisPubSubCommands PubSubs
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_PubSubs == null)
-                    m_PubSubs = new RedisPubSubCommands(this);
-                return m_PubSubs;
-            }
-        }
-
-        public IRedisScriptingCommands Scripting
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Scripting == null)
-                    m_Scripting = new RedisScriptingCommands(this);
-                return m_Scripting;
-            }
-        }
-
-        public IRedisSetsCommands Sets
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Sets == null)
-                    m_Sets = new RedisSetsCommands(this);
-                return m_Sets;
-            }
-        }
-
-        public IRedisSortedSetsCommands SortedSets
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_SortedSets == null)
-                    m_SortedSets = new RedisSortedSetsCommands(this);
-                return m_SortedSets;
-            }
-        }
-
-        public IRedisStringsCommands Strings
-        {
-            get
-            {
-                ValidateNotDisposed();
-                if (m_Strings == null)
-                    m_Strings = new RedisStringsCommands(this);
-                return m_Strings;
+                if (m_Commands == null)
+                    m_Commands = new RedisServerCommands(this);
+                return m_Commands;
             }
         }
 

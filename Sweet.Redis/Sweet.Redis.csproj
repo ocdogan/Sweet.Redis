@@ -247,6 +247,10 @@
     <Compile Include="Common\ServerInfo\RedisServerMasterInfo.cs" />
     <Compile Include="Common\RedisEndPointInfo.cs" />
     <Compile Include="Connection\RedisEndPointResolver.cs" />
+    <Compile Include="Connection\Interfaces\IRedisAdmin.cs" />
+    <Compile Include="Connection\Admin\RedisAdmin.cs" />
+    <Compile Include="Connection\Interfaces\IRedisPoolClient.cs" />
+    <Compile Include="Connection\Pooling\RedisPoolClient.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -256,6 +260,9 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Connection\Admin\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

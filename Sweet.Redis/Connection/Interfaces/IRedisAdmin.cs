@@ -26,18 +26,8 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisManager : IRedisNamedObject, IRedisIdentifiedObject
+    public interface IRedisAdmin : IRedisDisposable, IRedisClient, IRedisPoolClient
     {
-        RedisManagerSettings Settings { get; }
-
-        IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0);
-        IRedisTransaction BeginTransaction(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisAdmin GetAdmin(Func<RedisManagedNodeInfo, bool> nodeSelector);
-        IRedisDb GetDb(bool readOnly, int dbIndex = 0);
-        IRedisDb GetDb(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisMonitorChannel GetMonitorChannel(Func<RedisManagedNodeInfo, bool> nodeSelector);
-        IRedisPubSubChannel GetPubSubChannel(Func<RedisManagedNodeInfo, bool> nodeSelector);
+        IRedisServerCommands Commands { get; }
     }
 }

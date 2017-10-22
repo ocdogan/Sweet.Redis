@@ -282,6 +282,12 @@ namespace Sweet.Redis
             return new RedisPipeline(this, dbIndex);
         }
 
+        public IRedisAdmin GetAdmin()
+        {
+            ValidateNotDisposed();
+            return new RedisAdmin(this);
+        }
+
         public IRedisDb GetDb(int dbIndex = 0)
         {
             ValidateNotDisposed();

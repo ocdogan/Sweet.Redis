@@ -22,8 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
     interface IRedisConnectionPool
@@ -32,6 +30,7 @@ namespace Sweet.Redis
         int InUseCount { get; }
         int AvailableCount { get; }
 
+        IRedisAdmin GetAdmin();
         IRedisDb GetDb(int dbIndex = 0);
         IRedisTransaction BeginTransaction(int dbIndex = 0);
 

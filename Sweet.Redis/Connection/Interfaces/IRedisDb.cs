@@ -26,10 +26,8 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisDb : IRedisDisposable, IRedisClient
+    public interface IRedisDb : IRedisPoolClient, IRedisClient, IRedisDisposable
     {
-        RedisConnectionPool Pool { get; }
-
         IRedisConnectionCommands Connection { get; }
         IRedisGeoCommands Geo { get; }
         IRedisHashesCommands Hashes { get; }
@@ -38,7 +36,6 @@ namespace Sweet.Redis
         IRedisListsCommands Lists { get; }
         IRedisPubSubCommands PubSubs { get; }
         IRedisScriptingCommands Scripting { get; }
-        IRedisServerCommands Server { get; }
         IRedisSetsCommands Sets { get; }
         IRedisSortedSetsCommands SortedSets { get; }
         IRedisStringsCommands Strings { get; }
