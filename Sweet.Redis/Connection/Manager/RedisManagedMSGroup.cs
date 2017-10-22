@@ -30,7 +30,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private RedisManagedNodesGroup m_Masters; 
+        private RedisManagedNodesGroup m_Masters;
         private RedisManagedNodesGroup m_Slaves;
 
         #endregion Field Members
@@ -67,5 +67,21 @@ namespace Sweet.Redis
         public RedisManagedNodesGroup Slaves { get { return m_Slaves; } }
 
         #endregion Properties
+
+        #region Methods
+
+        internal RedisManagedNodesGroup ExchangeMasters(RedisManagedNodesGroup masters)
+        {
+            ValidateNotDisposed();
+            return Interlocked.Exchange(ref m_Masters, masters);
+        }
+
+        internal RedisManagedNodesGroup ExchangeSlaves(RedisManagedNodesGroup slaves)
+        {
+            ValidateNotDisposed();
+            return Interlocked.Exchange(ref m_Slaves, slaves);
+        }
+
+        #endregion Methods
     }
 }
