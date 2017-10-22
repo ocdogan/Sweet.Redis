@@ -23,6 +23,8 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -312,12 +314,23 @@ namespace Sweet.Redis
                 lock (m_SyncRoot)
                 {
                     if (Interlocked.Read(ref m_InitializationState) != (long)InitializationState.Initialized)
-                        RefreshNodes();
+                    {
+                        try
+                        {
+                            RefreshNodes(false);
+                            Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
+                        }
+                        catch (Exception)
+                        {
+                            Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
+                            throw;
+                        }
+                    }
                 }
             }
         }
 
-        private void RefreshNodes()
+        private void RefreshNodes(bool careValidNodes = true)
         {
             var endPointResolver = m_EndPointResolver;
             if (endPointResolver == null || endPointResolver.Disposed)
@@ -329,28 +342,132 @@ namespace Sweet.Redis
                 var msGroup = tuple.Item1;
                 var sentinels = tuple.Item2;
 
-                var oldMSGroup = (RedisManagedMSGroup)null;
-                var oldSentinels = (RedisManagedNodesGroup)null;
+                if (!careValidNodes)
+                {
+                    var oldMSGroup = (RedisManagedMSGroup)null;
+                    var oldSentinels = (RedisManagedNodesGroup)null;
+                    try
+                    {
+                        oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
+                        oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
+                    }
+                    catch (Exception)
+                    {
+                        if (msGroup != null) msGroup.Dispose();
+                        if (sentinels != null) sentinels.Dispose();
+                        throw;
+                    }
+                    finally
+                    {
+                        if (oldMSGroup != null) oldMSGroup.Dispose();
+                        if (oldSentinels != null) oldSentinels.Dispose();
+                    }
+                    return;
+                }
+
+                var disposeList = new List<IRedisDisposable>();
                 try
                 {
-                    oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
-                    oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
+                    var currMSGroup = m_MSGroup;
+                    if (msGroup == null || currMSGroup == null)
+                    {
+                        var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
+                        if (oldMSGroup != null)
+                            disposeList.Add(oldMSGroup);
+                    }
+                    else
+                    {
+                        RearrangeGroup(msGroup.Masters, currMSGroup.Masters,
+                                       (ng) => m_MSGroup.ExchangeMasters(ng),
+                                       disposeList);
+                        RearrangeGroup(msGroup.Slaves, currMSGroup.Slaves,
+                                       (ng) => m_MSGroup.ExchangeSlaves(ng),
+                                       disposeList);
+                    }
 
-                    Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
-                }
-                catch (Exception)
-                {
-                    Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Undefined);
-
-                    if (msGroup != null) msGroup.Dispose();
-                    if (sentinels != null) sentinels.Dispose();
-
-                    throw;
+                    RearrangeGroup(sentinels, m_Sentinels,
+                                   (ng) => Interlocked.Exchange(ref m_Sentinels, ng),
+                                   disposeList);
                 }
                 finally
                 {
-                    if (oldMSGroup != null) oldMSGroup.Dispose();
-                    if (oldSentinels != null) oldSentinels.Dispose();
+                    DisposeObjects(disposeList);
+                }
+            }
+        }
+
+        private void RearrangeGroup(RedisManagedNodesGroup newGroup, RedisManagedNodesGroup currGroup,
+                                    Func<RedisManagedNodesGroup, RedisManagedNodesGroup> exchangeFunction,
+                                    IList<IRedisDisposable> disposeList)
+        {
+            if (newGroup == null || newGroup.Nodes == null || newGroup.Nodes.Length == 0 ||
+                currGroup == null || currGroup.Nodes == null || currGroup.Nodes.Length == 0)
+            {
+                var oldGroup = exchangeFunction(newGroup);
+                if (oldGroup != null)
+                    disposeList.Add(oldGroup);
+            }
+            else
+            {
+                var currNodes = currGroup.Nodes.ToDictionary(n => n.EndPoint);
+
+                var newNodes = newGroup.Nodes;
+                var newLength = newNodes.Length;
+
+                var nodesToKeep = new Dictionary<RedisEndPoint, RedisManagedNode>();
+
+                for (var i = 0; i < newLength; i++)
+                {
+                    var newNode = newNodes[i];
+
+                    RedisManagedNode currNode;
+                    if (currNodes.TryGetValue(newNode.EndPoint, out currNode))
+                    {
+                        nodesToKeep[currNode.EndPoint] = currNode;
+
+                        var pool = newNode.ExchangePool(currNode.Pool);
+                        if (pool != null)
+                            disposeList.Add(pool);
+                    }
+                }
+
+                var oldGroup = exchangeFunction(newGroup);
+
+                if (oldGroup != null)
+                {
+                    var oldNodes = oldGroup.ExchangeNodes(null);
+                    var oldLength = oldNodes.Length;
+
+                    for (var j = 0; j < oldLength; j++)
+                    {
+                        var oldNode = oldNodes[j];
+                        oldNodes[j] = null;
+
+                        if (oldNode != null && !nodesToKeep.ContainsKey(oldNode.EndPoint))
+                            disposeList.Add(oldNode);
+                    }
+                }
+            }
+        }
+
+        private static void DisposeObjects(IList<IRedisDisposable> disposeList)
+        {
+            if (disposeList != null)
+            {
+                var count = disposeList.Count;
+                if (count > 0)
+                {
+                    for (var i = 0; i < count; i++)
+                    {
+                        try
+                        {
+                            var obj = disposeList[i];
+                            if (!ReferenceEquals(obj, null))
+                                obj.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    }
                 }
             }
         }
