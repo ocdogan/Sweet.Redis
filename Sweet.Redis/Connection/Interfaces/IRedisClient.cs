@@ -29,7 +29,7 @@ namespace Sweet.Redis
     public interface IRedisClient
     {
         int DbIndex { get; }
-        Guid Id { get; }
+        long Id { get; }
         bool ThrowOnError { get; }
 
         void ValidateNotDisposed();

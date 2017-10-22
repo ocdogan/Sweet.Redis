@@ -32,7 +32,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private RedisClient m_Client;
-        private Guid m_Id;
+        private long m_Id;
 
         #endregion Field Members
 
@@ -41,7 +41,7 @@ namespace Sweet.Redis
         public RedisCommandSet(RedisClient client)
         {
             m_Client = client;
-            m_Id = client.Id;
+            m_Id = RedisIDGenerator<RedisCommandSet>.NextId();
         }
 
         #endregion .Ctors
@@ -62,7 +62,7 @@ namespace Sweet.Redis
             get { return m_Client; }
         }
 
-        public Guid Id
+        public long Id
         {
             get { return m_Id; }
         }
@@ -76,7 +76,7 @@ namespace Sweet.Redis
         public override void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new RedisFatalException(new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N").ToUpper()), RedisErrorCode.ObjectDisposed);
+                throw new RedisFatalException(new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString()), RedisErrorCode.ObjectDisposed);
         }
 
         protected static void ValidateKeyAndValue(string key, byte[] value, string keyName = null, string valueName = null)

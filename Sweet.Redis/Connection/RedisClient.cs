@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private Guid m_Id;
+        private long m_Id;
 
         #endregion Field Members
 
@@ -39,7 +39,7 @@ namespace Sweet.Redis
 
         public RedisClient(bool throwOnError = true)
         {
-            m_Id = Guid.NewGuid();
+            m_Id = RedisIDGenerator<RedisClient>.NextId();
             ThrowOnError = throwOnError;
         }
 
@@ -47,7 +47,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public Guid Id
+        public long Id
         {
             get { return m_Id; }
         }
@@ -70,7 +70,7 @@ namespace Sweet.Redis
         public override void ValidateNotDisposed()
         {
             if (Disposed)
-                throw new RedisFatalException(new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString("N").ToUpper()), RedisErrorCode.ObjectDisposed);
+                throw new RedisFatalException(new ObjectDisposedException(GetType().Name + ", " + m_Id.ToString()), RedisErrorCode.ObjectDisposed);
         }
 
         #endregion IRedisConnection Methods

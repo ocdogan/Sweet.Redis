@@ -83,10 +83,66 @@ namespace Sweet.Redis.ConsoleTest
             // ManagerTest3();
             // ManagerTest4();
             // ManagerTest5();
-            ManagerTest6();
+            // ManagerTest6();
+            ManagerTest7();
         }
 
         #region Manager
+
+        static void ManagerTest7()
+        {
+            var i = 0;
+            var sw = new Stopwatch();
+            do
+            {
+                using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                    new[] { RedisEndPoint.SentinelLocalHostEndPoint },
+                    masterName: "mymaster")))
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        for (var j = 0; j < 100; j++)
+                        {
+                            var ch = (char)('0' + (i++ % 10));
+                            var text = i.ToString() + "-" + new string(ch, 10);
+
+                            sw.Restart();
+                            using (var db = manager.GetDb())
+                            {
+                                Ping(db);
+                                if (j % 10 == 3)
+                                    manager.Refresh();
+
+                                SetGet(db, "tinytext", text);
+                                if (j % 10 == 9)
+                                    manager.Refresh();
+                            }
+
+                            using (var db = manager.GetDb(true))
+                            {
+                                Get(db, "tinytext");
+                                if (j % 10 == 6)
+                                    manager.Refresh();
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue, ESC to escape ...");
+            }
+            while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+        }
 
         static void ManagerTest6()
         {

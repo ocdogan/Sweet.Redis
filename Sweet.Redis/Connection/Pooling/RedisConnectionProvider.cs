@@ -37,7 +37,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private Guid m_Id;
+        private long m_Id;
         private string m_Name;
 
         private RedisPoolSettings m_Settings;
@@ -52,11 +52,11 @@ namespace Sweet.Redis
         {
             m_Settings = settings ?? RedisPoolSettings.Default;
 
-            m_Id = Guid.NewGuid();
+            m_Id = RedisIDGenerator<RedisConnectionProvider>.NextId();
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name :
-                String.Format("{0}, {1}", GetType().Name, Id.ToString("N").ToUpper());
+                String.Format("{0}, {1}", GetType().Name, Id.ToString());
 
             if (connectionLimiter == null)
                 connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);
@@ -93,7 +93,7 @@ namespace Sweet.Redis
             }
         }
 
-        public Guid Id { get { return m_Id; } }
+        public long Id { get { return m_Id; } }
 
         public virtual int InUseCount
         {

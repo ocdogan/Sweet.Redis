@@ -41,7 +41,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private Guid m_Id;
+        private long m_Id;
         private string m_Name;
 
         private RedisRole m_ExpectedRole = RedisRole.Undefined;
@@ -71,13 +71,13 @@ namespace Sweet.Redis
             if (onReleaseSocket == null)
                 throw new RedisFatalException(new ArgumentNullException("releaseAction"));
 
-            m_Id = Guid.NewGuid();
+            m_Id = RedisIDGenerator<RedisConnection>.NextId();
 
             m_ExpectedRole = expectedRole;
             m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
-            m_Name = !String.IsNullOrEmpty(name) ? name : m_Id.ToString("N").ToUpper();
+            m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
 
             if ((socket != null) && socket.Connected)
             {
@@ -142,7 +142,7 @@ namespace Sweet.Redis
             get { return m_ExpectedRole; }
         }
 
-        public Guid Id
+        public long Id
         {
             get { return m_Id; }
         }

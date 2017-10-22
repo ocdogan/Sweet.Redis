@@ -22,13 +22,25 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
+using System.Threading;
 
 namespace Sweet.Redis
 {
-    public interface IRedisCommandSet
+    public static class RedisIDGenerator<T>
     {
-        IRedisClient Client { get; }
-        long Id { get; }
+        #region Static Members
+
+        private static long s_IdGen = RedisConstants.Zero;
+
+        #endregion Static Members
+
+        #region Methods
+
+        public static long NextId()
+        {
+            return Interlocked.Add(ref s_IdGen, RedisConstants.One);
+        }
+
+        #endregion Methods
     }
 }

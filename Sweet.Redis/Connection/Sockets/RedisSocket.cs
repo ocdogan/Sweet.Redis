@@ -35,12 +35,6 @@ namespace Sweet.Redis
 {
     public class RedisSocket : RedisDisposable
     {
-        #region Static Members
-
-        private static long s_IdGen = RedisConstants.Zero;
-
-        #endregion Static Members
-
         #region Field Members
 
         private int m_DbIndex = -1;
@@ -71,7 +65,7 @@ namespace Sweet.Redis
                            RemoteCertificateValidationCallback sslCertificateValidation = null,
                            Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
-            m_Id = NextId();
+            m_Id = RedisIDGenerator<RedisSocket>.NextId();
             m_Socket = socket;
             m_UseSsl = useSsl;
             m_OnConnect = onConnect;
@@ -85,7 +79,7 @@ namespace Sweet.Redis
                            RemoteCertificateValidationCallback sslCertificateValidation = null,
                            Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
-            m_Id = NextId();
+            m_Id = RedisIDGenerator<RedisSocket>.NextId();
             m_UseSsl = useSsl;
             m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
@@ -100,7 +94,7 @@ namespace Sweet.Redis
                            RemoteCertificateValidationCallback sslCertificateValidation = null,
                            Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
-            m_Id = NextId();
+            m_Id = RedisIDGenerator<RedisSocket>.NextId();
             m_UseSsl = useSsl;
             m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
@@ -938,11 +932,6 @@ namespace Sweet.Redis
         public void Listen(int backlog)
         {
             m_Socket.Listen(backlog);
-        }
-
-        private long NextId()
-        {
-            return Interlocked.Add(ref s_IdGen, RedisConstants.One);
         }
 
         public bool Poll(int time_us, SelectMode mode)

@@ -44,7 +44,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private Guid m_Id;
+        private long m_Id;
         private string m_Name;
 
         private RedisManagerSettings m_Settings;
@@ -65,9 +65,9 @@ namespace Sweet.Redis
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
 
-            m_Id = Guid.NewGuid();
+            m_Id = RedisIDGenerator<RedisManager>.NextId();
             m_Settings = settings;
-            m_Name = !String.IsNullOrEmpty(name) ? name : m_Id.ToString("N").ToUpper();
+            m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
 
             m_EndPointResolver = new RedisEndPointResolver(m_Name, settings);
         }
@@ -95,7 +95,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public Guid Id
+        public long Id
         {
             get { return m_Id; }
         }
@@ -246,6 +246,11 @@ namespace Sweet.Redis
             return null;
         }
 
+        public void Refresh()
+        {
+            RefreshNodes(true);
+        }
+
         private RedisConnectionPool SelectPool(RedisManagedNodesGroup nodesGroup, Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             if (nodesGroup != null)
@@ -342,32 +347,30 @@ namespace Sweet.Redis
                 var msGroup = tuple.Item1;
                 var sentinels = tuple.Item2;
 
-                if (!careValidNodes)
-                {
-                    var oldMSGroup = (RedisManagedMSGroup)null;
-                    var oldSentinels = (RedisManagedNodesGroup)null;
-                    try
-                    {
-                        oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
-                        oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
-                    }
-                    catch (Exception)
-                    {
-                        if (msGroup != null) msGroup.Dispose();
-                        if (sentinels != null) sentinels.Dispose();
-                        throw;
-                    }
-                    finally
-                    {
-                        if (oldMSGroup != null) oldMSGroup.Dispose();
-                        if (oldSentinels != null) oldSentinels.Dispose();
-                    }
-                    return;
-                }
-
                 var disposeList = new List<IRedisDisposable>();
                 try
                 {
+                    if (!careValidNodes)
+                    {
+                        try
+                        {
+                            var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
+                            if (oldMSGroup != null)
+                                disposeList.Add(oldMSGroup);
+
+                            var oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
+                            if (oldSentinels != null)
+                                disposeList.Add(oldSentinels);
+                        }
+                        catch (Exception)
+                        {
+                            if (msGroup != null) msGroup.Dispose();
+                            if (sentinels != null) sentinels.Dispose();
+                            throw;
+                        }
+                        return;
+                    }
+
                     var currMSGroup = m_MSGroup;
                     if (msGroup == null || currMSGroup == null)
                     {
@@ -378,10 +381,10 @@ namespace Sweet.Redis
                     else
                     {
                         RearrangeGroup(msGroup.Masters, currMSGroup.Masters,
-                                       (ng) => m_MSGroup.ExchangeMasters(ng),
+                                       (newGroup) => m_MSGroup.ExchangeMasters(newGroup),
                                        disposeList);
                         RearrangeGroup(msGroup.Slaves, currMSGroup.Slaves,
-                                       (ng) => m_MSGroup.ExchangeSlaves(ng),
+                                       (newGroup) => m_MSGroup.ExchangeSlaves(newGroup),
                                        disposeList);
                     }
 
@@ -436,15 +439,25 @@ namespace Sweet.Redis
                 if (oldGroup != null)
                 {
                     var oldNodes = oldGroup.ExchangeNodes(null);
-                    var oldLength = oldNodes.Length;
-
-                    for (var j = 0; j < oldLength; j++)
+                    if (oldNodes != null)
                     {
-                        var oldNode = oldNodes[j];
-                        oldNodes[j] = null;
+                        var oldLength = oldNodes.Length;
 
-                        if (oldNode != null && !nodesToKeep.ContainsKey(oldNode.EndPoint))
-                            disposeList.Add(oldNode);
+                        for (var j = 0; j < oldLength; j++)
+                        {
+                            var oldNode = oldNodes[j];
+                            oldNodes[j] = null;
+
+                            if (oldNode != null)
+                            {
+                                var oldPool = oldNode.ExchangePool(null);
+                                if (!nodesToKeep.ContainsKey(oldNode.EndPoint))
+                                {
+                                    disposeList.Add(oldPool);
+                                    disposeList.Add(oldNode);
+                                }
+                            }
+                        }
                     }
                 }
             }

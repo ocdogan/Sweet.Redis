@@ -29,12 +29,6 @@ namespace Sweet.Redis
 {
     internal abstract class RedisRequest : IRedisDisposable
     {
-        #region Static Members
-
-        private static long s_IdGen;
-
-        #endregion Static Members
-
         #region Field Members
 
         private long m_Disposed;
@@ -54,7 +48,7 @@ namespace Sweet.Redis
         public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
             string okIf = null, object stateObject = null, RedisRequestType requestType = RedisRequestType.Default)
         {
-            m_Id = NextId();
+            m_Id = RedisIDGenerator<RedisRequest>.NextId();
             m_OKIf = okIf;
             m_Expectation = expectation;
             m_Command = command;
@@ -168,17 +162,6 @@ namespace Sweet.Redis
         public abstract void SetException(Exception exception);
 
         public abstract void SetResult(object value);
-
-        #region Static Methods
-
-        private static long NextId()
-        {
-            var result = Interlocked.Add(ref s_IdGen, RedisConstants.One);
-            Interlocked.CompareExchange(ref s_IdGen, RedisConstants.Zero, (long)int.MaxValue);
-            return result;
-        }
-
-        #endregion Static Methods
 
         #endregion Methods
     }

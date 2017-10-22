@@ -28,6 +28,6 @@ namespace Sweet.Redis
 {
     public interface IRedisIdentifiedObject
     {
-        Guid Id { get; }
+        long Id { get; }
     }
 }

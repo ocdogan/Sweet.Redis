@@ -22,8 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 
@@ -31,12 +29,6 @@ namespace Sweet.Redis
 {
     public class RedisNativeSocket : Socket, IRedisDisposable
     {
-        #region Static Members
-
-        private static long s_IdGen = RedisConstants.Zero;
-
-        #endregion Static Members
-
         #region Field Members
 
         private long m_Disposed;
@@ -49,13 +41,13 @@ namespace Sweet.Redis
         public RedisNativeSocket(SocketInformation socketInformation)
             : base(socketInformation)
         {
-            m_Id = NextId();
+            m_Id = RedisIDGenerator<RedisNativeSocket>.NextId();
         }
 
         public RedisNativeSocket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType)
             : base(addressFamily, socketType, protocolType)
         {
-            m_Id = NextId();
+            m_Id = RedisIDGenerator<RedisNativeSocket>.NextId();
         }
 
         #endregion .Ctors
@@ -90,11 +82,6 @@ namespace Sweet.Redis
         {
             if (Disposed)
                 throw new RedisFatalException(GetType().Name + " is disposed");
-        }
-
-        private long NextId()
-        {
-            return Interlocked.Add(ref s_IdGen, RedisConstants.One);
         }
 
         #endregion Methods

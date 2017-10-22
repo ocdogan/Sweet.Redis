@@ -74,7 +74,14 @@ namespace Sweet.Redis
         internal RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
         {
             ValidateNotDisposed();
-            return Interlocked.Exchange(ref m_Nodes, nodes);
+            lock (m_SyncRoot)
+            {
+                var oldNodes = Interlocked.Exchange(ref m_Nodes, nodes);
+                if (nodes == null || nodes.Length == 0)
+                    m_NodeIndex = -1;
+
+                return oldNodes;
+            }
         }
 
         private void DisposeNodes()
