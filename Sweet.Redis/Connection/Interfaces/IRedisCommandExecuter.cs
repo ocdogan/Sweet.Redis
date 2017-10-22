@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    public interface IRedisCommandExecuter
+    internal interface IRedisCommandExecuter
     {
         RedisResponse Execute(RedisCommand command, bool throwException = true);
         RedisRaw ExpectArray(RedisCommand command, bool throwException = true);

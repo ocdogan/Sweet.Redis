@@ -252,6 +252,7 @@
     <Compile Include="Connection\Interfaces\IRedisPoolClient.cs" />
     <Compile Include="Connection\Pooling\RedisPoolClient.cs" />
     <Compile Include="Common\RedisIDGenerator.cs" />
+    <Compile Include="Connection\RedisCommandExecuter.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
