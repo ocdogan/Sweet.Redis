@@ -31,7 +31,7 @@ using System.Net.Sockets;
 
 namespace Sweet.Redis
 {
-    public class RedisEndPoint
+    public class RedisEndPoint : IEquatable<RedisEndPoint>
     {
         #region RedisIPAddressEntry
 
@@ -152,6 +152,18 @@ namespace Sweet.Redis
                 return Port == other.Port && Host == other.Host;
 
             return false;
+        }
+
+
+        public bool Equals(RedisEndPoint other)
+        {
+            if (ReferenceEquals(other, null))
+                return false;
+
+            if (ReferenceEquals(other, this))
+                return true;
+
+            return Port == other.Port && Host == other.Host;
         }
 
         #endregion Overrides
