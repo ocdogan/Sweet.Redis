@@ -121,20 +121,9 @@ namespace Sweet.Redis
             return NextPool(readOnly).BeginTransaction(dbIndex);
         }
 
-        public IRedisPipeline CreatePipeline(bool readOnly = false, int dbIndex = 0)
+        public IRedisTransaction BeginTransaction(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0)
         {
             ValidateNotDisposed();
-            return NextPool(readOnly).CreatePipeline(dbIndex);
-        }
-
-        public IRedisDb GetDb(bool readOnly = false, int dbIndex = 0)
-        {
-            ValidateNotDisposed();
-            return NextPool(readOnly).GetDb(dbIndex);
-        }
-
-        public IRedisPubSubChannel GetPubSubChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
-        {
             if (nodeSelector != null)
             {
                 var msGroup = m_MSGroup;
@@ -145,7 +134,57 @@ namespace Sweet.Redis
                         pool = SelectPool(msGroup.Masters, nodeSelector);
 
                     if (pool != null && !pool.Disposed)
-                        return pool.PubSubChannel;
+                        return pool.BeginTransaction(dbIndex);
+                }
+            }
+            return null;
+        }
+
+        public IRedisPipeline CreatePipeline(bool readOnly = false, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            return NextPool(readOnly).CreatePipeline(dbIndex);
+        }
+
+        public IRedisPipeline CreatePipeline(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            if (nodeSelector != null)
+            {
+                var msGroup = m_MSGroup;
+                if (msGroup != null && !msGroup.Disposed)
+                {
+                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
+                    if (pool == null)
+                        pool = SelectPool(msGroup.Masters, nodeSelector);
+
+                    if (pool != null && !pool.Disposed)
+                        return pool.CreatePipeline(dbIndex);
+                }
+            }
+            return null;
+        }
+
+        public IRedisDb GetDb(bool readOnly = false, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            return NextPool(readOnly).GetDb(dbIndex);
+        }
+
+        public IRedisDb GetDb(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0)
+        {
+            ValidateNotDisposed();
+            if (nodeSelector != null)
+            {
+                var msGroup = m_MSGroup;
+                if (msGroup != null && !msGroup.Disposed)
+                {
+                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
+                    if (pool == null)
+                        pool = SelectPool(msGroup.Masters, nodeSelector);
+
+                    if (pool != null && !pool.Disposed)
+                        return pool.GetDb(dbIndex);
                 }
             }
             return null;
@@ -153,6 +192,7 @@ namespace Sweet.Redis
 
         public IRedisMonitorChannel GetMonitorChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
+            ValidateNotDisposed();
             if (nodeSelector != null)
             {
                 var msGroup = m_MSGroup;
@@ -164,6 +204,25 @@ namespace Sweet.Redis
 
                     if (pool != null && !pool.Disposed)
                         return pool.MonitorChannel;
+                }
+            }
+            return null;
+        }
+
+        public IRedisPubSubChannel GetPubSubChannel(Func<RedisManagedNodeInfo, bool> nodeSelector)
+        {
+            ValidateNotDisposed();
+            if (nodeSelector != null)
+            {
+                var msGroup = m_MSGroup;
+                if (msGroup != null && !msGroup.Disposed)
+                {
+                    var pool = SelectPool(msGroup.Slaves, nodeSelector);
+                    if (pool == null)
+                        pool = SelectPool(msGroup.Masters, nodeSelector);
+
+                    if (pool != null && !pool.Disposed)
+                        return pool.PubSubChannel;
                 }
             }
             return null;
