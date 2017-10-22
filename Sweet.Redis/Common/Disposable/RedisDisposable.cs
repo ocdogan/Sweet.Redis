@@ -29,6 +29,17 @@ namespace Sweet.Redis
 {
     public class RedisDisposable : RedisInternalDisposable, IRedisDisposable
     {
+        #region .Ctors
+
+        public RedisDisposable()
+        { }
+
+        public RedisDisposable(Action<RedisInternalDisposable> onDispose)
+            : base(onDispose)
+        { }
+
+        #endregion .Ctors
+
         #region Destructors
 
         public virtual new void Dispose()

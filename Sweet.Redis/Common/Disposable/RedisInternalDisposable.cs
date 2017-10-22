@@ -32,8 +32,21 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_Disposed;
+        private Action<RedisInternalDisposable> m_OnDispose;
 
         #endregion Field Members
+
+        #region .Ctors
+
+        public RedisInternalDisposable()
+        { }
+
+        public RedisInternalDisposable(Action<RedisInternalDisposable> onDispose)
+        {
+            m_OnDispose = onDispose;
+        }
+
+        #endregion .Ctors
 
         #region Destructors
 
@@ -56,12 +69,21 @@ namespace Sweet.Redis
             }
             finally
             {
-                if (!alreadyDisposed)
+                try
                 {
-                    if (disposing)
-                        GC.SuppressFinalize(this);
+                    var onDispose = Interlocked.Exchange(ref m_OnDispose, null);
+                    if (onDispose != null)
+                        onDispose(this);
+                }
+                finally
+                {
+                    if (!alreadyDisposed)
+                    {
+                        if (disposing)
+                            GC.SuppressFinalize(this);
 
-                    OnDispose(disposing);
+                        OnDispose(disposing);
+                    }
                 }
             }
         }
@@ -71,6 +93,11 @@ namespace Sweet.Redis
 
         protected virtual void OnDispose(bool disposing)
         { }
+
+        internal void SetOnDispose(Action<RedisInternalDisposable> onDispose)
+        {
+            Interlocked.Exchange(ref m_OnDispose, onDispose);
+        }
 
         #endregion Destructors
 
