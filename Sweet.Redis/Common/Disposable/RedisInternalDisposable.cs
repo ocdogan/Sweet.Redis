@@ -32,7 +32,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_Disposed;
-        private Action<RedisInternalDisposable> m_OnDispose;
+        private event Action<RedisInternalDisposable> m_OnDispose;
 
         #endregion Field Members
 
@@ -94,9 +94,14 @@ namespace Sweet.Redis
         protected virtual void OnDispose(bool disposing)
         { }
 
-        internal void SetOnDispose(Action<RedisInternalDisposable> onDispose)
+        internal void AddOnDispose(Action<RedisInternalDisposable> onDispose)
         {
-            Interlocked.Exchange(ref m_OnDispose, onDispose);
+            m_OnDispose += onDispose;
+        }
+
+        internal void RemoveOnDispose(Action<RedisInternalDisposable> onDispose)
+        {
+            m_OnDispose -= onDispose;
         }
 
         #endregion Destructors
