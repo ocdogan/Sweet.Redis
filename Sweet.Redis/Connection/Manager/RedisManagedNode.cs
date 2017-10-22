@@ -26,7 +26,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisManagedNode : RedisInternalDisposable
+    internal class RedisManagedNode : RedisDisposable
     {
         #region Field Members
 
@@ -63,6 +63,8 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public RedisEndPoint EndPoint { get { return m_EndPoint; } }
+
         public bool OwnsPool { get { return m_OwnsPool; } }
 
         public RedisConnectionPool Pool { get { return m_Pool; } }
@@ -77,6 +79,13 @@ namespace Sweet.Redis
         {
             return new RedisManagedNodeInfo(m_EndPoint, Role);
         }
+
+        internal RedisConnectionPool ExchangePool(RedisConnectionPool pool)
+        {
+            ValidateNotDisposed();
+            return Interlocked.Exchange(ref m_Pool, pool);
+        }
+
 
         #endregion Methods
     }
