@@ -28,7 +28,33 @@ namespace Sweet.Redis
 {
     public abstract class RedisCommandExecuter : RedisDisposable, IRedisCommandExecuter
     {
+        #region Field Members
+
+        private long m_Id;
+
+        #endregion Field Members
+
+        #region .Ctors
+
+        public RedisCommandExecuter()
+        {
+            m_Id = RedisIDGenerator<RedisCommandExecuter>.NextId();
+        }
+
+        #endregion .Ctors
+
+        #region Properties
+
+        public long Id { get { return m_Id; } }
+
+        #endregion Properties
+
         #region Methods
+
+        IRedisConnection IRedisConnectionProvider.Connect(int dbIndex, RedisRole expectedRole)
+        {
+            return this.Connect(dbIndex, expectedRole);
+        }
 
         protected internal abstract IRedisConnection Connect(int dbIndex, RedisRole expectedRole);
 

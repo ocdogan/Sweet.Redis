@@ -22,22 +22,12 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    public interface IRedisDb : IRedisClient, IRedisDisposable
+    public interface IRedisConnectionInfoProvider
     {
-        IRedisConnectionCommands Connection { get; }
-        IRedisGeoCommands Geo { get; }
-        IRedisHashesCommands Hashes { get; }
-        IRedisHyperLogLogCommands HyperLogLogCommands { get; }
-        IRedisKeysCommands Keys { get; }
-        IRedisListsCommands Lists { get; }
-        IRedisPubSubCommands PubSubs { get; }
-        IRedisScriptingCommands Scripting { get; }
-        IRedisSetsCommands Sets { get; }
-        IRedisSortedSetsCommands SortedSets { get; }
-        IRedisStringsCommands Strings { get; }
+        int AvailableCount { get; }
+        int InUseCount { get; }
+        int SpareCount { get; }
     }
 }

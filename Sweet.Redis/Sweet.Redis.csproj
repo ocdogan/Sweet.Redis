@@ -252,7 +252,10 @@
     <Compile Include="Connection\Interfaces\IRedisPoolClient.cs" />
     <Compile Include="Connection\Pooling\RedisPoolClient.cs" />
     <Compile Include="Common\RedisIDGenerator.cs" />
-    <Compile Include="Connection\RedisCommandExecuter.cs" />
+    <Compile Include="Connection\CommandExecuter\RedisCommandExecuter.cs" />
+    <Compile Include="Connection\Interfaces\IRedisCommandExecuterClient.cs" />
+    <Compile Include="Connection\CommandExecuter\RedisCommandExecuterClient.cs" />
+    <Compile Include="Connection\Interfaces\IRedisConnectionInfoProvider.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -264,6 +267,7 @@
   <ItemGroup />
   <ItemGroup>
     <Folder Include="Connection\Admin\" />
+    <Folder Include="Connection\CommandExecuter\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

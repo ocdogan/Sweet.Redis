@@ -28,7 +28,7 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    internal class RedisAdmin : RedisPoolClient, IRedisAdmin, IRedisPoolClient
+    internal class RedisAdmin : RedisCommandExecuterClient, IRedisAdmin, IRedisCommandExecuterClient
     {
         #region Field Members
 
@@ -58,54 +58,5 @@ namespace Sweet.Redis
         }
 
         #endregion Properties
-
-        #region Methods
-
-        #region Execution Methods
-
-        protected internal override T Expect<T>(RedisCommand command, RedisCommandExpect expectation, string okIf = null)
-        {
-            switch (expectation)
-            {
-                case RedisCommandExpect.Response:
-                    return (T)(object)Pool.Execute(command, ThrowOnError);
-                case RedisCommandExpect.Array:
-                    return (T)(object)Pool.ExpectArray(command, ThrowOnError);
-                case RedisCommandExpect.BulkString:
-                    return (T)(object)Pool.ExpectBulkString(command, ThrowOnError);
-                case RedisCommandExpect.BulkStringBytes:
-                    return (T)(object)Pool.ExpectBulkStringBytes(command, ThrowOnError);
-                case RedisCommandExpect.Double:
-                    return (T)(object)Pool.ExpectDouble(command, ThrowOnError);
-                case RedisCommandExpect.GreaterThanZero:
-                    return (T)(object)Pool.ExpectInteger(command, ThrowOnError);
-                case RedisCommandExpect.Integer:
-                    return (T)(object)Pool.ExpectInteger(command, ThrowOnError);
-                case RedisCommandExpect.MultiDataBytes:
-                    return (T)(object)Pool.ExpectMultiDataBytes(command, ThrowOnError);
-                case RedisCommandExpect.MultiDataStrings:
-                    return (T)(object)Pool.ExpectMultiDataStrings(command, ThrowOnError);
-                case RedisCommandExpect.Nothing:
-                    return (T)(object)Pool.ExpectNothing(command, ThrowOnError);
-                case RedisCommandExpect.NullableDouble:
-                    return (T)(object)Pool.ExpectNullableDouble(command, ThrowOnError);
-                case RedisCommandExpect.NullableInteger:
-                    return (T)(object)Pool.ExpectNullableInteger(command, ThrowOnError);
-                case RedisCommandExpect.OK:
-                    return (T)(object)Pool.ExpectOK(command, ThrowOnError);
-                case RedisCommandExpect.One:
-                    return (T)(object)Pool.ExpectOne(command, ThrowOnError);
-                case RedisCommandExpect.SimpleString:
-                    return (T)(object)Pool.ExpectSimpleString(command, ThrowOnError);
-                case RedisCommandExpect.SimpleStringBytes:
-                    return (T)(object)Pool.ExpectSimpleStringBytes(command, ThrowOnError);
-                default:
-                    throw new RedisException(String.Format("Undefined expectation type, {0}", expectation.ToString("F")), RedisErrorCode.NotSupported);
-            }
-        }
-
-        #endregion Execution Methods
-
-        #endregion Methods
     }
 }

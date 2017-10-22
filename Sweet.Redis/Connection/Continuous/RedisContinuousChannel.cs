@@ -260,8 +260,8 @@ namespace Sweet.Redis
                 var provider = m_ConnectionProvider;
 
                 if (provider != null &&
-                    !provider.Disposed &&
-                    provider.SpareCount > 0)
+                    (!(provider is IRedisDisposable) || !((IRedisDisposable)provider).Disposed) &&
+                    (!(provider is IRedisConnectionInfoProvider) || ((IRedisConnectionInfoProvider)provider).SpareCount > 0))
                     SendAsync(RedisCommandList.Quit);
             }
         }

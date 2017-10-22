@@ -26,7 +26,7 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisAdmin : IRedisDisposable, IRedisClient, IRedisPoolClient
+    public interface IRedisAdmin : IRedisClient, IRedisDisposable
     {
         IRedisServerCommands Commands { get; }
     }

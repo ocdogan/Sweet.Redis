@@ -27,7 +27,8 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisConnectionProvider : RedisCommandExecuter, IRedisConnectionProvider, IRedisCommandExecuter, IRedisNamedObject, IRedisIdentifiedObject
+    public class RedisConnectionProvider : RedisCommandExecuter, IRedisConnectionProvider,
+            IRedisConnectionInfoProvider, IRedisCommandExecuter, IRedisNamedObject, IRedisIdentifiedObject
     {
         #region Constants
 
@@ -37,7 +38,6 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private long m_Id;
         private string m_Name;
 
         private RedisPoolSettings m_Settings;
@@ -51,8 +51,6 @@ namespace Sweet.Redis
             Func<int, RedisConnectionLimiter> connectionLimiter = null)
         {
             m_Settings = settings ?? RedisPoolSettings.Default;
-
-            m_Id = RedisIDGenerator<RedisConnectionProvider>.NextId();
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name :
@@ -92,8 +90,6 @@ namespace Sweet.Redis
                 return (connectionLimiter != null) ? connectionLimiter.AvailableCount : 0;
             }
         }
-
-        public long Id { get { return m_Id; } }
 
         public virtual int InUseCount
         {

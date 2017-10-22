@@ -92,7 +92,7 @@ namespace Sweet.Redis
                     if (requestCount == 0)
                         return false;
 
-                    using (var connection = Pool.Connect(DbIndex, RedisRole.Master))
+                    using (var connection = Owner.Connect(DbIndex, RedisRole.Master))
                     {
                         if (connection == null)
                         {
