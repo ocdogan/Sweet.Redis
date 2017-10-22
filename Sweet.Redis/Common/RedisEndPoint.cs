@@ -149,7 +149,8 @@ namespace Sweet.Redis
 
             var other = obj as RedisEndPoint;
             if (!ReferenceEquals(obj, null))
-                return Port == other.Port && Host == other.Host;
+                return Port == other.Port &&
+                     String.Equals(Host, other.Host, StringComparison.OrdinalIgnoreCase);
 
             return false;
         }
@@ -163,7 +164,8 @@ namespace Sweet.Redis
             if (ReferenceEquals(other, this))
                 return true;
 
-            return Port == other.Port && Host == other.Host;
+            return Port == other.Port &&
+                 String.Equals(Host, other.Host, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion Overrides
