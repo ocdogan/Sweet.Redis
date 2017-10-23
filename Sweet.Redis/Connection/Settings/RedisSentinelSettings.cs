@@ -28,78 +28,56 @@ using System.Net.Security;
 
 namespace Sweet.Redis
 {
-    public class RedisPoolSettings : RedisConnectionSettings
+    public class RedisSentinelSettings : RedisConnectionSettings
     {
         #region Static Members
 
-        public new static readonly RedisPoolSettings Default = new RedisPoolSettings((RedisEndPoint[])null);
+        public new static readonly RedisSentinelSettings Default = new RedisSentinelSettings((RedisEndPoint[])null);
 
         #endregion Static Members
 
         #region .Ctors
 
-        public RedisPoolSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
+        public RedisSentinelSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultSentinelPort,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
-            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true, bool useSsl = false,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false, 
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
-        public RedisPoolSettings(HashSet<RedisEndPoint> endPoints,
+        public RedisSentinelSettings(HashSet<RedisEndPoint> endPoints,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
-            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true, bool useSsl = false,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : this(ToEndPointList(endPoints), masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+            : this(ToEndPointList(endPoints, RedisConstants.DefaultSentinelPort), masterName, password, clientName, connectionTimeout, receiveTimeout,
+                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
-        public RedisPoolSettings(RedisEndPoint[] endPoints = null,
+        public RedisSentinelSettings(RedisEndPoint[] endPoints = null,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
-            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true, bool useSsl = false,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base(endPoints, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout,
+            : base((endPoints != null && endPoints.Length > 0) ? endPoints : new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) }, 
+                   masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, 
                    connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
-        {
-            UseAsyncCompleter = useAsyncCompleter;
-            ConnectionIdleTimeout = connectionIdleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, connectionIdleTimeout));
-            MaxConnectionCount = Math.Max(Math.Min(maxConnectionCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
-        }
+        { }
 
         #endregion .Ctors
-
-        #region Properties
-
-        public int ConnectionIdleTimeout { get; private set; }
-
-        public int MaxConnectionCount { get; private set; }
-        
-        public bool UseAsyncCompleter { get; private set; }
-
-        # endregion Properties
 
         #region Methods
 
         public override RedisConnectionSettings Clone(string host = null, int port = -1)
         {
-            return new RedisPoolSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
-                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
-                MaxConnectionCount, ConnectionWaitTimeout, ConnectionIdleTimeout, ReadBufferSize, WriteBufferSize,
-                UseAsyncCompleter, UseSsl, SslCertificateSelection, SslCertificateValidation);
+            return new RedisSentinelSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultSentinelPort : port,
+                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout, ConnectionWaitTimeout,
+                ReadBufferSize, WriteBufferSize, UseSsl, SslCertificateSelection, SslCertificateValidation);
         }
 
         #endregion Methods

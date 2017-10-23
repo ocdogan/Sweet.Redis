@@ -45,12 +45,13 @@ namespace Sweet.Redis
             int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
             int readBufferSize = 0, int writeBufferSize = 0,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
+                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisConnectionSettings(HashSet<RedisEndPoint> endPoints = null,
@@ -58,12 +59,13 @@ namespace Sweet.Redis
             int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
             int readBufferSize = 0, int writeBufferSize = 0,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(ToEndPointList(endPoints), masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
+                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisConnectionSettings(RedisEndPoint[] endPoints = null,
@@ -71,6 +73,7 @@ namespace Sweet.Redis
             int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
             int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
             int readBufferSize = 0, int writeBufferSize = 0,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
@@ -85,6 +88,7 @@ namespace Sweet.Redis
             SslCertificateSelection = sslCertificateSelection;
             SslCertificateValidation = sslCertificateValidation;
             ConnectionTimeout = Math.Max(RedisConstants.MinConnectionTimeout, Math.Min(RedisConstants.MaxConnectionTimeout, connectionTimeout));
+            ConnectionWaitTimeout = Math.Max(RedisConstants.MinWaitTimeout, Math.Min(RedisConstants.MaxWaitTimeout, connectionWaitTimeout));
             ReceiveTimeout = Math.Max(RedisConstants.MinReceiveTimeout, Math.Min(RedisConstants.MaxReceiveTimeout, receiveTimeout));
             SendTimeout = Math.Max(RedisConstants.MinSendTimeout, Math.Min(RedisConstants.MaxSendTimeout, sendTimeout));
             ReadBufferSize = Math.Max(0, readBufferSize);
@@ -96,23 +100,36 @@ namespace Sweet.Redis
         #region Properties
 
         public string ClientName { get; private set; }
+
         public int ConnectionTimeout { get; private set; }
+
+        public int ConnectionWaitTimeout { get; private set; }
+
         public RedisEndPoint[] EndPoints { get; private set; }
+
         public string MasterName { get; private set; }
+
         public string Password { get; private set; }
+
         public int ReadBufferSize { get; private set; }
+
         public int ReceiveTimeout { get; private set; }
+
         public int SendTimeout { get; private set; }
+
         public LocalCertificateSelectionCallback SslCertificateSelection { get; private set; }
+
         public RemoteCertificateValidationCallback SslCertificateValidation { get; private set; }
+
         public int WriteBufferSize { get; private set; }
+
         public bool UseSsl { get; private set; }
 
         #endregion Properties
 
         #region Methods
 
-        protected static RedisEndPoint[] ToEndPointList(HashSet<RedisEndPoint> endPoints)
+        protected static RedisEndPoint[] ToEndPointList(HashSet<RedisEndPoint> endPoints, int defaultPort = RedisConstants.DefaultPort)
         {
             if (endPoints != null)
             {
@@ -124,14 +141,14 @@ namespace Sweet.Redis
                         return result;
                 }
             }
-            return new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) };
+            return new[] { new RedisEndPoint(RedisConstants.LocalHost, defaultPort) };
         }
 
         public virtual RedisConnectionSettings Clone(string host = null, int port = -1)
         {
             return new RedisConnectionSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
-                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout, ReadBufferSize, WriteBufferSize,
-                UseSsl, SslCertificateSelection, SslCertificateValidation);
+                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout, ConnectionWaitTimeout, ReadBufferSize, 
+                WriteBufferSize, UseSsl, SslCertificateSelection, SslCertificateValidation);
         }
 
         #endregion Methods

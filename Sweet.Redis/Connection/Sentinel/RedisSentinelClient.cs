@@ -27,11 +27,11 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisSentinelClient : RedisClient, IRedisSentinelClient
+    internal class RedisSentinelClient : RedisClient, IRedisSentinelClient, IRedisDisposable
     {
         #region Field Members
 
-        private RedisPoolSettings m_Settings;
+        private RedisSentinelSettings m_Settings;
         private IRedisSentinelCommands m_Commands;
 
         private IRedisConnectionProvider m_ConnectionProvider;
@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisSentinelClient(RedisPoolSettings settings, bool throwOnError = true)
+        public RedisSentinelClient(RedisSentinelSettings settings, bool throwOnError = true)
             : base(throwOnError)
         {
             if (settings == null)
@@ -58,6 +58,10 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
             Interlocked.Exchange(ref m_Settings, null);
+
+            var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
+            if (connectionProvider != null)
+                connectionProvider.Dispose();
         }
 
         #endregion Destructors
@@ -80,7 +84,7 @@ namespace Sweet.Redis
             get { return RedisRole.Sentinel; }
         }
 
-        public RedisPoolSettings Settings
+        public RedisSentinelSettings Settings
         {
             get { return m_Settings; }
         }

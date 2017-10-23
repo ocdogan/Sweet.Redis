@@ -59,7 +59,7 @@ namespace Sweet.Redis
 
         protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
-            var settings = GetSettings() ?? RedisPoolSettings.Default;
+            var settings = GetSettings() as RedisPoolSettings ?? RedisPoolSettings.Default;
             return new RedisContinuousReaderConnection(Name, RedisRole.Master, settings,
                 (response) =>
                 {

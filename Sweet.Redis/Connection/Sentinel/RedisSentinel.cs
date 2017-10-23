@@ -22,10 +22,22 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Threading;
+
 namespace Sweet.Redis
 {
-    public interface IRedisSentinelClient : IRedisClient, IRedisDisposable
+    public static class RedisSentinel
     {
-        IRedisSentinelCommands Commands { get; }
+        #region Methods
+
+        public static IRedisSentinelClient NewClient(RedisSentinelSettings settings)
+        {
+            if (settings == null)
+                throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
+            return new RedisSentinelClient(settings);
+        }
+
+        #endregion Methods
     }
 }

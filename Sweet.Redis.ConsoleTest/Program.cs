@@ -429,7 +429,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest9()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -477,7 +477,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest8()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -542,7 +542,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest7()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -606,7 +606,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest6()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -654,7 +654,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest5()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -695,7 +695,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest4()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -748,7 +748,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest3()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -794,7 +794,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest2()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("127.0.0.1",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -859,7 +859,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest1()
         {
-            using (var sentinelClient = new RedisSentinelClient(new RedisPoolSettings("localhost",
+            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("localhost",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();

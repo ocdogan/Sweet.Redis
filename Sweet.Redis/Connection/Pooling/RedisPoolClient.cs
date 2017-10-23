@@ -56,7 +56,7 @@ namespace Sweet.Redis
 
         #endregion Destructors
 
-        #region Properties 	
+        #region Properties
 
         public RedisConnectionPool Pool
         {

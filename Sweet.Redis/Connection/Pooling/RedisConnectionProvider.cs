@@ -40,17 +40,17 @@ namespace Sweet.Redis
 
         private string m_Name;
 
-        private RedisPoolSettings m_Settings;
+        private RedisConnectionSettings m_Settings;
         private RedisConnectionLimiter m_ConnectionLimiter;
 
         #endregion Field Members
 
         #region .Ctors
 
-        protected RedisConnectionProvider(string name, RedisPoolSettings settings = null,
+        protected RedisConnectionProvider(string name, RedisConnectionSettings settings = null,
             Func<int, RedisConnectionLimiter> connectionLimiter = null)
         {
-            m_Settings = settings ?? RedisPoolSettings.Default;
+            m_Settings = settings ?? RedisConnectionSettings.Default;
 
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name :
@@ -59,8 +59,9 @@ namespace Sweet.Redis
             if (connectionLimiter == null)
                 connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);
 
-            m_ConnectionLimiter = connectionLimiter(settings.MaxConnectionCount) ??
-                                                   new RedisConnectionLimiter(settings.MaxConnectionCount);
+            var maxConnectionCount = Math.Max(RedisConstants.MinConnectionCount, GetMaxConnectionCount());
+            m_ConnectionLimiter = connectionLimiter(maxConnectionCount) ??
+                                                   new RedisConnectionLimiter(maxConnectionCount);
         }
 
         #endregion .Ctors
@@ -115,9 +116,14 @@ namespace Sweet.Redis
 
         #region IRedisConnectionProvider Methods
 
-        protected virtual RedisPoolSettings GetSettings()
+        protected virtual RedisConnectionSettings GetSettings()
         {
             return m_Settings;
+        }
+
+        protected virtual int GetMaxConnectionCount()
+        {
+            return RedisConstants.MinConnectionCount;
         }
 
         protected virtual RedisConnectionLimiter NewConnectionLimiter(int maxCount)
@@ -159,7 +165,9 @@ namespace Sweet.Redis
             var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.ConnectionWaitTimeout / spinStepTimeoutMs),
                 spinStepTimeoutMs, connectionTimeout, connectionTimeout);
 
-            var limiterWait = (settings.MaxConnectionCount < 2) ? 0 : retryInfo.SpinStepTimeoutMs;
+            var maxConnectionCount = Math.Max(RedisConstants.MinConnectionCount, GetMaxConnectionCount());
+
+            var limiterWait = (maxConnectionCount < 2) ? 0 : retryInfo.SpinStepTimeoutMs;
 
             while (retryInfo.RemainingTime > 0)
             {

@@ -41,7 +41,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisSingleConnectionProvider(string name, RedisPoolSettings settings = null)
+        public RedisSingleConnectionProvider(string name, RedisConnectionSettings settings = null)
             : base(name, settings)
         { }
 
