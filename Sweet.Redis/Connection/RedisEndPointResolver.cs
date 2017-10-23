@@ -57,6 +57,34 @@ namespace Sweet.Redis
 
         #endregion NodeRoleAndSiblings
 
+        #region GroupedSockets
+
+        protected class GroupedSockets
+        {
+            #region .Ctors
+
+            public GroupedSockets(RedisSocket[] masters, RedisSocket[] slaves, RedisSocket[] sentinels)
+            {
+                Masters = masters;
+                Slaves = slaves;
+                Sentinels = sentinels;
+            }
+
+            #endregion .Ctors
+
+            #region Properties
+
+            public RedisSocket[] Masters { get; private set; }
+            
+            public RedisSocket[] Slaves { get; private set; }
+
+            public RedisSocket[] Sentinels { get; private set; }
+
+            #endregion Properties
+        }
+
+        #endregion GroupedSockets
+
         #region Field Members
 
         private string m_Name;
@@ -97,7 +125,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected Tuple<RedisSocket[], RedisSocket[], RedisSocket[]> CreateGroupSockets()
+        protected GroupedSockets CreateGroupSockets()
         {
             var settings = m_Settings;
             var ipEPList = SplitToIPEndPoints(settings.EndPoints);
@@ -144,8 +172,7 @@ namespace Sweet.Redis
                             }
                         }
 
-                        return new Tuple<RedisSocket[], RedisSocket[], RedisSocket[]>(result[MastersPos],
-                                 result[SlavesPos], result[SentinelsPos]);
+                        return new GroupedSockets(result[MastersPos], result[SlavesPos], result[SentinelsPos]);
                     }
                 }
             }

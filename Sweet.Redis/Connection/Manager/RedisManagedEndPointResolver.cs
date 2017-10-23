@@ -56,13 +56,13 @@ namespace Sweet.Redis
                 RedisManagedNodesGroup masters = null;
                 try
                 {
-                    masters = ToNodesGroup(RedisRole.Master, tuple.Item1);
+                    masters = ToNodesGroup(RedisRole.Master, tuple.Masters);
                     try
                     {
-                        slaves = ToNodesGroup(RedisRole.Slave, tuple.Item2);
+                        slaves = ToNodesGroup(RedisRole.Slave, tuple.Slaves);
                         try
                         {
-                            sentinels = ToNodesGroup(RedisRole.Sentinel, tuple.Item3);
+                            sentinels = ToNodesGroup(RedisRole.Sentinel, tuple.Sentinels);
                         }
                         catch (Exception)
                         {
