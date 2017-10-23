@@ -128,7 +128,7 @@ namespace Sweet.Redis
         protected GroupedSockets CreateGroupSockets()
         {
             var settings = m_Settings;
-            var ipEPList = SplitToIPEndPoints(settings.EndPoints);
+            var ipEPList = RedisEndPoint.ToIPEndPoints(settings.EndPoints);
 
             if (ipEPList != null && ipEPList.Count > 0)
             {
@@ -419,38 +419,6 @@ namespace Sweet.Redis
                         }
                     }
                 }
-            }
-            return null;
-        }
-
-        private static HashSet<IPEndPoint> SplitToIPEndPoints(RedisEndPoint[] endPoints)
-        {
-            if (endPoints != null && endPoints.Length > 0)
-            {
-                var ipEPList = new HashSet<IPEndPoint>();
-                foreach (var ep in endPoints)
-                {
-                    if (ep != null && !ep.IsEmpty)
-                    {
-                        try
-                        {
-                            var ipAddresses = ep.ResolveHost();
-                            if (ipAddresses != null)
-                            {
-                                var length = ipAddresses.Length;
-                                if (length > 0)
-                                {
-                                    for (var i = 0; i < length; i++)
-                                        ipEPList.Add(new IPEndPoint(ipAddresses[i], ep.Port));
-                                }
-                            }
-                        }
-                        catch (Exception)
-                        { }
-                    }
-                }
-
-                return ipEPList;
             }
             return null;
         }
