@@ -113,7 +113,7 @@ namespace Sweet.Redis
                         if (socket.IsConnected())
                         {
                             var endPoint = socket.RemoteEP;
-                            var settings = (RedisPoolSettings)baseSettings.Clone(endPoint.Address.ToString(), endPoint.Port);
+                            var settings = (RedisManagerSettings)baseSettings.Clone(endPoint.Address.ToString(), endPoint.Port);
 
                             var pool = new RedisManagedConnectionPool(role, Name, settings);
                             pool.ReuseSocket(socket);
