@@ -219,10 +219,15 @@ namespace Sweet.Redis
                     {
                         if (node != null && !node.Disposed)
                         {
-                            var pool = node.Pool;
-                            if (pool != null && !pool.Disposed &&
-                                nodeSelector(node.GetNodeInfo()))
-                                return pool;
+                            try
+                            {
+                                var pool = node.Pool;
+                                if (pool != null && !pool.Disposed &&
+                                    nodeSelector(node.GetNodeInfo()))
+                                    return pool;
+                            }
+                            catch (Exception)
+                            { }
                         }
                     }
                 }
