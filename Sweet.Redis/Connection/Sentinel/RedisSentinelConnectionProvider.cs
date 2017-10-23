@@ -32,7 +32,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisSentinelConnectionProvider(RedisPoolSettings settings = null)
-            : base(String.Format("{0}, {1}", typeof(RedisSentinelConnectionProvider).Name, RedisCommon.NewGuidID()), settings)
+            : base(String.Format("{0}, {1}", typeof(RedisSentinelConnectionProvider).Name, RedisIDGenerator<RedisSentinelConnectionProvider>.NextId()), settings)
         { }
 
         #endregion .Ctors

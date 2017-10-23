@@ -87,7 +87,7 @@ namespace Sweet.Redis
 
         internal RedisPubSubChannel(IRedisNamedObject namedObject)
         {
-            var id = RedisCommon.NewGuidID();
+            var id = RedisIDGenerator<RedisPubSubChannel>.NextId();
 
             var name = !ReferenceEquals(namedObject, null) ? namedObject.Name : null;
             if (String.IsNullOrEmpty(name))
