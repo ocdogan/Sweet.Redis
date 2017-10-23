@@ -42,7 +42,7 @@ namespace Sweet.Redis
         public RedisConnectionLimiter(int maxCount)
         {
             m_MaxCount = Math.Max(Math.Min(maxCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
-            m_CountSync = new SemaphoreSlim(maxCount, m_MaxCount);
+            m_CountSync = new SemaphoreSlim(m_MaxCount, m_MaxCount);
         }
 
         #endregion .Ctors
