@@ -48,7 +48,7 @@ namespace Sweet.Redis
         private string m_Name;
 
         private RedisManagerSettings m_Settings;
-        private RedisEndPointResolver m_EndPointResolver;
+        private RedisManagedEndPointResolver m_EndPointResolver;
 
         private RedisManagedMSGroup m_MSGroup;
         private RedisManagedNodesGroup m_Sentinels;
@@ -69,7 +69,7 @@ namespace Sweet.Redis
             m_Settings = settings;
             m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
 
-            m_EndPointResolver = new RedisEndPointResolver(m_Name, settings);
+            m_EndPointResolver = new RedisManagedEndPointResolver(m_Name, settings);
         }
 
         #endregion .Ctors
@@ -191,7 +191,7 @@ namespace Sweet.Redis
             RefreshNodes(true);
         }
 
-        private RedisConnectionPool SelectMasterOrSlavePool(Func<RedisManagedNodeInfo, bool> nodeSelector)
+        private RedisManagedConnectionPool SelectMasterOrSlavePool(Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             if (nodeSelector != null)
             {
@@ -208,7 +208,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private RedisConnectionPool SelectPool(RedisManagedNodesGroup nodesGroup, Func<RedisManagedNodeInfo, bool> nodeSelector)
+        private RedisManagedConnectionPool SelectPool(RedisManagedNodesGroup nodesGroup, Func<RedisManagedNodeInfo, bool> nodeSelector)
         {
             if (nodesGroup != null)
             {
@@ -230,7 +230,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private RedisConnectionPool NextPool(bool readOnly)
+        private RedisManagedConnectionPool NextPool(bool readOnly)
         {
             InitializeNodes();
 

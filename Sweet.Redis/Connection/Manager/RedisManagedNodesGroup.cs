@@ -63,7 +63,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public RedisRole Role { get; private set; }
+        public RedisRole Role { get; internal set; }
 
         internal RedisManagedNode[] Nodes { get { return m_Nodes; } }
 
@@ -107,7 +107,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisConnectionPool Next()
+        public RedisManagedConnectionPool Next()
         {
             if (m_NodeIndex > -1)
             {

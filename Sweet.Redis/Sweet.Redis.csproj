@@ -66,6 +66,7 @@
     <Compile Include="Connection\Interfaces\IRedisClient.cs" />
     <Compile Include="Connection\Interfaces\IRedisManager.cs" />
     <Compile Include="Connection\Interfaces\IRedisSentinelClient.cs" />
+    <Compile Include="Connection\Manager\RedisManagedConnectionPool.cs" />
     <Compile Include="Connection\Manager\RedisManagedMSGroup.cs" />
     <Compile Include="Connection\Manager\RedisManagedNode.cs" />
     <Compile Include="Connection\Interfaces\IRedisPubSubChannel.cs" />
@@ -246,7 +247,7 @@
     <Compile Include="Connection\Manager\RedisManagedNodesGroup.cs" />
     <Compile Include="Common\ServerInfo\RedisServerMasterInfo.cs" />
     <Compile Include="Common\RedisEndPointInfo.cs" />
-    <Compile Include="Connection\RedisEndPointResolver.cs" />
+    <Compile Include="Connection\Manager\RedisManagedEndPointResolver.cs" />
     <Compile Include="Connection\Interfaces\IRedisAdmin.cs" />
     <Compile Include="Connection\Admin\RedisAdmin.cs" />
     <Compile Include="Connection\Interfaces\IRedisPoolClient.cs" />
@@ -265,10 +266,7 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup />
-  <ItemGroup>
-    <Folder Include="Connection\Admin\" />
-    <Folder Include="Connection\CommandExecuter\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

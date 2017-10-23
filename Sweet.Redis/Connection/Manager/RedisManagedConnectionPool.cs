@@ -22,71 +22,29 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisManagedNode : RedisDisposable
+    public class RedisManagedConnectionPool : RedisConnectionPool
     {
-        #region Field Members
-
-        private bool m_OwnsPool;
-        private RedisEndPoint m_EndPoint;
-        private RedisManagedConnectionPool m_Pool;
-
-        #endregion Field Members
-
         #region .Ctors
 
-        public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool, bool ownsPool = true)
+        public RedisManagedConnectionPool(RedisRole role, string name, RedisPoolSettings settings = null)
+            : base(name, settings)
         {
             Role = role;
-            m_Pool = pool;
-            m_OwnsPool = ownsPool;
-            m_EndPoint = pool.Settings.EndPoints[0];
         }
 
         #endregion .Ctors
 
-        #region Destructors
-
-        protected override void OnDispose(bool disposing)
-        {
-            base.OnDispose(disposing);
-
-            var pool = Interlocked.Exchange(ref m_Pool, null);
-            if (m_OwnsPool && pool != null)
-                pool.Dispose();
-        }
-
-        #endregion Destructors
-
         #region Properties
-
-        public RedisEndPoint EndPoint { get { return m_EndPoint; } }
-
-        public bool OwnsPool { get { return m_OwnsPool; } }
-
-        public RedisManagedConnectionPool Pool { get { return m_Pool; } }
 
         public RedisRole Role { get; internal set; }
 
         #endregion Properties
-
-        #region Methods
-
-        public RedisManagedNodeInfo GetNodeInfo()
-        {
-            return new RedisManagedNodeInfo(m_EndPoint, Role);
-        }
-
-        internal RedisConnectionPool ExchangePool(RedisManagedConnectionPool pool)
-        {
-            ValidateNotDisposed();
-            return Interlocked.Exchange(ref m_Pool, pool);
-        }
-
-
-        #endregion Methods
     }
 }

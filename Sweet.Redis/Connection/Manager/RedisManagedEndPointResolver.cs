@@ -30,7 +30,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisEndPointResolver : RedisInternalDisposable
+    internal class RedisManagedEndPointResolver : RedisInternalDisposable
     {
         #region NodeRoleAndSiblings
 
@@ -66,7 +66,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisEndPointResolver(string name, RedisPoolSettings settings)
+        public RedisManagedEndPointResolver(string name, RedisPoolSettings settings)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
@@ -170,7 +170,7 @@ namespace Sweet.Redis
                             var endPoint = socket.RemoteEP;
                             var settings = (RedisPoolSettings)m_Settings.Clone(endPoint.Address.ToString(), endPoint.Port);
 
-                            var pool = new RedisConnectionPool(m_Name, settings);
+                            var pool = new RedisManagedConnectionPool(role, m_Name, settings);
                             pool.ReuseSocket(socket);
 
                             nodeList.Add(new RedisManagedNode(role, pool));
