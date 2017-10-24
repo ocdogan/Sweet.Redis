@@ -22,6 +22,9 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Collections.Generic;
+
 namespace Sweet.Redis
 {
     /*
@@ -66,5 +69,57 @@ namespace Sweet.Redis
         public long? VotedLeaderEpoch { get { return GetInteger("voted-leader-epoch"); } } // 0
 
         #endregion Properties
+
+        #region Methods
+
+        public static RedisSentinelNodeInfo[] Parse(RedisRawObject rawObject)
+        {
+            if (!ReferenceEquals(rawObject, null) && 
+                rawObject.Type == RedisRawObjectType.Array)
+            {
+                var items = rawObject.Items;
+                if (items != null)
+                {
+                    var count = items.Count;
+                    if (count > 0)
+                    {
+                        var isInfoArray = true;
+                        for (var i = 0; i < count; i++)
+                        {
+                            var item = items[i];
+                            if (!ReferenceEquals(item, null) && 
+                                item.Type != RedisRawObjectType.Array)
+                            {
+                                isInfoArray = false;
+                                break;
+                            }
+                        }
+
+                        if (!isInfoArray)
+                        {
+                            var info = new RedisSentinelNodeInfo(rawObject);
+                            return new [] { info };
+                        }
+
+                        var list = new List<RedisSentinelNodeInfo>(count);
+                        for (var i = 0; i < count; i++)
+                        {
+                            var item = items[i];
+                            if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
+                            {
+                                var info = new RedisSentinelNodeInfo(item);
+                                list.Add(info);
+                            }
+                        }
+
+                        if (list.Count > 0)
+                            return list.ToArray();
+                    }
+                }
+            }
+            return null;
+        }
+
+        #endregion Methods    
     }
 }

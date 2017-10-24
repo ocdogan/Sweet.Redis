@@ -221,7 +221,7 @@ namespace Sweet.Redis
             if (!(commandRole == RedisRole.Undefined || commandRole == RedisRole.Any))
             {
                 var serverRole = ServerRole;
-                if (serverRole != commandRole &&
+                if (serverRole != RedisRole.Any && serverRole != commandRole &&
                     (serverRole == RedisRole.Sentinel || commandRole == RedisRole.Sentinel ||
                      (serverRole == RedisRole.Slave && commandRole == RedisRole.Master)))
                     throw new RedisException("Connected server does not satisfy the command's desired role", RedisErrorCode.NotSupported);
@@ -393,7 +393,9 @@ namespace Sweet.Redis
                 if (!String.IsNullOrEmpty(settings.ClientName))
                     SetClientName(socket, settings.ClientName);
 
-                if (NeedsToDiscoverRole())
+                if (!NeedsToDiscoverRole())
+                    socket.Role = ExpectedRole;
+                else
                 {
                     var role = DiscoverRole(socket);
                     ValidateRole(role);

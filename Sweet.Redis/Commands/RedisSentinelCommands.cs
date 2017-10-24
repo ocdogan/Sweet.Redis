@@ -39,12 +39,6 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public RedisBool Ping()
-        {
-            var pong = ExpectSimpleString(RedisCommandList.Ping);
-            return pong == RedisConstants.PONG;
-        }
-
         public RedisString CheckQuorum(string masterName)
         {
             if (String.IsNullOrEmpty(masterName))
@@ -214,6 +208,12 @@ namespace Sweet.Redis
                                       masterName.ToBytes(), ipAddress.ToBytes(), port.ToBytes(), quorum.ToBytes());
         }
 
+        public RedisBool Ping()
+        {
+            var pong = ExpectSimpleString(RedisCommandList.Ping);
+            return pong == RedisConstants.PONG;
+        }
+
         public RedisBool Remove(string masterName)
         {
             if (String.IsNullOrEmpty(masterName))
@@ -252,27 +252,9 @@ namespace Sweet.Redis
                 var rawValue = raw.Value;
                 if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
                 {
-                    var items = rawValue.Items;
-                    if (items != null)
-                    {
-                        var count = items.Count;
-                        if (count > 0)
-                        {
-                            var list = new List<RedisSentinelNodeInfo>(count);
-                            for (var i = 0; i < count; i++)
-                            {
-                                var item = items[i];
-                                if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.Array)
-                                {
-                                    var info = new RedisSentinelNodeInfo(item);
-                                    list.Add(info);
-                                }
-                            }
-
-                            if (list.Count > 0)
-                                return new RedisResult<RedisSentinelNodeInfo[]>(list.ToArray());
-                        }
-                    }
+                    var items = RedisSentinelNodeInfo.Parse(rawValue);
+                    if (items == null || items.Length > 0)
+                        return new RedisResult<RedisSentinelNodeInfo[]>(items);
                 }
             }
             return new RedisResult<RedisSentinelNodeInfo[]>(null);

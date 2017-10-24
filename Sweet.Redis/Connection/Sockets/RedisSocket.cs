@@ -226,11 +226,6 @@ namespace Sweet.Redis
             }
         }
 
-        public IPEndPoint RemoteEP
-        {
-            get { return m_RemoteEP; }
-        }
-
         public bool ExclusiveAddressUse
         {
 
@@ -351,6 +346,11 @@ namespace Sweet.Redis
             {
                 m_Socket.ReceiveTimeout = value;
             }
+        }
+
+        public IPEndPoint RemoteEP
+        {
+            get { return m_RemoteEP; }
         }
 
         public EndPoint RemoteEndPoint

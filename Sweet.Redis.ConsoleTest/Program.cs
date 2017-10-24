@@ -97,7 +97,9 @@ namespace Sweet.Redis.ConsoleTest
             do
             {
                 using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
-                    new[] { new RedisEndPoint("127.0.0.1", 26780) },
+                    new[] { new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort), 
+                        new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort + 1),
+                        new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort + 2)}, 
                     masterName: "mymaster")))
                 {
                     try
@@ -485,7 +487,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest9()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -497,7 +499,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Monitor("mymaster2", "127.0.0.1", 6379, 2);
+                        var result = sentinel.Commands.Monitor("mymaster2", "127.0.0.1", 6379, 2);
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -505,7 +507,7 @@ namespace Sweet.Redis.ConsoleTest
                             Console.WriteLine("Monitor: " + result.Value);
                             if (result)
                             {
-                                result = sentinelClient.Commands.Remove("mymaster2");
+                                result = sentinel.Commands.Remove("mymaster2");
                                 if (result == null)
                                     Console.WriteLine("(nil)");
                                 else
@@ -533,7 +535,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest8()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -545,7 +547,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Slaves("mymaster");
+                        var result = sentinel.Commands.Slaves("mymaster");
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -598,7 +600,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest7()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -610,35 +612,35 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Sentinels("mymaster");
+                        var result = sentinel.Commands.Sentinels("mymaster");
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
                         {
-                            var sentinelsValue = result.Value;
+                            var sentinelsInfo = result.Value;
 
-                            if (sentinelsValue == null)
+                            if (sentinelsInfo == null)
                                 Console.WriteLine("(nil)");
-                            else if (sentinelsValue.Length == 0)
+                            else if (sentinelsInfo.Length == 0)
                                 Console.WriteLine("(empty)");
                             else
                             {
-                                foreach (var sentinel in sentinelsValue)
+                                foreach (var sentinelInfo in sentinelsInfo)
                                 {
-                                    Console.WriteLine("IP address: " + sentinel.IPAddress);
-                                    Console.WriteLine("Port: " + sentinel.Port);
-                                    Console.WriteLine("RunId: " + sentinel.RunId);
-                                    Console.WriteLine("Info Refresh: " + sentinel.InfoRefresh);
-                                    Console.WriteLine("Last Hello Message: " + sentinel.LastHelloMessage);
-                                    Console.WriteLine("Pending Commands: " + sentinel.PendingCommands);
-                                    Console.WriteLine("Voted Leader: " + sentinel.VotedLeader);
-                                    Console.WriteLine("Voted Leader Epoch: " + sentinel.VotedLeaderEpoch);
-                                    Console.WriteLine("Down After Milliseconds: " + sentinel.DownAfterMilliseconds);
-                                    Console.WriteLine("Flags: " + sentinel.Flags);
-                                    Console.WriteLine("Last OK Ping Reply: " + sentinel.LastOKPingReply);
-                                    Console.WriteLine("Last Ping Reply: " + sentinel.LastPingReply);
-                                    Console.WriteLine("Last Ping Sent: " + sentinel.LastPingSent);
-                                    Console.WriteLine("Name: " + sentinel.Name);
+                                    Console.WriteLine("IP address: " + sentinelInfo.IPAddress);
+                                    Console.WriteLine("Port: " + sentinelInfo.Port);
+                                    Console.WriteLine("RunId: " + sentinelInfo.RunId);
+                                    Console.WriteLine("Info Refresh: " + sentinelInfo.InfoRefresh);
+                                    Console.WriteLine("Last Hello Message: " + sentinelInfo.LastHelloMessage);
+                                    Console.WriteLine("Pending Commands: " + sentinelInfo.PendingCommands);
+                                    Console.WriteLine("Voted Leader: " + sentinelInfo.VotedLeader);
+                                    Console.WriteLine("Voted Leader Epoch: " + sentinelInfo.VotedLeaderEpoch);
+                                    Console.WriteLine("Down After Milliseconds: " + sentinelInfo.DownAfterMilliseconds);
+                                    Console.WriteLine("Flags: " + sentinelInfo.Flags);
+                                    Console.WriteLine("Last OK Ping Reply: " + sentinelInfo.LastOKPingReply);
+                                    Console.WriteLine("Last Ping Reply: " + sentinelInfo.LastPingReply);
+                                    Console.WriteLine("Last Ping Sent: " + sentinelInfo.LastPingSent);
+                                    Console.WriteLine("Name: " + sentinelInfo.Name);
                                     Console.WriteLine();
                                 }
                             }
@@ -662,7 +664,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest6()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -676,7 +678,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Role();
+                        var result = sentinel.Commands.Role();
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -710,7 +712,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest5()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -724,7 +726,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Ping();
+                        var result = sentinel.Commands.Ping();
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -751,7 +753,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest4()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -763,7 +765,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         var runId = String.Empty;
 
-                        var masterResult = sentinelClient.Commands.Master("mymaster");
+                        var masterResult = sentinel.Commands.Master("mymaster");
                         if (masterResult != null)
                         {
                             var master = masterResult.Value;
@@ -773,7 +775,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.IsMasterDownByAddr("127.0.0.1", 6379, runId);
+                        var result = sentinel.Commands.IsMasterDownByAddr("127.0.0.1", 6379, runId);
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -804,7 +806,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest3()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -816,7 +818,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.GetMasterAddrByName("mymaster");
+                        var result = sentinel.Commands.GetMasterAddrByName("mymaster");
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -850,7 +852,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest2()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("127.0.0.1",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("127.0.0.1",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -862,7 +864,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Masters();
+                        var result = sentinel.Commands.Masters();
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else
@@ -915,7 +917,7 @@ namespace Sweet.Redis.ConsoleTest
 
         static void SentinelTest1()
         {
-            using (var sentinelClient = RedisSentinel.NewClient(new RedisSentinelSettings("localhost",
+            using (var sentinel = RedisSentinel.NewSentinel(new RedisSentinelSettings("localhost",
                        RedisConstants.DefaultSentinelPort, masterName: "mymaster")))
             {
                 var sw = new Stopwatch();
@@ -927,7 +929,7 @@ namespace Sweet.Redis.ConsoleTest
 
                         sw.Restart();
 
-                        var result = sentinelClient.Commands.Master("mymaster");
+                        var result = sentinel.Commands.Master("mymaster");
                         if (result == null)
                             Console.WriteLine("(nil)");
                         else

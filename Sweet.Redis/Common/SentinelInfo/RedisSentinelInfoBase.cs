@@ -99,15 +99,15 @@ namespace Sweet.Redis
         {
             if (!ReferenceEquals(rawObject, null) && rawObject.Type == RedisRawObjectType.Array)
             {
-                var list = rawObject.Items;
-                if (list != null)
+                var items = rawObject.Items;
+                if (items != null)
                 {
-                    var count = list.Count;
+                    var count = items.Count;
                     if (count > 0)
                     {
                         for (var i = 0; i < count; i += 2)
                         {
-                            var item = list[i];
+                            var item = items[i];
                             if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                             {
                                 var key = item.DataText;
@@ -116,7 +116,7 @@ namespace Sweet.Redis
                                     var value = (string)null;
                                     if (i < count - 1)
                                     {
-                                        item = list[i + 1];
+                                        item = items[i + 1];
                                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                                             value = item.DataText;
                                     }

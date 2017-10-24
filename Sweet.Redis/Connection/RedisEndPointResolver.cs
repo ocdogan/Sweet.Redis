@@ -268,7 +268,21 @@ namespace Sweet.Redis
                             case RedisRole.Master:
                                 return GetSlavesOfMaster(serverInfo) ?? new NodeRoleAndSiblings(role, null);
                             case RedisRole.Sentinel:
-                                return GetMastersOfSentinel(masterName, serverInfo) ?? new NodeRoleAndSiblings(role, null);
+                                {
+                                    var masters = GetMastersOfSentinel(masterName, serverInfo);
+                                    var otherSentinels = GetSiblingSentinelsOfSentinel(masterName, connection);
+
+                                    if (otherSentinels == null || otherSentinels.Siblings == null)
+                                        return masters ?? new NodeRoleAndSiblings(role, null);
+
+                                    if (masters == null || masters.Siblings == null)
+                                        return otherSentinels ?? new NodeRoleAndSiblings(role, null);
+
+                                    var siblings = new HashSet<RedisEndPoint>(masters.Siblings);
+                                    siblings.UnionWith(otherSentinels.Siblings);
+
+                                    return new NodeRoleAndSiblings(role, siblings.ToArray());
+                                }
                         }
                     }
                 }
@@ -420,6 +434,48 @@ namespace Sweet.Redis
                     }
                 }
             }
+            return null;
+        }
+
+        private static NodeRoleAndSiblings GetSiblingSentinelsOfSentinel(string masterName, IRedisConnection connection)
+        {
+            if (String.IsNullOrEmpty(masterName))
+                throw new ArgumentNullException("masterName");
+
+            try
+            {
+                using (var command = new RedisCommand(-1, RedisCommandList.Sentinel, RedisCommandType.SendAndReceive,
+                    RedisCommandList.Sentinels, masterName.ToBytes()))
+                {
+                    var raw = command.ExpectArray(connection, false);
+                    if (!ReferenceEquals(raw, null))
+                    {
+                        var rawValue = raw.Value;
+                        if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
+                        {
+                            var sentinelInfos = RedisSentinelNodeInfo.Parse(rawValue);
+                            if (sentinelInfos != null)
+                            {
+                                var length = sentinelInfos.Length;
+                                if (length > 0)
+                                {
+                                    var siblingEndPoints = new List<RedisEndPoint>(length);
+                                    for (var i = 0; i < length; i++)
+                                    {
+                                        var sentinelInfo = sentinelInfos[i];
+
+                                        if (sentinelInfo != null && sentinelInfo.Port.HasValue && !String.IsNullOrEmpty(sentinelInfo.IPAddress))
+                                            siblingEndPoints.Add(new RedisEndPoint(sentinelInfo.IPAddress, (int)sentinelInfo.Port.Value));
+                                    }
+                                    return new NodeRoleAndSiblings(RedisRole.Sentinel, siblingEndPoints.ToArray());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            { }
             return null;
         }
 
