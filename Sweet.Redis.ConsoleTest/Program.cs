@@ -120,6 +120,7 @@ namespace Sweet.Redis.ConsoleTest
 
                             using (var db = manager.GetDb(true))
                             {
+                                Ping(db);
                                 Get(db, "tinytext");
                             }
                         }

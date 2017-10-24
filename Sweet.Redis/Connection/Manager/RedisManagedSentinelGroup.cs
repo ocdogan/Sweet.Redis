@@ -222,28 +222,39 @@ namespace Sweet.Redis
                             }
 
                             // "+sdown", "-sdown", "+odown", "-odown"
-                            if (partsLength > 7)
+                            if (partsLength > 3)
                             {
                                 var onInstanceStateChange = m_OnInstanceStateChange;
                                 if (onInstanceStateChange != null)
                                 {
-                                    var masterName = parts[5];
-                                    if (masterName == MasterName)
+                                    var instanceType = (parts[0] ?? String.Empty).ToLowerInvariant();
+                                    if (instanceType == "master" || parts.Length < 8)
                                     {
-                                        var instanceType = parts[0];
-                                        var name = parts[1];
-
-                                        var endPoint = ToEndPoint(parts[2], parts[3]);
-                                        if (endPoint == null && !String.IsNullOrEmpty(name))
+                                        var masterName = parts[1];
+                                        if (masterName == MasterName)
                                         {
-                                            parts = name.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                                            if (parts != null && partsLength > 1)
-                                                endPoint = ToEndPoint(parts[0], parts[1]);
+                                            var endPoint = ToEndPoint(parts[2], parts[3]);
+                                            onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, masterName, null, endPoint, null));
                                         }
+                                    }
+                                    else
+                                    {
+                                        var masterName = parts[5];
+                                        if (masterName == MasterName)
+                                        {
+                                            var name = parts[1];
 
-                                        var masterEP = ToEndPoint(parts[6], parts[7]);
+                                            var endPoint = ToEndPoint(parts[2], parts[3]);
+                                            if (endPoint == null && !String.IsNullOrEmpty(name))
+                                            {
+                                                parts = name.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                                                if (parts != null && partsLength > 1)
+                                                    endPoint = ToEndPoint(parts[0], parts[1]);
+                                            }
 
-                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, name, masterName, endPoint, masterEP));
+                                            var masterEP = ToEndPoint(parts[6], parts[7]);
+                                            onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, name, masterName, endPoint, masterEP));
+                                        }
                                     }
                                 }
                             }
