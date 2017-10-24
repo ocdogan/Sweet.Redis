@@ -129,7 +129,7 @@ namespace Sweet.Redis
 
                 if (nodeList.Count > 0)
                     return role == RedisRole.Sentinel ? 
-                        new RedisManagedSentinelGroup(nodeList.ToArray()) :
+                        new RedisManagedSentinelGroup(Settings.MasterName, nodeList.ToArray()) :
                         new RedisManagedNodesGroup(role, nodeList.ToArray());
             }
             return null;

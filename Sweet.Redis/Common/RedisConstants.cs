@@ -164,6 +164,12 @@ namespace Sweet.Redis
 
         #region Constants
 
+        public const string SDownEntered = "+sdown";
+        public const string SDownExited = "-sdown";
+        public const string ODownEntered = "+odown";
+        public const string ODownExited = "-odown";
+        public const string SwitchMaster = "+switch-master";
+
         public const int RedisBatchBase = 1000;
 
         public const string Warning = "Warning";

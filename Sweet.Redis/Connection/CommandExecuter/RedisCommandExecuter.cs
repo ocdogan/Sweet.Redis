@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Linq;
 
 namespace Sweet.Redis
 {
@@ -58,11 +59,10 @@ namespace Sweet.Redis
                 if (settings != null)
                 {
                     var endPoints = settings.EndPoints;
-                    if (endPoints != null && endPoints.Length > 0)
+                    if (endPoints != null)
                     {
-                        foreach (var ep in endPoints)
-                            if (ep != null)
-                                return (RedisEndPoint)ep.Clone();
+                        var result = endPoints.FirstOrDefault(ep => ep != null && !ep.IsEmpty);
+                        return (result != null) ? (RedisEndPoint)result.Clone() : RedisEndPoint.Empty;
                     }
                 }
 

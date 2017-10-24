@@ -23,51 +23,39 @@
 #endregion License
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisManagedConnectionPool : RedisConnectionPool
+    public class RedisNodeStateChangedMessage
     {
-        #region Field Members
-
-        private bool m_SDown;
-        private bool m_ODown;
-
-        #endregion Field Members
-
         #region .Ctors
 
-        public RedisManagedConnectionPool(RedisRole role, string name, RedisPoolSettings settings)
-            : base(name, settings)
+        public RedisNodeStateChangedMessage(string channel, string instanceType, string name, string masterName, 
+            RedisEndPoint endPoint, RedisEndPoint masterEndPoint)
         {
-            Role = role;
+            Channel = channel;
+            InstanceType = instanceType;
+            Name = name;
+            MasterName = masterName;
+            EndPoint = endPoint;
+            MasterEndPoint = masterEndPoint;
         }
 
         #endregion .Ctors
 
         #region Properties
 
-        public bool IsAlive
-        {
-            get { return !(m_SDown && m_ODown); }
-        }
+        public string Channel { get; private set; }
 
-        public bool ODown
-        {
-            get { return m_ODown; }
-            set { m_ODown = value; }
-        }
+        public string InstanceType { get; private set; }
+        
+        public string Name { get; private set; }
 
-        public RedisRole Role { get; internal set; }
+        public string MasterName { get; private set; }
 
-        public bool SDown
-        {
-            get { return m_SDown; }
-            set { m_SDown = value; }
-        }
+        public RedisEndPoint EndPoint { get; private set; }
+        
+        public RedisEndPoint MasterEndPoint { get; private set; }
 
         #endregion Properties
     }

@@ -22,6 +22,7 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -43,7 +44,7 @@ namespace Sweet.Redis
             Role = role;
             m_Pool = pool;
             m_OwnsPool = ownsPool;
-            m_EndPoint = pool.Settings.EndPoints[0];
+            m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
         }
 
         #endregion .Ctors
@@ -83,9 +84,12 @@ namespace Sweet.Redis
         public RedisConnectionPool ExchangePool(RedisManagedConnectionPool pool)
         {
             ValidateNotDisposed();
-            return Interlocked.Exchange(ref m_Pool, pool);
-        }
 
+            var oldPool = Interlocked.Exchange(ref m_Pool, pool);
+            m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
+            
+            return oldPool;
+        }
 
         #endregion Methods
     }

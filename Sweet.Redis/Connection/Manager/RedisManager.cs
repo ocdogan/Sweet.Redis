@@ -389,7 +389,7 @@ namespace Sweet.Redis
                     {
                         var pubSubs = m_Sentinels;
                         if (pubSubs != null)
-                            pubSubs.Monitor();
+                            pubSubs.Monitor(MasterSwitched, InstanceStateChanged);
                     }
                     catch (Exception)
                     { }
@@ -484,6 +484,14 @@ namespace Sweet.Redis
                     }
                 }
             }
+        }
+
+        private void MasterSwitched(RedisMasterSwitchedMessage message)
+        {
+        }
+
+        private void InstanceStateChanged(RedisNodeStateChangedMessage message)
+        {
         }
 
         #endregion Initialization Methods
