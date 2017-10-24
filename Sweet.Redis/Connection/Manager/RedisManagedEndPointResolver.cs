@@ -42,14 +42,14 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public Tuple<RedisManagedMSGroup, RedisManagedNodesGroup> CreateGroups()
+        public Tuple<RedisManagedMSGroup, RedisManagedSentinelGroup> CreateGroups()
         {
             ValidateNotDisposed();
 
             var tuple = CreateGroupSockets();
             if (tuple != null)
             {
-                RedisManagedNodesGroup sentinels = null;
+                RedisManagedSentinelGroup sentinels = null;
                 RedisManagedMSGroup mastersAndSlaves = null;
 
                 RedisManagedNodesGroup slaves = null;
@@ -62,7 +62,7 @@ namespace Sweet.Redis
                         slaves = ToNodesGroup(RedisRole.Slave, tuple.Slaves);
                         try
                         {
-                            sentinels = ToNodesGroup(RedisRole.Sentinel, tuple.Sentinels);
+                            sentinels = (RedisManagedSentinelGroup)ToNodesGroup(RedisRole.Sentinel, tuple.Sentinels);
                         }
                         catch (Exception)
                         {
@@ -95,7 +95,7 @@ namespace Sweet.Redis
                 }
 
                 mastersAndSlaves = new RedisManagedMSGroup(masters, slaves);
-                return new Tuple<RedisManagedMSGroup, RedisManagedNodesGroup>(mastersAndSlaves, sentinels);
+                return new Tuple<RedisManagedMSGroup, RedisManagedSentinelGroup>(mastersAndSlaves, sentinels);
             }
             return null;
         }
@@ -128,7 +128,9 @@ namespace Sweet.Redis
                 }
 
                 if (nodeList.Count > 0)
-                    return new RedisManagedNodesGroup(role, nodeList.ToArray());
+                    return role == RedisRole.Sentinel ? 
+                        new RedisManagedSentinelGroup(nodeList.ToArray()) :
+                        new RedisManagedNodesGroup(role, nodeList.ToArray());
             }
             return null;
         }

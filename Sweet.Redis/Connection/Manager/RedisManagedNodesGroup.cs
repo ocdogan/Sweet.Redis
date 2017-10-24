@@ -65,13 +65,13 @@ namespace Sweet.Redis
 
         public RedisRole Role { get; internal set; }
 
-        internal RedisManagedNode[] Nodes { get { return m_Nodes; } }
+        public RedisManagedNode[] Nodes { get { return m_Nodes; } }
 
         #endregion Properties
 
         #region Methods
 
-        internal RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
+        public virtual RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
         {
             ValidateNotDisposed();
             lock (m_SyncRoot)

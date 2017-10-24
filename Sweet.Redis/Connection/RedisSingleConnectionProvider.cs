@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Net;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -41,7 +42,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisSingleConnectionProvider(string name, RedisConnectionSettings settings = null)
+        public RedisSingleConnectionProvider(string name, RedisConnectionSettings settings)
             : base(name, settings)
         { }
 
@@ -58,6 +59,33 @@ namespace Sweet.Redis
         #endregion Destructors
 
         #region Properties
+
+        public override RedisEndPoint EndPoint
+        {
+            get
+            {
+                var socket = m_Socket;
+                if (socket.IsConnected())
+                {
+                    var ipEP = socket.RemoteEP;
+                    if (ipEP != null)
+                        return new RedisEndPoint(ipEP.Address.ToString(), ipEP.Port);
+
+                    var ep = socket.RemoteEndPoint;
+                    if (ep != null)
+                    {
+                        ipEP = ep as IPEndPoint;
+                        if (ipEP != null)
+                            return new RedisEndPoint(ipEP.Address.ToString(), ipEP.Port);
+
+                        var dnsEP = ep as DnsEndPoint;
+                        if (dnsEP != null)
+                            return new RedisEndPoint(dnsEP.Host, ipEP.Port);
+                    }
+                }
+                return (base.EndPoint ?? RedisEndPoint.Empty);
+            }
+        }
 
         public override int SpareCount
         {

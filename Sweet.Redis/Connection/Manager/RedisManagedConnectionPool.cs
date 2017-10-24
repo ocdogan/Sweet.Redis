@@ -33,7 +33,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisManagedConnectionPool(RedisRole role, string name, RedisPoolSettings settings = null)
+        public RedisManagedConnectionPool(RedisRole role, string name, RedisPoolSettings settings)
             : base(name, settings)
         {
             Role = role;

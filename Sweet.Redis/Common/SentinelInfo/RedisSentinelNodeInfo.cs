@@ -72,7 +72,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public static RedisSentinelNodeInfo[] Parse(RedisRawObject rawObject)
+        public static RedisSentinelNodeInfo[] ParseInfoResponse(RedisRawObject rawObject)
         {
             if (!ReferenceEquals(rawObject, null) && 
                 rawObject.Type == RedisRawObjectType.Array)

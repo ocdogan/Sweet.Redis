@@ -51,7 +51,7 @@ namespace Sweet.Redis
         private RedisManagedEndPointResolver m_EndPointResolver;
 
         private RedisManagedMSGroup m_MSGroup;
-        private RedisManagedNodesGroup m_Sentinels;
+        private RedisManagedSentinelGroup m_Sentinels;
 
         private long m_InitializationState;
         private readonly object m_SyncRoot = new object();
@@ -326,8 +326,20 @@ namespace Sweet.Redis
                         }
                         catch (Exception)
                         {
-                            if (msGroup != null) msGroup.Dispose();
-                            if (sentinels != null) sentinels.Dispose();
+                            if (msGroup != null)
+                            {
+                                var grp = msGroup;
+                                msGroup = null;
+
+                                grp.Dispose();
+                            }
+                            if (sentinels != null)
+                            {
+                                var grp = sentinels;
+                                sentinels = null;
+
+                                grp.Dispose();
+                            }
                             throw;
                         }
                         return;
@@ -368,11 +380,20 @@ namespace Sweet.Redis
                     }
 
                     RearrangeGroup(sentinels, m_Sentinels,
-                                   (newSentinels) => Interlocked.Exchange(ref m_Sentinels, newSentinels),
-                                   disposeList);
+                                    (newSentinels) => Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)newSentinels),
+                                    disposeList);
                 }
                 finally
                 {
+                    try
+                    {
+                        var pubSubs = m_Sentinels;
+                        if (pubSubs != null)
+                            pubSubs.Monitor();
+                    }
+                    catch (Exception)
+                    { }
+
                     DisposeObjects(disposeList);
                 }
             }

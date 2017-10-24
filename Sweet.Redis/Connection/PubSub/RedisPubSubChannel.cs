@@ -70,6 +70,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private string m_Name;
+        private RedisPoolSettings m_Settings;
         private RedisContinuousConnectionProvider m_ConnectionProvider;
 
         private readonly object m_SubscriptionLock = new object();
@@ -85,8 +86,12 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisPubSubChannel(IRedisNamedObject namedObject)
+        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings)
         {
+            if (settings == null)
+                throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
+
+            m_Settings = settings;
             var id = RedisIDGenerator<RedisPubSubChannel>.NextId();
 
             var name = !ReferenceEquals(namedObject, null) ? namedObject.Name : null;
@@ -96,7 +101,7 @@ namespace Sweet.Redis
             m_Name = name;
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
-            m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, ResponseReceived);
+            m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
         }
 
         #endregion .Ctors
@@ -114,7 +119,33 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public RedisEndPoint EndPoint
+        {
+            get
+            {
+                var connectionProvider = m_ConnectionProvider;
+                if (connectionProvider != null)
+                    return connectionProvider.EndPoint;
+
+                var settings = Settings;
+                if (settings != null)
+                {
+                    var endPoints = settings.EndPoints;
+                    if (endPoints != null && endPoints.Length > 0)
+                    {
+                        foreach (var ep in endPoints)
+                            if (ep != null)
+                                return (RedisEndPoint)ep.Clone();
+                    }
+                }
+
+                return RedisEndPoint.Empty;
+            }
+        }
+
         public string Name { get { return m_Name; } }
+
+        public RedisPoolSettings Settings { get { return m_Settings; } }
 
         #endregion Properties
 

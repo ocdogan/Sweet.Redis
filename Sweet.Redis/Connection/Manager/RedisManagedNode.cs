@@ -80,7 +80,7 @@ namespace Sweet.Redis
             return new RedisManagedNodeInfo(m_EndPoint, Role);
         }
 
-        internal RedisConnectionPool ExchangePool(RedisManagedConnectionPool pool)
+        public RedisConnectionPool ExchangePool(RedisManagedConnectionPool pool)
         {
             ValidateNotDisposed();
             return Interlocked.Exchange(ref m_Pool, pool);

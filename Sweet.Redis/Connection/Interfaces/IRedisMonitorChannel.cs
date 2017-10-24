@@ -28,6 +28,8 @@ namespace Sweet.Redis
 {
     public interface IRedisMonitorChannel
     {
+        RedisEndPoint EndPoint { get; }
+
         void Monitor();
         void Quit();
         void Subscribe(Action<RedisMonitorMessage> callback);

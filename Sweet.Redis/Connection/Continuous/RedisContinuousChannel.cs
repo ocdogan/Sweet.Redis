@@ -63,6 +63,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private RedisPoolSettings m_Settings;
         private IRedisConnectionProvider m_ConnectionProvider;
 
         private readonly object m_SubscriptionLock = new object();
@@ -72,8 +73,13 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisContinuousChannel()
+        internal RedisContinuousChannel(RedisPoolSettings settings)
         {
+            if (settings == null)
+                throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
+
+            m_Settings = settings;
+
             Func<IRedisConnectionProvider> factory = () => { return NewConnectionProvider(); };
             m_ConnectionProvider = factory();
         }
@@ -98,13 +104,39 @@ namespace Sweet.Redis
             get { return m_ConnectionProvider; }
         }
 
+        public RedisEndPoint EndPoint
+        {
+            get
+            {
+                var connectionProvider = m_ConnectionProvider;
+                if (connectionProvider != null)
+                    return connectionProvider.EndPoint;
+
+                var settings = Settings;
+                if (settings != null)
+                {
+                    var endPoints = settings.EndPoints;
+                    if (endPoints != null && endPoints.Length > 0)
+                    {
+                        foreach (var ep in endPoints)
+                            if (ep != null)
+                                return (RedisEndPoint)ep.Clone();
+                    }
+                }
+
+                return RedisEndPoint.Empty;
+            }
+        }
+
+        public RedisConnectionSettings Settings { get { return m_Settings; } }
+
         #endregion Properties
 
         #region Methods
 
         protected virtual IRedisConnectionProvider NewConnectionProvider()
         {
-            return new RedisContinuousConnectionProvider(GetProviderName(), ResponseReceived);
+            return new RedisContinuousConnectionProvider(GetProviderName(), m_Settings, ResponseReceived);
         }
 
         protected virtual string GetProviderName()

@@ -31,13 +31,18 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_Id;
+        private RedisConnectionSettings m_Settings;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisCommandExecuter()
+        public RedisCommandExecuter(RedisConnectionSettings settings)
         {
+            if (settings == null)
+                throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
+
+            m_Settings = settings;
             m_Id = RedisIDGenerator<RedisCommandExecuter>.NextId();
         }
 
@@ -45,7 +50,29 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public virtual RedisEndPoint EndPoint
+        {
+            get
+            {
+                var settings = Settings;
+                if (settings != null)
+                {
+                    var endPoints = settings.EndPoints;
+                    if (endPoints != null && endPoints.Length > 0)
+                    {
+                        foreach (var ep in endPoints)
+                            if (ep != null)
+                                return (RedisEndPoint)ep.Clone();
+                    }
+                }
+
+                return RedisEndPoint.Empty;
+            }
+        }
+
         public long Id { get { return m_Id; } }
+
+        public RedisConnectionSettings Settings { get { return m_Settings; } }
 
         #endregion Properties
 

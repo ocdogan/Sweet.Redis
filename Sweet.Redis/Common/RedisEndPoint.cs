@@ -31,7 +31,7 @@ using System.Net.Sockets;
 
 namespace Sweet.Redis
 {
-    public class RedisEndPoint : IEquatable<RedisEndPoint>
+    public class RedisEndPoint : IEquatable<RedisEndPoint>, ICloneable
     {
         #region RedisIPAddressEntry
 
@@ -77,6 +77,8 @@ namespace Sweet.Redis
         #endregion RedisIPAddressEntry
 
         #region Static Members
+
+        public static readonly RedisEndPoint Empty = new RedisEndPoint(null, -1);
 
         public static readonly RedisEndPoint LocalHostEndPoint = new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort);
         public static readonly RedisEndPoint IP4LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP4Loopback, RedisConstants.DefaultPort);
@@ -256,6 +258,13 @@ namespace Sweet.Redis
                 return ipEPList;
             }
             return null;
+        }
+
+        public object Clone()
+        {
+            if (ReferenceEquals(this, Empty))
+                return this;
+            return new RedisEndPoint(Host, Port);
         }
 
         #endregion Methods

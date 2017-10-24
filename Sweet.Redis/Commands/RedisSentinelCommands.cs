@@ -252,7 +252,7 @@ namespace Sweet.Redis
                 var rawValue = raw.Value;
                 if (!ReferenceEquals(rawValue, null) && rawValue.Type == RedisRawObjectType.Array)
                 {
-                    var items = RedisSentinelNodeInfo.Parse(rawValue);
+                    var items = RedisSentinelNodeInfo.ParseInfoResponse(rawValue);
                     if (items == null || items.Length > 0)
                         return new RedisResult<RedisSentinelNodeInfo[]>(items);
                 }

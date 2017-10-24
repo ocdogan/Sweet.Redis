@@ -70,13 +70,13 @@ namespace Sweet.Redis
 
         #region Methods
 
-        internal RedisManagedNodesGroup ExchangeMasters(RedisManagedNodesGroup masters)
+        public RedisManagedNodesGroup ExchangeMasters(RedisManagedNodesGroup masters)
         {
             ValidateNotDisposed();
             return Interlocked.Exchange(ref m_Masters, masters);
         }
 
-        internal RedisManagedNodesGroup ExchangeSlaves(RedisManagedNodesGroup slaves)
+        public RedisManagedNodesGroup ExchangeSlaves(RedisManagedNodesGroup slaves)
         {
             ValidateNotDisposed();
             return Interlocked.Exchange(ref m_Slaves, slaves);

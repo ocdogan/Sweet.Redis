@@ -32,8 +32,8 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        internal RedisMonitorChannel()
-            : base()
+        internal RedisMonitorChannel(RedisPoolSettings settings)
+            : base(settings)
         { }
 
         #endregion .Ctors

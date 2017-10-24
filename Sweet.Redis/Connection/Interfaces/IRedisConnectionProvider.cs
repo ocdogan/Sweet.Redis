@@ -26,6 +26,7 @@ namespace Sweet.Redis
 {
     public interface IRedisConnectionProvider : IRedisDisposable, IRedisIdentifiedObject
     {
+        RedisEndPoint EndPoint { get; }
         IRedisConnection Connect(int dbIndex, RedisRole expectedRole);
     }
 }

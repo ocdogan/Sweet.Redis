@@ -39,19 +39,16 @@ namespace Sweet.Redis
         #region Field Members
 
         private string m_Name;
-
-        private RedisConnectionSettings m_Settings;
         private RedisConnectionLimiter m_ConnectionLimiter;
 
         #endregion Field Members
 
         #region .Ctors
 
-        protected RedisConnectionProvider(string name, RedisConnectionSettings settings = null,
+        protected RedisConnectionProvider(string name, RedisConnectionSettings settings,
             Func<int, RedisConnectionLimiter> connectionLimiter = null)
+            : base(settings)
         {
-            m_Settings = settings ?? RedisConnectionSettings.Default;
-
             name = (name ?? String.Empty).Trim();
             m_Name = !String.IsNullOrEmpty(name) ? name :
                 String.Format("{0}, {1}", GetType().Name, Id.ToString());
@@ -116,11 +113,6 @@ namespace Sweet.Redis
 
         #region IRedisConnectionProvider Methods
 
-        protected virtual RedisConnectionSettings GetSettings()
-        {
-            return m_Settings;
-        }
-
         protected virtual int GetMaxConnectionCount()
         {
             return RedisConstants.MinConnectionCount;
@@ -155,7 +147,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            var settings = (GetSettings() ?? RedisPoolSettings.Default);
+            var settings = (Settings ?? RedisPoolSettings.Default);
 
             var spinStepTimeoutMs = GetConnectionSpinStepTimeout();
 

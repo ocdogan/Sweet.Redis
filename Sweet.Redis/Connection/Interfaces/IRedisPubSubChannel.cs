@@ -26,9 +26,9 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisPubSubChannel
+    public interface IRedisPubSubChannel : IRedisNamedObject
     {
-        string Name { get; }
+        RedisEndPoint EndPoint { get; }
 
         void PSubscribe(Action<RedisPubSubMessage> callback, RedisParam pattern, params RedisParam[] patterns);
         void PUnsubscribe(params RedisParam[] patterns);
