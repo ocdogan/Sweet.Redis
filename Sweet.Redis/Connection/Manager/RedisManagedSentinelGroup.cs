@@ -94,10 +94,11 @@ namespace Sweet.Redis
             return oldNodes;
         }
 
-        public void Monitor(Action<RedisMasterSwitchedMessage> onSwitchMaster, Action<RedisNodeStateChangedMessage> onInstanceStateChange)
+        public void Monitor(Action<RedisMasterSwitchedMessage> onSwitchMaster,
+                            Action<RedisNodeStateChangedMessage> onInstanceStateChange)
         {
             ValidateNotDisposed();
-            
+
             if (Interlocked.CompareExchange(ref m_MonitoringStatus, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
             {
@@ -112,7 +113,7 @@ namespace Sweet.Redis
                         {
                             try
                             {
-                                if (node != null && !node.Disposed)
+                                if (!Disposed && node != null && !node.Disposed)
                                 {
                                     var pool = node.Pool;
                                     if (pool != null && !pool.Disposed)
@@ -138,7 +139,7 @@ namespace Sweet.Redis
                                     }
                                 }
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             { }
                         }
                     }
@@ -168,9 +169,9 @@ namespace Sweet.Redis
                 {
                     var channel = message.Channel;
 
-                    if (channel == RedisConstants.SDownEntered || 
+                    if (channel == RedisConstants.SDownEntered ||
                         channel == RedisConstants.SDownExited ||
-                        channel == RedisConstants.SDownEntered || 
+                        channel == RedisConstants.SDownEntered ||
                         channel == RedisConstants.ODownExited ||
                         channel == RedisConstants.SwitchMaster)
                         InvokeCallback(message);

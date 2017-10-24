@@ -75,7 +75,7 @@ namespace Sweet.Redis
             #region Properties
 
             public RedisSocket[] Masters { get; private set; }
-            
+
             public RedisSocket[] Slaves { get; private set; }
 
             public RedisSocket[] Sentinels { get; private set; }
@@ -127,52 +127,55 @@ namespace Sweet.Redis
 
         protected GroupedSockets CreateGroupSockets()
         {
-            var settings = m_Settings;
-            var ipEPList = RedisEndPoint.ToIPEndPoints(settings.EndPoints);
-
-            if (ipEPList != null && ipEPList.Count > 0)
+            if (!Disposed)
             {
-                var ipEPSettings = ipEPList
-                        .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
-                        .ToArray();
+                var settings = m_Settings;
+                var ipEPList = RedisEndPoint.ToIPEndPoints(settings.EndPoints);
 
-                if (ipEPSettings != null && ipEPSettings.Length > 0)
+                if (ipEPList != null && ipEPList.Count > 0)
                 {
-                    var discoveredEndPoints = new HashSet<IPEndPoint>();
-                    var emptyTuple = new Tuple<RedisRole, RedisSocket>[0];
+                    var ipEPSettings = ipEPList
+                            .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
+                            .ToArray();
 
-                    var groupsTuples = ipEPSettings
-                        .SelectMany(setting => CreateNodes(discoveredEndPoints, m_Name, setting) ?? emptyTuple)
-                        .Where(node => node != null)
-                        .GroupBy(
-                            tuple => tuple.Item1,
-                            tuple => tuple.Item2,
-                            (role, group) => new Tuple<RedisRole, RedisSocket[]>(role, group.ToArray()))
-                        .ToList();
-
-                    if (groupsTuples != null && groupsTuples.Count > 0)
+                    if (ipEPSettings != null && ipEPSettings.Length > 0)
                     {
-                        // 0: Masters, 1: Slaves, 2: Sentinels
-                        const int MastersPos = 0, SlavesPos = 1, SentinelsPos = 2;
+                        var discoveredEndPoints = new HashSet<IPEndPoint>();
+                        var emptyTuple = new Tuple<RedisRole, RedisSocket>[0];
 
-                        var result = new RedisSocket[3][];
-                        foreach (var tuple in groupsTuples)
+                        var groupsTuples = ipEPSettings
+                            .SelectMany(setting => CreateNodes(discoveredEndPoints, m_Name, setting) ?? emptyTuple)
+                            .Where(node => node != null)
+                            .GroupBy(
+                                tuple => tuple.Item1,
+                                tuple => tuple.Item2,
+                                (role, group) => new Tuple<RedisRole, RedisSocket[]>(role, group.ToArray()))
+                            .ToList();
+
+                        if (groupsTuples != null && groupsTuples.Count > 0)
                         {
-                            switch (tuple.Item1)
-                            {
-                                case RedisRole.Master:
-                                    result[MastersPos] = tuple.Item2;
-                                    break;
-                                case RedisRole.Slave:
-                                    result[SlavesPos] = tuple.Item2;
-                                    break;
-                                case RedisRole.Sentinel:
-                                    result[SentinelsPos] = tuple.Item2;
-                                    break;
-                            }
-                        }
+                            // 0: Masters, 1: Slaves, 2: Sentinels
+                            const int MastersPos = 0, SlavesPos = 1, SentinelsPos = 2;
 
-                        return new GroupedSockets(result[MastersPos], result[SlavesPos], result[SentinelsPos]);
+                            var result = new RedisSocket[3][];
+                            foreach (var tuple in groupsTuples)
+                            {
+                                switch (tuple.Item1)
+                                {
+                                    case RedisRole.Master:
+                                        result[MastersPos] = tuple.Item2;
+                                        break;
+                                    case RedisRole.Slave:
+                                        result[SlavesPos] = tuple.Item2;
+                                        break;
+                                    case RedisRole.Sentinel:
+                                        result[SentinelsPos] = tuple.Item2;
+                                        break;
+                                }
+                            }
+
+                            return new GroupedSockets(result[MastersPos], result[SlavesPos], result[SentinelsPos]);
+                        }
                     }
                 }
             }
@@ -195,6 +198,9 @@ namespace Sweet.Redis
         {
             try
             {
+                if (Disposed)
+                    return null;
+
                 var endPoints = settings.EndPoints;
                 if (endPoints == null || endPoints.Length == 0)
                     return null;
@@ -227,7 +233,7 @@ namespace Sweet.Redis
                             {
                                 try
                                 {
-                                    if (siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
+                                    if (!Disposed && siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
                                     {
                                         var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
 
@@ -250,7 +256,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static NodeRoleAndSiblings GetNodeInfo(string masterName, IRedisConnection connection)
+        private NodeRoleAndSiblings GetNodeInfo(string masterName, IRedisConnection connection)
         {
             if (connection != null)
             {
@@ -270,18 +276,24 @@ namespace Sweet.Redis
                             case RedisRole.Sentinel:
                                 {
                                     var masters = GetMastersOfSentinel(masterName, serverInfo);
-                                    var otherSentinels = GetSiblingSentinelsOfSentinel(masterName, connection);
+                                    if (!Disposed)
+                                    {
+                                        var otherSentinels = GetSiblingSentinelsOfSentinel(masterName, connection);
+                                        if (!Disposed)
+                                        {
+                                            if (otherSentinels == null || otherSentinels.Siblings == null)
+                                                return masters ?? new NodeRoleAndSiblings(role, null);
 
-                                    if (otherSentinels == null || otherSentinels.Siblings == null)
-                                        return masters ?? new NodeRoleAndSiblings(role, null);
+                                            if (masters == null || masters.Siblings == null)
+                                                return otherSentinels ?? new NodeRoleAndSiblings(role, null);
 
-                                    if (masters == null || masters.Siblings == null)
-                                        return otherSentinels ?? new NodeRoleAndSiblings(role, null);
+                                            var siblings = new HashSet<RedisEndPoint>(masters.Siblings);
+                                            siblings.UnionWith(otherSentinels.Siblings);
 
-                                    var siblings = new HashSet<RedisEndPoint>(masters.Siblings);
-                                    siblings.UnionWith(otherSentinels.Siblings);
-
-                                    return new NodeRoleAndSiblings(role, siblings.ToArray());
+                                            return new NodeRoleAndSiblings(role, siblings.ToArray());
+                                        }
+                                    }
+                                    break;
                                 }
                         }
                     }
@@ -292,7 +304,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static RedisRole DiscoverRoleOfNode(RedisServerInfo serverInfo)
+        private RedisRole DiscoverRoleOfNode(RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
@@ -322,7 +334,7 @@ namespace Sweet.Redis
             return RedisRole.Undefined;
         }
 
-        private static NodeRoleAndSiblings GetMasterOfSlave(RedisServerInfo serverInfo)
+        private NodeRoleAndSiblings GetMasterOfSlave(RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
@@ -347,7 +359,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static NodeRoleAndSiblings GetSlavesOfMaster(RedisServerInfo serverInfo)
+        private NodeRoleAndSiblings GetSlavesOfMaster(RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
@@ -380,7 +392,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static NodeRoleAndSiblings GetMastersOfSentinel(string masterName, RedisServerInfo serverInfo)
+        private NodeRoleAndSiblings GetMastersOfSentinel(string masterName, RedisServerInfo serverInfo)
         {
             if (serverInfo != null)
             {
@@ -437,7 +449,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private static NodeRoleAndSiblings GetSiblingSentinelsOfSentinel(string masterName, IRedisConnection connection)
+        private NodeRoleAndSiblings GetSiblingSentinelsOfSentinel(string masterName, IRedisConnection connection)
         {
             if (String.IsNullOrEmpty(masterName))
                 throw new ArgumentNullException("masterName");
@@ -464,10 +476,12 @@ namespace Sweet.Redis
                                     {
                                         var sentinelInfo = sentinelInfos[i];
 
-                                        if (sentinelInfo != null && sentinelInfo.Port.HasValue && !String.IsNullOrEmpty(sentinelInfo.IPAddress))
+                                        if (!Disposed && sentinelInfo != null && sentinelInfo.Port.HasValue && !String.IsNullOrEmpty(sentinelInfo.IPAddress))
                                             siblingEndPoints.Add(new RedisEndPoint(sentinelInfo.IPAddress, (int)sentinelInfo.Port.Value));
                                     }
-                                    return new NodeRoleAndSiblings(RedisRole.Sentinel, siblingEndPoints.ToArray());
+
+                                    if (!Disposed)
+                                        return new NodeRoleAndSiblings(RedisRole.Sentinel, siblingEndPoints.ToArray());
                                 }
                             }
                         }

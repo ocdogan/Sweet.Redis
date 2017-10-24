@@ -36,6 +36,8 @@ namespace Sweet.Redis
         private bool m_SDown;
         private bool m_ODown;
 
+        private RedisRole m_Role;
+
         #endregion Field Members
 
         #region .Ctors
@@ -50,9 +52,9 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public bool IsAlive
+        public bool IsDown
         {
-            get { return !(m_SDown && m_ODown); }
+            get { return m_SDown && m_ODown; }
         }
 
         public bool ODown
@@ -61,7 +63,15 @@ namespace Sweet.Redis
             set { m_ODown = value; }
         }
 
-        public RedisRole Role { get; internal set; }
+        public RedisRole Role
+        {
+            get { return m_Role; }
+            internal set
+            {
+                m_Role = value;
+                ApplyRole(value);
+            }
+        }
 
         public bool SDown
         {

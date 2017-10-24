@@ -86,10 +86,71 @@ namespace Sweet.Redis.ConsoleTest
             // ManagerTest6();
             // ManagerTest7();
             // ManagerTest8();
-            ManagerTest9();
+            // ManagerTest9();
+            ManagerTest10();
         }
 
         #region Manager
+
+        static void ManagerTest10()
+        {
+            var i = 0;
+            var sw = new Stopwatch();
+
+            using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                new[] { new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort) },
+                masterName: "mymaster")))
+            {
+                do
+                {
+                    try
+                    {
+                        Console.Clear();
+
+                        for (var j = 0; j < 100000; j++)
+                        {
+                            var ch = (char)('0' + (i++ % 10));
+                            var text = i.ToString() + "-" + new string(ch, 10);
+
+                            sw.Restart();
+                            try
+                            {
+                                using (var db = manager.GetDb())
+                                {
+                                    Ping(db);
+                                    SetGet(db, "tinytext", text);
+                                }
+
+                                using (var db = manager.GetDb(true))
+                                {
+                                    Ping(db);
+                                    Get(db, "tinytext");
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    sw.Stop();
+
+                    Console.WriteLine();
+                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
+                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
 
         static void ManagerTest9()
         {
@@ -150,9 +211,9 @@ namespace Sweet.Redis.ConsoleTest
             do
             {
                 using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
-                    new[] { new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort), 
+                    new[] { new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort),
                         new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort + 1),
-                        new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort + 2)}, 
+                        new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort + 2)},
                     masterName: "mymaster")))
                 {
                     try
@@ -222,22 +283,30 @@ namespace Sweet.Redis.ConsoleTest
                             var text = i.ToString() + "-" + new string(ch, 10);
 
                             sw.Restart();
-                            using (var db = manager.GetDb())
-                            {
-                                Ping(db);
-                                if (j % 10 == 3)
-                                    manager.Refresh();
 
-                                SetGet(db, "tinytext", text);
-                                if (j % 10 == 9)
-                                    manager.Refresh();
+                            try
+                            {
+                                using (var db = manager.GetDb())
+                                {
+                                    Ping(db);
+                                    if (j % 10 == 3)
+                                        manager.Refresh();
+
+                                    SetGet(db, "tinytext", text);
+                                    if (j % 10 == 9)
+                                        manager.Refresh();
+                                }
+
+                                using (var db = manager.GetDb(true))
+                                {
+                                    Get(db, "tinytext");
+                                    if (j % 10 == 6)
+                                        manager.Refresh();
+                                }
                             }
-
-                            using (var db = manager.GetDb(true))
+                            catch (Exception e)
                             {
-                                Get(db, "tinytext");
-                                if (j % 10 == 6)
-                                    manager.Refresh();
+                                Console.WriteLine(e);
                             }
                         }
                     }

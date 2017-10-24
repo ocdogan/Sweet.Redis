@@ -46,6 +46,7 @@ namespace Sweet.Redis
 
         private long m_Id;
         private string m_Name;
+        private string m_MasterName;
 
         private RedisManagerSettings m_Settings;
         private RedisManagedEndPointResolver m_EndPointResolver;
@@ -68,6 +69,7 @@ namespace Sweet.Redis
             m_Id = RedisIDGenerator<RedisManager>.NextId();
             m_Settings = settings;
             m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
+            m_MasterName = (settings.MasterName ?? String.Empty).Trim();
 
             m_EndPointResolver = new RedisManagedEndPointResolver(m_Name, settings);
         }
@@ -188,7 +190,10 @@ namespace Sweet.Redis
 
         public void Refresh()
         {
-            RefreshNodes(true);
+            lock (m_SyncRoot)
+            {
+                RefreshNodes(true);
+            }
         }
 
         private RedisManagedConnectionPool SelectMasterOrSlavePool(Func<RedisManagedNodeInfo, bool> nodeSelector)
@@ -239,19 +244,22 @@ namespace Sweet.Redis
         {
             InitializeNodes();
 
-            var msGroup = m_MSGroup;
-            if (msGroup == null)
-                throw new RedisFatalException("Can not discover masters and slaves", RedisErrorCode.ConnectionError);
+            lock (m_SyncRoot)
+            {
+                var msGroup = m_MSGroup;
+                if (msGroup == null)
+                    throw new RedisFatalException("Can not discover masters and slaves", RedisErrorCode.ConnectionError);
 
-            var group = readOnly ? (msGroup.Slaves ?? msGroup.Masters) : msGroup.Masters;
-            if (group == null)
-                throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
+                var group = readOnly ? (msGroup.Slaves ?? msGroup.Masters) : msGroup.Masters;
+                if (group == null)
+                    throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
-            var pool = group.Next();
-            if (pool == null)
-                throw new RedisFatalException(String.Format("No {0} node found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
+                var pool = group.Next();
+                if (pool == null)
+                    throw new RedisFatalException(String.Format("No {0} node found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
-            return pool;
+                return pool;
+            }
         }
 
         private static void DisposeGroups(RedisManagedNodesGroup[] nodeGroups)
@@ -488,10 +496,131 @@ namespace Sweet.Redis
 
         private void MasterSwitched(RedisMasterSwitchedMessage message)
         {
+            if (!Disposed && message != null)
+            {
+                lock (m_SyncRoot)
+                {
+                    var msGroup = m_MSGroup;
+                    if (msGroup != null && !msGroup.Disposed)
+                    {
+                        SetMasterDown(msGroup, message.OldEndPoint, true);
+                        PromoteSlaveToMaster(msGroup, message.OldEndPoint);
+                    }
+                }
+            }
         }
 
         private void InstanceStateChanged(RedisNodeStateChangedMessage message)
         {
+            if (!Disposed && message != null && message.MasterName == m_MasterName)
+            {
+                var endPoint = message.EndPoint;
+                if (endPoint != null && !endPoint.IsEmpty)
+                {
+                    lock (m_SyncRoot)
+                    {
+                        var msGroup = m_MSGroup;
+                        if (msGroup != null && !msGroup.Disposed)
+                            ApplyStateChange((message.InstanceType == "master") ? msGroup.Masters : msGroup.Slaves,
+                                             message.Channel, endPoint);
+                    }
+                }
+            }
+        }
+
+        private static void PromoteSlaveToMaster(RedisManagedMSGroup msGroup, RedisEndPoint slaveEndPoint)
+        {
+            if (msGroup != null && !msGroup.Disposed &&
+               slaveEndPoint != null && !slaveEndPoint.IsEmpty)
+            {
+                var slaves = msGroup.Slaves;
+                if (slaves != null && !slaves.Disposed)
+                {
+                    var slaveNodes = slaves.Nodes;
+                    if (slaveNodes != null)
+                    {
+                        var slaveNode = slaveNodes.FirstOrDefault(n => n != null && !n.Disposed && slaveEndPoint == n.EndPoint);
+                        if (slaveNode != null)
+                        {
+                            msGroup.ChangeGroup(slaveNode);
+
+                            var changedPool = slaveNode.Pool;
+                            if (changedPool != null && !changedPool.Disposed)
+                            {
+                                changedPool.SDown = false;
+                                changedPool.ODown = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void SetMasterDown(RedisManagedMSGroup msGroup, RedisEndPoint masterEndPoint, bool isDown)
+        {
+            if (msGroup != null && !msGroup.Disposed &&
+               masterEndPoint != null && !masterEndPoint.IsEmpty)
+            {
+                var masters = msGroup.Masters;
+                if (masters != null && !masters.Disposed)
+                {
+                    var masterNodes = masters.Nodes;
+                    if (masterNodes != null)
+                    {
+                        var changedNode = masterNodes.FirstOrDefault(n => n != null && !n.Disposed && masterEndPoint == n.EndPoint);
+                        if (changedNode != null)
+                        {
+                            var changedPool = changedNode.Pool;
+                            if (changedPool != null && !changedPool.Disposed)
+                            {
+                                changedPool.SDown = isDown;
+                                changedPool.ODown = isDown;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void ApplyStateChange(RedisManagedNodesGroup nodesGroup, string channel, RedisEndPoint endPoint)
+        {
+            if (nodesGroup != null && !nodesGroup.Disposed)
+            {
+                var nodes = nodesGroup.Nodes;
+                if (nodes != null)
+                {
+                    var changedNode = nodes.FirstOrDefault(n => n != null && !n.Disposed && endPoint == n.EndPoint);
+                    if (changedNode == null)
+                    {
+                        // TODO: Ty to add as new node
+                        if (channel == RedisConstants.SDownEntered ||
+                            channel == RedisConstants.ODownEntered)
+                        {
+                        }
+                        return;
+                    }
+
+                    var pool = changedNode.Pool;
+                    if (pool != null && !pool.Disposed)
+                    {
+                        switch (channel)
+                        {
+                            case RedisConstants.SDownEntered:
+                                pool.SDown = true;
+                                break;
+                            case RedisConstants.SDownExited:
+                                pool.SDown = false;
+                                break;
+                            case RedisConstants.ODownEntered:
+                                pool.ODown = true;
+                                break;
+                            case RedisConstants.ODownExited:
+                                pool.ODown = false;
+                                break;
+                        }
+                    }
+                }
+            }
         }
 
         #endregion Initialization Methods

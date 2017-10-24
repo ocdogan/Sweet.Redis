@@ -270,6 +270,10 @@ namespace Sweet.Redis
             }
         }
 
+        protected override void ApplyRole(RedisRole role)
+        {
+        }
+
         protected override int GetMaxConnectionCount()
         {
             var settings = Settings as RedisPoolSettings;

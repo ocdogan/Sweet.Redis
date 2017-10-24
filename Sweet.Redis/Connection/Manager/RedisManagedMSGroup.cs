@@ -22,6 +22,7 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -29,6 +30,8 @@ namespace Sweet.Redis
     internal class RedisManagedMSGroup : RedisDisposable
     {
         #region Field Members
+
+        private readonly object m_SyncRoot = new object();
 
         private RedisManagedNodesGroup m_Masters;
         private RedisManagedNodesGroup m_Slaves;
@@ -73,13 +76,47 @@ namespace Sweet.Redis
         public RedisManagedNodesGroup ExchangeMasters(RedisManagedNodesGroup masters)
         {
             ValidateNotDisposed();
-            return Interlocked.Exchange(ref m_Masters, masters);
+            lock (m_SyncRoot)
+            {
+                return Interlocked.Exchange(ref m_Masters, masters);
+            }
         }
 
         public RedisManagedNodesGroup ExchangeSlaves(RedisManagedNodesGroup slaves)
         {
             ValidateNotDisposed();
-            return Interlocked.Exchange(ref m_Slaves, slaves);
+            lock (m_SyncRoot)
+            {
+                return Interlocked.Exchange(ref m_Slaves, slaves);
+            }
+        }
+
+        public void ChangeGroup(RedisManagedNode node)
+        {
+            if (node != null && !node.Disposed)
+            {
+                lock (m_SyncRoot)
+                {
+                    var slaves = m_Slaves;
+                    if (slaves != null && slaves.Disposed)
+                    {
+                        var masters = m_Masters;
+                        if (masters != null && !masters.Disposed)
+                        {
+                            if (slaves.RemoveNode(node))
+                            {
+                                if (masters.AppendNode(node))
+                                    node.Role = RedisRole.Master;
+                            }
+                            else if (masters.RemoveNode(node))
+                            {
+                                if (slaves.AppendNode(node))
+                                    node.Role = RedisRole.Slave;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         #endregion Methods

@@ -113,6 +113,10 @@ namespace Sweet.Redis
 
         #region IRedisConnectionProvider Methods
 
+        protected virtual void ApplyRole(RedisRole role)
+        {
+        }
+
         protected virtual int GetMaxConnectionCount()
         {
             return RedisConstants.MinConnectionCount;

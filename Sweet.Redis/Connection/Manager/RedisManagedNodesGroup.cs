@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -120,18 +121,106 @@ namespace Sweet.Redis
                         var maxLength = nodes.Length;
                         if (maxLength > 0)
                         {
-                            var index = Interlocked.Add(ref m_NodeIndex, 1);
-                            if (index > maxLength - 1)
+                            var visitCount = 0;
+                            while (visitCount++ < maxLength)
                             {
-                                index = 0;
-                                Interlocked.Exchange(ref m_NodeIndex, 0);
+                                var index = Interlocked.Add(ref m_NodeIndex, 1);
+                                if (index > maxLength - 1)
+                                {
+                                    index = 0;
+                                    Interlocked.Exchange(ref m_NodeIndex, 0);
+                                }
+
+                                var result = nodes[index].Pool;
+                                if (!result.IsDown)
+                                    return result;
                             }
-                            return nodes[index].Pool;
                         }
                     }
                 }
             }
             return null;
+        }
+
+        public bool RemoveNode(RedisManagedNode node)
+        {
+            if (node != null)
+            {
+                lock (m_SyncRoot)
+                {
+                    var nodes = m_Nodes;
+                    if (nodes != null)
+                    {
+                        var length = nodes.Length;
+                        if (length > 0 && nodes.Contains(node))
+                        {
+                            if (length == 1)
+                            {
+                                Interlocked.Exchange(ref m_NodeIndex, -1);
+                                Interlocked.Exchange(ref m_Nodes, null);
+                                return true;
+                            }
+
+                            var newNodes = new RedisManagedNode[length - 1];
+
+                            var index = 0;
+                            for (var i = 0; i < length; i++)
+                            {
+                                var groupNode = nodes[i];
+                                if (groupNode == node)
+                                    continue;
+
+                                newNodes[index++] = groupNode;
+                            }
+
+                            Interlocked.Exchange(ref m_Nodes, newNodes);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public bool AppendNode(RedisManagedNode node)
+        {
+            if (node != null)
+            {
+                lock (m_SyncRoot)
+                {
+                    var nodes = m_Nodes;
+
+                    var length = (nodes != null) ? nodes.Length : 0;
+                    if (length == 0)
+                    {
+                        Interlocked.Exchange(ref m_Nodes, new[] { node });
+                        Interlocked.Exchange(ref m_NodeIndex, 0);
+                        return true;
+                    }
+
+                    if (!nodes.Contains(node))
+                    {
+                        var isDown = node.Disposed;
+                        if (!isDown)
+                        {
+                            var pool = node.Pool;
+                            isDown = pool == null || pool.Disposed || pool.IsDown;
+                        }
+
+                        var newNodes = new RedisManagedNode[length + 1];
+
+                        var index = isDown ? 0 : 1;
+                        newNodes[!isDown ? 0 : length] = node;
+
+                        for (var i = 0; i < length; i++)
+                            newNodes[index++] = nodes[i];
+
+                        Interlocked.Exchange(ref m_Nodes, newNodes);
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         #endregion Methods

@@ -32,6 +32,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private bool m_OwnsPool;
+        private RedisRole m_Role;
         private RedisEndPoint m_EndPoint;
         private RedisManagedConnectionPool m_Pool;
 
@@ -41,8 +42,8 @@ namespace Sweet.Redis
 
         public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool, bool ownsPool = true)
         {
-            Role = role;
             m_Pool = pool;
+            Role = role;
             m_OwnsPool = ownsPool;
             m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
         }
@@ -70,7 +71,18 @@ namespace Sweet.Redis
 
         public RedisManagedConnectionPool Pool { get { return m_Pool; } }
 
-        public RedisRole Role { get; internal set; }
+        public RedisRole Role
+        {
+            get { return m_Role; }
+            internal set
+            {
+                m_Role = value;
+
+                var pool = m_Pool;
+                if (pool != null)
+                    pool.Role = value;
+            }
+        }
 
         #endregion Properties
 
@@ -87,7 +99,7 @@ namespace Sweet.Redis
 
             var oldPool = Interlocked.Exchange(ref m_Pool, pool);
             m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
-            
+
             return oldPool;
         }
 
