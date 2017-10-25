@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -216,7 +217,7 @@ namespace Sweet.Redis
         {
             lock (m_SyncRoot)
             {
-                RefreshNodes(true);
+                RefreshAllNodes(true);
             }
         }
 
@@ -316,7 +317,7 @@ namespace Sweet.Redis
                     {
                         try
                         {
-                            RefreshNodes(false);
+                            RefreshAllNodes(false);
                             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
                         }
                         catch (Exception)
@@ -329,7 +330,7 @@ namespace Sweet.Redis
             }
         }
 
-        private void RefreshNodes(bool careValidNodes = true)
+        private void RefreshAllNodes(bool careValidNodes = true)
         {
             if (Interlocked.CompareExchange(ref m_RefreshState, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
@@ -422,15 +423,7 @@ namespace Sweet.Redis
                         }
                         finally
                         {
-                            try
-                            {
-                                var pubSubs = m_Sentinels;
-                                if (pubSubs != null)
-                                    pubSubs.Monitor(MasterSwitched, InstanceStateChanged, PubSubCompleted);
-                            }
-                            catch (Exception)
-                            { }
-
+                            AttachToSentinel();
                             DisposeObjects(disposeList);
                         }
                     }
@@ -440,6 +433,178 @@ namespace Sweet.Redis
                     Interlocked.Exchange(ref m_RefreshState, RedisConstants.Zero);
                 }
             }
+        }
+
+        private void AttachToSentinel()
+        {
+            try
+            {
+                var sentinels = m_Sentinels;
+                if (sentinels != null)
+                {
+                    sentinels.RegisterMessageEvents(MasterSwitched, InstanceStateChanged);
+                    sentinels.Monitor(PubSubCompleted);
+                }
+            }
+            catch (Exception)
+            { }
+        }
+
+        private void RefreshSentinels()
+        {
+            if (!Disposed)
+            {
+                try
+                {
+                    HealthCheckAll();
+
+                    var sentinels = GetSentinelsGroups();
+                    if (sentinels != null)
+                    {
+                        var nodes = sentinels.Nodes;
+                        if (nodes != null && nodes.Length > 0)
+                        {
+                            sentinels.RegisterMessageEvents(MasterSwitched, InstanceStateChanged);
+                            sentinels.Monitor(PubSubCompleted);
+                        }
+                    }
+                }
+                catch (Exception)
+                { }
+            }
+        }
+
+        private RedisManagedSentinelGroup GetSentinelsGroups()
+        {
+            var sentinels = m_Sentinels;
+
+            var discover = sentinels == null;
+            if (!discover)
+            {
+                var nodes = sentinels.Nodes;
+                discover = (nodes == null || nodes.Length == 0);
+            }
+
+            if (discover)
+            {
+                DiscoverSentinels();
+                sentinels = m_Sentinels;
+            }
+            return sentinels;
+        }
+
+        private void DiscoverSentinels()
+        {
+            if (!Disposed)
+            {
+                var msGroup = m_MSGroup;
+
+                var settings = (RedisPoolSettings)null;
+                if (msGroup != null && !msGroup.Disposed)
+                {
+                    settings = FindValidSetting(msGroup.Masters);
+                    if (settings == null)
+                    {
+                        settings = FindValidSetting(msGroup.Slaves);
+                        if (settings == null)
+                            settings = FindValidSetting(m_Sentinels);
+                    }
+                }
+
+                if (settings == null)
+                    Refresh();
+                else
+                {
+                    // TODO: Get the settings and discover healthy nodes
+                }
+            }
+        }
+
+        private void HealthCheckAll()
+        {
+            HealthCheckGroup(m_Sentinels);
+
+            var msGroup = m_MSGroup;
+            if (msGroup != null && !msGroup.Disposed)
+            {
+                HealthCheckGroup(msGroup.Masters);
+                HealthCheckGroup(msGroup.Slaves);
+            }
+        }
+
+        private static void HealthCheckGroup(RedisManagedNodesGroup nodesGroup)
+        {
+            if (nodesGroup != null && !nodesGroup.Disposed)
+            {
+                var nodes = nodesGroup.Nodes;
+                if (nodes != null)
+                {
+                    foreach (var node in nodes)
+                    {
+                        if (node != null)
+                        {
+                            if (node.Disposed)
+                                nodesGroup.RemoveNode(node);
+                            else
+                            {
+                                var pool = node.Pool;
+                                if (pool == null || pool.Disposed)
+                                    nodesGroup.RemoveNode(node);
+                                else
+                                {
+                                    try
+                                    {
+                                        using (var db = pool.GetDb(-1))
+                                            db.Connection.Ping();
+
+                                        pool.SDown = false;
+                                        pool.ODown = false;
+                                    }
+                                    catch (Exception)
+                                    {
+                                        pool.SDown = true;
+                                        pool.ODown = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        private static RedisPoolSettings FindValidSetting(RedisManagedNodesGroup nodesGroup)
+        {
+            if (nodesGroup != null && !nodesGroup.Disposed)
+            {
+                var nodes = nodesGroup.Nodes;
+                if (nodes != null)
+                {
+                    foreach (var node in nodes)
+                    {
+                        try
+                        {
+                            if (node != null && !node.Disposed)
+                            {
+                                var pool = node.Pool;
+                                if (pool != null && !pool.Disposed)
+                                {
+                                    using (var db = pool.GetDb(-1))
+                                    {
+                                        db.Connection.Ping();
+                                        return pool.Settings;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        { }
+                    }
+                }
+            }
+
+            return null;
         }
 
         private void RearrangeGroup(RedisManagedNodesGroup newGroup, RedisManagedNodesGroup currGroup,
@@ -660,6 +825,44 @@ namespace Sweet.Redis
 
         private void PubSubCompleted(object sender)
         {
+            if (!Disposed)
+            {
+                var task = new Task(() =>
+                {
+                    ReleaseSentinelNode(sender as RedisManagedNode);
+                    RefreshSentinels();
+                });
+                task.Start();
+            }
+        }
+
+        private void ReleaseSentinelNode(RedisManagedNode node)
+        {
+            try
+            {
+                if (node != null)
+                {
+                    var sentinels = m_Sentinels;
+                    if (sentinels != null)
+                    {
+                        if (node.Disposed)
+                            sentinels.RemoveNode(node);
+                        else
+                        {
+                            var pool = node.Pool;
+                            if (pool == null || pool.Disposed)
+                                sentinels.RemoveNode(node);
+                            else
+                            {
+                                pool.SDown = true;
+                                pool.ODown = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            { }
         }
 
         #endregion Initialization Methods

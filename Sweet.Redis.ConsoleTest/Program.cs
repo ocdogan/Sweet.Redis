@@ -126,7 +126,7 @@ namespace Sweet.Redis.ConsoleTest
                                 Get(db, "tinytext", false);
                             }
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             /* Console.WriteLine(e);
                             Console.WriteLine();
