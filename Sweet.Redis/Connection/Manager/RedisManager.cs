@@ -426,7 +426,7 @@ namespace Sweet.Redis
                             {
                                 var pubSubs = m_Sentinels;
                                 if (pubSubs != null)
-                                    pubSubs.Monitor(MasterSwitched, InstanceStateChanged);
+                                    pubSubs.Monitor(MasterSwitched, InstanceStateChanged, PubSubCompleted);
                             }
                             catch (Exception)
                             { }
@@ -656,6 +656,10 @@ namespace Sweet.Redis
                     }
                 }
             }
+        }
+
+        private void PubSubCompleted(object sender)
+        {
         }
 
         #endregion Initialization Methods

@@ -114,7 +114,8 @@ namespace Sweet.Redis
         }
 
         public void Monitor(Action<RedisMasterSwitchedMessage> onSwitchMaster,
-                            Action<RedisNodeStateChangedMessage> onInstanceStateChange)
+                            Action<RedisNodeStateChangedMessage> onInstanceStateChange,
+                            Action<RedisManagedNodesGroup> onComplete)
         {
             ValidateNotDisposed();
 
@@ -140,20 +141,34 @@ namespace Sweet.Redis
                                         var channel = pool.PubSubChannel;
                                         if (channel != null)
                                         {
-                                            using (var db = pool.GetDb(-1))
-                                                db.Connection.Ping();
+                                            var disposable = channel as RedisInternalDisposable;
+                                            if (disposable == null || !disposable.Disposed)
+                                            {
+                                                using (var db = pool.GetDb(-1))
+                                                    db.Connection.Ping();
 
-                                            channel.Subscribe(PubSubMessageReceived,
-                                                RedisCommandList.SentinelChanelSDownEntered,
-                                                RedisCommandList.SentinelChanelSDownExited,
-                                                RedisCommandList.SentinelChanelODownEntered,
-                                                RedisCommandList.SentinelChanelODownExited,
-                                                RedisCommandList.SentinelChanelSwitchMaster);
+                                                channel.Subscribe(PubSubMessageReceived,
+                                                    RedisCommandList.SentinelChanelSDownEntered,
+                                                    RedisCommandList.SentinelChanelSDownExited,
+                                                    RedisCommandList.SentinelChanelODownEntered,
+                                                    RedisCommandList.SentinelChanelODownExited,
+                                                    RedisCommandList.SentinelChanelSwitchMaster);
 
-                                            monitoring = true;
-                                            monitoredPools.Add(pool);
+                                                monitoring = true;
+                                                monitoredPools.Add(pool);
 
-                                            break;
+                                                var pubSubChannel = channel as RedisPubSubChannel;
+                                                if (pubSubChannel != null && !pubSubChannel.Disposed)
+                                                {
+                                                    pubSubChannel.SetOnComplete((obj) =>
+                                                    {
+                                                        if (onComplete != null)
+                                                            onComplete(this);
+                                                    });
+                                                }
+
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -208,7 +223,6 @@ namespace Sweet.Redis
             if (data != null)
             {
                 var msgText = Encoding.UTF8.GetString(data);
-                Console.WriteLine(channel + " " + msgText);
 
                 if (!String.IsNullOrEmpty(msgText))
                 {

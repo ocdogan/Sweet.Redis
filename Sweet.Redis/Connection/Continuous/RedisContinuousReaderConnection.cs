@@ -122,7 +122,7 @@ namespace Sweet.Redis
             { }
         }
 
-        public bool BeginReceive()
+        public bool BeginReceive(Action<object> onComplete)
         {
             ValidateNotDisposed();
 
@@ -141,6 +141,8 @@ namespace Sweet.Redis
                     reader.BeginReceive((sr) =>
                         {
                             Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+                            if (onComplete != null)
+                                onComplete(this);
                         },
                         (response) =>
                         {
@@ -165,10 +167,9 @@ namespace Sweet.Redis
             if (Interlocked.Read(ref m_ReceiveState) != RedisConstants.Zero)
             {
                 var reader = Interlocked.Exchange(ref m_Reader, null);
-                if (reader == null)
-                    Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
-                else
-                    reader.Dispose();
+
+                if (reader != null) reader.Dispose();
+                Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
             }
         }
 

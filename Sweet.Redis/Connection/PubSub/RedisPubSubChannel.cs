@@ -69,6 +69,8 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private Action<object> m_OnComplete;
+
         private string m_Name;
         private RedisPoolSettings m_Settings;
         private RedisContinuousConnectionProvider m_ConnectionProvider;
@@ -86,7 +88,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings)
+        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings, Action<object> onComplete)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
@@ -99,6 +101,7 @@ namespace Sweet.Redis
                 name = String.Format("{0}, {1}", GetType().Name, id);
 
             m_Name = name;
+            m_OnComplete = onComplete;
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
@@ -110,6 +113,8 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_OnComplete, null);
+
             var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
             if (connectionProvider != null)
                 connectionProvider.Dispose();
@@ -163,11 +168,21 @@ namespace Sweet.Redis
                 if (connection != null && !connection.Connected)
                     connection.Connect();
 
-                ((RedisContinuousReaderConnection)connection).BeginReceive();
+                ((RedisContinuousReaderConnection)connection).BeginReceive((sende) =>
+                {
+                    var onComplete = m_OnComplete;
+                    if (onComplete != null)
+                        onComplete(this);
+                });
 
                 return connection;
             }
             return null;
+        }
+
+        internal void SetOnComplete(Action<object> onComplete)
+        {
+            Interlocked.Exchange(ref m_OnComplete, onComplete);
         }
 
         private static RedisPubSubMessage ToPubSubMessage(RedisPubSubResponse response)

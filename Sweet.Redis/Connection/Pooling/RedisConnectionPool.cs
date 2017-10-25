@@ -136,6 +136,13 @@ namespace Sweet.Redis
 
         #endregion Field Members
 
+        #region Events
+
+        public event EventHandler MonitorCompleted;
+        public event EventHandler PubSubCompleted;
+
+        #endregion Events
+
         #region .Ctors
 
         public RedisConnectionPool(string name, RedisPoolSettings settings)
@@ -155,6 +162,9 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref MonitorCompleted, null);
+            Interlocked.Exchange(ref PubSubCompleted, null);
+
             RedisConnectionPool.Unregister(this);
             CloseMemberStore();
 
@@ -210,7 +220,12 @@ namespace Sweet.Redis
                         channel = m_MonitorChannel;
                         if (channel == null)
                         {
-                            channel = new RedisMonitorChannel(Settings);
+                            channel = new RedisMonitorChannel(Settings, (obj) =>
+                            {
+                                var onComplete = MonitorCompleted;
+                                if (onComplete != null)
+                                    onComplete(this, EventArgs.Empty);
+                            });
                             Interlocked.Exchange(ref m_MonitorChannel, channel);
                         }
                     }
@@ -233,7 +248,12 @@ namespace Sweet.Redis
                         channel = m_PubSubChannel;
                         if (channel == null)
                         {
-                            channel = new RedisPubSubChannel(this, Settings);
+                            channel = new RedisPubSubChannel(this, Settings, (obj) =>
+                            {
+                                var onComplete = PubSubCompleted;
+                                if (onComplete != null)
+                                    onComplete(this, EventArgs.Empty);
+                            });
                             Interlocked.Exchange(ref m_PubSubChannel, channel);
                         }
                     }

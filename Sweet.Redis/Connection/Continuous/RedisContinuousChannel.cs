@@ -63,6 +63,8 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private event Action<object> m_OnComplete;
+
         private RedisPoolSettings m_Settings;
         private IRedisConnectionProvider m_ConnectionProvider;
 
@@ -88,8 +90,16 @@ namespace Sweet.Redis
 
         #region Destructors
 
+        protected void RegisterOnComplete(Action<object> callback)
+        {
+            if (callback != null)
+                m_OnComplete += callback;
+        }
+
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_OnComplete, null);
+
             var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
             if (connectionProvider != null)
                 connectionProvider.Dispose();
@@ -169,7 +179,14 @@ namespace Sweet.Redis
             {
                 var continuousConnection = connection as IRedisContinuousConnection;
                 if (continuousConnection != null)
-                    continuousConnection.BeginReceive();
+                {
+                    continuousConnection.BeginReceive((conn) =>
+                    {
+                        var onComplete = m_OnComplete;
+                        if (onComplete != null)
+                            onComplete(this);
+                    });
+                }
             }
         }
 

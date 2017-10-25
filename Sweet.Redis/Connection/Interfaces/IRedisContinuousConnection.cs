@@ -30,7 +30,7 @@ namespace Sweet.Redis
     {
         bool Receiving { get; }
 
-        bool BeginReceive();
+        bool BeginReceive(Action<object> onComplete);
         void EndReceive();
     }
 }

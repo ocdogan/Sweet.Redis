@@ -30,15 +30,41 @@ namespace Sweet.Redis
 {
     public class RedisMonitorChannel : RedisContinuousChannel<RedisMonitorMessage>, IRedisMonitorChannel
     {
+        #region Field Members
+
+        private Action<object> m_OnComplete;
+
+        #endregion Field Members
+
         #region .Ctors
 
-        internal RedisMonitorChannel(RedisPoolSettings settings)
+        internal RedisMonitorChannel(RedisPoolSettings settings, Action<object> onComplete)
             : base(settings)
-        { }
+        {
+            m_OnComplete = onComplete;
+            RegisterOnComplete(OnComplete);
+        }
 
         #endregion .Ctors
 
+        #region Destructors
+
+        protected override void OnDispose(bool disposing)
+        {
+            Interlocked.Exchange(ref m_OnComplete, null);
+            base.OnDispose(disposing);
+        }
+
+        #endregion Destructors
+
         #region Methods
+
+        private void OnComplete(object sender)
+        {
+            var onComplete = m_OnComplete;
+            if (onComplete != null)
+                onComplete(this);
+        }
 
         protected override bool CanBeginReceive(byte[] cmd)
         {
