@@ -34,6 +34,7 @@ namespace Sweet.Redis
     Master down:
     ------------
     +sdown master mymaster 127.0.0.1 6380
+    +switch-master mymaster 127.0.0.1 6380 127.0.0.1 6381
     +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
 
     Slave up:
@@ -221,7 +222,7 @@ namespace Sweet.Redis
                             /*
                             +switch-master mymaster 127.0.0.1 6381 127.0.0.1 6380
                              */
-                            if (channel == RedisConstants.SwitchMaster) // "+switch-master"
+                            if (channel == RedisConstants.SwitchMaster)
                             {
                                 if (partsLength > 2)
                                 {
@@ -241,17 +242,16 @@ namespace Sweet.Redis
                                 return;
                             }
 
-                            // "+sdown", "-sdown", "+odown", "-odown"
+                            /* Samples:
+                            +sdown master mymaster 127.0.0.1 6380
+                            +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+                            -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+
+                            +odown master mymaster 127.0.0.1 6381 #quorum 2/2
+                            -odown master mymaster 127.0.0.1 6381
+                             */
                             if (partsLength > 3)
                             {
-                                /* Samples:
-                                +sdown master mymaster 127.0.0.1 6380
-                                +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
-                                -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
-
-                                -odown master mymaster 127.0.0.1 6381
-                                +odown master mymaster 127.0.0.1 6381 #quorum 2/2
-                                 */
                                 var onInstanceStateChange = m_OnInstanceStateChange;
                                 if (onInstanceStateChange != null)
                                 {
