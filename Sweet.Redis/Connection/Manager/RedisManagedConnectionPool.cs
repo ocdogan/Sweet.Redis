@@ -54,7 +54,7 @@ namespace Sweet.Redis
 
         public bool IsDown
         {
-            get { return m_SDown && m_ODown; }
+            get { return m_SDown || m_ODown; }
         }
 
         public bool ODown

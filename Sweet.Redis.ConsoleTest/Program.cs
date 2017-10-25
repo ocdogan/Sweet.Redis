@@ -94,63 +94,71 @@ namespace Sweet.Redis.ConsoleTest
 
         static void ManagerTest10()
         {
-            var i = 0;
-            var sw = new Stopwatch();
-
-            using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
-                new[] { new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort) },
-                masterName: "mymaster")))
+            try
             {
-                do
+                var i = 0;
+                using (var manager = new RedisManager("My Manager", new RedisManagerSettings(
+                    new[] { new RedisEndPoint("127.0.0.1", RedisConstants.DefaultSentinelPort) },
+                    masterName: "mymaster")))
                 {
-                    try
-                    {
-                        Console.Clear();
-
-                        for (var j = 0; j < 100000; j++)
-                        {
-                            var ch = (char)('0' + (i++ % 10));
-                            var text = i.ToString() + "-" + new string(ch, 10);
-
-                            sw.Restart();
-                            try
-                            {
-                                using (var db = manager.GetDb())
-                                {
-                                    Ping(db);
-                                    SetGet(db, "tinytext", text);
-                                }
-
-                                using (var db = manager.GetDb(true))
-                                {
-                                    Ping(db);
-                                    Get(db, "tinytext");
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e);
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-
-                    sw.Stop();
-
-                    Console.WriteLine();
-                    Console.WriteLine("Total ticks: " + sw.ElapsedTicks);
-                    Console.WriteLine("Total millisecs: " + sw.ElapsedMilliseconds);
+                    Console.Clear();
 
                     Console.WriteLine();
                     Console.WriteLine("Press any key to continue, ESC to escape ...");
+
+                    var modKey = 0;
+                    do
+                    {
+                        var ch = (char)('0' + (i++ % 10));
+                        var text = i.ToString() + "-" + new string(ch, 10);
+
+                        try
+                        {
+                            using (var db = manager.GetDb())
+                            {
+                                Ping(db, false);
+                                SetGet(db, "tinytext", text, false);
+                            }
+
+                            using (var db = manager.GetDb(true))
+                            {
+                                Ping(db, false);
+                                Get(db, "tinytext", false);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            /* Console.WriteLine(e);
+                            Console.WriteLine();
+                            Console.WriteLine("Press any key to continue, ESC to escape ..."); */
+                        }
+
+                        modKey = (modKey + 1) % 100;
+                        if (modKey == 99 && WaitForConsoleKey(50).Key == ConsoleKey.Escape)
+                            return;
+                    }
+                    while (true);
                 }
-                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
 
+        static ConsoleKeyInfo WaitForConsoleKey(int milliSecond)
+        {
+            var delay = 0;
+            while (delay < milliSecond)
+            {
+                if (Console.KeyAvailable)
+                    return Console.ReadKey();
+
+                Thread.Sleep(50);
+                delay += 50;
+            }
+            return new ConsoleKeyInfo((char)0, (ConsoleKey)0, false, false, false);
+        }
 
         static void ManagerTest9()
         {
@@ -459,50 +467,55 @@ namespace Sweet.Redis.ConsoleTest
             }
         }
 
-        static void Ping(IRedisDb db)
+        static void Ping(IRedisDb db, bool writeLog = true)
         {
             var result = db.Connection.Ping();
-
-            if (result == (string)null)
-                Console.WriteLine("(nil)");
-            else
+            if (writeLog)
             {
-                var value = result.Value;
-                if (value == null)
+                if (result == (string)null)
                     Console.WriteLine("(nil)");
                 else
                 {
-                    Console.WriteLine("Response: " + value);
-                    Console.WriteLine();
+                    var value = result.Value;
+                    if (value == null)
+                        Console.WriteLine("(nil)");
+                    else
+                    {
+                        Console.WriteLine("Response: " + value);
+                        Console.WriteLine();
+                    }
                 }
             }
         }
 
-        static void SetGet(IRedisDb db, string key, string value)
+        static void SetGet(IRedisDb db, string key, string value, bool writeLog = true)
         {
             var result = db.Strings.Set(key, value);
             if (result)
-                Get(db, key);
+                Get(db, key, writeLog);
         }
 
-        static void Get(IRedisDb db, string key)
+        static void Get(IRedisDb db, string key, bool writeLog = true)
         {
             var result = db.Strings.Get(key);
-
-            if (result == (string)null)
-                Console.WriteLine("(nil)");
-            else
+            if (writeLog)
             {
-                var value = result.Value;
-                if (value == null)
+                if (result == (string)null)
                     Console.WriteLine("(nil)");
                 else
                 {
-                    Console.WriteLine("Response: " + Encoding.UTF8.GetString(value));
-                    Console.WriteLine();
+                    var value = result.Value;
+                    if (value == null)
+                        Console.WriteLine("(nil)");
+                    else
+                    {
+                        Console.WriteLine("Response: " + Encoding.UTF8.GetString(value));
+                        Console.WriteLine();
+                    }
                 }
             }
         }
+
         static void ManagerTest3()
         {
             using (var manager = new RedisManager("My Manager", new RedisManagerSettings(

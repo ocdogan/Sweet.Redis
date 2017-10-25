@@ -22,7 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis

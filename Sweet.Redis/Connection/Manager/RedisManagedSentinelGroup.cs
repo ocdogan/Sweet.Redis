@@ -24,13 +24,31 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
 
 namespace Sweet.Redis
 {
+    /*
+    Master down:
+    ------------
+    +sdown master mymaster 127.0.0.1 6380
+    +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+
+    Slave up:
+    ------------
+    -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+
+    Slave down:
+    ------------
+    +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+
+    -odown master mymaster 127.0.0.1 6381
+    +odown master mymaster 127.0.0.1 6381 #quorum 2/2
+    
+    +switch-master mymaster 127.0.0.1 6381 127.0.0.1 6380
+     */
     internal class RedisManagedSentinelGroup : RedisManagedNodesGroup
     {
         #region Field Members
@@ -189,6 +207,7 @@ namespace Sweet.Redis
             if (data != null)
             {
                 var msgText = Encoding.UTF8.GetString(data);
+                Console.WriteLine(channel + " " + msgText);
 
                 if (!String.IsNullOrEmpty(msgText))
                 {
@@ -199,6 +218,9 @@ namespace Sweet.Redis
                         var partsLength = parts.Length;
                         if (partsLength > 0)
                         {
+                            /*
+                            +switch-master mymaster 127.0.0.1 6381 127.0.0.1 6380
+                             */
                             if (channel == RedisConstants.SwitchMaster) // "+switch-master"
                             {
                                 if (partsLength > 2)
@@ -209,13 +231,10 @@ namespace Sweet.Redis
                                         var masterName = parts[0];
                                         if (masterName == MasterName)
                                         {
-                                            var oldEP = ToEndPoint(parts[1], parts[2]);
+                                            var oldEndPoint = ToEndPoint(parts[1], parts[2]);
+                                            var newEndPoint = (partsLength > 4) ? ToEndPoint(parts[3], parts[4]) : null;
 
-                                            RedisEndPoint newEP = null;
-                                            if (partsLength > 4)
-                                                newEP = ToEndPoint(parts[3], parts[4]);
-
-                                            onSwitchMaster(new RedisMasterSwitchedMessage(masterName, oldEP, newEP));
+                                            onSwitchMaster(new RedisMasterSwitchedMessage(masterName, oldEndPoint, newEndPoint));
                                         }
                                     }
                                 }
@@ -225,37 +244,54 @@ namespace Sweet.Redis
                             // "+sdown", "-sdown", "+odown", "-odown"
                             if (partsLength > 3)
                             {
+                                /* Samples:
+                                +sdown master mymaster 127.0.0.1 6380
+                                +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+                                -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+
+                                -odown master mymaster 127.0.0.1 6381
+                                +odown master mymaster 127.0.0.1 6381 #quorum 2/2
+                                 */
                                 var onInstanceStateChange = m_OnInstanceStateChange;
                                 if (onInstanceStateChange != null)
                                 {
                                     var instanceType = (parts[0] ?? String.Empty).ToLowerInvariant();
-                                    if (instanceType == "master" || parts.Length < 8)
-                                    {
-                                        var masterName = parts[1];
-                                        if (masterName == MasterName)
-                                        {
-                                            var endPoint = ToEndPoint(parts[2], parts[3]);
-                                            onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, masterName, null, endPoint, null));
-                                        }
-                                    }
-                                    else
-                                    {
-                                        var masterName = parts[5];
-                                        if (masterName == MasterName)
-                                        {
-                                            var name = parts[1];
 
-                                            var endPoint = ToEndPoint(parts[2], parts[3]);
-                                            if (endPoint == null && !String.IsNullOrEmpty(name))
+                                    switch (instanceType)
+                                    {
+                                        case "master":
                                             {
-                                                parts = name.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                                                if (parts != null && partsLength > 1)
-                                                    endPoint = ToEndPoint(parts[0], parts[1]);
+                                                var masterName = parts[1];
+                                                if (masterName == MasterName)
+                                                {
+                                                    var endPoint = ToEndPoint(parts[2], parts[3]);
+                                                    onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, masterName, null, endPoint, null));
+                                                }
+                                                break;
                                             }
+                                        case "slave":
+                                            {
+                                                if (partsLength > 4)
+                                                {
+                                                    var masterName = parts[5];
+                                                    if (masterName == MasterName)
+                                                    {
+                                                        var slaveName = parts[1];
+                                                        var endPoint = ToEndPoint(parts[2], parts[3]);
+                                                        var masterEP = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : null;
 
-                                            var masterEP = ToEndPoint(parts[6], parts[7]);
-                                            onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, name, masterName, endPoint, masterEP));
-                                        }
+                                                        if ((endPoint == null || endPoint.IsEmpty) && !String.IsNullOrEmpty(slaveName))
+                                                        {
+                                                            var nameParts = slaveName.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                                                            if (nameParts != null && nameParts.Length > 1)
+                                                                endPoint = ToEndPoint(nameParts[0], nameParts[1]);
+                                                        }
+
+                                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, slaveName, masterName, endPoint, masterEP));
+                                                    }
+                                                }
+                                                break;
+                                            }
                                     }
                                 }
                             }

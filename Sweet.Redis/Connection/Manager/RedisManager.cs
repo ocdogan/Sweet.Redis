@@ -54,6 +54,7 @@ namespace Sweet.Redis
         private RedisManagedMSGroup m_MSGroup;
         private RedisManagedSentinelGroup m_Sentinels;
 
+        private long m_RefreshState;
         private long m_InitializationState;
         private readonly object m_SyncRoot = new object();
 
@@ -102,9 +103,32 @@ namespace Sweet.Redis
             get { return m_Id; }
         }
 
+        public bool Initialized
+        {
+            get
+            {
+                return Interlocked.Read(ref m_InitializationState) ==
+                  (long)InitializationState.Initialized;
+            }
+        }
+
+        public bool Initializing
+        {
+            get
+            {
+                return Interlocked.Read(ref m_InitializationState) !=
+                  (long)InitializationState.Undefined;
+            }
+        }
+
         public string Name
         {
             get { return m_Name; }
+        }
+
+        public bool Refreshing
+        {
+            get { return Interlocked.Read(ref m_RefreshState) != RedisConstants.Zero; }
         }
 
         public RedisManagerSettings Settings
@@ -288,7 +312,7 @@ namespace Sweet.Redis
             {
                 lock (m_SyncRoot)
                 {
-                    if (Interlocked.Read(ref m_InitializationState) != (long)InitializationState.Initialized)
+                    if (!Initialized)
                     {
                         try
                         {
@@ -307,102 +331,113 @@ namespace Sweet.Redis
 
         private void RefreshNodes(bool careValidNodes = true)
         {
-            var endPointResolver = m_EndPointResolver;
-            if (endPointResolver == null || endPointResolver.Disposed)
-                return;
-
-            var tuple = endPointResolver.CreateGroups();
-            if (tuple != null)
+            if (Interlocked.CompareExchange(ref m_RefreshState, RedisConstants.One, RedisConstants.Zero) ==
+                RedisConstants.Zero)
             {
-                var msGroup = tuple.Item1;
-                var sentinels = tuple.Item2;
-
-                var disposeList = new List<IRedisDisposable>();
                 try
                 {
-                    if (!careValidNodes)
-                    {
-                        try
-                        {
-                            var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
-                            if (oldMSGroup != null)
-                                disposeList.Add(oldMSGroup);
-
-                            var oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
-                            if (oldSentinels != null)
-                                disposeList.Add(oldSentinels);
-                        }
-                        catch (Exception)
-                        {
-                            if (msGroup != null)
-                            {
-                                var grp = msGroup;
-                                msGroup = null;
-
-                                grp.Dispose();
-                            }
-                            if (sentinels != null)
-                            {
-                                var grp = sentinels;
-                                sentinels = null;
-
-                                grp.Dispose();
-                            }
-                            throw;
-                        }
+                    var endPointResolver = m_EndPointResolver;
+                    if (endPointResolver == null || endPointResolver.Disposed)
                         return;
-                    }
 
-                    var currMSGroup = m_MSGroup;
-                    if (msGroup == null || currMSGroup == null)
+                    var tuple = endPointResolver.CreateGroups();
+                    if (tuple != null)
                     {
-                        var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
-                        if (oldMSGroup != null)
-                            disposeList.Add(oldMSGroup);
-                    }
-                    else
-                    {
-                        disposeList.Add(msGroup);
+                        var msGroup = tuple.Item1;
+                        var sentinels = tuple.Item2;
 
+                        var disposeList = new List<IRedisDisposable>();
                         try
                         {
-                            RearrangeGroup(msGroup.Masters, currMSGroup.Masters,
-                                           (newMasters) => m_MSGroup.ExchangeMasters(newMasters),
-                                           disposeList);
+                            if (!careValidNodes)
+                            {
+                                try
+                                {
+                                    var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
+                                    if (oldMSGroup != null)
+                                        disposeList.Add(oldMSGroup);
+
+                                    var oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
+                                    if (oldSentinels != null)
+                                        disposeList.Add(oldSentinels);
+                                }
+                                catch (Exception)
+                                {
+                                    if (msGroup != null)
+                                    {
+                                        var grp = msGroup;
+                                        msGroup = null;
+
+                                        grp.Dispose();
+                                    }
+                                    if (sentinels != null)
+                                    {
+                                        var grp = sentinels;
+                                        sentinels = null;
+
+                                        grp.Dispose();
+                                    }
+                                    throw;
+                                }
+                                return;
+                            }
+
+                            var currMSGroup = m_MSGroup;
+                            if (msGroup == null || currMSGroup == null)
+                            {
+                                var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
+                                if (oldMSGroup != null)
+                                    disposeList.Add(oldMSGroup);
+                            }
+                            else
+                            {
+                                disposeList.Add(msGroup);
+
+                                try
+                                {
+                                    RearrangeGroup(msGroup.Masters, currMSGroup.Masters,
+                                                   (newMasters) => m_MSGroup.ExchangeMasters(newMasters),
+                                                   disposeList);
+                                }
+                                finally
+                                {
+                                    msGroup.ExchangeMasters(null);
+                                }
+
+                                try
+                                {
+                                    RearrangeGroup(msGroup.Slaves, currMSGroup.Slaves,
+                                                   (newSlaves) => m_MSGroup.ExchangeSlaves(newSlaves),
+                                                   disposeList);
+                                }
+                                finally
+                                {
+                                    msGroup.ExchangeSlaves(null);
+                                }
+                            }
+
+                            RearrangeGroup(sentinels, m_Sentinels,
+                                            (newSentinels) => Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)newSentinels),
+                                            disposeList);
                         }
                         finally
                         {
-                            msGroup.ExchangeMasters(null);
-                        }
+                            try
+                            {
+                                var pubSubs = m_Sentinels;
+                                if (pubSubs != null)
+                                    pubSubs.Monitor(MasterSwitched, InstanceStateChanged);
+                            }
+                            catch (Exception)
+                            { }
 
-                        try
-                        {
-                            RearrangeGroup(msGroup.Slaves, currMSGroup.Slaves,
-                                           (newSlaves) => m_MSGroup.ExchangeSlaves(newSlaves),
-                                           disposeList);
-                        }
-                        finally
-                        {
-                            msGroup.ExchangeSlaves(null);
+                            DisposeObjects(disposeList);
                         }
                     }
-
-                    RearrangeGroup(sentinels, m_Sentinels,
-                                    (newSentinels) => Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)newSentinels),
-                                    disposeList);
                 }
                 finally
                 {
-                    try
-                    {
-                        var pubSubs = m_Sentinels;
-                        if (pubSubs != null)
-                            pubSubs.Monitor(MasterSwitched, InstanceStateChanged);
-                    }
-                    catch (Exception)
-                    { }
-
-                    DisposeObjects(disposeList);
+                    Interlocked.Exchange(ref m_RefreshState, RedisConstants.Zero);
                 }
             }
         }
