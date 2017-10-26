@@ -44,7 +44,7 @@ namespace Sweet.Redis
         public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes)
         {
             Role = role;
-            m_Nodes = nodes;
+            m_Nodes = nodes ?? new RedisManagedNode[0];
 
             if (nodes == null || nodes.Length == 0)
                 m_NodeIndex = -1;
@@ -89,7 +89,7 @@ namespace Sweet.Redis
         {
             Interlocked.Exchange(ref m_NodeIndex, -1);
 
-            var nodes = Interlocked.Exchange(ref m_Nodes, null);
+            var nodes = Interlocked.Exchange(ref m_Nodes, new RedisManagedNode[0]);
             if (nodes != null)
             {
                 lock (m_SyncRoot)

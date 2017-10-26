@@ -41,8 +41,8 @@ namespace Sweet.Redis
 
         public RedisManagedMSGroup(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null)
         {
-            m_Masters = masters;
-            m_Slaves = slaves;
+            m_Slaves = slaves ?? new RedisManagedNodesGroup(RedisRole.Slave, null);
+            m_Masters = masters ?? new RedisManagedNodesGroup(RedisRole.Master, null);
         }
 
         #endregion .Ctors

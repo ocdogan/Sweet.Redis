@@ -502,7 +502,7 @@ namespace Sweet.Redis
             { }
         }
 
-        private static void PingPool(RedisManagedConnectionPool pool)
+        private static bool PingPool(RedisManagedConnectionPool pool)
         {
             if (pool != null && !pool.Disposed)
             {
@@ -513,6 +513,8 @@ namespace Sweet.Redis
 
                     pool.SDown = false;
                     pool.ODown = false;
+
+                    return true;
                 }
                 catch (Exception)
                 {
@@ -520,6 +522,7 @@ namespace Sweet.Redis
                     pool.ODown = true;
                 }
             }
+            return false;
         }
 
         private void RearrangeGroup(RedisManagedNodesGroup newGroup, RedisManagedNodesGroup currGroup,
@@ -595,74 +598,176 @@ namespace Sweet.Redis
         {
             if (!Disposed && message != null)
             {
-                var instanceEndPoint = message.InstanceEndPoint;
-                if (instanceEndPoint != null && !instanceEndPoint.IsEmpty)
+                var task = new Task(() =>
                 {
-                    lock (m_SyncRoot)
+                    var instanceEndPoint = message.InstanceEndPoint;
+                    if (instanceEndPoint != null && !instanceEndPoint.IsEmpty)
                     {
-                        var msGroup = m_MSGroup;
-
-                        var instanceType = message.InstanceType;
-                        var nodesGroup = (RedisManagedNodesGroup)null;
-
-                        switch (instanceType)
+                        lock (m_SyncRoot)
                         {
-                            case "master":
-                                nodesGroup =
-                                    (message.MasterName == m_MasterName) &&
-                                        (msGroup != null && !msGroup.Disposed) ? msGroup.Masters : null;
-                                break;
-                            case "slave":
-                                nodesGroup =
-                                    (message.MasterName == m_MasterName) &&
-                                        (msGroup != null && !msGroup.Disposed) ? msGroup.Slaves : null;
-                                break;
-                            case "sentinel":
-                                nodesGroup = m_Sentinels;
-                                break;
-                        }
+                            var instanceRole = ToRedisRole(message.InstanceType);
+                            var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
 
-                        if (nodesGroup != null && !nodesGroup.Disposed)
-                            ApplyStateChange(message.Channel, instanceType, instanceEndPoint, nodesGroup);
+                            if (nodesGroup != null && !nodesGroup.Disposed)
+                                ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
+                        }
                     }
-                }
+                });
+                task.Start();
             }
         }
 
-        private static void ApplyStateChange(string channel, string instanceType, RedisEndPoint instanceEndPoint, RedisManagedNodesGroup nodesGroup)
+        private static RedisRole ToRedisRole(string instanceType)
+        {
+            var instanceRole = RedisRole.Undefined;
+            switch (instanceType)
+            {
+                case "master":
+                    instanceRole = RedisRole.Master;
+                    break;
+                case "slave":
+                    instanceRole = RedisRole.Slave;
+                    break;
+                case "sentinel":
+                    instanceRole = RedisRole.Sentinel;
+                    break;
+            }
+            return instanceRole;
+        }
+
+        private RedisManagedNodesGroup GetNodesGroup(RedisRole instanceRole, string masterName)
+        {
+            var msGroup = m_MSGroup;
+
+            var nodesGroup = (RedisManagedNodesGroup)null;
+            switch (instanceRole)
+            {
+                case RedisRole.Master:
+                    nodesGroup =
+                        (masterName == m_MasterName) &&
+                            (msGroup != null && !msGroup.Disposed) ? msGroup.Masters : null;
+
+                    if (nodesGroup == null || nodesGroup.Disposed)
+                    {
+                        var masters = new RedisManagedNodesGroup(instanceRole, null);
+                        if (msGroup == null || msGroup.Disposed)
+                        {
+                            msGroup = new RedisManagedMSGroup(masters, new RedisManagedNodesGroup(instanceRole, null));
+                            Interlocked.Exchange(ref m_MSGroup, msGroup);
+                        }
+                        else
+                        {
+                            var oldMasters = msGroup.ExchangeMasters(masters);
+                            if (oldMasters != null)
+                                oldMasters.Dispose();
+                        }
+                    }
+                    break;
+                case RedisRole.Slave:
+                    nodesGroup =
+                        (masterName == m_MasterName) &&
+                            (msGroup != null && !msGroup.Disposed) ? msGroup.Slaves : null;
+
+                    if (nodesGroup == null || nodesGroup.Disposed)
+                    {
+                        var slaves = new RedisManagedNodesGroup(instanceRole, null);
+                        if (msGroup == null || msGroup.Disposed)
+                        {
+                            msGroup = new RedisManagedMSGroup(new RedisManagedNodesGroup(instanceRole, null), slaves);
+                            Interlocked.Exchange(ref m_MSGroup, msGroup);
+                        }
+                        else
+                        {
+                            var oldSlaves = msGroup.ExchangeSlaves(slaves);
+                            if (oldSlaves != null)
+                                oldSlaves.Dispose();
+                        }
+                    }
+                    break;
+                case RedisRole.Sentinel:
+                    nodesGroup = m_Sentinels;
+                    if (nodesGroup == null || nodesGroup.Disposed)
+                    {
+                        nodesGroup = new RedisManagedSentinelGroup(m_MasterName, null);
+                        Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)nodesGroup);
+                    }
+                    break;
+            }
+            return nodesGroup;
+        }
+
+        private void ApplyStateChange(string channel, RedisRole instanceRole, RedisEndPoint instanceEndPoint, RedisManagedNodesGroup nodesGroup)
         {
             if (nodesGroup != null && !nodesGroup.Disposed)
             {
                 var nodes = nodesGroup.Nodes;
                 if (nodes != null)
                 {
-                    var changedNode = nodes.FirstOrDefault(n => n != null && !n.Disposed && instanceEndPoint == n.EndPoint);
-                    if (changedNode == null)
+                    var instanceNode = nodes.FirstOrDefault(n => n != null && instanceEndPoint == n.EndPoint);
+
+                    // Found but disposed
+                    if (instanceNode != null && instanceNode.Disposed)
                     {
-                        if (channel == RedisConstants.SDownEntered ||
-                            channel == RedisConstants.ODownEntered)
+                        nodesGroup.RemoveNode(instanceNode);
+                        instanceNode = null;
+                    }
+
+                    if (instanceNode == null)
+                    {
+                        if (channel == RedisConstants.SDownExited ||
+                            channel == RedisConstants.ODownExited ||
+                            channel == RedisConstants.SentinelDiscovered)
                         {
                             // TODO: Try to add as new node
+                            var endPointResolver = m_EndPointResolver;
+                            if (endPointResolver != null && !endPointResolver.Disposed)
+                            {
+                                var nodeInfo = endPointResolver.DiscoverNode(instanceEndPoint);
+                                if (nodeInfo != null)
+                                {
+                                    var role = nodeInfo.Item1;
+                                    var socket = nodeInfo.Item3;
+
+                                    if (role == RedisRole.Undefined)
+                                        socket.DisposeSocket();
+                                    else
+                                    {
+                                        var settings = m_Settings.Clone(instanceEndPoint.Host, instanceEndPoint.Port);
+                                        var newPool = new RedisManagedConnectionPool(role, m_Name, (RedisPoolSettings)settings);
+                                        
+                                        instanceNode = new RedisManagedNode(role, newPool);
+                                        nodesGroup.AppendNode(instanceNode);
+
+                                        PingPool(newPool);
+                                        if (!newPool.IsDown && role == RedisRole.Sentinel)
+                                            RefreshSentinels();
+                                    }
+                                }
+                            }
                         }
                         return;
                     }
 
-                    var pool = changedNode.Pool;
-                    if (pool != null && !pool.Disposed)
+                    var instancePool = instanceNode.Pool;
+                    if (instancePool != null && !instancePool.Disposed)
                     {
                         switch (channel)
                         {
                             case RedisConstants.SDownEntered:
-                                pool.SDown = true;
+                                instancePool.SDown = true;
                                 break;
                             case RedisConstants.SDownExited:
-                                pool.SDown = false;
+                                instancePool.SDown = false;
                                 break;
                             case RedisConstants.ODownEntered:
-                                pool.ODown = true;
+                                instancePool.ODown = true;
                                 break;
                             case RedisConstants.ODownExited:
-                                pool.ODown = false;
+                                instancePool.ODown = false;
+                                break;
+                            case RedisConstants.SentinelDiscovered:
+                                instancePool.SDown = false;
+                                instancePool.ODown = false;
                                 break;
                         }
                     }
@@ -678,15 +783,19 @@ namespace Sweet.Redis
         {
             if (!Disposed && message != null)
             {
-                lock (m_SyncRoot)
+                var task = new Task(() =>
                 {
-                    var msGroup = m_MSGroup;
-                    if (msGroup != null && !msGroup.Disposed)
+                    lock (m_SyncRoot)
                     {
-                        SetMasterDown(msGroup, message.OldEndPoint, true);
-                        PromoteSlaveToMaster(msGroup, message.OldEndPoint);
+                        var msGroup = m_MSGroup;
+                        if (msGroup != null && !msGroup.Disposed)
+                        {
+                            SetMasterDown(msGroup, message.OldEndPoint, true);
+                            PromoteSlaveToMaster(msGroup, message.OldEndPoint);
+                        }
                     }
-                }
+                });
+                task.Start();
             }
         }
 

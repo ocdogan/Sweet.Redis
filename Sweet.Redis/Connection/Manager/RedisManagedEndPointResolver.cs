@@ -97,6 +97,29 @@ namespace Sweet.Redis
             return null;
         }
 
+        public Tuple<RedisRole, RedisEndPoint[], RedisSocket> DiscoverNode(RedisEndPoint endPoint)
+        {
+            if (endPoint == null || endPoint.IsEmpty)
+                throw new RedisFatalException(new ArgumentNullException("endPoint"), RedisErrorCode.MissingParameter);
+
+            ValidateNotDisposed();
+
+            var settings = Settings.Clone(endPoint.Host, endPoint.Port);
+
+            using (var connection = NewConnection(settings))
+            {
+                var nodeInfo = GetNodeInfo(settings.MasterName, connection);
+                if (!(nodeInfo == null || nodeInfo.Role == RedisRole.Undefined))
+                {
+                    var role = nodeInfo.Role;
+                    var siblingEndPoints = nodeInfo.Siblings;
+
+                    return new Tuple<RedisRole, RedisEndPoint[], RedisSocket>(role, siblingEndPoints, connection.RemoveSocket());
+                }
+            }
+            return null;
+        }
+
         private RedisManagedNodesGroup ToNodesGroup(RedisRole role, RedisSocket[] sockets)
         {
             if (sockets != null && sockets.Length > 0)

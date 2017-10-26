@@ -34,7 +34,7 @@ namespace Sweet.Redis
     {
         #region NodeRoleAndSiblings
 
-        private class NodeRoleAndSiblings
+        protected class NodeRoleAndSiblings
         {
             #region .Ctors
 
@@ -144,7 +144,7 @@ namespace Sweet.Redis
                         var emptyTuple = new Tuple<RedisRole, RedisSocket>[0];
 
                         var groupsTuples = ipEPSettings
-                            .SelectMany(setting => CreateNodes(discoveredEndPoints, m_Name, setting) ?? emptyTuple)
+                            .SelectMany(setting => CreateNodes(discoveredEndPoints, setting) ?? emptyTuple)
                             .Where(node => node != null)
                             .GroupBy(
                                 tuple => tuple.Item1,
@@ -182,9 +182,9 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected virtual RedisConnection NewConnection(string name, RedisConnectionSettings settings)
+        protected virtual RedisConnection NewConnection(RedisConnectionSettings settings)
         {
-            return new RedisDbConnection(name, RedisRole.Any, settings,
+            return new RedisDbConnection(m_Name, RedisRole.Any, settings,
                          null,
                          (connection, socket) =>
                          {
@@ -193,8 +193,23 @@ namespace Sweet.Redis
                          RedisConstants.MinDbIndex, null, true);
         }
 
-        private Tuple<RedisRole, RedisSocket>[] CreateNodes(HashSet<IPEndPoint> discoveredEndPoints,
-            string name, RedisPoolSettings settings)
+        protected Tuple<RedisRole, RedisEndPoint[], RedisSocket> DiscoverNode(RedisPoolSettings settings)
+        {
+            using (var connection = NewConnection(settings))
+            {
+                var nodeInfo = GetNodeInfo(settings.MasterName, connection);
+                if (!(nodeInfo == null || nodeInfo.Role == RedisRole.Undefined))
+                {
+                    var role = nodeInfo.Role;
+                    var siblingEndPoints = nodeInfo.Siblings;
+
+                    return new Tuple<RedisRole, RedisEndPoint[], RedisSocket>(role, siblingEndPoints, connection.RemoveSocket());
+                }
+            }
+            return null;
+        }
+
+        private Tuple<RedisRole, RedisSocket>[] CreateNodes(HashSet<IPEndPoint> discoveredEndPoints, RedisPoolSettings settings)
         {
             try
             {
@@ -215,40 +230,40 @@ namespace Sweet.Redis
 
                 discoveredEndPoints.Add(nodeEndPoint);
 
-                using (var connection = NewConnection(name, settings))
+                var nodeInfo = DiscoverNode(settings);
+
+                if (nodeInfo != null)
                 {
-                    var nodeInfo = GetNodeInfo(settings.MasterName, connection);
+                    var role = nodeInfo.Item1;
+                    var siblingEndPoints = nodeInfo.Item2;
+                    var socket = nodeInfo.Item3;
 
-                    if (!(nodeInfo == null || nodeInfo.Role == RedisRole.Undefined))
+                    var list = new List<Tuple<RedisRole, RedisSocket>>();
+                    if (socket != null)
+                        list.Add(new Tuple<RedisRole, RedisSocket>(role, socket));
+
+                    if (role != RedisRole.Undefined && 
+                        siblingEndPoints != null && siblingEndPoints.Length > 0)
                     {
-                        var role = nodeInfo.Role;
-                        var siblingEndPoints = nodeInfo.Siblings;
-
-                        var list = new List<Tuple<RedisRole, RedisSocket>>();
-                        list.Add(new Tuple<RedisRole, RedisSocket>(role, connection.RemoveSocket()));
-
-                        if (siblingEndPoints != null && siblingEndPoints.Length > 0)
+                        foreach (var siblingEndPoint in siblingEndPoints)
                         {
-                            foreach (var siblingEndPoint in siblingEndPoints)
+                            try
                             {
-                                try
+                                if (!Disposed && siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
                                 {
-                                    if (!Disposed && siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
-                                    {
-                                        var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
+                                    var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
 
-                                        var otherNodes = CreateNodes(discoveredEndPoints, name, siblingSettings);
-                                        if (otherNodes != null)
-                                            list.AddRange(otherNodes);
-                                    }
+                                    var otherNodes = CreateNodes(discoveredEndPoints, siblingSettings);
+                                    if (otherNodes != null)
+                                        list.AddRange(otherNodes);
                                 }
-                                catch (Exception)
-                                { }
                             }
+                            catch (Exception)
+                            { }
                         }
-
-                        return list.ToArray();
                     }
+
+                    return list.ToArray();
                 }
             }
             catch (Exception)
@@ -256,7 +271,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private NodeRoleAndSiblings GetNodeInfo(string masterName, IRedisConnection connection)
+        protected NodeRoleAndSiblings GetNodeInfo(string masterName, IRedisConnection connection)
         {
             if (connection != null)
             {
