@@ -443,7 +443,7 @@ namespace Sweet.Redis
                 if (sentinels != null)
                 {
                     sentinels.RegisterMessageEvents(MasterSwitched, InstanceStateChanged);
-                    sentinels.Monitor(PubSubCompleted);
+                    sentinels.Monitor(PubSubConnectionDropped);
                 }
             }
             catch (Exception)
@@ -465,7 +465,7 @@ namespace Sweet.Redis
                         if (nodes != null && nodes.Length > 0)
                         {
                             sentinels.RegisterMessageEvents(MasterSwitched, InstanceStateChanged);
-                            sentinels.Monitor(PubSubCompleted);
+                            sentinels.Monitor(PubSubConnectionDropped);
                         }
                     }
                 }
@@ -540,39 +540,54 @@ namespace Sweet.Redis
                 if (nodes != null)
                 {
                     foreach (var node in nodes)
-                    {
-                        if (node != null)
-                        {
-                            if (node.Disposed)
-                                nodesGroup.RemoveNode(node);
-                            else
-                            {
-                                var pool = node.Pool;
-                                if (pool == null || pool.Disposed)
-                                    nodesGroup.RemoveNode(node);
-                                else
-                                {
-                                    try
-                                    {
-                                        using (var db = pool.GetDb(-1))
-                                            db.Connection.Ping();
-
-                                        pool.SDown = false;
-                                        pool.ODown = false;
-                                    }
-                                    catch (Exception)
-                                    {
-                                        pool.SDown = true;
-                                        pool.ODown = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                        TestNode(node, nodesGroup);
                 }
             }
         }
 
+
+        private static void TestNode(RedisManagedNode node, RedisManagedNodesGroup parent)
+        {
+            try
+            {
+                if (node != null &&
+                    parent != null && !parent.Disposed)
+                {
+                    if (node.Disposed)
+                        parent.RemoveNode(node);
+                    else
+                    {
+                        var pool = node.Pool;
+                        if (pool == null || pool.Disposed)
+                            parent.RemoveNode(node);
+                        else
+                            PingPool(pool);
+                    }
+                }
+            }
+            catch (Exception)
+            { }
+        }
+
+        private static void PingPool(RedisManagedConnectionPool pool)
+        {
+            if (pool != null && !pool.Disposed)
+            {
+                try
+                {
+                    using (var db = pool.GetDb(-1))
+                        db.Connection.Ping();
+
+                    pool.SDown = false;
+                    pool.ODown = false;
+                }
+                catch (Exception)
+                {
+                    pool.SDown = true;
+                    pool.ODown = true;
+                }
+            }
+        }
 
         private static RedisPoolSettings FindValidSetting(RedisManagedNodesGroup nodesGroup)
         {
@@ -590,11 +605,8 @@ namespace Sweet.Redis
                                 var pool = node.Pool;
                                 if (pool != null && !pool.Disposed)
                                 {
-                                    using (var db = pool.GetDb(-1))
-                                    {
-                                        db.Connection.Ping();
-                                        return pool.Settings;
-                                    }
+                                    PingPool(node.Pool);
+                                    return pool.Settings;
                                 }
                             }
                         }
@@ -823,46 +835,17 @@ namespace Sweet.Redis
             }
         }
 
-        private void PubSubCompleted(object sender)
+        private void PubSubConnectionDropped(object sender)
         {
             if (!Disposed)
             {
                 var task = new Task(() =>
                 {
-                    ReleaseSentinelNode(sender as RedisManagedNode);
+                    TestNode(sender as RedisManagedNode, m_Sentinels);
                     RefreshSentinels();
                 });
                 task.Start();
             }
-        }
-
-        private void ReleaseSentinelNode(RedisManagedNode node)
-        {
-            try
-            {
-                if (node != null)
-                {
-                    var sentinels = m_Sentinels;
-                    if (sentinels != null)
-                    {
-                        if (node.Disposed)
-                            sentinels.RemoveNode(node);
-                        else
-                        {
-                            var pool = node.Pool;
-                            if (pool == null || pool.Disposed)
-                                sentinels.RemoveNode(node);
-                            else
-                            {
-                                pool.SDown = true;
-                                pool.ODown = true;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            { }
         }
 
         #endregion Initialization Methods

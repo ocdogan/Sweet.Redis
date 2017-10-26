@@ -117,6 +117,10 @@ namespace Sweet.Redis
         {
         }
 
+        protected virtual void OnBeforeConnect(int dbIndex, RedisRole expectedRole)
+        {
+        }
+
         protected virtual int GetMaxConnectionCount()
         {
             return RedisConstants.MinConnectionCount;
@@ -150,6 +154,8 @@ namespace Sweet.Redis
         protected internal override IRedisConnection Connect(int dbIndex, RedisRole expectedRole)
         {
             ValidateNotDisposed();
+
+            OnBeforeConnect(dbIndex, expectedRole);
 
             var settings = (Settings ?? RedisPoolSettings.Default);
 

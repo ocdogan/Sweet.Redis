@@ -66,6 +66,34 @@ namespace Sweet.Redis
 
         public RedisEndPoint EndPoint { get { return m_EndPoint; } }
 
+        public bool IsDown
+        {
+            get 
+            {
+                var pool = m_Pool;
+                if (pool != null)
+                    return pool.SDown || pool.ODown || pool.Disposed;
+                return true;
+            }
+        }
+
+        public bool ODown
+        {
+            get
+            {
+                var pool = m_Pool;
+                if (pool != null)
+                    return pool.ODown;
+                return true;
+            }
+            set
+            {
+                var pool = m_Pool;
+                if (pool != null)
+                    pool.ODown = value;
+            }
+        }
+
         public bool OwnsPool { get { return m_OwnsPool; } }
 
         public RedisManagedConnectionPool Pool { get { return m_Pool; } }
@@ -80,6 +108,23 @@ namespace Sweet.Redis
                 var pool = m_Pool;
                 if (pool != null)
                     pool.Role = value;
+            }
+        }
+
+        public bool SDown
+        {
+            get
+            {
+                var pool = m_Pool;
+                if (pool != null)
+                    return pool.SDown;
+                return true;
+            }
+            set
+            {
+                var pool = m_Pool;
+                if (pool != null)
+                    pool.SDown = value;
             }
         }
 
@@ -98,6 +143,9 @@ namespace Sweet.Redis
 
             var oldPool = Interlocked.Exchange(ref m_Pool, pool);
             m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
+
+            if (pool != null) 
+                pool.Role = m_Role;
 
             return oldPool;
         }

@@ -80,5 +80,14 @@ namespace Sweet.Redis
         }
 
         #endregion Properties
+
+        #region Methods
+
+        protected override void OnBeforeConnect(int dbIndex, RedisRole expectedRole)
+        {
+            if (IsDown) throw new RedisFatalException("Pool is down");
+        }
+
+        #endregion Methods
     }
 }
