@@ -169,6 +169,7 @@ namespace Sweet.Redis
         public const string ODownEntered = "+odown";
         public const string ODownExited = "-odown";
         public const string SwitchMaster = "+switch-master";
+        public const string SentinelDiscovered = "+sentinel";
 
         public const int RedisBatchBase = 1000;
 

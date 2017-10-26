@@ -34,22 +34,28 @@ namespace Sweet.Redis
     /*
     Master down:
     ------------
-    +sdown master mymaster 127.0.0.1 6380
-    +switch-master mymaster 127.0.0.1 6380 127.0.0.1 6381
-    +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+    +sdown master mymaster 127.0.0.1 6379
+    +switch-master mymaster 127.0.0.1 6379 127.0.0.1 6380
+    +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
 
     Slave up:
     ------------
-    -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+    -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
 
     Slave down:
     ------------
-    +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+    +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
 
-    -odown master mymaster 127.0.0.1 6381
-    +odown master mymaster 127.0.0.1 6381 #quorum 2/2
+    -odown master mymaster 127.0.0.1 6379
+    +odown master mymaster 127.0.0.1 6379 #quorum 2/2
     
-    +switch-master mymaster 127.0.0.1 6381 127.0.0.1 6380
+    +switch-master mymaster 127.0.0.1 6380 127.0.0.1 6379
+    
+    New Sentinel:
+    -------------
+    +sdown sentinel 127.0.0.1:26381 127.0.0.1 26381 @ mymaster 127.0.0.1 6379
+    -dup-sentinel master mymaster 127.0.0.1 6381 #duplicate of 127.0.0.1:26381 or cab1c287ec59309126ad1a63b354ba132bb4e55b
+    +sentinel sentinel 127.0.0.1:26381 127.0.0.1 26379 @ mymaster 127.0.0.1 6379
      */
     internal class RedisManagedSentinelGroup : RedisManagedNodesGroup
     {
@@ -207,7 +213,8 @@ namespace Sweet.Redis
                                         RedisCommandList.SentinelChanelSDownExited,
                                         RedisCommandList.SentinelChanelODownEntered,
                                         RedisCommandList.SentinelChanelODownExited,
-                                        RedisCommandList.SentinelChanelSwitchMaster);
+                                        RedisCommandList.SentinelChanelSwitchMaster,
+                                        RedisCommandList.SentinelChanelSentinel);
 
                                 monitoredPools.Add(pool);
 
@@ -270,7 +277,8 @@ namespace Sweet.Redis
                         channel == RedisConstants.SDownExited ||
                         channel == RedisConstants.SDownEntered ||
                         channel == RedisConstants.ODownExited ||
-                        channel == RedisConstants.SwitchMaster)
+                        channel == RedisConstants.SwitchMaster ||
+                        channel == RedisConstants.SentinelDiscovered)
                         InvokeCallback(message);
                 }
             }
@@ -297,7 +305,7 @@ namespace Sweet.Redis
                         if (partsLength > 0)
                         {
                             /*
-                            +switch-master mymaster 127.0.0.1 6381 127.0.0.1 6380
+                            +switch-master mymaster 127.0.0.1 6379 127.0.0.1 6380
                              */
                             if (channel == RedisConstants.SwitchMaster)
                             {
@@ -321,11 +329,15 @@ namespace Sweet.Redis
 
                             /* Samples:
                             +sdown master mymaster 127.0.0.1 6380
-                            +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
-                            -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6381
+                            +sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
+                            -sdown slave 127.0.0.1:6380 127.0.0.1 6380 @ mymaster 127.0.0.1 6379
 
-                            +odown master mymaster 127.0.0.1 6381 #quorum 2/2
-                            -odown master mymaster 127.0.0.1 6381
+                            +odown master mymaster 127.0.0.1 6379 #quorum 2/2
+                            -odown master mymaster 127.0.0.1 6379
+
+                            +sdown sentinel 127.0.0.1:26381 127.0.0.1 26381 @ mymaster 127.0.0.1 6379
+                            -dup-sentinel master mymaster 127.0.0.1 6381 #duplicate of 127.0.0.1:26381 or cab1c287ec59309126ad1a63b354ba132bb4e55b
+                            +sentinel sentinel 127.0.0.1:26381 127.0.0.1 26379 @ mymaster 127.0.0.1 6379
                              */
                             if (partsLength > 3)
                             {
@@ -341,30 +353,33 @@ namespace Sweet.Redis
                                                 var masterName = parts[1];
                                                 if (masterName == MasterName)
                                                 {
-                                                    var endPoint = ToEndPoint(parts[2], parts[3]);
-                                                    onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, masterName, null, endPoint, null));
+                                                    var masterEndPoint = ToEndPoint(parts[2], parts[3]);
+                                                    onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, 
+                                                            masterName, masterEndPoint, null, null));
                                                 }
                                                 break;
                                             }
                                         case "slave":
+                                        case "sentinel":
                                             {
                                                 if (partsLength > 4)
                                                 {
                                                     var masterName = parts[5];
                                                     if (masterName == MasterName)
                                                     {
-                                                        var slaveName = parts[1];
-                                                        var endPoint = ToEndPoint(parts[2], parts[3]);
-                                                        var masterEP = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : null;
+                                                        var instanceName = parts[1];
+                                                        var instanceEndPoint = ToEndPoint(parts[2], parts[3]);
+                                                        var masterEndPoint = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : null;
 
-                                                        if ((endPoint == null || endPoint.IsEmpty) && !String.IsNullOrEmpty(slaveName))
+                                                        if ((instanceEndPoint == null || instanceEndPoint.IsEmpty) && !String.IsNullOrEmpty(instanceName))
                                                         {
-                                                            var nameParts = slaveName.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                                                            var nameParts = instanceName.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                                                             if (nameParts != null && nameParts.Length > 1)
-                                                                endPoint = ToEndPoint(nameParts[0], nameParts[1]);
+                                                                instanceEndPoint = ToEndPoint(nameParts[0], nameParts[1]);
                                                         }
 
-                                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, slaveName, masterName, endPoint, masterEP));
+                                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, 
+                                                                instanceName, instanceEndPoint, masterName, masterEndPoint));
                                                     }
                                                 }
                                                 break;

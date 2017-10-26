@@ -28,14 +28,14 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisNodeStateChangedMessage(string channel, string instanceType, string name, string masterName, 
-            RedisEndPoint endPoint, RedisEndPoint masterEndPoint)
+        public RedisNodeStateChangedMessage(string channel, string instanceType,
+            string instanceName, RedisEndPoint instanceEndPoint, string masterName, RedisEndPoint masterEndPoint)
         {
             Channel = channel;
             InstanceType = instanceType;
-            Name = name;
+            InstanceName = instanceName;
             MasterName = masterName;
-            EndPoint = endPoint;
+            InstanceEndPoint = instanceEndPoint;
             MasterEndPoint = masterEndPoint;
         }
 
@@ -47,11 +47,11 @@ namespace Sweet.Redis
 
         public string InstanceType { get; private set; }
         
-        public string Name { get; private set; }
+        public string InstanceName { get; private set; }
 
         public string MasterName { get; private set; }
 
-        public RedisEndPoint EndPoint { get; private set; }
+        public RedisEndPoint InstanceEndPoint { get; private set; }
         
         public RedisEndPoint MasterEndPoint { get; private set; }
 
