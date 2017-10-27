@@ -39,8 +39,9 @@ namespace Sweet.Redis
         {
             #region .Ctors
 
-            public RedisIPAddressEntry(string host, IPAddress[] ipAddresses)
+            public RedisIPAddressEntry(string host, IPAddress[] ipAddresses, bool eternal = false)
             {
+                Eternal = eternal;
                 Host = host;
                 IPAddresses = ipAddresses;
                 CreationDate = DateTime.UtcNow;
@@ -50,6 +51,8 @@ namespace Sweet.Redis
 
             #region Properties
 
+            public bool Eternal { get; private set; }
+
             public string Host { get; private set; }
 
             public IPAddress[] IPAddresses { get; private set; }
@@ -58,15 +61,16 @@ namespace Sweet.Redis
 
             public bool Expired
             {
-                get { return (DateTime.UtcNow - CreationDate).TotalSeconds >= 30d; }
+                get { return !Eternal && (DateTime.UtcNow - CreationDate).TotalSeconds >= 30d; }
             }
 
             #endregion Properties
 
             #region Methods
 
-            public void SetIPAddresses(IPAddress[] ipAddresses)
+            public void SetIPAddresses(IPAddress[] ipAddresses, bool eternal = false)
             {
+                Eternal = eternal;
                 IPAddresses = ipAddresses;
                 CreationDate = DateTime.UtcNow;
             }
@@ -88,6 +92,8 @@ namespace Sweet.Redis
         public static readonly RedisEndPoint SentinelIP4LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP4Loopback, RedisConstants.DefaultSentinelPort);
         public static readonly RedisEndPoint SentinelIP6LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP6Loopback, RedisConstants.DefaultSentinelPort);
 
+        public static readonly HashSet<IPAddress> LocalIPs = new HashSet<IPAddress>(new[] { IPAddress.Loopback, IPAddress.IPv6Loopback });
+
         private static readonly IPAddress[] EmptyAddresses = new IPAddress[0];
 
         private static readonly ConcurrentDictionary<string, RedisIPAddressEntry> s_DnsEntries =
@@ -102,6 +108,18 @@ namespace Sweet.Redis
         #endregion Field Members
 
         #region .Ctors
+
+        static RedisEndPoint()
+        {
+            try 
+            {
+                var hostNameIPs = Dns.GetHostAddresses(Dns.GetHostName());
+                if (hostNameIPs != null)
+                    LocalIPs.UnionWith(hostNameIPs);
+            }
+            catch (Exception) 
+            { }
+        }
 
         public RedisEndPoint(string host, int port)
         {
@@ -193,33 +211,50 @@ namespace Sweet.Redis
                     {
                         if (!s_DnsEntries.TryGetValue(host, out entry) || entry.Expired)
                         {
-                            IPAddress[] ipAddresses;
+                            var isIp = false;
+
+                            IPAddress[] ipAddresses = null;
                             if (host.Equals(RedisConstants.LocalHost, StringComparison.OrdinalIgnoreCase))
                             {
-                                var list = new List<IPAddress>();
                                 if (RedisSocket.OSSupportsIPv4)
-                                    list.Add(IPAddress.Parse(RedisConstants.IP4Loopback));
-                                else if (RedisSocket.OSSupportsIPv6)
-                                    list.Add(IPAddress.Parse(RedisConstants.IP6Loopback));
-
-                                ipAddresses = list.ToArray();
-                            }
-                            else
-                            {
-                                ipAddresses = RedisAsyncEx.GetHostAddressesAsync(host).Result;
-                                if (ipAddresses != null && ipAddresses.Length > 1)
                                 {
-                                    ipAddresses = ipAddresses
-                                        .OrderBy((addr) =>
-                                        { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
-                                        .ToArray();
+                                    isIp = true;
+                                    ipAddresses = new[] { IPAddress.Parse(RedisConstants.IP4Loopback) };
+                                }
+                                else if (RedisSocket.OSSupportsIPv6)
+                                {
+                                    isIp = true;
+                                    ipAddresses = new[] { IPAddress.Parse(RedisConstants.IP6Loopback) };
+                                }
+                            }
+
+                            if (!isIp)
+                            {
+                                IPAddress ipAddress;
+                                isIp = IPAddress.TryParse(host, out ipAddress);
+
+                                ipAddresses = isIp ? new[] { ipAddress } :
+                                    RedisAsyncEx.GetHostAddressesAsync(host).Result;
+
+                                if (ipAddresses != null && ipAddresses.Length > 0)
+                                {
+                                    isIp = isIp || 
+                                        ipAddresses.All(ip => IPAddress.IsLoopback(ip) || LocalIPs.Contains(ip));
+                                    
+                                    if (ipAddresses.Length > 1)
+                                    {
+                                        ipAddresses = ipAddresses
+                                            .OrderBy((addr) =>
+                                            { return addr.AddressFamily == AddressFamily.InterNetwork ? -1 : 1; })
+                                            .ToArray();
+                                    }
                                 }
                             }
 
                             if (entry != null)
-                                entry.SetIPAddresses(ipAddresses);
+                                entry.SetIPAddresses(ipAddresses, isIp);
                             else
-                                s_DnsEntries[host] = entry = new RedisIPAddressEntry(host, ipAddresses);
+                                s_DnsEntries[host] = entry = new RedisIPAddressEntry(host, ipAddresses, isIp);
                         }
                     }
                 }
