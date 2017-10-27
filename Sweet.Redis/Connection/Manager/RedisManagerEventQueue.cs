@@ -176,8 +176,7 @@ namespace Sweet.Redis
 
         public void Enqueu(Action action)
         {
-            ValidateNotDisposed();
-            if (action != null)
+            if (action != null && !Disposed)
             {
                 var actionQ = m_ActionQ;
                 if (actionQ != null)
@@ -267,16 +266,19 @@ namespace Sweet.Redis
                     var task = new Task((stateObject) =>
                     {
                         Process((CancellationToken)stateObject);
-                    }, token, token, TaskCreationOptions.LongRunning)
-                    .ContinueWith(t =>
+                    }, token, token, TaskCreationOptions.LongRunning);
+
+                    task.ContinueWith(t =>
                     {
                         Interlocked.Exchange(ref s_ProcessState, (long)RedisProcessState.Idle);
                     });
+
                     task.Start();
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     Interlocked.Exchange(ref s_ProcessState, (long)RedisProcessState.Idle);
+                    Console.WriteLine(e);
                 }
             }
         }
@@ -340,29 +342,22 @@ namespace Sweet.Redis
                 if (actionQ != null)
                 {
                     ManagerEvent mEvent;
-                    if (actionQ.TryDequeue(out mEvent))
+                    if (actionQ.TryDequeue(out mEvent) && (mEvent != null))
                     {
-                        if (mEvent != null)
+                        try
                         {
-                            try
+                            var manager = mEvent.Manager;
+                            if (manager.IsAlive())
                             {
-                                var manager = mEvent.Manager;
-                                if (manager.IsAlive())
-                                {
-                                    var eventQ = mEvent.EventQ;
-                                    if (eventQ.IsAlive() && eventQ.m_Registered)
-                                    {
-                                        var action = mEvent.Action;
-                                        if (action != null)
-                                            action();
-                                        return true;
-                                    }
-                                }
+                                var action = mEvent.Action;
+                                if (action != null)
+                                    action();
+                                return true;
                             }
-                            finally
-                            {
-                                mEvent.Dispose();
-                            }
+                        }
+                        finally
+                        {
+                            mEvent.Dispose();
                         }
                     }
                 }

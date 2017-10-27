@@ -641,16 +641,19 @@ namespace Sweet.Redis
                 {
                     eventQ.Enqueu(() =>
                     {
-                        var instanceEndPoint = message.InstanceEndPoint;
-                        if (!instanceEndPoint.IsEmpty())
+                        if (!Disposed)
                         {
-                            lock (m_SyncRoot)
+                            var instanceEndPoint = message.InstanceEndPoint;
+                            if (!instanceEndPoint.IsEmpty())
                             {
-                                var instanceRole = ToRedisRole(message.InstanceType);
-                                var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
+                                lock (m_SyncRoot)
+                                {
+                                    var instanceRole = ToRedisRole(message.InstanceType);
+                                    var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
 
-                                if (nodesGroup.IsAlive())
-                                    ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
+                                    if (nodesGroup.IsAlive())
+                                        ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
+                                }
                             }
                         }
                     });
@@ -775,7 +778,7 @@ namespace Sweet.Redis
                                     {
                                         var settings = m_Settings.Clone(instanceEndPoint.Host, instanceEndPoint.Port);
                                         var newPool = new RedisManagedConnectionPool(role, m_Name, (RedisPoolSettings)settings);
-                                        
+
                                         instanceNode = new RedisManagedNode(role, newPool);
                                         nodesGroup.AppendNode(instanceNode);
 
@@ -829,9 +832,12 @@ namespace Sweet.Redis
                 {
                     eventQ.Enqueu(() =>
                     {
-                        lock (m_SyncRoot)
+                        if (!Disposed)
                         {
-                            PromoteToMaster(m_MSGroup, message.NewEndPoint, message.OldEndPoint);
+                            lock (m_SyncRoot)
+                            {
+                                PromoteToMaster(m_MSGroup, message.NewEndPoint, message.OldEndPoint);
+                            }
                         }
                     });
                 }
