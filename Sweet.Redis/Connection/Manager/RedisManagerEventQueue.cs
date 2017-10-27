@@ -156,7 +156,7 @@ namespace Sweet.Redis
             base.OnDispose(disposing);
 
             UnregisterEventQ(this);
-            Clear();
+            ClearInternal();
         }
 
         #endregion Destructors
@@ -191,7 +191,11 @@ namespace Sweet.Redis
         public void Clear()
         {
             ValidateNotDisposed();
+            ClearInternal();
+        }
 
+        private void ClearInternal()
+        {
             var actionQ = Interlocked.Exchange(ref m_ActionQ, new ConcurrentQueue<ManagerEvent>());
             if (actionQ != null)
             {
