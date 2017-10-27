@@ -126,11 +126,13 @@ namespace Sweet.Redis.ConsoleTest
                                 Get(db, "tinytext", false);
                             }
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
-                            /* Console.WriteLine(e);
+                            Console.WriteLine(e);
                             Console.WriteLine();
-                            Console.WriteLine("Press any key to continue, ESC to escape ..."); */
+                            Console.WriteLine("Press any key to continue, ESC to escape ...");
+                            if (Console.ReadKey(true).Key == ConsoleKey.Escape)
+                                return;
                         }
 
                         modKey = (modKey + 1) % 100;
@@ -152,7 +154,7 @@ namespace Sweet.Redis.ConsoleTest
             while (delay < milliSecond)
             {
                 if (Console.KeyAvailable)
-                    return Console.ReadKey();
+                    return Console.ReadKey(true);
 
                 Thread.Sleep(50);
                 delay += 50;
