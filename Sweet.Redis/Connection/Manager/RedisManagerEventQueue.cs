@@ -85,7 +85,7 @@ namespace Sweet.Redis
                 }
             }
 
-            public IRedisManager Manager 
+            public IRedisManager Manager
             {
                 get
                 {
@@ -196,7 +196,7 @@ namespace Sweet.Redis
             if (actionQ != null)
             {
                 ManagerEvent mEvent;
-                while (actionQ.TryDequeue(out mEvent)) 
+                while (actionQ.TryDequeue(out mEvent))
                 {
                     if (mEvent != null)
                         mEvent.Dispose();
@@ -264,7 +264,8 @@ namespace Sweet.Redis
                     {
                         Process((CancellationToken)stateObject);
                     }, token, token, TaskCreationOptions.LongRunning)
-                    .ContinueWith(t => {
+                    .ContinueWith(t =>
+                    {
                         Interlocked.Exchange(ref s_ProcessState, (long)RedisProcessState.Idle);
                     });
                     task.Start();
@@ -310,9 +311,9 @@ namespace Sweet.Redis
                             break;
 
                         try { eventQ.ProcessEvent(); }
-                        finally 
-                        { 
-                            Thread.Sleep(1); 
+                        finally
+                        {
+                            Thread.Sleep(1);
                         }
                     }
                     catch (Exception)

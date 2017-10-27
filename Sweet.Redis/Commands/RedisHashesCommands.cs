@@ -280,7 +280,7 @@ namespace Sweet.Redis
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
-            if (values == null || values.Count == 0)
+            if (values.IsEmpty())
                 throw new ArgumentNullException("values");
 
             ValidateNotDisposed();
