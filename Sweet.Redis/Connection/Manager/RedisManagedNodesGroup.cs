@@ -132,7 +132,7 @@ namespace Sweet.Redis
                                 }
 
                                 var result = nodes[index].Pool;
-                                if (!result.IsDown)
+                                if (result.IsAlive() && !result.IsDown)
                                     return result;
                             }
                         }

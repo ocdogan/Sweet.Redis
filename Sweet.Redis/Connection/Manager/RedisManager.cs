@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -43,6 +44,13 @@ namespace Sweet.Redis
 
         #endregion InitializationState
 
+        #region Static Members
+
+        private static readonly object s_NodeActionQLock = new object();
+        private static readonly ConcurrentQueue<Action> s_NodeActionQ = new ConcurrentQueue<Action>();
+
+        #endregion Static Members
+
         #region Field Members
 
         private long m_Id;
@@ -59,6 +67,8 @@ namespace Sweet.Redis
         private long m_InitializationState;
         private readonly object m_SyncRoot = new object();
 
+        private RedisManagerEventQueue m_EventQ;
+
         #endregion Field Members
 
         #region .Ctors
@@ -73,6 +83,7 @@ namespace Sweet.Redis
             m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
             m_MasterName = (settings.MasterName ?? String.Empty).Trim();
 
+            m_EventQ = new RedisManagerEventQueue(this);
             m_EndPointResolver = new RedisManagedEndPointResolver(m_Name, settings);
         }
 
@@ -83,6 +94,10 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
+
+            var eventQ = Interlocked.Exchange(ref m_EventQ, null);
+            if (eventQ != null)
+                eventQ.Dispose();
 
             var endPointResolver = Interlocked.Exchange(ref m_EndPointResolver, null);
             if (endPointResolver != null)
@@ -275,7 +290,7 @@ namespace Sweet.Redis
                 if (!msGroup.IsAlive())
                     throw new RedisFatalException("Can not discover masters and slaves", RedisErrorCode.ConnectionError);
 
-                var group = readOnly ? (msGroup.Slaves ?? msGroup.Masters) : msGroup.Masters;
+                var group = SelectGroup(msGroup, readOnly);
                 if (!group.IsAlive())
                     throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
@@ -285,6 +300,31 @@ namespace Sweet.Redis
 
                 return pool;
             }
+        }
+
+        private static RedisManagedNodesGroup SelectGroup(RedisManagedMSGroup msGroup, bool readOnly)
+        {
+            if (msGroup.IsAlive())
+            {
+                var group = (RedisManagedNodesGroup)null;
+                if (!readOnly)
+                    group = msGroup.Masters;
+                else
+                {
+                    group = msGroup.Slaves;
+                    if (!group.IsAlive())
+                        group = msGroup.Masters;
+                    else
+                    {
+                        var nodes = group.Nodes;
+                        if (nodes == null || nodes.Length == 0 ||
+                            !nodes.Any(n => n.IsAlive() && n.Pool.IsAlive()))
+                            group = msGroup.Masters;
+                    }
+                }
+                return group;
+            }
+            return null;
         }
 
         private static void DisposeGroups(RedisManagedNodesGroup[] nodeGroups)
@@ -597,22 +637,25 @@ namespace Sweet.Redis
         {
             if (!Disposed && message != null)
             {
-                var task = new Task(() =>
+                var eventQ = m_EventQ;
+                if (eventQ.IsAlive())
                 {
-                    var instanceEndPoint = message.InstanceEndPoint;
-                    if (!instanceEndPoint.IsEmpty())
+                    eventQ.Enqueu(() =>
                     {
-                        lock (m_SyncRoot)
+                        var instanceEndPoint = message.InstanceEndPoint;
+                        if (!instanceEndPoint.IsEmpty())
                         {
-                            var instanceRole = ToRedisRole(message.InstanceType);
-                            var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
+                            lock (m_SyncRoot)
+                            {
+                                var instanceRole = ToRedisRole(message.InstanceType);
+                                var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
 
-                            if (nodesGroup.IsAlive())
-                                ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
+                                if (nodesGroup.IsAlive())
+                                    ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
+                            }
                         }
-                    }
-                });
-                task.Start();
+                    });
+                }
             }
         }
 
@@ -782,23 +825,21 @@ namespace Sweet.Redis
         {
             if (!Disposed && message != null)
             {
-                var task = new Task(() =>
+                var eventQ = m_EventQ;
+                if (eventQ.IsAlive())
                 {
-                    lock (m_SyncRoot)
+                    eventQ.Enqueu(() =>
                     {
-                        var msGroup = m_MSGroup;
-                        if (msGroup.IsAlive())
+                        lock (m_SyncRoot)
                         {
-                            SetMasterDown(msGroup, message.OldEndPoint, true);
-                            PromoteSlaveToMaster(msGroup, message.OldEndPoint);
+                            PromoteToMaster(m_MSGroup, message.NewEndPoint, message.OldEndPoint);
                         }
-                    }
-                });
-                task.Start();
+                    });
+                }
             }
         }
 
-        private static void SetMasterDown(RedisManagedMSGroup msGroup, RedisEndPoint masterEndPoint, bool isDown)
+        private static bool SetMasterDown(RedisManagedMSGroup msGroup, RedisEndPoint masterEndPoint, bool isDown)
         {
             if (msGroup.IsAlive() && !masterEndPoint.IsEmpty())
             {
@@ -816,36 +857,52 @@ namespace Sweet.Redis
                             {
                                 changedPool.SDown = isDown;
                                 changedPool.ODown = isDown;
+
+                                return true;
                             }
                         }
                     }
                 }
             }
+            return false;
         }
 
-        private static void PromoteSlaveToMaster(RedisManagedMSGroup msGroup, RedisEndPoint slaveEndPoint)
+        private static void PromoteToMaster(RedisManagedMSGroup msGroup, RedisEndPoint newEndPoint, RedisEndPoint oldEndPoint)
         {
-            if (msGroup.IsAlive() && !slaveEndPoint.IsEmpty())
+            if (msGroup.IsAlive() && !newEndPoint.IsEmpty())
             {
-                var slaves = msGroup.Slaves;
-                if (slaves.IsAlive())
-                {
-                    var slaveNodes = slaves.Nodes;
-                    if (slaveNodes != null)
-                    {
-                        var slaveNode = slaveNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == slaveEndPoint);
-                        if (slaveNode.IsAlive())
-                        {
-                            msGroup.ChangeGroup(slaveNode);
+                SetMasterDown(msGroup, oldEndPoint, true);
 
-                            var changedPool = slaveNode.Pool;
-                            if (changedPool.IsAlive())
+                var switched = false;
+                try
+                {
+                    var slaves = msGroup.Slaves;
+                    if (slaves.IsAlive())
+                    {
+                        var slaveNodes = slaves.Nodes;
+                        if (slaveNodes != null)
+                        {
+                            var slaveNode = slaveNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == newEndPoint);
+                            if (slaveNode.IsAlive())
                             {
-                                changedPool.SDown = false;
-                                changedPool.ODown = false;
+                                msGroup.ChangeGroup(slaveNode);
+
+                                var changedPool = slaveNode.Pool;
+                                if (changedPool.IsAlive())
+                                {
+                                    changedPool.SDown = false;
+                                    changedPool.ODown = false;
+
+                                    switched = true;
+                                }
                             }
                         }
                     }
+                }
+                finally
+                {
+                    if (!switched)
+                        SetMasterDown(msGroup, newEndPoint, false);
                 }
             }
         }

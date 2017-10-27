@@ -32,15 +32,6 @@ namespace Sweet.Redis
 {
     internal class RedisAsyncRequestQProcessor : RedisDisposable
     {
-        #region ProcessingState
-
-        private enum ProcessingState : long
-        {
-            Idle = 0L,
-            Starting = 1L,
-            Processing = 2L
-        }
-
         #region ProcessParameters
 
         private class ProcessParameters
@@ -74,8 +65,6 @@ namespace Sweet.Redis
 
         #endregion ProcessParameters
 
-        #endregion ProcessingState
-
         #region Constants
 
         private const int IdleTimout = 60 * 1000;
@@ -84,8 +73,8 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private Thread m_Thread;
         private long m_State;
+        private Thread m_Thread;
 
         #endregion Field Members
 
@@ -116,7 +105,7 @@ namespace Sweet.Redis
 
         public bool Processing
         {
-            get { return Interlocked.Read(ref m_State) != (long)ProcessingState.Idle; }
+            get { return Interlocked.Read(ref m_State) != (long)RedisProcessState.Idle; }
         }
 
         public RedisAsyncRequestQ Queue { get; private set; }
@@ -129,8 +118,8 @@ namespace Sweet.Redis
 
         public void Start()
         {
-            if (Interlocked.CompareExchange(ref m_State, (long)ProcessingState.Starting,
-                                            (long)ProcessingState.Idle) == (long)ProcessingState.Idle)
+            if (Interlocked.CompareExchange(ref m_State, (long)RedisProcessState.Initialized,
+                                            (long)RedisProcessState.Idle) == (long)RedisProcessState.Idle)
             {
                 try
                 {
@@ -145,19 +134,19 @@ namespace Sweet.Redis
                     Interlocked.Exchange(ref m_Thread, thread);
                     thread.Start(new ProcessParameters(this, thread, Queue, Settings));
 
-                    Interlocked.Exchange(ref m_State, (long)ProcessingState.Processing);
+                    Interlocked.Exchange(ref m_State, (long)RedisProcessState.Processing);
                 }
                 catch (Exception)
                 {
-                    Interlocked.Exchange(ref m_State, (long)ProcessingState.Idle);
+                    Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
                 }
             }
         }
 
         public void Stop()
         {
-            if (Interlocked.Exchange(ref m_State, (long)ProcessingState.Idle) !=
-                (long)ProcessingState.Idle)
+            if (Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle) !=
+                (long)RedisProcessState.Idle)
             {
                 StopCurrent();
             }
@@ -181,7 +170,7 @@ namespace Sweet.Redis
         {
             if (thread == m_Thread)
             {
-                Interlocked.Exchange(ref m_State, (long)ProcessingState.Idle);
+                Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
             }
         }
 

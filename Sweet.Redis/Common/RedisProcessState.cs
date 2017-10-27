@@ -22,23 +22,12 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
-    public interface IRedisManager : IRedisNamedObject, IRedisIdentifiedObject, IRedisDisposable
+    public enum RedisProcessState : long
     {
-        RedisManagerSettings Settings { get; }
-
-        IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0);
-        IRedisTransaction BeginTransaction(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisAdmin GetAdmin(Func<RedisManagedNodeInfo, bool> nodeSelector);
-        IRedisDb GetDb(bool readOnly, int dbIndex = 0);
-        IRedisDb GetDb(Func<RedisManagedNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisMonitorChannel GetMonitorChannel(Func<RedisManagedNodeInfo, bool> nodeSelector);
-        IRedisPubSubChannel GetPubSubChannel(Func<RedisManagedNodeInfo, bool> nodeSelector);
-        void Refresh();
+        Idle = 0L,
+        Initialized = 1L,
+        Processing = 2L
     }
 }

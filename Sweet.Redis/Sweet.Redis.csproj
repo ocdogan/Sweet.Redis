@@ -55,6 +55,7 @@
     <Compile Include="Common\RedisByteArray.cs" />
     <Compile Include="Common\RedisEndPoint.cs" />
     <Compile Include="Common\RedisParam.cs" />
+    <Compile Include="Common\RedisProcessState.cs" />
     <Compile Include="Common\RedisRole.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Connection\Interfaces\IRedisPubSubChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisMonitorChannel.cs" />
     <Compile Include="Connection\Manager\RedisManagedNodeInfo.cs" />
+    <Compile Include="Connection\Manager\RedisManagerEventQueue.cs" />
     <Compile Include="Connection\Manager\RedisMasterSwitchedMessage.cs" />
     <Compile Include="Connection\Manager\RedisNodeStateChangedMessage.cs" />
     <Compile Include="Connection\Manager\RedisManagedSentinelGroup.cs" />
