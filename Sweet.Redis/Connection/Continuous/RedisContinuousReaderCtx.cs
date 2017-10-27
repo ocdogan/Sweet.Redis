@@ -128,7 +128,7 @@ namespace Sweet.Redis
                 if (base.Receiving)
                 {
                     var reader = Reader;
-                    return (reader != null) && !reader.Disposed && reader.Receiving;
+                    return reader.IsAlive() && reader.Receiving;
                 }
                 return false;
             }

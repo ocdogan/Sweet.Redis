@@ -204,7 +204,7 @@ namespace Sweet.Redis
                         if (!isDown)
                         {
                             var pool = node.Pool;
-                            isDown = pool == null || pool.Disposed || pool.IsDown;
+                            isDown = !pool.IsAlive() || pool.IsDown;
                         }
 
                         var newNodes = new RedisManagedNode[length + 1];

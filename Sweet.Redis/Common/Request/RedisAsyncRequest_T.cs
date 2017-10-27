@@ -337,7 +337,7 @@ namespace Sweet.Redis
                         }
 
                         var command = Command;
-                        if (command == null || connection == null || connection.Disposed)
+                        if (command == null || !connection.IsAlive())
                             tcs.TrySetCanceled();
                         else
                             Process(new RedisSocketContext(connection.Connect(), connection.Settings), timeoutMilliseconds);

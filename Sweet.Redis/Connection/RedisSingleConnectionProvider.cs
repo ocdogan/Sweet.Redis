@@ -92,9 +92,7 @@ namespace Sweet.Redis
             get
             {
                 var connection = m_Connection;
-                if (connection != null && !connection.Disposed)
-                    return 1;
-                return 0;
+                return (connection.IsAlive() ? 1 : 0);
             }
         }
 
@@ -121,12 +119,12 @@ namespace Sweet.Redis
         protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole expectedRole, bool connectImmediately = true)
         {
             var connection = m_Connection;
-            if (connection == null || connection.Disposed)
+            if (!connection.IsAlive())
             {
                 lock (m_ConnectionLock)
                 {
                     connection = m_Connection;
-                    if (connection == null || connection.Disposed)
+                    if (!connection.IsAlive())
                     {
                         m_Connection = connection = OnNewConnection(socket, dbIndex, expectedRole, connectImmediately);
                     }
@@ -173,7 +171,7 @@ namespace Sweet.Redis
                     }
 
                     currentSocket = m_Socket;
-                    if (currentSocket != null && currentSocket.Disposed)
+                    if (!currentSocket.IsAlive())
                     {
                         Interlocked.Exchange(ref m_Socket, null);
                         currentSocket = null;
@@ -182,7 +180,7 @@ namespace Sweet.Redis
                     if (ReferenceEquals(currentSocket, socket))
                         return;
 
-                    if (socket != null && !socket.Disposed)
+                    if (socket.IsAlive())
                     {
                         currentSocket = Interlocked.Exchange(ref m_Socket, socket);
                         if (currentSocket != null)

@@ -26,7 +26,7 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisMonitorChannel
+    public interface IRedisMonitorChannel : IRedisDisposableBase
     {
         RedisEndPoint EndPoint { get; }
 

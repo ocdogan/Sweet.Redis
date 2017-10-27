@@ -238,7 +238,7 @@ namespace Sweet.Redis
                                         if (quitMessage)
                                         {
                                             var provider = m_ConnectionProvider;
-                                            if (provider != null && !provider.Disposed)
+                                            if (provider.IsAlive())
                                             {
                                                 var scProvider = provider as RedisSingleConnectionProvider;
                                                 if (scProvider != null)
@@ -307,11 +307,12 @@ namespace Sweet.Redis
             if (!Disposed)
             {
                 var provider = m_ConnectionProvider;
-
-                if (provider != null &&
-                    (!(provider is IRedisDisposable) || !((IRedisDisposable)provider).Disposed) &&
-                    (!(provider is IRedisConnectionInfoProvider) || ((IRedisConnectionInfoProvider)provider).SpareCount > 0))
-                    SendAsync(RedisCommandList.Quit);
+                if (provider != null && provider.IsAlive())
+                {
+                    var infoProvider = provider as IRedisConnectionInfoProvider;
+                    if (infoProvider == null || infoProvider.SpareCount > 0)
+                        SendAsync(RedisCommandList.Quit);
+                }
             }
         }
 

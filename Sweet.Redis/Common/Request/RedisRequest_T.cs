@@ -254,7 +254,7 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) ==
                 (long)RequestState.Waiting)
             {
-                if (connection == null || connection.Disposed)
+                if (!connection.IsAlive())
                     Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
                 else
                     ProcessInternal(new RedisSocketContext(connection.Connect(), connection.Settings));

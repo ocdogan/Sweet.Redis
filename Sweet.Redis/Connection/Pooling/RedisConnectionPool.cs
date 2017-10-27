@@ -388,7 +388,7 @@ namespace Sweet.Redis
 
         protected void EnqueueSocket(RedisSocket socket)
         {
-            if (socket != null && !socket.Disposed)
+            if (socket.IsAlive())
             {
                 var member = new RedisConnectionPoolMember(socket, socket.DbIndex);
                 lock (m_MemberStoreLock)

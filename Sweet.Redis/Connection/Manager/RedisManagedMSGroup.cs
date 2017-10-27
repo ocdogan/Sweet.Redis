@@ -92,15 +92,15 @@ namespace Sweet.Redis
 
         public void ChangeGroup(RedisManagedNode node)
         {
-            if (node != null && !node.Disposed)
+            if (node.IsAlive())
             {
                 lock (m_SyncRoot)
                 {
                     var slaves = m_Slaves;
-                    if (slaves != null && slaves.Disposed)
+                    if (slaves.IsAlive())
                     {
                         var masters = m_Masters;
-                        if (masters != null && !masters.Disposed)
+                        if (masters.IsAlive())
                         {
                             if (slaves.RemoveNode(node))
                             {

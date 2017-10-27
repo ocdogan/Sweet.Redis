@@ -169,10 +169,10 @@ namespace Sweet.Redis
                 var filteredNodes = nodes
                     .Where(node =>
                     {
-                        if (node != null && !node.Disposed)
+                        if (node.IsAlive())
                         {
                             var pool = node.Pool;
-                            return pool != null && !pool.Disposed && pool.IsDown == downNodes;
+                            return pool.IsAlive() && pool.IsDown == downNodes;
                         }
                         return false;
                     })
@@ -192,53 +192,49 @@ namespace Sweet.Redis
                                 List<RedisManagedConnectionPool> monitoredPools,
                                 Action<object> onComplete)
         {
-            if (node != null && !node.Disposed)
+            if (node.IsAlive())
             {
                 var pool = node.Pool;
-                if (pool != null && !pool.Disposed)
+                if (pool.IsAlive())
                 {
                     var channel = pool.PubSubChannel;
-                    if (channel != null)
+                    if (channel.IsAlive())
                     {
-                        var disposable = channel as RedisInternalDisposable;
-                        if (disposable == null || !disposable.Disposed)
+                        if (!Ping(pool))
+                            return false;
+
+                        try
                         {
-                            if (!Ping(pool))
-                                return false;
+                            channel.Subscribe(PubSubMessageReceived,
+                                    RedisCommandList.SentinelChanelSDownEntered,
+                                    RedisCommandList.SentinelChanelSDownExited,
+                                    RedisCommandList.SentinelChanelODownEntered,
+                                    RedisCommandList.SentinelChanelODownExited,
+                                    RedisCommandList.SentinelChanelSwitchMaster,
+                                    RedisCommandList.SentinelChanelSentinel);
 
-                            try
+                            monitoredPools.Add(pool);
+
+                            var pubSubChannel = pool.PubSubChannel as RedisPubSubChannel;
+                            if (pubSubChannel.IsAlive())
                             {
-                                channel.Subscribe(PubSubMessageReceived,
-                                        RedisCommandList.SentinelChanelSDownEntered,
-                                        RedisCommandList.SentinelChanelSDownExited,
-                                        RedisCommandList.SentinelChanelODownEntered,
-                                        RedisCommandList.SentinelChanelODownExited,
-                                        RedisCommandList.SentinelChanelSwitchMaster,
-                                        RedisCommandList.SentinelChanelSentinel);
-
-                                monitoredPools.Add(pool);
-
-                                var pubSubChannel = pool.PubSubChannel as RedisPubSubChannel;
-                                if (pubSubChannel != null && !pubSubChannel.Disposed)
+                                pubSubChannel.SetOnComplete((obj) =>
                                 {
-                                    pubSubChannel.SetOnComplete((obj) =>
-                                    {
-                                        Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
-                                        monitoredPools.Remove(pool);
+                                    Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
+                                    monitoredPools.Remove(pool);
 
-                                        Ping(pool);
+                                    Ping(pool);
 
-                                        if (onComplete != null)
-                                            onComplete(node);
-                                    });
-                                }
-                                return true;
+                                    if (onComplete != null)
+                                        onComplete(node);
+                                });
                             }
-                            catch (Exception)
-                            {
-                                pool.SDown = true;
-                                pool.ODown = true;
-                            }
+                            return true;
+                        }
+                        catch (Exception)
+                        {
+                            pool.SDown = true;
+                            pool.ODown = true;
                         }
                     }
                 }
@@ -248,7 +244,7 @@ namespace Sweet.Redis
 
         private bool Ping(RedisManagedConnectionPool pool)
         {
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
             {
                 try
                 {
@@ -424,23 +420,21 @@ namespace Sweet.Redis
                         {
                             foreach (var pool in pools)
                             {
-                                if (pool != null)
+                                try
                                 {
-                                    try
+                                    if (pool.IsAlive())
                                     {
-                                        if (!pool.Disposed)
-                                        {
-                                            var channel = pool.PubSubChannel;
-                                            if (channel != null)
-                                                channel.Unsubscribe();
-                                        }
+                                        var channel = pool.PubSubChannel;
+                                        if (channel.IsAlive())
+                                            channel.Unsubscribe();
                                     }
-                                    catch (Exception)
-                                    { }
-                                    finally
-                                    {
+                                }
+                                catch (Exception)
+                                { }
+                                finally
+                                {
+                                    if (pool != null)
                                         monitoredPools.Remove(pool);
-                                    }
                                 }
                             }
                         }

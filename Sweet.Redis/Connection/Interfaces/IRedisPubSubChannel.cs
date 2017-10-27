@@ -26,7 +26,7 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisPubSubChannel : IRedisNamedObject
+    public interface IRedisPubSubChannel : IRedisNamedObject, IRedisDisposableBase
     {
         RedisEndPoint EndPoint { get; }
 

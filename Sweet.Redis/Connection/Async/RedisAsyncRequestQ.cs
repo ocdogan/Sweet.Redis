@@ -258,7 +258,7 @@ namespace Sweet.Redis
 
         private static void RegisterForTimeout(RedisAsyncRequestQ queue)
         {
-            if (queue != null && !queue.Disposed)
+            if (queue.IsAlive())
             {
                 lock (s_QTimerLock)
                 {
@@ -326,7 +326,7 @@ namespace Sweet.Redis
                                         if (!TimeoutCheckEnabled)
                                             break;
 
-                                        if (!queue.Disposed)
+                                        if (queue.IsAlive())
                                         {
                                             var queueTimeoutMs = queue.TimeoutMilliseconds;
                                             if (queueTimeoutMs > -1)
@@ -340,7 +340,7 @@ namespace Sweet.Redis
                                                     if (store != null)
                                                     {
                                                         var node = store.First;
-                                                        while (node != null && !queue.Disposed && TimeoutCheckEnabled)
+                                                        while (node != null && queue.IsAlive() && TimeoutCheckEnabled)
                                                         {
                                                             var nextNode = node.Next;
                                                             if (CheckRequestTimeout(node.Value, queueTimeoutMs))
@@ -381,7 +381,7 @@ namespace Sweet.Redis
         {
             try
             {
-                if (timeoutMilliseconds > -1 && request != null && !request.Disposed)
+                if (timeoutMilliseconds > -1 && request.IsAlive())
                     return request.Expire(timeoutMilliseconds);
             }
             catch (Exception)

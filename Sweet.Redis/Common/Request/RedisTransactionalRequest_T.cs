@@ -49,7 +49,7 @@ namespace Sweet.Redis
                 else
                 {
                     var command = Command;
-                    if (command == null || command.Disposed)
+                    if (!command.IsAlive())
                     {
                         Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
                         return;

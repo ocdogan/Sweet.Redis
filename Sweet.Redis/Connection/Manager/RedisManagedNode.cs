@@ -71,9 +71,7 @@ namespace Sweet.Redis
             get 
             {
                 var pool = m_Pool;
-                if (pool != null)
-                    return pool.SDown || pool.ODown || pool.Disposed;
-                return true;
+                return !pool.IsAlive() || pool.SDown || pool.ODown;
             }
         }
 
@@ -82,9 +80,7 @@ namespace Sweet.Redis
             get
             {
                 var pool = m_Pool;
-                if (pool != null)
-                    return pool.ODown;
-                return true;
+                return (pool == null) || pool.ODown;
             }
             set
             {
@@ -116,9 +112,7 @@ namespace Sweet.Redis
             get
             {
                 var pool = m_Pool;
-                if (pool != null)
-                    return pool.SDown;
-                return true;
+                return (pool == null) || pool.SDown;
             }
             set
             {

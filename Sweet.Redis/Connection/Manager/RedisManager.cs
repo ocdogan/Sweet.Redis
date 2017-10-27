@@ -151,7 +151,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             var pool = SelectMasterOrSlavePool(nodeSelector);
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
                 return pool.BeginTransaction(dbIndex);
             return null;
         }
@@ -166,7 +166,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             var pool = SelectMasterOrSlavePool(nodeSelector);
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
                 return pool.CreatePipeline(dbIndex);
             return null;
         }
@@ -175,7 +175,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             var pool = SelectMasterOrSlavePool(nodeSelector);
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
                 return pool.GetAdmin();
             return null;
         }
@@ -190,7 +190,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             var pool = SelectMasterOrSlavePool(nodeSelector);
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
                 return pool.GetDb(dbIndex);
             return null;
         }
@@ -199,7 +199,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             var pool = SelectMasterOrSlavePool(nodeSelector);
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
                 return pool.MonitorChannel;
             return null;
         }
@@ -208,7 +208,7 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
             var pool = SelectMasterOrSlavePool(nodeSelector);
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
                 return pool.PubSubChannel;
             return null;
         }
@@ -226,7 +226,7 @@ namespace Sweet.Redis
             if (nodeSelector != null)
             {
                 var msGroup = m_MSGroup;
-                if (msGroup != null && !msGroup.Disposed)
+                if (msGroup.IsAlive())
                 {
                     var pool = SelectPool(msGroup.Slaves, nodeSelector);
                     if (pool == null)
@@ -247,12 +247,12 @@ namespace Sweet.Redis
                 {
                     foreach (var node in nodes)
                     {
-                        if (node != null && !node.Disposed)
+                        if (node.IsAlive())
                         {
                             try
                             {
                                 var pool = node.Pool;
-                                if (pool != null && !pool.Disposed &&
+                                if (pool.IsAlive() &&
                                     nodeSelector(node.GetNodeInfo()))
                                     return pool;
                             }
@@ -272,15 +272,15 @@ namespace Sweet.Redis
             lock (m_SyncRoot)
             {
                 var msGroup = m_MSGroup;
-                if (msGroup == null)
+                if (!msGroup.IsAlive())
                     throw new RedisFatalException("Can not discover masters and slaves", RedisErrorCode.ConnectionError);
 
                 var group = readOnly ? (msGroup.Slaves ?? msGroup.Masters) : msGroup.Masters;
-                if (group == null)
+                if (!group.IsAlive())
                     throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
                 var pool = group.Next();
-                if (pool == null)
+                if (!pool.IsAlive())
                     throw new RedisFatalException(String.Format("No {0} node found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
                 return pool;
@@ -364,7 +364,7 @@ namespace Sweet.Redis
                 try
                 {
                     var endPointResolver = m_EndPointResolver;
-                    if (endPointResolver == null || endPointResolver.Disposed)
+                    if (!endPointResolver.IsAlive())
                         return;
 
                     var tuple = endPointResolver.CreateGroups();
@@ -381,11 +381,11 @@ namespace Sweet.Redis
                                 try
                                 {
                                     var oldMSGroup = Interlocked.Exchange(ref m_MSGroup, msGroup);
-                                    if (oldMSGroup != null)
+                                    if (oldMSGroup.IsAlive())
                                         objectsToDispose.Add(oldMSGroup);
 
                                     var oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
-                                    if (oldSentinels != null)
+                                    if (oldSentinels.IsAlive())
                                         objectsToDispose.Add(oldSentinels);
                                 }
                                 catch (Exception)
@@ -483,18 +483,17 @@ namespace Sweet.Redis
         {
             try
             {
-                if (node != null &&
-                    parent != null && !parent.Disposed)
+                if (parent.IsAlive())
                 {
-                    if (node.Disposed)
+                    if (!node.IsAlive())
                         parent.RemoveNode(node);
                     else
                     {
                         var pool = node.Pool;
-                        if (pool == null || pool.Disposed)
-                            parent.RemoveNode(node);
-                        else
+                        if (pool.IsAlive())
                             PingPool(pool);
+                        else if (parent.RemoveNode(node))
+                            node.Dispose();
                     }
                 }
             }
@@ -504,7 +503,7 @@ namespace Sweet.Redis
 
         private static bool PingPool(RedisManagedConnectionPool pool)
         {
-            if (pool != null && !pool.Disposed)
+            if (pool.IsAlive())
             {
                 try
                 {
@@ -608,7 +607,7 @@ namespace Sweet.Redis
                             var instanceRole = ToRedisRole(message.InstanceType);
                             var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
 
-                            if (nodesGroup != null && !nodesGroup.Disposed)
+                            if (nodesGroup.IsAlive())
                                 ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
                         }
                     }
@@ -645,12 +644,12 @@ namespace Sweet.Redis
                 case RedisRole.Master:
                     nodesGroup =
                         (masterName == m_MasterName) &&
-                            (msGroup != null && !msGroup.Disposed) ? msGroup.Masters : null;
+                            msGroup.IsAlive() ? msGroup.Masters : null;
 
-                    if (nodesGroup == null || nodesGroup.Disposed)
+                    if (!nodesGroup.IsAlive())
                     {
                         var masters = new RedisManagedNodesGroup(instanceRole, null);
-                        if (msGroup == null || msGroup.Disposed)
+                        if (!msGroup.IsAlive())
                         {
                             msGroup = new RedisManagedMSGroup(masters, new RedisManagedNodesGroup(instanceRole, null));
                             Interlocked.Exchange(ref m_MSGroup, msGroup);
@@ -666,12 +665,12 @@ namespace Sweet.Redis
                 case RedisRole.Slave:
                     nodesGroup =
                         (masterName == m_MasterName) &&
-                            (msGroup != null && !msGroup.Disposed) ? msGroup.Slaves : null;
+                            msGroup.IsAlive() ? msGroup.Slaves : null;
 
-                    if (nodesGroup == null || nodesGroup.Disposed)
+                    if (!nodesGroup.IsAlive())
                     {
                         var slaves = new RedisManagedNodesGroup(instanceRole, null);
-                        if (msGroup == null || msGroup.Disposed)
+                        if (!msGroup.IsAlive())
                         {
                             msGroup = new RedisManagedMSGroup(new RedisManagedNodesGroup(instanceRole, null), slaves);
                             Interlocked.Exchange(ref m_MSGroup, msGroup);
@@ -686,7 +685,7 @@ namespace Sweet.Redis
                     break;
                 case RedisRole.Sentinel:
                     nodesGroup = m_Sentinels;
-                    if (nodesGroup == null || nodesGroup.Disposed)
+                    if (!nodesGroup.IsAlive())
                     {
                         nodesGroup = new RedisManagedSentinelGroup(m_MasterName, null);
                         Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)nodesGroup);
@@ -698,15 +697,15 @@ namespace Sweet.Redis
 
         private void ApplyStateChange(string channel, RedisRole instanceRole, RedisEndPoint instanceEndPoint, RedisManagedNodesGroup nodesGroup)
         {
-            if (nodesGroup != null && !nodesGroup.Disposed)
+            if (nodesGroup.IsAlive())
             {
                 var nodes = nodesGroup.Nodes;
                 if (nodes != null)
                 {
-                    var instanceNode = nodes.FirstOrDefault(n => n != null && instanceEndPoint == n.EndPoint);
+                    var instanceNode = nodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == instanceEndPoint);
 
                     // Found but disposed
-                    if (instanceNode != null && instanceNode.Disposed)
+                    if (!instanceNode.IsAlive())
                     {
                         nodesGroup.RemoveNode(instanceNode);
                         instanceNode = null;
@@ -720,7 +719,7 @@ namespace Sweet.Redis
                         {
                             // TODO: Try to add as new node
                             var endPointResolver = m_EndPointResolver;
-                            if (endPointResolver != null && !endPointResolver.Disposed)
+                            if (endPointResolver.IsAlive())
                             {
                                 var nodeInfo = endPointResolver.DiscoverNode(instanceEndPoint);
                                 if (nodeInfo != null)
@@ -749,7 +748,7 @@ namespace Sweet.Redis
                     }
 
                     var instancePool = instanceNode.Pool;
-                    if (instancePool != null && !instancePool.Disposed)
+                    if (instancePool.IsAlive())
                     {
                         switch (channel)
                         {
@@ -788,7 +787,7 @@ namespace Sweet.Redis
                     lock (m_SyncRoot)
                     {
                         var msGroup = m_MSGroup;
-                        if (msGroup != null && !msGroup.Disposed)
+                        if (msGroup.IsAlive())
                         {
                             SetMasterDown(msGroup, message.OldEndPoint, true);
                             PromoteSlaveToMaster(msGroup, message.OldEndPoint);
@@ -801,20 +800,20 @@ namespace Sweet.Redis
 
         private static void SetMasterDown(RedisManagedMSGroup msGroup, RedisEndPoint masterEndPoint, bool isDown)
         {
-            if (msGroup != null && !msGroup.Disposed &&
+            if (msGroup.IsAlive() &&
                masterEndPoint != null && !masterEndPoint.IsEmpty)
             {
                 var masters = msGroup.Masters;
-                if (masters != null && !masters.Disposed)
+                if (masters.IsAlive())
                 {
                     var masterNodes = masters.Nodes;
                     if (masterNodes != null)
                     {
-                        var changedNode = masterNodes.FirstOrDefault(n => n != null && !n.Disposed && masterEndPoint == n.EndPoint);
-                        if (changedNode != null)
+                        var changedNode = masterNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == masterEndPoint);
+                        if (changedNode.IsAlive())
                         {
                             var changedPool = changedNode.Pool;
-                            if (changedPool != null && !changedPool.Disposed)
+                            if (changedPool.IsAlive())
                             {
                                 changedPool.SDown = isDown;
                                 changedPool.ODown = isDown;
@@ -827,22 +826,22 @@ namespace Sweet.Redis
 
         private static void PromoteSlaveToMaster(RedisManagedMSGroup msGroup, RedisEndPoint slaveEndPoint)
         {
-            if (msGroup != null && !msGroup.Disposed &&
+            if (msGroup.IsAlive() &&
                slaveEndPoint != null && !slaveEndPoint.IsEmpty)
             {
                 var slaves = msGroup.Slaves;
-                if (slaves != null && !slaves.Disposed)
+                if (slaves.IsAlive())
                 {
                     var slaveNodes = slaves.Nodes;
                     if (slaveNodes != null)
                     {
-                        var slaveNode = slaveNodes.FirstOrDefault(n => n != null && !n.Disposed && slaveEndPoint == n.EndPoint);
-                        if (slaveNode != null)
+                        var slaveNode = slaveNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == slaveEndPoint);
+                        if (slaveNode.IsAlive())
                         {
                             msGroup.ChangeGroup(slaveNode);
 
                             var changedPool = slaveNode.Pool;
-                            if (changedPool != null && !changedPool.Disposed)
+                            if (changedPool.IsAlive())
                             {
                                 changedPool.SDown = false;
                                 changedPool.ODown = false;
@@ -879,7 +878,7 @@ namespace Sweet.Redis
                     HealthCheckAll();
 
                     var sentinels = GetSentinelsGroups();
-                    if (sentinels != null)
+                    if (sentinels.IsAlive())
                     {
                         var nodes = sentinels.Nodes;
                         if (nodes != null && nodes.Length > 0)
@@ -899,7 +898,7 @@ namespace Sweet.Redis
             HealthCheckGroup(m_Sentinels);
 
             var msGroup = m_MSGroup;
-            if (msGroup != null && !msGroup.Disposed)
+            if (msGroup.IsAlive())
             {
                 HealthCheckGroup(msGroup.Masters);
                 HealthCheckGroup(msGroup.Slaves);
@@ -908,7 +907,7 @@ namespace Sweet.Redis
 
         private static void HealthCheckGroup(RedisManagedNodesGroup nodesGroup)
         {
-            if (nodesGroup != null && !nodesGroup.Disposed)
+            if (nodesGroup.IsAlive())
             {
                 var nodes = nodesGroup.Nodes;
                 if (nodes != null)
@@ -945,7 +944,7 @@ namespace Sweet.Redis
                 var msGroup = m_MSGroup;
 
                 var settings = (RedisPoolSettings)null;
-                if (msGroup != null && !msGroup.Disposed)
+                if (msGroup.IsAlive())
                 {
                     settings = FindValidSetting(msGroup.Masters);
                     if (settings == null)
@@ -967,7 +966,7 @@ namespace Sweet.Redis
 
         private static RedisPoolSettings FindValidSetting(RedisManagedNodesGroup nodesGroup)
         {
-            if (nodesGroup != null && !nodesGroup.Disposed)
+            if (nodesGroup.IsAlive())
             {
                 var nodes = nodesGroup.Nodes;
                 if (nodes != null)
@@ -976,10 +975,10 @@ namespace Sweet.Redis
                     {
                         try
                         {
-                            if (node != null && !node.Disposed)
+                            if (node.IsAlive())
                             {
                                 var pool = node.Pool;
-                                if (pool != null && !pool.Disposed)
+                                if (pool.IsAlive())
                                 {
                                     PingPool(node.Pool);
                                     return pool.Settings;

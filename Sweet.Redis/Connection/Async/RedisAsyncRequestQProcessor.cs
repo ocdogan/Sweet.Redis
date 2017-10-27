@@ -207,7 +207,7 @@ namespace Sweet.Redis
                     var idleSpinCount = 0;
                     var queueTimeoutMs = queue.TimeoutMilliseconds;
 
-                    while (processor.Processing && !queue.Disposed)
+                    while (processor.Processing && queue.IsAlive())
                     {
                         RedisAsyncRequest request = null;
                         try
