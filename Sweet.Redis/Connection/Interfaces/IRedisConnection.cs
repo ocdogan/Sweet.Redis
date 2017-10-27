@@ -22,7 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
 using System.Threading.Tasks;
 
 namespace Sweet.Redis
@@ -30,7 +29,6 @@ namespace Sweet.Redis
     public interface IRedisConnection : IRedisNamedObject, IRedisIdentifiedObject, IRedisDisposable
     {
         bool Connected { get; }
-        bool Disposed { get; }
         long LastError { get; }
         RedisRole ServerRole { get; }
         RedisRole ExpectedRole { get; }

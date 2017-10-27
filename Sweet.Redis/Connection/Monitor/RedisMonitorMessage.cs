@@ -23,7 +23,6 @@
 #endregion License
 
 using System;
-using System.Linq;
 using System.Text;
 
 namespace Sweet.Redis

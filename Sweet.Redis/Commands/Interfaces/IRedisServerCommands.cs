@@ -22,7 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
 using System.Collections.Generic;
 
 namespace Sweet.Redis

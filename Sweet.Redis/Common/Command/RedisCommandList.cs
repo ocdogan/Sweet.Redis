@@ -22,8 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System.Collections.Generic;
-
 namespace Sweet.Redis
 {
     public static class RedisCommandList

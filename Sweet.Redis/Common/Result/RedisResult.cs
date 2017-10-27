@@ -26,7 +26,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 
 namespace Sweet.Redis
 {
@@ -233,9 +232,9 @@ namespace Sweet.Redis
             internal set { m_Status = value; }
         }
 
-        public virtual RedisResultType Type 
-        { 
-            get { return RedisResultType.Custom; } 
+        public virtual RedisResultType Type
+        {
+            get { return RedisResultType.Custom; }
         }
 
         #endregion Properties

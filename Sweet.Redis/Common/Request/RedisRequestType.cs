@@ -22,11 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Concurrent;
-using System.Reflection;
-using System.Threading;
-
 namespace Sweet.Redis
 {
     internal enum RedisRequestType : int

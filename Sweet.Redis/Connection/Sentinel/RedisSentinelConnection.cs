@@ -23,7 +23,6 @@
 #endregion License
 
 using System;
-using System.Net.Sockets;
 
 namespace Sweet.Redis
 {

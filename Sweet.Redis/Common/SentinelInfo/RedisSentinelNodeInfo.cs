@@ -22,7 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
 using System.Collections.Generic;
 
 namespace Sweet.Redis
@@ -74,7 +73,7 @@ namespace Sweet.Redis
 
         public static RedisSentinelNodeInfo[] ParseInfoResponse(RedisRawObject rawObject)
         {
-            if (!ReferenceEquals(rawObject, null) && 
+            if (!ReferenceEquals(rawObject, null) &&
                 rawObject.Type == RedisRawObjectType.Array)
             {
                 var items = rawObject.Items;
@@ -87,7 +86,7 @@ namespace Sweet.Redis
                         for (var i = 0; i < count; i++)
                         {
                             var item = items[i];
-                            if (!ReferenceEquals(item, null) && 
+                            if (!ReferenceEquals(item, null) &&
                                 item.Type != RedisRawObjectType.Array)
                             {
                                 isInfoArray = false;
@@ -98,7 +97,7 @@ namespace Sweet.Redis
                         if (!isInfoArray)
                         {
                             var info = new RedisSentinelNodeInfo(rawObject);
-                            return new [] { info };
+                            return new[] { info };
                         }
 
                         var list = new List<RedisSentinelNodeInfo>(count);

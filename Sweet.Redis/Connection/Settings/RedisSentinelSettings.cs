@@ -22,7 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
 using System.Collections.Generic;
 using System.Net.Security;
 
@@ -41,7 +40,7 @@ namespace Sweet.Redis
         public RedisSentinelSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultSentinelPort,
             string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
             int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false, 
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
@@ -64,8 +63,8 @@ namespace Sweet.Redis
             int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base(!endPoints.IsEmpty() ? endPoints : new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) }, 
-                   masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, 
+            : base(!endPoints.IsEmpty() ? endPoints : new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) },
+                   masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout,
                    connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 

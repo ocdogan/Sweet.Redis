@@ -22,9 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Text;
-
 namespace Sweet.Redis
 {
     public class RedisVoidVal

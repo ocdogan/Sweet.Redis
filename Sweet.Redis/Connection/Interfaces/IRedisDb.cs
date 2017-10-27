@@ -22,8 +22,6 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-
 namespace Sweet.Redis
 {
     public interface IRedisDb : IRedisClient, IRedisDisposable

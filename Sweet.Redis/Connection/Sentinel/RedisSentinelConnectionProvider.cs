@@ -23,7 +23,6 @@
 #endregion License
 
 using System;
-using System.Threading;
 
 namespace Sweet.Redis
 {
@@ -32,7 +31,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisSentinelConnectionProvider(RedisSentinelSettings settings)
-            : base(String.Format("{0}, {1}", typeof(RedisSentinelConnectionProvider).Name, 
+            : base(String.Format("{0}, {1}", typeof(RedisSentinelConnectionProvider).Name,
                     RedisIDGenerator<RedisSentinelConnectionProvider>.NextId()), settings)
         { }
 
