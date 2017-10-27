@@ -72,6 +72,11 @@ namespace Sweet.Redis
 
         #region General
 
+        internal static bool IsAlive(this IRedisDisposableBase obj)
+        {
+            return (obj != null) && !obj.Disposed;
+        }
+
         internal static bool IsEqualTo(this byte[] data, object obj)
         {
             if (ReferenceEquals(data, null))
