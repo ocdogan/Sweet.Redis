@@ -99,7 +99,7 @@ namespace Sweet.Redis
 
         public Tuple<RedisRole, RedisEndPoint[], RedisSocket> DiscoverNode(RedisEndPoint endPoint)
         {
-            if (endPoint == null || endPoint.IsEmpty)
+            if (endPoint.IsEmpty())
                 throw new RedisFatalException(new ArgumentNullException("endPoint"), RedisErrorCode.MissingParameter);
 
             ValidateNotDisposed();

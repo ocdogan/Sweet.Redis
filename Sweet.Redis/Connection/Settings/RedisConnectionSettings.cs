@@ -136,7 +136,7 @@ namespace Sweet.Redis
                 var count = endPoints.Count;
                 if (count > 0)
                 {
-                    var result = endPoints.Where(ep => ep != null && !ep.IsEmpty).ToArray();
+                    var result = endPoints.Where(ep => !ep.IsEmpty()).ToArray();
                     if (result != null && result.Length > 0)
                         return result;
                 }

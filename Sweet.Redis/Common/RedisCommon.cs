@@ -72,6 +72,11 @@ namespace Sweet.Redis
 
         #region General
 
+        internal static bool IsEmpty(this RedisEndPoint endPoint)
+        {
+            return (endPoint == null || endPoint.IsEmpty);
+        }
+
         internal static bool IsAlive(this IRedisDisposableBase obj)
         {
             return (obj != null) && !obj.Disposed;

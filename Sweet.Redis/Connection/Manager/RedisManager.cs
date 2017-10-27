@@ -600,7 +600,7 @@ namespace Sweet.Redis
                 var task = new Task(() =>
                 {
                     var instanceEndPoint = message.InstanceEndPoint;
-                    if (instanceEndPoint != null && !instanceEndPoint.IsEmpty)
+                    if (!instanceEndPoint.IsEmpty())
                     {
                         lock (m_SyncRoot)
                         {
@@ -800,8 +800,7 @@ namespace Sweet.Redis
 
         private static void SetMasterDown(RedisManagedMSGroup msGroup, RedisEndPoint masterEndPoint, bool isDown)
         {
-            if (msGroup.IsAlive() &&
-               masterEndPoint != null && !masterEndPoint.IsEmpty)
+            if (msGroup.IsAlive() && !masterEndPoint.IsEmpty())
             {
                 var masters = msGroup.Masters;
                 if (masters.IsAlive())
@@ -826,8 +825,7 @@ namespace Sweet.Redis
 
         private static void PromoteSlaveToMaster(RedisManagedMSGroup msGroup, RedisEndPoint slaveEndPoint)
         {
-            if (msGroup.IsAlive() &&
-               slaveEndPoint != null && !slaveEndPoint.IsEmpty)
+            if (msGroup.IsAlive() && !slaveEndPoint.IsEmpty())
             {
                 var slaves = msGroup.Slaves;
                 if (slaves.IsAlive())

@@ -367,7 +367,7 @@ namespace Sweet.Redis
                                                         var instanceEndPoint = ToEndPoint(parts[2], parts[3]);
                                                         var masterEndPoint = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : null;
 
-                                                        if ((instanceEndPoint == null || instanceEndPoint.IsEmpty) && !String.IsNullOrEmpty(instanceName))
+                                                        if (instanceEndPoint.IsEmpty() && !String.IsNullOrEmpty(instanceName))
                                                         {
                                                             var nameParts = instanceName.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                                                             if (nameParts != null && nameParts.Length > 1)

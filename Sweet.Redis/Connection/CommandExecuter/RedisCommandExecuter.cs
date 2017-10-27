@@ -61,7 +61,7 @@ namespace Sweet.Redis
                     var endPoints = settings.EndPoints;
                     if (endPoints != null)
                     {
-                        var result = endPoints.FirstOrDefault(ep => ep != null && !ep.IsEmpty);
+                        var result = endPoints.FirstOrDefault(ep => !ep.IsEmpty());
                         return (result != null) ? (RedisEndPoint)result.Clone() : RedisEndPoint.Empty;
                     }
                 }

@@ -464,7 +464,7 @@ namespace Sweet.Redis
             {
                 foreach (var ep in endPoints)
                 {
-                    if (ep != null && !ep.IsEmpty)
+                    if (!ep.IsEmpty())
                     {
                         try
                         {

@@ -270,7 +270,7 @@ namespace Sweet.Redis
                 var ipEPList = new HashSet<IPEndPoint>();
                 foreach (var ep in endPoints)
                 {
-                    if (ep != null && !ep.IsEmpty)
+                    if (!ep.IsEmpty())
                     {
                         try
                         {
