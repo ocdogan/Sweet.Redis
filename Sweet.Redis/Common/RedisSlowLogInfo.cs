@@ -255,7 +255,7 @@ namespace Sweet.Redis
                 response.Type == RedisRawObjectType.Integer)
             {
                 var data = response.Data;
-                if (data != null && data.Length > 0)
+                if (!data.IsEmpty())
                 {
                     value = RedisConstants.MinusOne;
                     if (long.TryParse(Encoding.UTF8.GetString(data), out value))

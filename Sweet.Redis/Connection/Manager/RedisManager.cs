@@ -317,7 +317,7 @@ namespace Sweet.Redis
                     else
                     {
                         var nodes = group.Nodes;
-                        if (nodes == null || nodes.Length == 0 ||
+                        if (nodes.IsEmpty() ||
                             !nodes.Any(n => n.IsAlive() && n.Pool.IsAlive()))
                             group = msGroup.Masters;
                     }
@@ -573,8 +573,7 @@ namespace Sweet.Redis
 
             var newLength = (newNodes != null) ? newNodes.Length : 0;
 
-            if (newNodes == null || newLength == 0 ||
-                currNodes == null || currNodes.Length == 0)
+            if (newNodes == null || newLength == 0 || currNodes.IsEmpty())
             {
                 var oldGroup = exchangeGroupFunction(newGroup);
                 if (oldGroup != null)
@@ -936,7 +935,7 @@ namespace Sweet.Redis
                     if (sentinels.IsAlive())
                     {
                         var nodes = sentinels.Nodes;
-                        if (nodes != null && nodes.Length > 0)
+                        if (!nodes.IsEmpty())
                         {
                             sentinels.RegisterMessageEvents(MasterSwitched, InstanceStateChanged);
                             sentinels.Monitor(PubSubConnectionDropped);
@@ -981,7 +980,7 @@ namespace Sweet.Redis
             if (!discover)
             {
                 var nodes = sentinels.Nodes;
-                discover = (nodes == null || nodes.Length == 0);
+                discover = nodes.IsEmpty();
             }
 
             if (discover)

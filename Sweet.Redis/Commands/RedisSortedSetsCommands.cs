@@ -768,7 +768,7 @@ namespace Sweet.Redis
                         if (index < bLength - 1)
                         {
                             var b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -847,13 +847,13 @@ namespace Sweet.Redis
                         var k = String.Empty;
 
                         var b = bytes[index];
-                        if (b != null && b.Length > 0)
+                        if (!b.IsEmpty())
                             k = Encoding.UTF8.GetString(b);
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -961,7 +961,7 @@ namespace Sweet.Redis
                         if (index < bLength - 1)
                         {
                             var b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -1029,13 +1029,13 @@ namespace Sweet.Redis
                         var k = String.Empty;
 
                         var b = bytes[index];
-                        if (b != null && b.Length > 0)
+                        if (!b.IsEmpty())
                             k = Encoding.UTF8.GetString(b);
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -1357,7 +1357,7 @@ namespace Sweet.Redis
                         if (index < bLength - 1)
                         {
                             var b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -1423,13 +1423,13 @@ namespace Sweet.Redis
                         var k = String.Empty;
 
                         var b = bytes[index];
-                        if (b != null && b.Length > 0)
+                        if (!b.IsEmpty())
                             k = Encoding.UTF8.GetString(b);
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -1521,7 +1521,7 @@ namespace Sweet.Redis
                         if (index < bLength - 1)
                         {
                             var b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -1580,13 +1580,13 @@ namespace Sweet.Redis
                         var k = String.Empty;
 
                         var b = bytes[index];
-                        if (b != null && b.Length > 0)
+                        if (!b.IsEmpty())
                             k = Encoding.UTF8.GetString(b);
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 
@@ -1678,13 +1678,13 @@ namespace Sweet.Redis
                         var k = String.Empty;
 
                         var b = bytes[index];
-                        if (b != null && b.Length > 0)
+                        if (!b.IsEmpty())
                             k = Encoding.UTF8.GetString(b);
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
-                            if (b != null && b.Length > 0)
+                            if (!b.IsEmpty())
                                 double.TryParse(Encoding.UTF8.GetString(b), out d);
                         }
 

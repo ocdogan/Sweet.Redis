@@ -64,7 +64,7 @@ namespace Sweet.Redis
             int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
-            : base((endPoints != null && endPoints.Length > 0) ? endPoints : new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) }, 
+            : base(!endPoints.IsEmpty() ? endPoints : new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) }, 
                    masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout, 
                    connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }

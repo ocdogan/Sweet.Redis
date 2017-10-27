@@ -516,13 +516,8 @@ namespace Sweet.Redis
                     store.Clear();
                 }
 
-                if (members.Length > 0)
-                {
-                    if (members != null && members.Length > 0)
-                    {
-                        members.AsParallel().ForAll(m => m.Dispose());
-                    }
-                }
+                if (!members.IsEmpty())
+                    members.AsParallel().ForAll(m => m.Dispose());
             }
         }
 
@@ -1068,10 +1063,8 @@ namespace Sweet.Redis
                     s_PurgeTimer = new Timer((state) =>
                     {
                         var pools = GetPoolList();
-                        if (pools != null && pools.Length > 0)
-                        {
+                        if (!pools.IsEmpty())
                             pools.AsParallel().ForAll(p => p.PurgeIdles());
-                        }
                     }, null,
                         RedisConstants.ConnectionPurgePeriod,
                                              RedisConstants.ConnectionPurgePeriod);

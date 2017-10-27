@@ -236,7 +236,7 @@ namespace Sweet.Redis
                                 ipAddresses = isIp ? new[] { ipAddress } :
                                     RedisAsyncEx.GetHostAddressesAsync(host).Result;
 
-                                if (ipAddresses != null && ipAddresses.Length > 0)
+                                if (!ipAddresses.IsEmpty())
                                 {
                                     isIp = isIp || 
                                         ipAddresses.All(ip => IPAddress.IsLoopback(ip) || LocalIPs.Contains(ip));
@@ -265,7 +265,7 @@ namespace Sweet.Redis
 
         public static HashSet<IPEndPoint> ToIPEndPoints(RedisEndPoint[] endPoints)
         {
-            if (endPoints != null && endPoints.Length > 0)
+            if (!endPoints.IsEmpty())
             {
                 var ipEPList = new HashSet<IPEndPoint>();
                 foreach (var ep in endPoints)

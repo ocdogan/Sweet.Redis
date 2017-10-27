@@ -104,7 +104,7 @@ namespace Sweet.Redis
 
         public RedisSocket Dequeue()
         {
-            if (m_Items != null && m_Items.Length > 0)
+            if (!m_Items.IsEmpty())
             {
                 lock (m_ItemsLock)
                 {

@@ -473,7 +473,7 @@ namespace Sweet.Redis
                 var list = new List<byte[]>();
 
                 var readLength = 0;
-                if (line != null && line.Length > 0)
+                if (!line.IsEmpty())
                 {
                     readLength = line.Length;
                     list.Add(line);
@@ -482,7 +482,7 @@ namespace Sweet.Redis
                 while (TryToReceive(socket, -1, out receivedLength))
                 {
                     state = TryReadLineFromBuffer(state, out line);
-                    if (line != null && line.Length > 0)
+                    if (!line.IsEmpty())
                     {
                         readLength += line.Length;
                         list.Add(line);

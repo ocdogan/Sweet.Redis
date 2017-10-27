@@ -47,7 +47,7 @@ namespace Sweet.Redis
             if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
-            if (members.Length == 0)
+            if (members.IsEmpty())
                 return ExpectInteger(RedisCommandList.GeoAdd, key, member.Longitude.ToBytes(),
                                 member.Latitude.ToBytes(), member.Name.ToBytes());
 
@@ -109,7 +109,7 @@ namespace Sweet.Redis
             if (member.IsEmpty)
                 throw new ArgumentNullException("member");
 
-            if (members.Length == 0)
+            if (members.IsEmpty())
                 return ExpectMultiDataBytes(RedisCommandList.GeoHash, key, member);
 
             var parameters = key.Join(member);

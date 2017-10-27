@@ -103,7 +103,7 @@ namespace Sweet.Redis
                 if (!String.IsNullOrEmpty(value))
                 {
                     var lines = value.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (lines.Length > 0)
+                    if (!lines.IsEmpty())
                     {
                         var list = new List<RedisClientInfo>(lines.Length);
                         foreach (var line in lines)
@@ -128,7 +128,7 @@ namespace Sweet.Redis
                 if (!String.IsNullOrEmpty(value))
                 {
                     var lines = value.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (lines.Length > 0)
+                    if (!lines.IsEmpty())
                     {
                         var list = new List<IDictionary<string, string>>(lines.Length);
                         foreach (var line in lines)
@@ -180,11 +180,11 @@ namespace Sweet.Redis
             var lines = ExpectMultiDataStrings(RedisCommandList.Config, RedisCommandList.Get, parameter.ToBytes());
             if (lines != null)
             {
-                var length = lines.Length;
+                var linesLength = lines.Length;
                 if (lines.Length > 0)
                 {
-                    var result = new Dictionary<string, string>(lines.Length / 2);
-                    for (var i = 0; i < length; i += 2)
+                    var result = new Dictionary<string, string>(linesLength / 2);
+                    for (var i = 0; i < linesLength; i += 2)
                     {
                         var key = (lines[i] ?? String.Empty).Trim();
                         if (!String.IsNullOrEmpty(key))

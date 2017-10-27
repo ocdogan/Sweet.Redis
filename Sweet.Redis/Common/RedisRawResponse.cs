@@ -108,11 +108,9 @@ namespace Sweet.Redis
                 if (!m_Type.HasValue || m_Type == RedisRawObjectType.Array)
                     return false;
 
-                var data = m_Data;
-                var result = (data != null) && data.Length > 0;
+                var result = !m_Data.IsEmpty();
                 if (result)
                     Interlocked.Exchange(ref m_HasData, RedisConstants.True);
-
                 return result;
             }
         }
@@ -360,7 +358,8 @@ namespace Sweet.Redis
             if (Type == RedisRawObjectType.Error)
             {
                 var data = m_Data;
-                var hasData = data != null && data.Length > 0;
+                var hasData = !data.IsEmpty();
+
                 throw new RedisException(hasData ? Encoding.UTF8.GetString(data) : "No data returned",
                     hasData ? RedisErrorCode.ReturnedError : RedisErrorCode.CorruptResponse);
             }

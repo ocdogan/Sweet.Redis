@@ -138,7 +138,7 @@ namespace Sweet.Redis
                             .Select(ep => (RedisPoolSettings)settings.Clone(ep.Address.ToString(), ep.Port))
                             .ToArray();
 
-                    if (ipEPSettings != null && ipEPSettings.Length > 0)
+                    if (!ipEPSettings.IsEmpty())
                     {
                         var discoveredEndPoints = new HashSet<IPEndPoint>();
                         var emptyTuple = new Tuple<RedisRole, RedisSocket>[0];
@@ -152,7 +152,7 @@ namespace Sweet.Redis
                                 (role, group) => new Tuple<RedisRole, RedisSocket[]>(role, group.ToArray()))
                             .ToList();
 
-                        if (groupsTuples != null && groupsTuples.Count > 0)
+                        if (!groupsTuples.IsEmpty())
                         {
                             // 0: Masters, 1: Slaves, 2: Sentinels
                             const int MastersPos = 0, SlavesPos = 1, SentinelsPos = 2;
@@ -217,11 +217,11 @@ namespace Sweet.Redis
                     return null;
 
                 var endPoints = settings.EndPoints;
-                if (endPoints == null || endPoints.Length == 0)
+                if (endPoints.IsEmpty())
                     return null;
 
                 var ipAddresses = endPoints[0].ResolveHost();
-                if (ipAddresses == null || ipAddresses.Length == 0)
+                if (ipAddresses.IsEmpty())
                     return null;
 
                 var nodeEndPoint = new IPEndPoint(ipAddresses[0], endPoints[0].Port);
@@ -242,8 +242,7 @@ namespace Sweet.Redis
                     if (socket != null)
                         list.Add(new Tuple<RedisRole, RedisSocket>(role, socket));
 
-                    if (role != RedisRole.Undefined && 
-                        siblingEndPoints != null && siblingEndPoints.Length > 0)
+                    if (role != RedisRole.Undefined && !siblingEndPoints.IsEmpty())
                     {
                         foreach (var siblingEndPoint in siblingEndPoints)
                         {

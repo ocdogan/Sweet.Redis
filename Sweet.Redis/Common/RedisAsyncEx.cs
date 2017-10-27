@@ -45,7 +45,7 @@ namespace Sweet.Redis
                     try
                     {
                         var addresses = Dns.EndGetHostAddresses(ar);
-                        innerTcs.TrySetResult((addresses != null && addresses.Length > 0) ? addresses[0] : null);
+                        innerTcs.TrySetResult(!addresses.IsEmpty() ? addresses[0] : null);
                     }
                     catch (OperationCanceledException)
                     {

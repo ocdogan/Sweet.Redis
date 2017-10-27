@@ -1322,28 +1322,28 @@ namespace Sweet.Redis
 
         internal static bool IsDbRequiredCommand(this byte[] cmd)
         {
-            if (cmd != null && cmd.Length > 0)
+            if (!cmd.IsEmpty())
                 return !RedisConstants.CommandsNotRequireDB.Contains(cmd);
             return false;
         }
 
         internal static bool IsUpdateCommand(this byte[] cmd)
         {
-            if (cmd != null && cmd.Length > 0)
+            if (!cmd.IsEmpty())
                 return RedisConstants.CommandsThatUpdate.Contains(cmd);
             return false;
         }
 
         internal static bool IsAnyRoleCommand(this byte[] cmd)
         {
-            if (cmd != null && cmd.Length > 0)
+            if (!cmd.IsEmpty())
                 return RedisConstants.CommandsForAnyRole.Contains(cmd);
             return false;
         }
 
         internal static RedisRole CommandRole(this byte[] cmd)
         {
-            if (cmd == null || cmd.Length == 0)
+            if (cmd.IsEmpty())
                 return RedisRole.Undefined;
             if (cmd == RedisCommandList.Sentinel)
                 return RedisRole.Sentinel;

@@ -317,7 +317,7 @@ namespace Sweet.Redis
                                     queues = s_Queues.ToArray();
                             }
 
-                            if (queues != null && queues.Length > 0 && TimeoutCheckEnabled)
+                            if (!queues.IsEmpty() && TimeoutCheckEnabled)
                             {
                                 foreach (var queue in queues)
                                 {

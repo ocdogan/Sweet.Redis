@@ -138,7 +138,7 @@ namespace Sweet.Redis
                 try
                 {
                     var nodes = Nodes;
-                    if (nodes != null && nodes.Length > 0)
+                    if (!nodes.IsEmpty())
                     {
                         var monitoredPools = m_MonitoredPools;
 
@@ -164,7 +164,7 @@ namespace Sweet.Redis
                                 Action<object> onComplete,
                                  bool downNodes)
         {
-            if (nodes != null && nodes.Length > 0)
+            if (!nodes.IsEmpty())
             {
                 var filteredNodes = nodes
                     .Where(node =>
@@ -370,7 +370,7 @@ namespace Sweet.Redis
                                                         if (instanceEndPoint.IsEmpty() && !String.IsNullOrEmpty(instanceName))
                                                         {
                                                             var nameParts = instanceName.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
-                                                            if (nameParts != null && nameParts.Length > 1)
+                                                            if (!nameParts.IsEmpty())
                                                                 instanceEndPoint = ToEndPoint(nameParts[0], nameParts[1]);
                                                         }
 
@@ -416,7 +416,7 @@ namespace Sweet.Redis
                     if (monitoredPools.Count > 0)
                     {
                         var pools = monitoredPools.ToArray();
-                        if (pools != null && pools.Length > 0)
+                        if (!pools.IsEmpty())
                         {
                             foreach (var pool in pools)
                             {

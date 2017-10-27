@@ -156,7 +156,7 @@ namespace Sweet.Redis
 
         public bool IsEmpty
         {
-            get { return m_Data == null || m_Data.Length == 0; }
+            get { return m_Data.IsEmpty(); }
         }
 
         public int Length
@@ -304,37 +304,37 @@ namespace Sweet.Redis
 
         public static implicit operator DateTime? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (DateTime?)(new DateTime(long.Parse(Encoding.UTF8.GetString(param.Data)))) : null;
+            return !param.Data.IsEmpty() ? (DateTime?)(new DateTime(long.Parse(Encoding.UTF8.GetString(param.Data)))) : null;
         }
 
         public static implicit operator byte? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (byte?)param.Data[0] : null;
+            return !param.Data.IsEmpty() ? (byte?)param.Data[0] : null;
         }
 
         public static implicit operator short? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (short?)short.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (short?)short.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
         public static implicit operator int? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (int?)int.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (int?)int.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
         public static implicit operator long? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (long?)long.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (long?)long.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
         public static implicit operator double? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (double?)double.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (double?)double.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
         public static implicit operator bool? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null && param.Data.Length > 0 ? (bool?)bool.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (bool?)bool.Parse(Encoding.UTF8.GetString(param.Data)) : null;
         }
 
         public static implicit operator DateTime(RedisParam param) // implicit RedisParam to ? type conversion operator

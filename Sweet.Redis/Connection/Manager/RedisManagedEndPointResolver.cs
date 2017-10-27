@@ -122,7 +122,7 @@ namespace Sweet.Redis
 
         private RedisManagedNodesGroup ToNodesGroup(RedisRole role, RedisSocket[] sockets)
         {
-            if (sockets != null && sockets.Length > 0)
+            if (!sockets.IsEmpty())
             {
                 var baseSettings = Settings;
                 var nodeList = new List<RedisManagedNode>();

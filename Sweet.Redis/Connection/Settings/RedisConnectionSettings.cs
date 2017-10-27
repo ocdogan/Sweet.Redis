@@ -79,7 +79,7 @@ namespace Sweet.Redis
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
         {
-            EndPoints = (endPoints != null && endPoints.Length > 0) ? endPoints :
+            EndPoints = !endPoints.IsEmpty() ? endPoints :
                 new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) };
             UseSsl = useSsl;
             Password = password;
@@ -137,7 +137,7 @@ namespace Sweet.Redis
                 if (count > 0)
                 {
                     var result = endPoints.Where(ep => !ep.IsEmpty()).ToArray();
-                    if (result != null && result.Length > 0)
+                    if (!result.IsEmpty())
                         return result;
                 }
             }

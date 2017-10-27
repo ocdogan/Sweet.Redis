@@ -126,7 +126,7 @@ namespace Sweet.Redis
                 if (settings != null)
                 {
                     var endPoints = settings.EndPoints;
-                    if (endPoints != null && endPoints.Length > 0)
+                    if (!endPoints.IsEmpty())
                     {
                         foreach (var ep in endPoints)
                             if (ep != null)
@@ -217,7 +217,7 @@ namespace Sweet.Redis
 
         protected virtual void SendAsync(byte[] cmd, params byte[][] parameters)
         {
-            if (cmd != null && cmd.Length > 0)
+            if (!cmd.IsEmpty())
             {
                 Action action = () =>
                 {

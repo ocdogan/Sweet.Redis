@@ -136,7 +136,7 @@ namespace Sweet.Redis
                 if (settings != null)
                 {
                     var endPoints = settings.EndPoints;
-                    if (endPoints != null && endPoints.Length > 0)
+                    if (!endPoints.IsEmpty())
                     {
                         foreach (var ep in endPoints)
                             if (ep != null)
