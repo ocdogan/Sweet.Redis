@@ -186,14 +186,16 @@ namespace Sweet.Redis
         private const int PulseOnEveryMilliSecs = 1000;
 
         #endregion Constants
+
         #region Static Members
 
-        public static readonly IRedisCardio Instance = new RedisCardio();
+        public static readonly IRedisCardio Default = new RedisCardio();
 
         #endregion Static Members
 
-
         #region Field Members
+
+        private long m_PulseState;
 
         private Timer m_Ticker;
         private readonly object m_SyncRoot = new object();
@@ -212,11 +214,22 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_Probes, null);
+
             base.OnDispose(disposing);
             Stop();
         }
 
         #endregion Destructors
+
+        #region Properties
+
+        public bool Pulsing
+        {
+            get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+        }
+
+        #endregion Properties
 
         #region Methods
 
@@ -240,7 +253,6 @@ namespace Sweet.Redis
 
         public void Detach(IRedisHeartBeatProbe probe)
         {
-            ValidateNotDisposed();
             if (!ReferenceEquals(probe, null))
             {
                 lock (m_SyncRoot)
@@ -259,14 +271,19 @@ namespace Sweet.Redis
                 lock (m_SyncRoot)
                 {
                     if (m_Ticker == null)
+                    {
+                        Interlocked.Exchange(ref m_PulseState, RedisConstants.One);
                         Interlocked.Exchange(ref m_Ticker, new Timer((state) => { PulseAll(); },
                                                                      null, PulseOnEveryMilliSecs, PulseOnEveryMilliSecs));
+                    }
                 }
             }
         }
 
         private void Stop()
         {
+            Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
+
             var timer = Interlocked.Exchange(ref m_Ticker, null);
             if (timer != null)
                 timer.Dispose();
