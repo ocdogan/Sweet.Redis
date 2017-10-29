@@ -26,6 +26,8 @@ namespace Sweet.Redis
 {
     public interface IRedisCardio
     {
+        bool Pulsing { get; }
+
         void Attach(IRedisHeartBeatProbe probe, int interval);
         void Detach(IRedisHeartBeatProbe probe);
     }
