@@ -24,10 +24,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisCallbackHub<T>
+    internal class RedisCallbackHub<T> : RedisInternalDisposable
     {
         #region Field Members
 
@@ -35,6 +36,35 @@ namespace Sweet.Redis
         private Dictionary<string, RedisActionBag<T>> m_Subscriptions = new Dictionary<string, RedisActionBag<T>>();
 
         #endregion Field Members
+
+        #region Destructors
+
+        protected override void OnDispose(bool disposing)
+        {
+            base.OnDispose(disposing);
+
+            var subscriptions = Interlocked.Exchange(ref m_Subscriptions, null);
+            if (subscriptions != null)
+                subscriptions.Clear();
+        }
+
+        #endregion Destructors
+
+        #region Properties
+
+        public bool HasSubscription
+        {
+            get
+            {
+                lock (m_SyncObj)
+                {
+                    return !Disposed && (m_Subscriptions != null) &&
+                        (m_Subscriptions.Count > 0);
+                }
+            }
+        }
+
+        #endregion Properties
 
         #region Methods
 
@@ -44,10 +74,13 @@ namespace Sweet.Redis
             {
                 lock (m_SyncObj)
                 {
-                    RedisActionBag<T> callbacks;
-                    if (m_Subscriptions.TryGetValue(keyword, out callbacks) &&
-                        callbacks != null && callbacks.Count > 0)
-                        return new RedisActionBag<T>(callbacks);
+                    if (m_Subscriptions != null)
+                    {
+                        RedisActionBag<T> callbacks;
+                        if (m_Subscriptions.TryGetValue(keyword, out callbacks) &&
+                            callbacks != null && callbacks.Count > 0)
+                            return new RedisActionBag<T>(callbacks);
+                    }
                 }
             }
             return null;
@@ -57,7 +90,7 @@ namespace Sweet.Redis
         {
             lock (m_SyncObj)
             {
-                if (m_Subscriptions.Count > 0)
+                if (m_Subscriptions != null && m_Subscriptions.Count > 0)
                 {
                     var result = new Dictionary<string, RedisActionBag<T>>();
                     foreach (var kvp in m_Subscriptions)
@@ -73,14 +106,17 @@ namespace Sweet.Redis
         {
             if (!String.IsNullOrEmpty(keyword) && callback != null)
             {
-                RedisActionBag<T> callbacks;
                 lock (m_SyncObj)
                 {
-                    if (m_Subscriptions.TryGetValue(keyword, out callbacks) &&
-                        callbacks != null && callbacks.Count > 0)
+                    if (m_Subscriptions != null)
                     {
-                        var minfo = callback.Method;
-                        return callbacks.FindIndex(c => c.Method == minfo) > -1;
+                        RedisActionBag<T> callbacks;
+                        if (m_Subscriptions.TryGetValue(keyword, out callbacks) &&
+                            callbacks != null && callbacks.Count > 0)
+                        {
+                            var minfo = callback.Method;
+                            return callbacks.FindIndex(c => c.Method == minfo) > -1;
+                        }
                     }
                 }
             }
@@ -93,7 +129,7 @@ namespace Sweet.Redis
             {
                 lock (m_SyncObj)
                 {
-                    return m_Subscriptions.ContainsKey(keyword);
+                    return m_Subscriptions != null && m_Subscriptions.ContainsKey(keyword);
                 }
             }
             return false;
@@ -103,11 +139,14 @@ namespace Sweet.Redis
         {
             if (!String.IsNullOrEmpty(keyword))
             {
-                RedisActionBag<T> callbacks;
                 lock (m_SyncObj)
                 {
-                    if (m_Subscriptions.TryGetValue(keyword, out callbacks))
-                        return (callbacks != null && callbacks.Count > 0);
+                    if (m_Subscriptions != null)
+                    {
+                        RedisActionBag<T> callbacks;
+                        if (m_Subscriptions.TryGetValue(keyword, out callbacks))
+                            return (callbacks != null && callbacks.Count > 0);
+                    }
                 }
             }
             return false;
@@ -117,11 +156,14 @@ namespace Sweet.Redis
         {
             lock (m_SyncObj)
             {
-                foreach (var kvp in m_Subscriptions)
+                if (m_Subscriptions != null)
                 {
-                    var callbacks = kvp.Value;
-                    if (callbacks != null && callbacks.Count > 0)
-                        return false;
+                    foreach (var kvp in m_Subscriptions)
+                    {
+                        var callbacks = kvp.Value;
+                        if (callbacks != null && callbacks.Count > 0)
+                            return false;
+                    }
                 }
             }
             return true;
@@ -133,37 +175,38 @@ namespace Sweet.Redis
                 return false;
 
             var result = false;
-
-            RedisActionBag<T> bag;
-            if (!m_Subscriptions.TryGetValue(keyword, out bag))
+            if (m_Subscriptions != null)
             {
-                lock (m_SyncObj)
+                RedisActionBag<T> bag;
+                if (!m_Subscriptions.TryGetValue(keyword, out bag))
                 {
-                    if (!m_Subscriptions.TryGetValue(keyword, out bag))
+                    lock (m_SyncObj)
                     {
-                        bag = new RedisActionBag<T>();
-                        bag.Add(callback);
-                        m_Subscriptions[keyword] = bag;
-                        result = true;
+                        if (!m_Subscriptions.TryGetValue(keyword, out bag))
+                        {
+                            bag = new RedisActionBag<T>();
+                            bag.Add(callback);
+                            m_Subscriptions[keyword] = bag;
+                            result = true;
+                        }
+                    }
+                }
+
+                if (!result)
+                {
+                    lock (m_SyncObj)
+                    {
+                        var minfo = callback.Method;
+
+                        var index = bag.FindIndex(c => c.Method == minfo);
+                        if (index == -1)
+                        {
+                            bag.Add(callback);
+                            result = true;
+                        }
                     }
                 }
             }
-
-            if (!result)
-            {
-                lock (m_SyncObj)
-                {
-                    var minfo = callback.Method;
-
-                    var index = bag.FindIndex(c => c.Method == minfo);
-                    if (index == -1)
-                    {
-                        bag.Add(callback);
-                        result = true;
-                    }
-                }
-            }
-
             return result;
         }
 
@@ -174,18 +217,44 @@ namespace Sweet.Redis
                 return false;
 
             var result = false;
-
-            RedisActionBag<T> bag;
-            var processed = false;
-            if (!m_Subscriptions.TryGetValue(keyword, out bag))
+            if (m_Subscriptions != null)
             {
-                lock (m_SyncObj)
+                RedisActionBag<T> bag;
+                var processed = false;
+                if (!m_Subscriptions.TryGetValue(keyword, out bag))
                 {
-                    if (!m_Subscriptions.TryGetValue(keyword, out bag))
+                    lock (m_SyncObj)
                     {
-                        processed = true;
-                        bag = new RedisActionBag<T>();
+                        if (!m_Subscriptions.TryGetValue(keyword, out bag))
+                        {
+                            processed = true;
+                            bag = new RedisActionBag<T>();
 
+                            foreach (var callback in callbacks)
+                            {
+                                if (callback != null)
+                                {
+                                    var minfo = callback.Method;
+
+                                    var index = bag.FindIndex(c => c.Method == minfo);
+                                    if (index == -1)
+                                    {
+                                        bag.Add(callback);
+                                        result = true;
+                                    }
+                                }
+                            }
+
+                            if (result)
+                                m_Subscriptions[keyword] = bag;
+                        }
+                    }
+                }
+
+                if (!processed)
+                {
+                    lock (m_SyncObj)
+                    {
                         foreach (var callback in callbacks)
                         {
                             if (callback != null)
@@ -200,34 +269,9 @@ namespace Sweet.Redis
                                 }
                             }
                         }
-
-                        if (result)
-                            m_Subscriptions[keyword] = bag;
                     }
                 }
             }
-
-            if (!processed)
-            {
-                lock (m_SyncObj)
-                {
-                    foreach (var callback in callbacks)
-                    {
-                        if (callback != null)
-                        {
-                            var minfo = callback.Method;
-
-                            var index = bag.FindIndex(c => c.Method == minfo);
-                            if (index == -1)
-                            {
-                                bag.Add(callback);
-                                result = true;
-                            }
-                        }
-                    }
-                }
-            }
-
             return result;
         }
 
@@ -237,10 +281,13 @@ namespace Sweet.Redis
             {
                 lock (m_SyncObj)
                 {
-                    RedisActionBag<T> callbacks;
-                    if (m_Subscriptions.TryGetValue(keyword, out callbacks))
-                        m_Subscriptions.Remove(keyword);
-                    return callbacks;
+                    if (m_Subscriptions != null)
+                    {
+                        RedisActionBag<T> callbacks;
+                        if (m_Subscriptions.TryGetValue(keyword, out callbacks))
+                            m_Subscriptions.Remove(keyword);
+                        return callbacks;
+                    }
                 }
             }
             return null;
@@ -252,13 +299,16 @@ namespace Sweet.Redis
             {
                 lock (m_SyncObj)
                 {
-                    RedisActionBag<T> callbacks;
-                    if (m_Subscriptions.TryGetValue(keyword, out callbacks))
+                    if (m_Subscriptions != null)
                     {
-                        m_Subscriptions.Remove(keyword);
-                        if (callbacks != null && callbacks.Count > 0)
-                            callbacks.Clear();
-                        return true;
+                        RedisActionBag<T> callbacks;
+                        if (m_Subscriptions.TryGetValue(keyword, out callbacks))
+                        {
+                            m_Subscriptions.Remove(keyword);
+                            if (callbacks != null && callbacks.Count > 0)
+                                callbacks.Clear();
+                            return true;
+                        }
                     }
                 }
             }
@@ -271,17 +321,20 @@ namespace Sweet.Redis
             {
                 lock (m_SyncObj)
                 {
-                    RedisActionBag<T> callbacks;
-                    if (m_Subscriptions.TryGetValue(keyword, out callbacks) &&
-                        callbacks != null && callbacks.Count > 0)
+                    if (m_Subscriptions != null)
                     {
-                        var minfo = callback.Method;
-
-                        var index = callbacks.FindIndex(c => c.Method == minfo);
-                        if (index > -1)
+                        RedisActionBag<T> callbacks;
+                        if (m_Subscriptions.TryGetValue(keyword, out callbacks) &&
+                            callbacks != null && callbacks.Count > 0)
                         {
-                            callbacks.RemoveAt(index);
-                            return true;
+                            var minfo = callback.Method;
+
+                            var index = callbacks.FindIndex(c => c.Method == minfo);
+                            if (index > -1)
+                            {
+                                callbacks.RemoveAt(index);
+                                return true;
+                            }
                         }
                     }
                 }
@@ -291,7 +344,7 @@ namespace Sweet.Redis
 
         public bool Unregister(Action<T> callback)
         {
-            if (callback == null)
+            if (callback == null || m_Subscriptions == null)
                 return false;
 
             var result = false;
@@ -321,11 +374,14 @@ namespace Sweet.Redis
         {
             lock (m_SyncObj)
             {
-                foreach (var kvp in m_Subscriptions)
-                    if (kvp.Value != null)
-                        kvp.Value.Clear();
+                if (m_Subscriptions != null)
+                {
+                    foreach (var kvp in m_Subscriptions)
+                        if (kvp.Value != null)
+                            kvp.Value.Clear();
 
-                m_Subscriptions.Clear();
+                    m_Subscriptions.Clear();
+                }
             }
         }
 
