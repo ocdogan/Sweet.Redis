@@ -29,6 +29,7 @@ namespace Sweet.Redis
     public interface IRedisMonitorChannel : IRedisDisposableBase
     {
         RedisEndPoint EndPoint { get; }
+        DateTime LastMessageSeenTime { get; }
 
         void Monitor();
         void Quit();
