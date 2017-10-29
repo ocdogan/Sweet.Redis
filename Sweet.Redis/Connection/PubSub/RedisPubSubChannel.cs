@@ -76,6 +76,7 @@ namespace Sweet.Redis
         private long m_PulseFailCount;
 
         private Action<object> m_OnComplete;
+        private Action<object> m_OnPulseFail;
 
         private IRedisConnection m_Connection;
 
@@ -96,7 +97,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings, Action<object> onComplete)
+        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings, Action<object> onComplete, Action<object> onPulseFail)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
@@ -110,6 +111,7 @@ namespace Sweet.Redis
 
             m_Name = name;
             m_OnComplete = onComplete;
+            m_OnPulseFail = onPulseFail;
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
@@ -128,6 +130,7 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             Interlocked.Exchange(ref m_OnComplete, null);
+            Interlocked.Exchange(ref m_OnPulseFail, null);
             Interlocked.Exchange(ref m_Connection, null);
 
             if (m_ProbeAttached)
@@ -195,7 +198,8 @@ namespace Sweet.Redis
                 {
                     if (!Disposed)
                     {
-                        Send(RedisCommandList.Ping);
+                        if (ReferenceEquals(m_Connection, null))
+                            Send(RedisCommandList.Ping);
 
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
                         return true;
@@ -205,6 +209,8 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
+
+                    OnPulseFail();
                 }
                 finally
                 {
@@ -217,6 +223,13 @@ namespace Sweet.Redis
         void IRedisHeartBeatProbe.ResetPulseFailCount()
         {
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
+        }
+
+        private void OnPulseFail()
+        {
+            var onPulseFail = m_OnPulseFail;
+            if (onPulseFail != null)
+                onPulseFail.InvokeAsync(this);
         }
 
         private IRedisConnection Connect()
