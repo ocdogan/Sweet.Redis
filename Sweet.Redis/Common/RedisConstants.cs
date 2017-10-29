@@ -57,7 +57,7 @@ namespace Sweet.Redis
             "QUIT".ToBytes(),
             "SLOWLOG".ToBytes(),
             "SUBSCRIBE".ToBytes(),
-            "UNSUBSCRIBE".ToBytes() 
+            "UNSUBSCRIBE".ToBytes()
         };
 
         public static readonly HashSet<RedisByteArray> CommandsNotRequireDB = new HashSet<RedisByteArray> {
@@ -205,6 +205,10 @@ namespace Sweet.Redis
 
         public const int MinDbIndex = -1;
         public const int MaxDbIndex = 16;
+
+        public const int DefaultHeartBeatIntervalSecs = 10;
+        public const int MinHeartBeatIntervalSecs = 2;
+        public const int MaxHeartBeatIntervalSecs = 30;
 
         public const int DefaultConnectionTimeout = 10000;
         public const int MinConnectionTimeout = 100;

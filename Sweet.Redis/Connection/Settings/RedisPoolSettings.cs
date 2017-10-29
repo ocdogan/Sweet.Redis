@@ -38,42 +38,74 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisPoolSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultPort,
-            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
-            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true, bool useSsl = false,
+        public RedisPoolSettings(string host = RedisConstants.LocalHost,
+            int port = RedisConstants.DefaultPort,
+            string masterName = null,
+            string password = null,
+            string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout,
+            int readBufferSize = 0,
+            int writeBufferSize = 0,
+            bool heartBeatEnabled = true,
+            int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
+            bool useAsyncCompleter = true,
+            bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
                 sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisPoolSettings(HashSet<RedisEndPoint> endPoints,
-            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
-            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true, bool useSsl = false,
+            string masterName = null,
+            string password = null,
+            string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout,
+            int readBufferSize = 0,
+            int writeBufferSize = 0,
+            bool heartBeatEnabled = true,
+            int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
+            bool useAsyncCompleter = true,
+            bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(ToEndPointList(endPoints), masterName, password, clientName, connectionTimeout, receiveTimeout,
                 sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisPoolSettings(RedisEndPoint[] endPoints = null,
-            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount, int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
-            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout, int readBufferSize = 0, int writeBufferSize = 0,
-            bool useAsyncCompleter = true, bool useSsl = false,
+            string masterName = null,
+            string password = null,
+            string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int maxConnectionCount = RedisConstants.DefaultMaxConnectionCount,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int connectionIdleTimeout = RedisConstants.DefaultIdleTimeout,
+            int readBufferSize = 0,
+            int writeBufferSize = 0,
+            bool heartBeatEnabled = true,
+            int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
+            bool useAsyncCompleter = true,
+            bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : base(endPoints, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout,
-                   connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
+                   connectionWaitTimeout, readBufferSize, writeBufferSize, heartBeatEnabled, hearBeatIntervalInSecs,
+                   useSsl, sslCertificateSelection, sslCertificateValidation)
         {
             UseAsyncCompleter = useAsyncCompleter;
             ConnectionIdleTimeout = connectionIdleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, connectionIdleTimeout));
@@ -87,7 +119,7 @@ namespace Sweet.Redis
         public int ConnectionIdleTimeout { get; private set; }
 
         public int MaxConnectionCount { get; private set; }
-        
+
         public bool UseAsyncCompleter { get; private set; }
 
         # endregion Properties
@@ -96,10 +128,25 @@ namespace Sweet.Redis
 
         public override RedisConnectionSettings Clone(string host = null, int port = -1)
         {
-            return new RedisPoolSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultPort : port,
-                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout,
-                MaxConnectionCount, ConnectionWaitTimeout, ConnectionIdleTimeout, ReadBufferSize, WriteBufferSize,
-                UseAsyncCompleter, UseSsl, SslCertificateSelection, SslCertificateValidation);
+            return new RedisPoolSettings(host ?? RedisConstants.LocalHost,
+                            port < 1 ? RedisConstants.DefaultPort : port,
+                            MasterName,
+                            Password,
+                            ClientName,
+                            ConnectionTimeout,
+                            ReceiveTimeout,
+                            SendTimeout,
+                            MaxConnectionCount,
+                            ConnectionWaitTimeout,
+                            ConnectionIdleTimeout,
+                            ReadBufferSize,
+                            WriteBufferSize,
+                            HeartBeatEnabled,
+                            HearBeatIntervalInSecs,
+                            UseAsyncCompleter,
+                            UseSsl,
+                            SslCertificateSelection,
+                            SslCertificateValidation);
         }
 
         #endregion Methods

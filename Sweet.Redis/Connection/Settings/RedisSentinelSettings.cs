@@ -37,35 +37,66 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisSentinelSettings(string host = RedisConstants.LocalHost, int port = RedisConstants.DefaultSentinelPort,
-            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
+        public RedisSentinelSettings(string host = RedisConstants.LocalHost,
+            int port = RedisConstants.DefaultSentinelPort,
+            string masterName = null,
+            string password = null,
+            string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int readBufferSize = 0,
+            int writeBufferSize = 0,
+            bool heartBeatEnabled = true,
+            int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
+            bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
+                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, heartBeatEnabled, hearBeatIntervalInSecs,
+                useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisSentinelSettings(HashSet<RedisEndPoint> endPoints,
-            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
+            string masterName = null,
+            string password = null,
+            string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int readBufferSize = 0,
+            int writeBufferSize = 0,
+            bool heartBeatEnabled = true,
+            int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
+            bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(ToEndPointList(endPoints, RedisConstants.DefaultSentinelPort), masterName, password, clientName, connectionTimeout, receiveTimeout,
-                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
+                sendTimeout, connectionWaitTimeout, readBufferSize, writeBufferSize, heartBeatEnabled, hearBeatIntervalInSecs,
+                useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisSentinelSettings(RedisEndPoint[] endPoints = null,
-            string masterName = null, string password = null, string clientName = null, int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
-            int receiveTimeout = RedisConstants.DefaultReceiveTimeout, int sendTimeout = RedisConstants.DefaultSendTimeout,
-            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout, int readBufferSize = 0, int writeBufferSize = 0, bool useSsl = false,
+            string masterName = null,
+            string password = null,
+            string clientName = null,
+            int connectionTimeout = RedisConstants.DefaultConnectionTimeout,
+            int receiveTimeout = RedisConstants.DefaultReceiveTimeout,
+            int sendTimeout = RedisConstants.DefaultSendTimeout,
+            int connectionWaitTimeout = RedisConstants.DefaultWaitTimeout,
+            int readBufferSize = 0,
+            int writeBufferSize = 0,
+            bool heartBeatEnabled = true,
+            int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
+            bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : base(!endPoints.IsEmpty() ? endPoints : new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) },
                    masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout,
-                   connectionWaitTimeout, readBufferSize, writeBufferSize, useSsl, sslCertificateSelection, sslCertificateValidation)
+                   connectionWaitTimeout, readBufferSize, writeBufferSize, heartBeatEnabled, hearBeatIntervalInSecs,
+                   useSsl, sslCertificateSelection, sslCertificateValidation)
         { }
 
         #endregion .Ctors
@@ -74,9 +105,22 @@ namespace Sweet.Redis
 
         public override RedisConnectionSettings Clone(string host = null, int port = -1)
         {
-            return new RedisSentinelSettings(host ?? RedisConstants.LocalHost, port < 1 ? RedisConstants.DefaultSentinelPort : port,
-                MasterName, Password, ClientName, ConnectionTimeout, ReceiveTimeout, SendTimeout, ConnectionWaitTimeout,
-                ReadBufferSize, WriteBufferSize, UseSsl, SslCertificateSelection, SslCertificateValidation);
+            return new RedisSentinelSettings(host ?? RedisConstants.LocalHost,
+                            port < 1 ? RedisConstants.DefaultSentinelPort : port,
+                            MasterName,
+                            Password,
+                            ClientName,
+                            ConnectionTimeout,
+                            ReceiveTimeout,
+                            SendTimeout,
+                            ConnectionWaitTimeout,
+                            ReadBufferSize,
+                            WriteBufferSize,
+                            HeartBeatEnabled,
+                            HearBeatIntervalInSecs,
+                            UseSsl,
+                            SslCertificateSelection,
+                            SslCertificateValidation);
         }
 
         #endregion Methods
