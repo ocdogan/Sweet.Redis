@@ -22,6 +22,7 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -32,6 +33,8 @@ namespace Sweet.Redis
 
         private readonly object m_SyncRoot = new object();
 
+        private Action<object> m_OnPulseFail;
+
         private RedisManagedNodesGroup m_Masters;
         private RedisManagedNodesGroup m_Slaves;
 
@@ -39,10 +42,13 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedMSGroup(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null)
+        public RedisManagedMSGroup(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null,
+                                  Action<object> onPulseFail = null)
         {
-            m_Slaves = slaves ?? new RedisManagedNodesGroup(RedisRole.Slave, null);
-            m_Masters = masters ?? new RedisManagedNodesGroup(RedisRole.Master, null);
+            m_OnPulseFail = onPulseFail;
+
+            ExchangeSlavesInternal(slaves ?? new RedisManagedNodesGroup(RedisRole.Slave, null, null));
+            ExchangeMastersInternal(masters ?? new RedisManagedNodesGroup(RedisRole.Master, null, null));
         }
 
         #endregion .Ctors
@@ -53,11 +59,13 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            var masters = Interlocked.Exchange(ref m_Masters, null);
-            var slaves = Interlocked.Exchange(ref m_Slaves, null);
+            Interlocked.Exchange(ref m_OnPulseFail, null);
 
-            if (masters != null) masters.Dispose();
+            var slaves = ExchangeSlavesInternal(null);
+            var masters = ExchangeMastersInternal(null);
+
             if (slaves != null) slaves.Dispose();
+            if (masters != null) masters.Dispose();
         }
 
         #endregion Destructors
@@ -72,21 +80,57 @@ namespace Sweet.Redis
 
         #region Methods
 
+        internal void SetOnPulseFail(Action<object> onPulseFail)
+        {
+            Interlocked.Exchange(ref m_OnPulseFail, onPulseFail);
+        }
+
+        private void OnPulseFail(object sender)
+        {
+            var onPulseFail = m_OnPulseFail;
+            if (onPulseFail != null)
+                onPulseFail(sender);
+        }
+
         public RedisManagedNodesGroup ExchangeMasters(RedisManagedNodesGroup masters)
         {
             ValidateNotDisposed();
+            return ExchangeMastersInternal(masters);
+        }
+
+        private RedisManagedNodesGroup ExchangeMastersInternal(RedisManagedNodesGroup masters)
+        {
             lock (m_SyncRoot)
             {
-                return Interlocked.Exchange(ref m_Masters, masters);
+                var oldGroup = Interlocked.Exchange(ref m_Masters, masters);
+                if (oldGroup != null)
+                    oldGroup.SetOnPulseFail(null);
+
+                if (masters != null)
+                    masters.SetOnPulseFail(OnPulseFail);
+
+                return oldGroup;
             }
         }
 
         public RedisManagedNodesGroup ExchangeSlaves(RedisManagedNodesGroup slaves)
         {
             ValidateNotDisposed();
+            return ExchangeSlavesInternal(slaves);
+        }
+
+        private RedisManagedNodesGroup ExchangeSlavesInternal(RedisManagedNodesGroup slaves)
+        {
             lock (m_SyncRoot)
             {
-                return Interlocked.Exchange(ref m_Slaves, slaves);
+                var oldGroup = Interlocked.Exchange(ref m_Slaves, slaves);
+                if (oldGroup != null)
+                    oldGroup.SetOnPulseFail(null);
+
+                if (slaves != null)
+                    slaves.SetOnPulseFail(OnPulseFail);
+
+                return oldGroup;
             }
         }
 

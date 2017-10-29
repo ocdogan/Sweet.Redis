@@ -163,7 +163,7 @@ namespace Sweet.Redis
                 return false;
             }
 
-            public void ResetPulseFailCount()
+            public void ResetPulseFailCounter()
             {
                 Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
             }
@@ -244,11 +244,13 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            if (m_ProbeAttached)
-                RedisCardio.Default.Detach(this);
-
             Interlocked.Exchange(ref MonitorCompleted, null);
             Interlocked.Exchange(ref PubSubCompleted, null);
+            Interlocked.Exchange(ref PubSubPulseFailed, null);
+            Interlocked.Exchange(ref PoolPulseFailed, null);
+
+            if (m_ProbeAttached)
+                RedisCardio.Default.Detach(this);
 
             RedisConnectionPool.Unregister(this);
             CloseMemberStore();
@@ -390,7 +392,7 @@ namespace Sweet.Redis
         {
             var failEvent = PubSubPulseFailed;
             if (failEvent != null)
-                failEvent(this, EventArgs.Empty);
+                failEvent(sender, EventArgs.Empty);
         }
 
         protected override void ApplyRole(RedisRole role)
@@ -486,7 +488,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        void IRedisHeartBeatProbe.ResetPulseFailCount()
+        void IRedisHeartBeatProbe.ResetPulseFailCounter()
         {
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }

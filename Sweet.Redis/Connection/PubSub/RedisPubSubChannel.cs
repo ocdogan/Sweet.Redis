@@ -220,7 +220,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        void IRedisHeartBeatProbe.ResetPulseFailCount()
+        void IRedisHeartBeatProbe.ResetPulseFailCounter()
         {
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }

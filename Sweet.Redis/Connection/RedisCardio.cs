@@ -257,9 +257,15 @@ namespace Sweet.Redis
             {
                 lock (m_SyncRoot)
                 {
-                    m_Probes.RemoveWhere((c) => ReferenceEquals(c.Probe, probe));
-                    if (m_Probes.Count == 0)
+                    var probes = m_Probes;
+                    if (probes == null)
                         Stop();
+                    else
+                    {
+                        probes.RemoveWhere((c) => ReferenceEquals(c.Probe, probe));
+                        if (probes.Count == 0)
+                            Stop();
+                    }
                 }
             }
         }

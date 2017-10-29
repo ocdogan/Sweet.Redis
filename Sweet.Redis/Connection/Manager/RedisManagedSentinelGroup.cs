@@ -73,8 +73,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedSentinelGroup(string masterName, RedisManagedNode[] nodes)
-            : base(RedisRole.Sentinel, nodes)
+        public RedisManagedSentinelGroup(string masterName, RedisManagedNode[] nodes, Action<object> onPulseFail)
+            : base(RedisRole.Sentinel, nodes, onPulseFail)
         {
             masterName = (masterName ?? String.Empty).Trim();
             if (String.IsNullOrEmpty(masterName))
@@ -350,7 +350,7 @@ namespace Sweet.Redis
                                                 if (masterName == MasterName)
                                                 {
                                                     var masterEndPoint = ToEndPoint(parts[2], parts[3]);
-                                                    onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, 
+                                                    onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType,
                                                             masterName, masterEndPoint, null, null));
                                                 }
                                                 break;
@@ -374,7 +374,7 @@ namespace Sweet.Redis
                                                                 instanceEndPoint = ToEndPoint(nameParts[0], nameParts[1]);
                                                         }
 
-                                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType, 
+                                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType,
                                                                 instanceName, instanceEndPoint, masterName, masterEndPoint));
                                                     }
                                                 }

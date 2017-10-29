@@ -32,6 +32,8 @@ namespace Sweet.Redis
     {
         #region Field Members
 
+        private Action<object> m_OnPulseFail;
+
         private int m_NodeIndex;
         private readonly object m_SyncRoot = new object();
 
@@ -41,13 +43,21 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes)
+        public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes,
+                                     Action<object> onPulseFail)
         {
             Role = role;
+            m_OnPulseFail = onPulseFail;
             m_Nodes = nodes ?? new RedisManagedNode[0];
 
             if (nodes.IsEmpty())
                 m_NodeIndex = -1;
+            else
+            {
+                foreach (var node in nodes)
+                    if (node != null)
+                        node.SetOnPulseFail(OnPulseFail);
+            }
         }
 
         #endregion .Ctors
@@ -56,6 +66,8 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_OnPulseFail, null);
+
             base.OnDispose(disposing);
             DisposeNodes();
         }
@@ -72,14 +84,44 @@ namespace Sweet.Redis
 
         #region Methods
 
+        internal void SetOnPulseFail(Action<object> onPulseFail)
+        {
+            Interlocked.Exchange(ref m_OnPulseFail, onPulseFail);
+        }
+
+        private void OnPulseFail(object sender)
+        {
+            var onPulseFail = m_OnPulseFail;
+            if (onPulseFail != null)
+                onPulseFail(sender);
+        }
+
         public virtual RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
         {
             ValidateNotDisposed();
+            return ExchangeNodesInternal(nodes);
+        }
+
+        private RedisManagedNode[] ExchangeNodesInternal(RedisManagedNode[] nodes)
+        {
             lock (m_SyncRoot)
             {
                 var oldNodes = Interlocked.Exchange(ref m_Nodes, nodes);
                 if (nodes.IsEmpty())
                     m_NodeIndex = -1;
+                else
+                {
+                    foreach (var node in nodes)
+                        if (node != null)
+                            node.SetOnPulseFail(OnPulseFail);
+                }
+
+                if (!oldNodes.IsEmpty())
+                {
+                    foreach (var node in oldNodes)
+                        if (node != null)
+                            node.SetOnPulseFail(null);
+                }
 
                 return oldNodes;
             }

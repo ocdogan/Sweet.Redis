@@ -22,6 +22,7 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -29,6 +30,8 @@ namespace Sweet.Redis
     internal class RedisManagedNode : RedisDisposable
     {
         #region Field Members
+
+        private Action<object> m_OnPulseFail;
 
         private bool m_OwnsPool;
         private RedisRole m_Role;
@@ -39,12 +42,21 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool, bool ownsPool = true)
+        public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool,
+                                Action<object> onPulseFail, bool ownsPool = true)
         {
             m_Pool = pool;
             Role = role;
             m_OwnsPool = ownsPool;
             m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
+
+            m_OnPulseFail = onPulseFail;
+
+            if (pool != null)
+            {
+                pool.PoolPulseFailed += OnPoolPulseFail;
+                pool.PubSubPulseFailed += OnPubSubPulseFail;
+            }
         }
 
         #endregion .Ctors
@@ -53,9 +65,11 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_OnPulseFail, null);
+
             base.OnDispose(disposing);
 
-            var pool = Interlocked.Exchange(ref m_Pool, null);
+            var pool = ExchangePoolInternal(null);
             if (m_OwnsPool && pool != null)
                 pool.Dispose();
         }
@@ -68,7 +82,7 @@ namespace Sweet.Redis
 
         public bool IsDown
         {
-            get 
+            get
             {
                 var pool = m_Pool;
                 return !pool.IsAlive() || pool.SDown || pool.ODown;
@@ -134,14 +148,48 @@ namespace Sweet.Redis
         public RedisConnectionPool ExchangePool(RedisManagedConnectionPool pool)
         {
             ValidateNotDisposed();
+            return ExchangePoolInternal(pool);
+        }
 
+        private RedisConnectionPool ExchangePoolInternal(RedisManagedConnectionPool pool)
+        {
             var oldPool = Interlocked.Exchange(ref m_Pool, pool);
-            m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
+            if (!Disposed)
+                m_EndPoint = pool.IsAlive() ? pool.EndPoint : RedisEndPoint.Empty;
 
-            if (pool != null) 
+            if (pool.IsAlive())
+            {
                 pool.Role = m_Role;
+                pool.PoolPulseFailed += OnPoolPulseFail;
+                pool.PubSubPulseFailed += OnPubSubPulseFail;
+            }
+
+            if (oldPool != null)
+            {
+                oldPool.PoolPulseFailed -= OnPoolPulseFail;
+                oldPool.PubSubPulseFailed -= OnPubSubPulseFail;
+            }
 
             return oldPool;
+        }
+
+        internal void SetOnPulseFail(Action<object> onPulseFail)
+        {
+            Interlocked.Exchange(ref m_OnPulseFail, onPulseFail);
+        }
+
+        private void OnPoolPulseFail(object sender, EventArgs e)
+        {
+            var onPulseFail = m_OnPulseFail;
+            if (onPulseFail != null)
+                onPulseFail(sender);
+        }
+
+        private void OnPubSubPulseFail(object sender, EventArgs e)
+        {
+            var onPulseFail = m_OnPulseFail;
+            if (onPulseFail != null)
+                onPulseFail(sender);
         }
 
         #endregion Methods

@@ -30,6 +30,6 @@ namespace Sweet.Redis
         long PulseFailCount { get; }
 
         bool Pulse();
-        void ResetPulseFailCount();
+        void ResetPulseFailCounter();
     }
 }
