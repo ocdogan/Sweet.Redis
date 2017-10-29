@@ -62,6 +62,8 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private DateTime m_LastMessageSeenTime;
+
         private event Action<object> m_OnComplete;
 
         private RedisPoolSettings m_Settings;
@@ -137,6 +139,8 @@ namespace Sweet.Redis
             }
         }
 
+        public DateTime LastMessageSeenTime { get; }
+
         public RedisConnectionSettings Settings { get { return m_Settings; } }
 
         #endregion Properties
@@ -197,6 +201,7 @@ namespace Sweet.Redis
 
         protected virtual void ResponseReceived(IRedisRawResponse response)
         {
+            m_LastMessageSeenTime = DateTime.UtcNow;
             if (CanSendResponse(response))
             {
                 var subscriptions = m_Subscriptions;
