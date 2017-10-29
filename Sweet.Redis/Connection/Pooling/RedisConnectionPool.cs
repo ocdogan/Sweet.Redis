@@ -214,6 +214,8 @@ namespace Sweet.Redis
 
         public event EventHandler MonitorCompleted;
         public event EventHandler PubSubCompleted;
+        public event EventHandler PoolPulseFailed;
+        public event EventHandler PubSubPulseFailed;
 
         #endregion Events
 
@@ -336,7 +338,8 @@ namespace Sweet.Redis
                                 var onComplete = PubSubCompleted;
                                 if (onComplete != null)
                                     onComplete(this, EventArgs.Empty);
-                            });
+                            },
+                            OnPubSubPulseFail);
                             Interlocked.Exchange(ref m_PubSubChannel, channel);
                         }
                     }
@@ -381,6 +384,13 @@ namespace Sweet.Redis
                     throw new RedisFatalException(new ObjectDisposedException(Name), RedisErrorCode.ObjectDisposed);
                 base.ValidateNotDisposed();
             }
+        }
+
+        protected virtual void OnPubSubPulseFail(object sender)
+        {
+            var failEvent = PubSubPulseFailed;
+            if (failEvent != null)
+                failEvent(this, EventArgs.Empty);
         }
 
         protected override void ApplyRole(RedisRole role)
@@ -465,6 +475,8 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
+
+                    OnPoolPulseFail();
                 }
                 finally
                 {
@@ -477,6 +489,20 @@ namespace Sweet.Redis
         void IRedisHeartBeatProbe.ResetPulseFailCount()
         {
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
+        }
+
+
+        private void OnPoolPulseFail()
+        {
+            var failEvent = PoolPulseFailed;
+            if (failEvent != null)
+            {
+                Action failAction = () =>
+                {
+                    failEvent(this, EventArgs.Empty);
+                };
+                failAction.InvokeAsync();
+            }
         }
 
         private static bool PulseSocket(RedisSocket socket)
