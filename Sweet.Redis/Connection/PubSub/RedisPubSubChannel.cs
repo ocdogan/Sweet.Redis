@@ -69,7 +69,12 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private long m_PulseState;
+        private bool m_ProbeAttached;
+
         private Action<object> m_OnComplete;
+
+        private IRedisConnection m_Connection;
 
         private string m_Name;
         private RedisPoolSettings m_Settings;
@@ -105,6 +110,12 @@ namespace Sweet.Redis
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
+
+            if (m_Settings != null && m_Settings.HeartBeatEnabled)
+            {
+                RedisCardio.Default.Attach(this, m_Settings.HearBeatIntervalInSecs);
+                m_ProbeAttached = true;
+            }
         }
 
         #endregion .Ctors
@@ -114,6 +125,10 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             Interlocked.Exchange(ref m_OnComplete, null);
+            Interlocked.Exchange(ref m_Connection, null);
+
+            if (m_ProbeAttached)
+                RedisCardio.Default.Detach(this);
 
             var connectionProvider = Interlocked.Exchange(ref m_ConnectionProvider, null);
             if (connectionProvider != null)
@@ -150,6 +165,11 @@ namespace Sweet.Redis
 
         public string Name { get { return m_Name; } }
 
+        public bool Pulsing
+        {
+            get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+        }
+
         public RedisPoolSettings Settings { get { return m_Settings; } }
 
         #endregion Properties
@@ -158,31 +178,54 @@ namespace Sweet.Redis
 
         bool IRedisHeartBeatProbe.Pulse()
         {
-            return true;
+            if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
+                RedisConstants.Zero)
+            {
+                try
+                {
+                    if (!Disposed)
+                    {
+                        Send(RedisCommandList.Ping);
+                        return true;
+                    }
+                }
+                catch (Exception)
+                { }
+                finally
+                {
+                    Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
+                }
+            }
+            return false;
         }
 
         private IRedisConnection Connect()
         {
             ValidateNotDisposed();
 
-            var connectionProvider = m_ConnectionProvider;
-            if (connectionProvider != null)
+            var connection = m_Connection;
+            if (connection == null)
             {
-                var connection = connectionProvider.Connect(-1, RedisRole.Master);
-
-                if (connection != null && !connection.Connected)
-                    connection.Connect();
-
-                ((RedisContinuousReaderConnection)connection).BeginReceive((sende) =>
+                var connectionProvider = m_ConnectionProvider;
+                if (connectionProvider != null)
                 {
-                    var onComplete = m_OnComplete;
-                    if (onComplete != null)
-                        onComplete(this);
-                });
+                    m_Connection = (connection = connectionProvider.Connect(-1, RedisRole.Master));
+                    if (connection != null && !connection.Connected)
+                        connection.Connect();
 
-                return connection;
+                    ((RedisContinuousReaderConnection)connection).BeginReceive((sender) =>
+                    {
+                        Interlocked.Exchange(ref m_Connection, null);
+
+                        var onComplete = m_OnComplete;
+                        if (onComplete != null)
+                            onComplete(this);
+                    });
+
+                    return connection;
+                }
             }
-            return null;
+            return connection;
         }
 
         internal void SetOnComplete(Action<object> onComplete)
@@ -327,6 +370,21 @@ namespace Sweet.Redis
                         SendAsync(RedisCommandList.PSubscribe, newItems.ToArray());
                 }
             }
+        }
+
+        private void Send(byte[] cmd, params byte[][] parameters)
+        {
+            Action action = () =>
+            {
+                var connection = Connect();
+                if (connection != null && connection.Connected)
+                {
+                    var pubSubCmd = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
+                    connection.SendAsync(pubSubCmd)
+                              .ContinueWith(t => pubSubCmd.Dispose()).Wait();
+                }
+            };
+            action.Invoke();
         }
 
         private void SendAsync(byte[] cmd, params byte[][] parameters)

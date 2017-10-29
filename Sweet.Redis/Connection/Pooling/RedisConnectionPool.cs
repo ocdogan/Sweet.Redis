@@ -26,24 +26,29 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    public class RedisConnectionPool : RedisConnectionProvider, IRedisConnectionPool
+    public class RedisConnectionPool : RedisConnectionProvider, IRedisConnectionPool, IRedisHeartBeatProbe
     {
         #region RedisConnectionPoolMember
 
-        private class RedisConnectionPoolMember : RedisDisposable
+        private class RedisConnectionPoolMember : RedisDisposable, IRedisHeartBeatProbe
         {
             #region Field Members
 
+            private long m_PulseState;
             private RedisSocket m_Socket;
+            private RedisConnectionSettings m_Settings;
+
+            private readonly object m_SyncRoot = new object();
 
             #endregion Field Members
 
             #region .Ctors
 
-            public RedisConnectionPoolMember(RedisSocket socket, int dbIndex)
+            public RedisConnectionPoolMember(RedisSocket socket, int dbIndex, RedisConnectionSettings settings)
             {
                 DbIndex = dbIndex;
                 Socket = socket;
@@ -52,11 +57,28 @@ namespace Sweet.Redis
 
             #endregion .Ctors
 
+            #region Destructors
+
+            protected override void OnDispose(bool disposing)
+            {
+                Interlocked.Exchange(ref m_Settings, null);
+                base.OnDispose(disposing);
+
+                ReleaseSocketInternal().DisposeSocket();
+            }
+
+            #endregion Destructors
+
             #region Properties
 
             public int DbIndex { get; private set; }
 
             public DateTime PooledTime { get; private set; }
+
+            public bool Pulsing
+            {
+                get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+            }
 
             public RedisRole Role
             {
@@ -84,14 +106,49 @@ namespace Sweet.Redis
 
             private RedisSocket ReleaseSocketInternal()
             {
-                var socket = Interlocked.Exchange(ref m_Socket, null);
-                GC.SuppressFinalize(this);
-                return socket;
+                lock (m_SyncRoot)
+                {
+                    var socket = Interlocked.Exchange(ref m_Socket, null);
+                    GC.SuppressFinalize(this);
+                    return socket;
+                }
             }
 
-            protected override void OnDispose(bool disposing)
+            public bool Pulse()
             {
-                ReleaseSocketInternal().DisposeSocket();
+                if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
+                    RedisConstants.Zero)
+                {
+                    try
+                    {
+                        if (!Disposed)
+                        {
+                            lock (m_SyncRoot)
+                            {
+                                var socket = m_Socket;
+                                if (socket.IsConnected(10))
+                                {
+                                    var settings = m_Settings;
+                                    if (settings != null)
+                                    {
+                                        using (var cmd = new RedisCommand(-1, RedisCommandList.Ping))
+                                        {
+                                            cmd.ExpectSimpleString(new RedisSocketContext(socket, settings), "PONG");
+                                        }
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    { }
+                    finally
+                    {
+                        Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
+                    }
+                }
+                return false;
             }
 
             #endregion Methods
@@ -114,15 +171,14 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        #region Field Readonly Members
+        private long m_PulseState;
+        private bool m_ProbeAttached;
 
         private RedisAsyncRequestQProcessor m_Processor;
 
         private RedisConnectionPoolMember m_MemberStoreTail;
         private readonly object m_MemberStoreLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
-
-        #endregion Field Readonly Members
 
         private int m_PurgingIdles;
 
@@ -154,6 +210,12 @@ namespace Sweet.Redis
 
             m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
             m_Processor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
+
+            if (thisSettings.HeartBeatEnabled)
+            {
+                RedisCardio.Default.Attach(this, thisSettings.HearBeatIntervalInSecs);
+                m_ProbeAttached = true;
+            }
         }
 
         #endregion .Ctors
@@ -162,6 +224,9 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            if (m_ProbeAttached)
+                RedisCardio.Default.Detach(this);
+
             Interlocked.Exchange(ref MonitorCompleted, null);
             Interlocked.Exchange(ref PubSubCompleted, null);
 
@@ -262,6 +327,11 @@ namespace Sweet.Redis
             }
         }
 
+        public bool Pulsing
+        {
+            get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+        }
+
         public bool ProcessingQ
         {
             get
@@ -278,7 +348,7 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Member Methods
+        #region Methods
 
         public override void ValidateNotDisposed()
         {
@@ -325,6 +395,66 @@ namespace Sweet.Redis
             ValidateNotDisposed();
             return new RedisDb(this, dbIndex);
         }
+
+        #region Pulse
+
+        bool IRedisHeartBeatProbe.Pulse()
+        {
+            if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
+                RedisConstants.Zero)
+            {
+                try
+                {
+                    if (!Disposed)
+                    {
+                        IRedisHeartBeatProbe[] members = null;
+                        lock (m_MemberStoreLock)
+                        {
+                            if (m_MemberStore != null && m_MemberStore.Count > 0)
+                                members = m_MemberStore.ToArray();
+                        }
+
+                        if (members != null && members.Length > 0)
+                        {
+                            Action<IRedisHeartBeatProbe> pulseAction =
+                                (member) =>
+                                {
+                                    try
+                                    {
+                                        if (!Disposed && !ReferenceEquals(member, null) && !member.Pulsing)
+                                            member.Pulse();
+                                    }
+                                    catch (Exception)
+                                    { }
+                                };
+
+                            if (members.Length == 1)
+                                pulseAction(members[0]);
+                            else
+                                Parallel.ForEach(members, (member) => { pulseAction(member); });
+                        }
+                    }
+                }
+                catch (Exception)
+                { }
+                finally
+                {
+                    Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
+                }
+            }
+            return false;
+        }
+
+        private static bool PulseSocket(RedisSocket socket)
+        {
+            if (socket.IsConnected(10))
+            {
+
+            }
+            return false;
+        }
+
+        #endregion Pulse
 
         #region Processor Methods
 
@@ -390,7 +520,7 @@ namespace Sweet.Redis
         {
             if (socket.IsAlive())
             {
-                var member = new RedisConnectionPoolMember(socket, socket.DbIndex);
+                var member = new RedisConnectionPoolMember(socket, socket.DbIndex, Settings);
                 lock (m_MemberStoreLock)
                 {
                     var prevTail = Interlocked.Exchange(ref m_MemberStoreTail, member);
@@ -1049,8 +1179,6 @@ namespace Sweet.Redis
 
         #endregion IRedisCommandExecuter Methods
 
-        #endregion Member Methods
-
         #region Static Methods
 
         private static void Register(RedisConnectionPool pool)
@@ -1101,5 +1229,7 @@ namespace Sweet.Redis
         }
 
         #endregion Static Methods
+
+        #endregion Methods
     }
 }
