@@ -207,8 +207,8 @@ namespace Sweet.Redis
         public const int MaxDbIndex = 16;
 
         public const int DefaultHeartBeatIntervalSecs = 10;
-        public const int MinHeartBeatIntervalSecs = 2;
-        public const int MaxHeartBeatIntervalSecs = 30;
+        public const int MinHeartBeatIntervalSecs = 5;
+        public const int MaxHeartBeatIntervalSecs = 120;
 
         public const int DefaultConnectionTimeout = 10000;
         public const int MinConnectionTimeout = 100;
