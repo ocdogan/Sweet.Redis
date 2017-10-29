@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private Action<object> m_OnPulseFail;
+        private Action<object, bool> m_OnPulseStateChange;
 
         private bool m_OwnsPool;
         private RedisRole m_Role;
@@ -43,19 +43,19 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool,
-                                Action<object> onPulseFail, bool ownsPool = true)
+                                Action<object, bool> onPulseStateChange, bool ownsPool = true)
         {
             m_Pool = pool;
             Role = role;
             m_OwnsPool = ownsPool;
             m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
 
-            m_OnPulseFail = onPulseFail;
+            m_OnPulseStateChange = onPulseStateChange;
 
             if (pool != null)
             {
-                pool.PoolPulseFailed += OnPoolPulseFail;
-                pool.PubSubPulseFailed += OnPubSubPulseFail;
+                pool.PoolPulseStateChanged += OnPoolPulseStateChange;
+                pool.PubSubPulseStateChanged += OnPubSubPulseStateChange;
             }
         }
 
@@ -65,7 +65,7 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Interlocked.Exchange(ref m_OnPulseFail, null);
+            Interlocked.Exchange(ref m_OnPulseStateChange, null);
 
             base.OnDispose(disposing);
 
@@ -160,36 +160,36 @@ namespace Sweet.Redis
             if (pool.IsAlive())
             {
                 pool.Role = m_Role;
-                pool.PoolPulseFailed += OnPoolPulseFail;
-                pool.PubSubPulseFailed += OnPubSubPulseFail;
+                pool.PoolPulseStateChanged += OnPoolPulseStateChange;
+                pool.PubSubPulseStateChanged += OnPubSubPulseStateChange;
             }
 
             if (oldPool != null)
             {
-                oldPool.PoolPulseFailed -= OnPoolPulseFail;
-                oldPool.PubSubPulseFailed -= OnPubSubPulseFail;
+                oldPool.PoolPulseStateChanged -= OnPoolPulseStateChange;
+                oldPool.PubSubPulseStateChanged -= OnPubSubPulseStateChange;
             }
 
             return oldPool;
         }
 
-        internal void SetOnPulseFail(Action<object> onPulseFail)
+        internal void SetOnPulseStateChange(Action<object, bool> onPulseStateChange)
         {
-            Interlocked.Exchange(ref m_OnPulseFail, onPulseFail);
+            Interlocked.Exchange(ref m_OnPulseStateChange, onPulseStateChange);
         }
 
-        private void OnPoolPulseFail(object sender, EventArgs e)
+        protected virtual void OnPoolPulseStateChange(object sender, bool alive)
         {
-            var onPulseFail = m_OnPulseFail;
-            if (onPulseFail != null)
-                onPulseFail(sender);
+            var onPulseStateChange = m_OnPulseStateChange;
+            if (onPulseStateChange != null)
+                onPulseStateChange(sender, alive);
         }
 
-        private void OnPubSubPulseFail(object sender, EventArgs e)
+        protected virtual void OnPubSubPulseStateChange(object sender, bool alive)
         {
-            var onPulseFail = m_OnPulseFail;
-            if (onPulseFail != null)
-                onPulseFail(sender);
+            var onPulseStateChange = m_OnPulseStateChange;
+            if (onPulseStateChange != null)
+                onPulseStateChange(sender, alive);
         }
 
         #endregion Methods

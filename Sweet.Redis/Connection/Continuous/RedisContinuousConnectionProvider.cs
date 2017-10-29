@@ -53,6 +53,17 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_OnReceiveResponse, null);
         }
 
+        protected internal override IRedisConnection Connect(int dbIndex, RedisRole expectedRole)
+        {
+            ValidateNotDisposed();
+
+            var connection = m_Connection;
+            if (connection.IsAlive())
+                return connection;
+
+            return base.Connect(dbIndex, expectedRole);
+        }
+
         protected override IRedisConnection OnNewConnection(RedisSocket socket, int dbIndex, RedisRole role, bool connectImmediately = true)
         {
             var settings = (Settings as RedisPoolSettings) ?? RedisPoolSettings.Default;

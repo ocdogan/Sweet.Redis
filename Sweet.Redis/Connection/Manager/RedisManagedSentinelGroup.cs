@@ -73,8 +73,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedSentinelGroup(string masterName, RedisManagedNode[] nodes, Action<object> onPulseFail)
-            : base(RedisRole.Sentinel, nodes, onPulseFail)
+        public RedisManagedSentinelGroup(string masterName, RedisManagedNode[] nodes, Action<object, bool> onPulseStateChange)
+            : base(RedisRole.Sentinel, nodes, onPulseStateChange)
         {
             masterName = (masterName ?? String.Empty).Trim();
             if (String.IsNullOrEmpty(masterName))

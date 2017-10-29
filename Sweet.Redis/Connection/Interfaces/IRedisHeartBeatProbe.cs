@@ -31,5 +31,6 @@ namespace Sweet.Redis
 
         bool Pulse();
         void ResetPulseFailCounter();
+        void PulseStateChanged(bool alive);
     }
 }

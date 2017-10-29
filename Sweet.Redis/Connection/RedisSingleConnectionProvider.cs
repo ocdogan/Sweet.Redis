@@ -125,7 +125,7 @@ namespace Sweet.Redis
                     connection = m_Connection;
                     if (!connection.IsAlive())
                     {
-                        m_Connection = connection = OnNewConnection(socket, dbIndex, expectedRole, connectImmediately);
+                        m_Connection = (connection = OnNewConnection(socket, dbIndex, expectedRole, connectImmediately));
                     }
                 }
             }

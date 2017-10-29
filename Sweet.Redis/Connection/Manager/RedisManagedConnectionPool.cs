@@ -55,7 +55,16 @@ namespace Sweet.Redis
         public bool ODown
         {
             get { return m_ODown; }
-            set { m_ODown = value; }
+            set
+            {
+                if (m_ODown != value)
+                {
+                    var wasDown = IsDown;
+                    m_ODown = value;
+                    if (IsDown != wasDown && !Disposed)
+                        DownStateChanged(!wasDown);
+                }
+            }
         }
 
         public RedisRole Role
@@ -71,7 +80,16 @@ namespace Sweet.Redis
         public bool SDown
         {
             get { return m_SDown; }
-            set { m_SDown = value; }
+            set
+            {
+                if (m_SDown != value)
+                {
+                    var wasDown = IsDown;
+                    m_SDown = value;
+                    if (IsDown != wasDown && !Disposed)
+                        DownStateChanged(!wasDown);
+                }
+            }
         }
 
         #endregion Properties
@@ -81,6 +99,10 @@ namespace Sweet.Redis
         protected override void OnBeforeConnect(int dbIndex, RedisRole expectedRole)
         {
             if (IsDown) throw new RedisFatalException("Pool is down");
+        }
+
+        protected virtual void DownStateChanged(bool down)
+        {
         }
 
         #endregion Methods

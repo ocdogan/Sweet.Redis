@@ -37,9 +37,11 @@ namespace Sweet.Redis
         {
             #region Field Members
 
+            private bool m_Healthy = true;
             private bool m_IsDisposable;
             private DateTime? m_LastPulseTime;
             private IRedisHeartBeatProbe m_Probe;
+            private Action<IRedisHeartBeatProbe, bool> m_OnStateChange;
 
             private long m_PulseState;
 
@@ -47,9 +49,10 @@ namespace Sweet.Redis
 
             #region .Ctors
 
-            public CardioProbe(IRedisHeartBeatProbe probe, int intervalInSecs)
+            public CardioProbe(IRedisHeartBeatProbe probe, int intervalInSecs, Action<IRedisHeartBeatProbe, bool> onStateChange)
             {
                 m_Probe = probe;
+                m_OnStateChange = onStateChange;
                 m_IsDisposable = probe is IRedisDisposableBase;
                 IntervalInSecs = Math.Max(RedisConstants.MinHeartBeatIntervalSecs, Math.Min(RedisConstants.MaxHeartBeatIntervalSecs, intervalInSecs));
             }
@@ -57,6 +60,19 @@ namespace Sweet.Redis
             #endregion .Ctors
 
             #region Properties
+
+            public bool Healthy
+            {
+                get { return m_Healthy; }
+                set
+                {
+                    if (m_Healthy != value)
+                    {
+                        m_Healthy = value;
+                        OnStateChange(value);
+                    }
+                }
+            }
 
             public int IntervalInSecs { get; private set; }
 
@@ -68,6 +84,7 @@ namespace Sweet.Redis
 
             public void Dispose()
             {
+                Interlocked.Exchange(ref m_OnStateChange, null);
                 Interlocked.Exchange(ref m_Probe, null);
             }
 
@@ -81,10 +98,16 @@ namespace Sweet.Redis
                         try
                         {
                             m_LastPulseTime = DateTime.UtcNow;
-                            return m_Probe.Pulse();
+
+                            var result = m_Probe.Pulse();
+                            Healthy = result;
+
+                            return result;
                         }
                         catch (Exception)
-                        { }
+                        {
+                            Healthy = true;
+                        }
                         finally
                         {
                             Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
@@ -99,6 +122,18 @@ namespace Sweet.Redis
                 return !ReferenceEquals(m_Probe, null) &&
                     (!m_IsDisposable || !((IRedisDisposableBase)m_Probe).Disposed) &&
                     (!m_LastPulseTime.HasValue || (DateTime.UtcNow - m_LastPulseTime.Value).TotalSeconds >= IntervalInSecs);
+            }
+
+            private void OnStateChange(bool alive)
+            {
+                try
+                {
+                    var onStateChange = m_OnStateChange;
+                    if (onStateChange != null)
+                        onStateChange(m_Probe, alive);
+                }
+                catch (Exception)
+                { }
             }
 
             #region Overrides
@@ -244,7 +279,11 @@ namespace Sweet.Redis
                 {
                     lock (m_SyncRoot)
                     {
-                        m_Probes.Add(new CardioProbe(probe, interval));
+                        m_Probes.Add(new CardioProbe(probe, interval, (prb, state) =>
+                        {
+                            if (!ReferenceEquals(prb, null))
+                                probe.PulseStateChanged(state);
+                        }));
                         Start();
                     }
                 }

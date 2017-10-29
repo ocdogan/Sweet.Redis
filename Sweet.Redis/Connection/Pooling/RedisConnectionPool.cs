@@ -168,6 +168,10 @@ namespace Sweet.Redis
                 Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
             }
 
+            public void PulseStateChanged(bool alive)
+            {
+            }
+
             #endregion Methods
         }
 
@@ -214,8 +218,8 @@ namespace Sweet.Redis
 
         public event EventHandler MonitorCompleted;
         public event EventHandler PubSubCompleted;
-        public event EventHandler PoolPulseFailed;
-        public event EventHandler PubSubPulseFailed;
+        public event Action<object, bool> PoolPulseStateChanged;
+        public event Action<object, bool> PubSubPulseStateChanged;
 
         #endregion Events
 
@@ -246,8 +250,8 @@ namespace Sweet.Redis
         {
             Interlocked.Exchange(ref MonitorCompleted, null);
             Interlocked.Exchange(ref PubSubCompleted, null);
-            Interlocked.Exchange(ref PubSubPulseFailed, null);
-            Interlocked.Exchange(ref PoolPulseFailed, null);
+            Interlocked.Exchange(ref PubSubPulseStateChanged, null);
+            Interlocked.Exchange(ref PoolPulseStateChanged, null);
 
             if (m_ProbeAttached)
                 RedisCardio.Default.Detach(this);
@@ -341,7 +345,7 @@ namespace Sweet.Redis
                                 if (onComplete != null)
                                     onComplete(this, EventArgs.Empty);
                             },
-                            OnPubSubPulseFail);
+                            OnPubSubPulseStateChanged);
                             Interlocked.Exchange(ref m_PubSubChannel, channel);
                         }
                     }
@@ -388,11 +392,11 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual void OnPubSubPulseFail(object sender)
+        protected virtual void OnPubSubPulseStateChanged(object sender, bool alive)
         {
-            var failEvent = PubSubPulseFailed;
-            if (failEvent != null)
-                failEvent(sender, EventArgs.Empty);
+            var onPulseStateChange = PubSubPulseStateChanged;
+            if (onPulseStateChange != null)
+                onPulseStateChange(sender, alive);
         }
 
         protected override void ApplyRole(RedisRole role)
@@ -477,8 +481,6 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
-
-                    OnPoolPulseFail();
                 }
                 finally
                 {
@@ -493,27 +495,22 @@ namespace Sweet.Redis
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }
 
-
-        private void OnPoolPulseFail()
+        void IRedisHeartBeatProbe.PulseStateChanged(bool alive)
         {
-            var failEvent = PoolPulseFailed;
-            if (failEvent != null)
+            OnPoolPulseStateChange(alive);
+        }
+
+        protected virtual void OnPoolPulseStateChange(bool alive)
+        {
+            var onPulseStateChange = PoolPulseStateChanged;
+            if (onPulseStateChange != null)
             {
                 Action failAction = () =>
                 {
-                    failEvent(this, EventArgs.Empty);
+                    onPulseStateChange(this, alive);
                 };
                 failAction.InvokeAsync();
             }
-        }
-
-        private static bool PulseSocket(RedisSocket socket)
-        {
-            if (socket.IsConnected(10))
-            {
-
-            }
-            return false;
         }
 
         #endregion Pulse

@@ -76,7 +76,7 @@ namespace Sweet.Redis
         private long m_PulseFailCount;
 
         private Action<object> m_OnComplete;
-        private Action<object> m_OnPulseFail;
+        private Action<object, bool> m_OnPulseStateChange;
 
         private IRedisConnection m_Connection;
 
@@ -97,7 +97,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings, Action<object> onComplete, Action<object> onPulseFail)
+        internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings,
+                                    Action<object> onComplete, Action<object, bool> onPulseStateChange)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
@@ -111,7 +112,7 @@ namespace Sweet.Redis
 
             m_Name = name;
             m_OnComplete = onComplete;
-            m_OnPulseFail = onPulseFail;
+            m_OnPulseStateChange = onPulseStateChange;
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
@@ -129,8 +130,8 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_OnPulseStateChange, null);
             Interlocked.Exchange(ref m_OnComplete, null);
-            Interlocked.Exchange(ref m_OnPulseFail, null);
             Interlocked.Exchange(ref m_Connection, null);
 
             if (m_ProbeAttached)
@@ -189,6 +190,28 @@ namespace Sweet.Redis
 
         #region Methods
 
+        private bool HasSubscription()
+        {
+            var result = false;
+            lock (m_SubscriptionLock)
+            {
+                var subscriptions = m_Subscriptions;
+                if (subscriptions != null)
+                    result = subscriptions.HasSubscription;
+            }
+
+            if (!result)
+            {
+                lock (m_PSubscriptionLock)
+                {
+                    var subscriptions = m_PSubscriptions;
+                    if (subscriptions != null)
+                        result = subscriptions.HasSubscription;
+                }
+            }
+            return result;
+        }
+
         bool IRedisHeartBeatProbe.Pulse()
         {
             if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
@@ -198,7 +221,8 @@ namespace Sweet.Redis
                 {
                     if (!Disposed)
                     {
-                        if (ReferenceEquals(m_Connection, null))
+                        if (!ReferenceEquals(m_Connection, null) ||
+                           HasSubscription())
                             Send(RedisCommandList.Ping);
 
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
@@ -209,8 +233,6 @@ namespace Sweet.Redis
                 {
                     if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
-
-                    OnPulseFail();
                 }
                 finally
                 {
@@ -225,11 +247,16 @@ namespace Sweet.Redis
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }
 
-        private void OnPulseFail()
+        void IRedisHeartBeatProbe.PulseStateChanged(bool alive)
         {
-            var onPulseFail = m_OnPulseFail;
+            OnPulseStateChanged(alive);
+        }
+
+        protected virtual void OnPulseStateChanged(bool alive)
+        {
+            var onPulseFail = m_OnPulseStateChange;
             if (onPulseFail != null)
-                onPulseFail.InvokeAsync(this);
+                onPulseFail.InvokeAsync(this, alive);
         }
 
         private IRedisConnection Connect()
@@ -409,32 +436,38 @@ namespace Sweet.Redis
 
         private void Send(byte[] cmd, params byte[][] parameters)
         {
-            Action action = () =>
+            if (!Disposed)
             {
                 var connection = Connect();
-                if (connection != null && connection.Connected)
+                if (connection != null)
                 {
                     var pubSubCmd = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
                     connection.SendAsync(pubSubCmd)
-                              .ContinueWith(t => pubSubCmd.Dispose()).Wait();
+                              .ContinueWith(t => pubSubCmd.Dispose())
+                              .Wait();
                 }
-            };
-            action.Invoke();
+            }
         }
 
         private void SendAsync(byte[] cmd, params byte[][] parameters)
         {
-            Action action = () =>
+            if (!Disposed)
             {
-                var connection = Connect();
-                if (connection != null && connection.Connected)
+                Action action = () =>
                 {
-                    var pubSubCmd = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
-                    connection.SendAsync(pubSubCmd)
-                        .ContinueWith(t => pubSubCmd.Dispose());
-                }
-            };
-            action.InvokeAsync();
+                    if (!Disposed)
+                    {
+                        var connection = Connect();
+                        if (connection != null && connection.Connected)
+                        {
+                            var pubSubCmd = new RedisCommand(0, cmd, RedisCommandType.SendNotReceive, parameters);
+                            connection.SendAsync(pubSubCmd)
+                                .ContinueWith(t => pubSubCmd.Dispose());
+                        }
+                    }
+                };
+                action.InvokeAsync();
+            }
         }
 
         public void PUnsubscribe(params RedisParam[] patterns)

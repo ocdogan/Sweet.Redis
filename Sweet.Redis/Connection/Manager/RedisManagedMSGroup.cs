@@ -33,7 +33,7 @@ namespace Sweet.Redis
 
         private readonly object m_SyncRoot = new object();
 
-        private Action<object> m_OnPulseFail;
+        private Action<object, bool> m_OnPulseStateChange;
 
         private RedisManagedNodesGroup m_Masters;
         private RedisManagedNodesGroup m_Slaves;
@@ -43,9 +43,9 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisManagedMSGroup(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null,
-                                  Action<object> onPulseFail = null)
+                                   Action<object, bool> onPulseStateChange = null)
         {
-            m_OnPulseFail = onPulseFail;
+            m_OnPulseStateChange = onPulseStateChange;
 
             ExchangeSlavesInternal(slaves ?? new RedisManagedNodesGroup(RedisRole.Slave, null, null));
             ExchangeMastersInternal(masters ?? new RedisManagedNodesGroup(RedisRole.Master, null, null));
@@ -59,7 +59,7 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            Interlocked.Exchange(ref m_OnPulseFail, null);
+            Interlocked.Exchange(ref m_OnPulseStateChange, null);
 
             var slaves = ExchangeSlavesInternal(null);
             var masters = ExchangeMastersInternal(null);
@@ -80,16 +80,16 @@ namespace Sweet.Redis
 
         #region Methods
 
-        internal void SetOnPulseFail(Action<object> onPulseFail)
+        internal void SetOnPulseStateChange(Action<object, bool> onPulseStateChange)
         {
-            Interlocked.Exchange(ref m_OnPulseFail, onPulseFail);
+            Interlocked.Exchange(ref m_OnPulseStateChange, onPulseStateChange);
         }
 
-        private void OnPulseFail(object sender)
+        protected virtual void OnPulseStateChange(object sender, bool alive)
         {
-            var onPulseFail = m_OnPulseFail;
-            if (onPulseFail != null)
-                onPulseFail(sender);
+            var onPulseStateChange = m_OnPulseStateChange;
+            if (onPulseStateChange != null)
+                onPulseStateChange(sender, alive);
         }
 
         public RedisManagedNodesGroup ExchangeMasters(RedisManagedNodesGroup masters)
@@ -104,10 +104,10 @@ namespace Sweet.Redis
             {
                 var oldGroup = Interlocked.Exchange(ref m_Masters, masters);
                 if (oldGroup != null)
-                    oldGroup.SetOnPulseFail(null);
+                    oldGroup.SetOnPulseStateChange(null);
 
                 if (masters != null)
-                    masters.SetOnPulseFail(OnPulseFail);
+                    masters.SetOnPulseStateChange(OnPulseStateChange);
 
                 return oldGroup;
             }
@@ -125,10 +125,10 @@ namespace Sweet.Redis
             {
                 var oldGroup = Interlocked.Exchange(ref m_Slaves, slaves);
                 if (oldGroup != null)
-                    oldGroup.SetOnPulseFail(null);
+                    oldGroup.SetOnPulseStateChange(null);
 
                 if (slaves != null)
-                    slaves.SetOnPulseFail(OnPulseFail);
+                    slaves.SetOnPulseStateChange(OnPulseStateChange);
 
                 return oldGroup;
             }

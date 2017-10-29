@@ -236,48 +236,44 @@ namespace Sweet.Redis
             }
         }
 
-        private void OnMasterSlavePulseFail(object sender)
+        private void OnMasterSlavePulseStateChange(object sender, bool alive)
         {
         }
 
-        private void OnSentinelPulseFail(object sender)
+        private void OnSentinelPulseStateChange(object sender, bool alive)
         {
             if (!Disposed)
             {
                 var pubSubChannel = sender as RedisPubSubChannel;
                 if (pubSubChannel.IsAlive())
                 {
-                    var probe = pubSubChannel as IRedisHeartBeatProbe;
-
-                    var dropped = (ReferenceEquals(probe, null) || (probe.PulseFailCount > 2));
-                    if (!dropped)
+                    if (alive)
                     {
-                        var settings = Settings;
-                        dropped = (settings == null ||
-                                   (probe.PulseFailCount * settings.HearBeatIntervalInSecs >= RedisConstants.HeartBeatIntervalThreshold));
-                    }
-
-                    if (dropped)
-                    {
+                        var probe = pubSubChannel as IRedisHeartBeatProbe;
                         if (!ReferenceEquals(probe, null))
                             probe.ResetPulseFailCounter();
 
-                        var sentinels = m_Sentinels;
-                        if (!sentinels.IsAlive())
+                        RefreshSentinels();
+                        return;
+                    }
+
+                    var sentinels = m_Sentinels;
+                    if (!sentinels.IsAlive())
+                        RefreshSentinels();
+                    else
+                    {
+                        var nodes = sentinels.Nodes;
+                        if (nodes.IsEmpty())
                             RefreshSentinels();
                         else
                         {
-                            var nodes = sentinels.Nodes;
-                            if (!nodes.IsEmpty())
-                            {
-                                var droppedNode = nodes.FirstOrDefault(n => n.IsAlive() && n.Pool.IsAlive() &&
-                                                     ReferenceEquals(pubSubChannel, n.Pool.PubSubChannel));
+                            var droppedNode = nodes.FirstOrDefault(n => n.IsAlive() && n.Pool.IsAlive() &&
+                                                 ReferenceEquals(pubSubChannel, n.Pool.PubSubChannel));
 
-                                if (droppedNode != null)
-                                    PubSubConnectionDropped(droppedNode);
-                                else
-                                    RefreshSentinels();
-                            }
+                            if (droppedNode == null)
+                                RefreshSentinels();
+                            else if (!droppedNode.IsDown)
+                                PubSubConnectionDropped(droppedNode);
                         }
                     }
                 }
@@ -473,14 +469,14 @@ namespace Sweet.Redis
                                         objectsToDispose.Add(oldMSGroup);
 
                                     if (msGroup.IsAlive())
-                                        msGroup.SetOnPulseFail(OnMasterSlavePulseFail);
+                                        msGroup.SetOnPulseStateChange(OnMasterSlavePulseStateChange);
 
                                     var oldSentinels = Interlocked.Exchange(ref m_Sentinels, sentinels);
                                     if (oldSentinels.IsAlive())
                                         objectsToDispose.Add(oldSentinels);
 
                                     if (sentinels.IsAlive())
-                                        sentinels.SetOnPulseFail(OnSentinelPulseFail);
+                                        sentinels.SetOnPulseStateChange(OnSentinelPulseStateChange);
                                 }
                                 catch (Exception)
                                 {
@@ -545,9 +541,9 @@ namespace Sweet.Redis
                                            {
                                                var oldSentinel = Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)newSentinels);
                                                if (oldSentinel != null)
-                                                   oldSentinel.SetOnPulseFail(null);
+                                                   oldSentinel.SetOnPulseStateChange(null);
                                                if (newSentinels != null)
-                                                   newSentinels.SetOnPulseFail(OnSentinelPulseFail);
+                                                   newSentinels.SetOnPulseStateChange(OnSentinelPulseStateChange);
                                                return oldSentinel;
                                            },
                                            objectsToDispose);
@@ -758,7 +754,7 @@ namespace Sweet.Redis
                         var masters = new RedisManagedNodesGroup(instanceRole, null, null);
                         if (!msGroup.IsAlive())
                         {
-                            msGroup = new RedisManagedMSGroup(masters, new RedisManagedNodesGroup(instanceRole, null, null), OnMasterSlavePulseFail);
+                            msGroup = new RedisManagedMSGroup(masters, new RedisManagedNodesGroup(instanceRole, null, null), OnMasterSlavePulseStateChange);
                             Interlocked.Exchange(ref m_MSGroup, msGroup);
                         }
                         else
@@ -779,7 +775,7 @@ namespace Sweet.Redis
                         var slaves = new RedisManagedNodesGroup(instanceRole, null, null);
                         if (!msGroup.IsAlive())
                         {
-                            msGroup = new RedisManagedMSGroup(new RedisManagedNodesGroup(instanceRole, null, null), slaves, OnMasterSlavePulseFail);
+                            msGroup = new RedisManagedMSGroup(new RedisManagedNodesGroup(instanceRole, null, null), slaves, OnMasterSlavePulseStateChange);
                             Interlocked.Exchange(ref m_MSGroup, msGroup);
                         }
                         else
@@ -794,7 +790,7 @@ namespace Sweet.Redis
                     nodesGroup = m_Sentinels;
                     if (!nodesGroup.IsAlive())
                     {
-                        nodesGroup = new RedisManagedSentinelGroup(m_MasterName, null, OnSentinelPulseFail);
+                        nodesGroup = new RedisManagedSentinelGroup(m_MasterName, null, OnSentinelPulseStateChange);
                         Interlocked.Exchange(ref m_Sentinels, (RedisManagedSentinelGroup)nodesGroup);
                     }
                     break;

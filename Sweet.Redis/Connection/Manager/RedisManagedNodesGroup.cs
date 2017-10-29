@@ -32,7 +32,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private Action<object> m_OnPulseFail;
+        private Action<object, bool> m_OnPulseStateChange;
 
         private int m_NodeIndex;
         private readonly object m_SyncRoot = new object();
@@ -44,10 +44,10 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes,
-                                     Action<object> onPulseFail)
+                                      Action<object, bool> onPulseStateChange)
         {
             Role = role;
-            m_OnPulseFail = onPulseFail;
+            m_OnPulseStateChange = onPulseStateChange;
             m_Nodes = nodes ?? new RedisManagedNode[0];
 
             if (nodes.IsEmpty())
@@ -56,7 +56,7 @@ namespace Sweet.Redis
             {
                 foreach (var node in nodes)
                     if (node != null)
-                        node.SetOnPulseFail(OnPulseFail);
+                        node.SetOnPulseStateChange(OnPulseStateChange);
             }
         }
 
@@ -66,7 +66,7 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Interlocked.Exchange(ref m_OnPulseFail, null);
+            Interlocked.Exchange(ref m_OnPulseStateChange, null);
 
             base.OnDispose(disposing);
             DisposeNodes();
@@ -84,16 +84,16 @@ namespace Sweet.Redis
 
         #region Methods
 
-        internal void SetOnPulseFail(Action<object> onPulseFail)
+        internal void SetOnPulseStateChange(Action<object, bool> onPulseStateChange)
         {
-            Interlocked.Exchange(ref m_OnPulseFail, onPulseFail);
+            Interlocked.Exchange(ref m_OnPulseStateChange, onPulseStateChange);
         }
 
-        private void OnPulseFail(object sender)
+        private void OnPulseStateChange(object sender, bool alive)
         {
-            var onPulseFail = m_OnPulseFail;
-            if (onPulseFail != null)
-                onPulseFail(sender);
+            var onPulseStateChange = m_OnPulseStateChange;
+            if (onPulseStateChange != null)
+                onPulseStateChange(sender, alive);
         }
 
         public virtual RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
@@ -113,14 +113,14 @@ namespace Sweet.Redis
                 {
                     foreach (var node in nodes)
                         if (node != null)
-                            node.SetOnPulseFail(OnPulseFail);
+                            node.SetOnPulseStateChange(OnPulseStateChange);
                 }
 
                 if (!oldNodes.IsEmpty())
                 {
                     foreach (var node in oldNodes)
                         if (node != null)
-                            node.SetOnPulseFail(null);
+                            node.SetOnPulseStateChange(null);
                 }
 
                 return oldNodes;
