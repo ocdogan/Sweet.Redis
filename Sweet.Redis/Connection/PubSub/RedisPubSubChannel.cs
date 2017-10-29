@@ -69,6 +69,8 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private DateTime m_LastMessageSeenTime;
+
         private long m_PulseState;
         private bool m_ProbeAttached;
 
@@ -163,6 +165,8 @@ namespace Sweet.Redis
             }
         }
 
+        public DateTime LastMessageSeenTime { get { return m_LastMessageSeenTime; } }
+
         public string Name { get { return m_Name; } }
 
         public bool Pulsing
@@ -246,6 +250,8 @@ namespace Sweet.Redis
 
         private void ResponseReceived(IRedisRawResponse response)
         {
+            m_LastMessageSeenTime = DateTime.UtcNow;
+
             var pubSubResp = RedisPubSubResponse.ToPubSubResponse(response);
             if (!pubSubResp.IsEmpty)
             {

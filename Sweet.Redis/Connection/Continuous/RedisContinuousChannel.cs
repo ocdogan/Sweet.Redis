@@ -139,7 +139,7 @@ namespace Sweet.Redis
             }
         }
 
-        public DateTime LastMessageSeenTime { get; }
+        public DateTime LastMessageSeenTime { get { return m_LastMessageSeenTime; } }
 
         public RedisConnectionSettings Settings { get { return m_Settings; } }
 

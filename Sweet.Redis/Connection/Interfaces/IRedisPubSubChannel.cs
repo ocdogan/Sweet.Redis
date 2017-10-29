@@ -29,6 +29,7 @@ namespace Sweet.Redis
     public interface IRedisPubSubChannel : IRedisNamedObject, IRedisDisposableBase
     {
         RedisEndPoint EndPoint { get; }
+        DateTime LastMessageSeenTime { get; }
 
         void PSubscribe(Action<RedisPubSubMessage> callback, RedisParam pattern, params RedisParam[] patterns);
         void PUnsubscribe(params RedisParam[] patterns);
