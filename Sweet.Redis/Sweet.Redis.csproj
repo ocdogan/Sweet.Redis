@@ -266,6 +266,9 @@
     <Compile Include="Connection\Interfaces\IRedisCommandExecuterClient.cs" />
     <Compile Include="Connection\CommandExecuter\RedisCommandExecuterClient.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnectionInfoProvider.cs" />
+    <Compile Include="Connection\Interfaces\IRedisHeartBeatProbe.cs" />
+    <Compile Include="Connection\Interfaces\IRedisCardio.cs" />
+    <Compile Include="Connection\RedisCardio.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

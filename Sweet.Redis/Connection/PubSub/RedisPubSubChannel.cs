@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisPubSubChannel : RedisInternalDisposable, IRedisPubSubChannel
+    public class RedisPubSubChannel : RedisInternalDisposable, IRedisPubSubChannel, IRedisHeartBeatProbe
     {
         #region RedisPubSubSubscriptions
 
@@ -155,6 +155,11 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
+
+        bool IRedisHeartBeatProbe.Pulse()
+        {
+            return true;
+        }
 
         private IRedisConnection Connect()
         {
