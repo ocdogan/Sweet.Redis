@@ -73,6 +73,7 @@ namespace Sweet.Redis
 
         private long m_PulseState;
         private bool m_ProbeAttached;
+        private long m_PulseFailCount;
 
         private Action<object> m_OnComplete;
 
@@ -169,7 +170,12 @@ namespace Sweet.Redis
 
         public string Name { get { return m_Name; } }
 
-        public bool Pulsing
+        long IRedisHeartBeatProbe.PulseFailCount
+        {
+            get { return Interlocked.Read(ref m_PulseFailCount); }
+        }
+
+        bool IRedisHeartBeatProbe.Pulsing
         {
             get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
         }
@@ -190,17 +196,27 @@ namespace Sweet.Redis
                     if (!Disposed)
                     {
                         Send(RedisCommandList.Ping);
+
+                        Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
                         return true;
                     }
                 }
                 catch (Exception)
-                { }
+                {
+                    if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
+                        Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
+                }
                 finally
                 {
                     Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                 }
             }
             return false;
+        }
+
+        void IRedisHeartBeatProbe.ResetPulseFailCount()
+        {
+            Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }
 
         private IRedisConnection Connect()

@@ -39,6 +39,8 @@ namespace Sweet.Redis
             #region Field Members
 
             private long m_PulseState;
+            private long m_PulseFailCount;
+
             private RedisSocket m_Socket;
             private RedisConnectionSettings m_Settings;
 
@@ -74,6 +76,11 @@ namespace Sweet.Redis
             public int DbIndex { get; private set; }
 
             public DateTime PooledTime { get; private set; }
+
+            public long PulseFailCount
+            {
+                get { return Interlocked.Read(ref m_PulseFailCount); }
+            }
 
             public bool Pulsing
             {
@@ -138,17 +145,27 @@ namespace Sweet.Redis
                                     }
                                 }
                             }
+
+                            Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
                             return true;
                         }
                     }
                     catch (Exception)
-                    { }
+                    {
+                        if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
+                            Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
+                    }
                     finally
                     {
                         Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                     }
                 }
                 return false;
+            }
+
+            public void ResetPulseFailCount()
+            {
+                Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
             }
 
             #endregion Methods
@@ -173,6 +190,7 @@ namespace Sweet.Redis
 
         private long m_PulseState;
         private bool m_ProbeAttached;
+        private long m_PulseFailCount;
 
         private RedisAsyncRequestQProcessor m_Processor;
 
@@ -327,7 +345,12 @@ namespace Sweet.Redis
             }
         }
 
-        public bool Pulsing
+        long IRedisHeartBeatProbe.PulseFailCount
+        {
+            get { return Interlocked.Read(ref m_PulseFailCount); }
+        }
+
+        bool IRedisHeartBeatProbe.Pulsing
         {
             get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
         }
@@ -433,17 +456,27 @@ namespace Sweet.Redis
                             else
                                 Parallel.ForEach(members, (member) => { pulseAction(member); });
                         }
-                        return true;
                     }
+
+                    Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
+                    return true;
                 }
                 catch (Exception)
-                { }
+                {
+                    if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
+                        Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
+                }
                 finally
                 {
                     Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                 }
             }
             return false;
+        }
+
+        void IRedisHeartBeatProbe.ResetPulseFailCount()
+        {
+            Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }
 
         private static bool PulseSocket(RedisSocket socket)
