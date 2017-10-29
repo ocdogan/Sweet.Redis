@@ -135,10 +135,10 @@ namespace Sweet.Redis
                                         {
                                             cmd.ExpectSimpleString(new RedisSocketContext(socket, settings), "PONG");
                                         }
-                                        return true;
                                     }
                                 }
                             }
+                            return true;
                         }
                     }
                     catch (Exception)
@@ -433,6 +433,7 @@ namespace Sweet.Redis
                             else
                                 Parallel.ForEach(members, (member) => { pulseAction(member); });
                         }
+                        return true;
                     }
                 }
                 catch (Exception)
