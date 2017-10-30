@@ -37,8 +37,9 @@ namespace Sweet.Redis
         {
             #region Field Members
 
-            private bool m_Healthy = true;
             private long m_PulseState;
+
+            private bool m_Health = true;
 
             private long m_FailCount;
             private long m_SuccessCount;
@@ -46,16 +47,17 @@ namespace Sweet.Redis
             private bool m_IsDisposable;
             private DateTime? m_LastPulseTime;
             private IRedisHeartBeatProbe m_Probe;
-            private Action<IRedisHeartBeatProbe, RedisCardioPulseStatus> m_OnStateChange;
+            private Func<object, RedisCardioPulseStatus, bool> m_OnSetHealthState;
 
             #endregion Field Members
 
             #region .Ctors
 
-            public CardioProbe(IRedisHeartBeatProbe probe, int intervalInSecs, Action<IRedisHeartBeatProbe, RedisCardioPulseStatus> onStateChange)
+            public CardioProbe(IRedisHeartBeatProbe probe, int intervalInSecs,
+                               Func<object, RedisCardioPulseStatus, bool> onSetHealthState)
             {
                 m_Probe = probe;
-                m_OnStateChange = onStateChange;
+                m_OnSetHealthState = onSetHealthState;
                 m_IsDisposable = probe is IRedisDisposableBase;
                 IntervalInSecs = Math.Max(RedisConstants.MinHeartBeatIntervalSecs, Math.Min(RedisConstants.MaxHeartBeatIntervalSecs, intervalInSecs));
             }
@@ -68,7 +70,7 @@ namespace Sweet.Redis
             {
                 base.OnDispose(disposing);
 
-                Interlocked.Exchange(ref m_OnStateChange, null);
+                Interlocked.Exchange(ref m_OnSetHealthState, null);
                 Interlocked.Exchange(ref m_Probe, null);
             }
 
@@ -81,17 +83,16 @@ namespace Sweet.Redis
                 get { return Interlocked.Read(ref m_FailCount); }
             }
 
-            public bool Healthy
+            public bool Health
             {
-                get { return m_Healthy; }
+                get { return m_Health; }
                 set
                 {
                     SetCounters(value);
-                    if (m_Healthy != value)
-                    {
-                        m_Healthy = value;
-                        OnStateChange(new RedisCardioPulseStatus(m_Probe, value, FailCount, SuccessCount));
-                    }
+
+                    var status = new RedisCardioPulseStatus(m_Probe, m_Health, value, FailCount, SuccessCount);
+                    if (CanSetHealthState(status))
+                        m_Health = value;
                 }
             }
 
@@ -143,14 +144,14 @@ namespace Sweet.Redis
                         if (probe != null)
                         {
                             var result = probe.Pulse();
-                            Healthy = result;
+                            Health = result;
 
                             return result;
                         }
                     }
                     catch (Exception)
                     {
-                        Healthy = false;
+                        Health = false;
                     }
                     finally
                     {
@@ -167,16 +168,17 @@ namespace Sweet.Redis
                     (!m_LastPulseTime.HasValue || (DateTime.UtcNow - m_LastPulseTime.Value).TotalSeconds >= IntervalInSecs);
             }
 
-            private void OnStateChange(RedisCardioPulseStatus status)
+            private bool CanSetHealthState(RedisCardioPulseStatus status)
             {
                 try
                 {
-                    var onStateChange = m_OnStateChange;
-                    if (onStateChange != null)
-                        onStateChange(m_Probe, status);
+                    var onSetHealthState = m_OnSetHealthState;
+                    if (onSetHealthState != null)
+                        return onSetHealthState(this, status);
                 }
                 catch (Exception)
                 { }
+                return true;
             }
 
             #region Overrides
@@ -280,6 +282,8 @@ namespace Sweet.Redis
         private readonly object m_SyncRoot = new object();
         private HashSet<CardioProbe> m_Probes = new HashSet<CardioProbe>();
 
+        private Func<object, RedisCardioPulseStatus, bool> m_StateUpdateStrategy;
+
         #endregion Field Members
 
         #region .Ctors
@@ -343,10 +347,27 @@ namespace Sweet.Redis
                                                     ReferenceEquals(probe, cp.Probe));
                             if (!exists && !Disposed)
                             {
-                                probes.Add(new CardioProbe(probe, interval, (prb, state) =>
+                                probes.Add(new CardioProbe(probe, interval, (obj, status) =>
                                 {
-                                    if (!ReferenceEquals(prb, null))
-                                        probe.PulseStateChanged(state);
+                                    if (status.NewHealth != status.CurrentHealth)
+                                    {
+                                        var canSet = CanUpdateHealthState(obj, status);
+                                        if (canSet)
+                                        {
+                                            try
+                                            {
+                                                var cp = (CardioProbe)obj;
+
+                                                var prb = cp.Probe;
+                                                if (!ReferenceEquals(prb, null))
+                                                    prb.PulseStateChanged(status);
+                                            }
+                                            catch (Exception)
+                                            { }
+                                        }
+                                        return canSet;
+                                    }
+                                    return false;
                                 }));
                                 Start();
                             }
@@ -415,6 +436,23 @@ namespace Sweet.Redis
                     }
                 }
             }
+        }
+
+        private bool CanUpdateHealthState(object sender, RedisCardioPulseStatus status)
+        {
+            if (status.NewHealth != status.CurrentHealth)
+            {
+                var strategy = m_StateUpdateStrategy;
+                if (strategy != null)
+                    return strategy(sender, status);
+                return true;
+            }
+            return false;
+        }
+
+        public void SetStateUpdateStrategy(Func<object, RedisCardioPulseStatus, bool> strategy)
+        {
+            Interlocked.Exchange(ref m_StateUpdateStrategy, strategy);
         }
 
         private void Stop()
