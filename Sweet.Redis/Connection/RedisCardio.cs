@@ -40,6 +40,9 @@ namespace Sweet.Redis
             private bool m_Healthy = true;
             private long m_PulseState;
 
+            private long m_FailCount;
+            private long m_SuccessCount;
+
             private bool m_IsDisposable;
             private DateTime? m_LastPulseTime;
             private IRedisHeartBeatProbe m_Probe;
@@ -61,11 +64,29 @@ namespace Sweet.Redis
 
             #region Properties
 
+            public long FailCount
+            {
+                get { return Interlocked.Read(ref m_FailCount); }
+            }
+
             public bool Healthy
             {
                 get { return m_Healthy; }
                 set
                 {
+                    if (value)
+                    {
+                        Interlocked.Exchange(ref m_FailCount, RedisConstants.Zero);
+                        if (Interlocked.Read(ref m_SuccessCount) < long.MaxValue)
+                            Interlocked.Add(ref m_SuccessCount, RedisConstants.One);
+                    }
+                    else
+                    {
+                        Interlocked.Exchange(ref m_SuccessCount, RedisConstants.Zero);
+                        if (Interlocked.Read(ref m_FailCount) < long.MaxValue)
+                            Interlocked.Add(ref m_FailCount, RedisConstants.One);
+                    }
+
                     if (m_Healthy != value)
                     {
                         m_Healthy = value;
@@ -81,6 +102,11 @@ namespace Sweet.Redis
             public bool Pulsing
             {
                 get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+            }
+
+            public long SuccessCount
+            {
+                get { return Interlocked.Read(ref m_SuccessCount); }
             }
 
             #endregion Properties
@@ -112,7 +138,7 @@ namespace Sweet.Redis
                     }
                     catch (Exception)
                     {
-                        Healthy = true;
+                        Healthy = false;
                     }
                     finally
                     {
