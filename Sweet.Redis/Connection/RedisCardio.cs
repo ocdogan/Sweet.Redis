@@ -274,6 +274,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_PulseState;
+        private long m_TickState;
 
         private Timer m_Ticker;
         private readonly object m_SyncRoot = new object();
@@ -394,8 +395,23 @@ namespace Sweet.Redis
                     if (m_Ticker == null && !Disposed)
                     {
                         Interlocked.Exchange(ref m_PulseState, RedisConstants.One);
-                        Interlocked.Exchange(ref m_Ticker, new Timer((state) => { PulseAll(); },
-                                                                     null, PulseOnEveryMilliSecs, PulseOnEveryMilliSecs));
+
+                        Interlocked.Exchange(ref m_Ticker, new Timer((state) =>
+                        {
+                            if (Interlocked.CompareExchange(ref m_TickState, RedisConstants.One, RedisConstants.Zero) ==
+                                RedisConstants.Zero)
+                            {
+                                try
+                                {
+                                    PulseAll();
+                                }
+                                finally
+                                {
+                                    Interlocked.Exchange(ref m_TickState, RedisConstants.Zero);
+                                }
+                            }
+                        },
+                        null, PulseOnEveryMilliSecs, PulseOnEveryMilliSecs));
                     }
                 }
             }

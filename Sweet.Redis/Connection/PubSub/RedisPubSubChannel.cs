@@ -116,12 +116,6 @@ namespace Sweet.Redis
 
             var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
-
-            if (m_Settings != null && m_Settings.HeartBeatEnabled)
-            {
-                RedisCardio.Default.Attach(this, m_Settings.HearBeatIntervalInSecs);
-                m_ProbeAttached = true;
-            }
         }
 
         #endregion .Ctors
@@ -212,6 +206,27 @@ namespace Sweet.Redis
             return result;
         }
 
+        #region Pulse
+
+        internal void AttachToCardio()
+        {
+            if (!Disposed && !m_ProbeAttached)
+            {
+                var settings = Settings;
+                if (settings != null && settings.HeartBeatEnabled)
+                {
+                    m_ProbeAttached = true;
+                    RedisCardio.Default.Attach(this, settings.HearBeatIntervalInSecs);
+                }
+            }
+        }
+
+        internal void DetachFromCardio()
+        {
+            if (m_ProbeAttached && !Disposed)
+                RedisCardio.Default.Detach(this);
+        }
+
         bool IRedisHeartBeatProbe.Pulse()
         {
             if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
@@ -221,8 +236,7 @@ namespace Sweet.Redis
                 {
                     if (!Disposed)
                     {
-                        if (!ReferenceEquals(m_Connection, null) ||
-                           HasSubscription())
+                        if (!ReferenceEquals(m_Connection, null) || HasSubscription())
                             Send(RedisCommandList.Ping);
 
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
@@ -258,6 +272,8 @@ namespace Sweet.Redis
             if (onPulseFail != null)
                 onPulseFail.InvokeAsync(this, status);
         }
+
+        #endregion Pulse
 
         private IRedisConnection Connect()
         {

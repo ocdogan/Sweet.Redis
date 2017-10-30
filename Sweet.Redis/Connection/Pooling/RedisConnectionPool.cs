@@ -234,12 +234,6 @@ namespace Sweet.Redis
 
             m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
             m_Processor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
-
-            if (thisSettings.HeartBeatEnabled)
-            {
-                RedisCardio.Default.Attach(this, thisSettings.HearBeatIntervalInSecs);
-                m_ProbeAttached = true;
-            }
         }
 
         #endregion .Ctors
@@ -437,6 +431,25 @@ namespace Sweet.Redis
 
         #region Pulse
 
+        internal void AttachToCardio()
+        {
+            if (!Disposed && !m_ProbeAttached)
+            {
+                var settings = Settings;
+                if (settings != null && settings.HeartBeatEnabled)
+                {
+                    m_ProbeAttached = true;
+                    RedisCardio.Default.Attach(this, settings.HearBeatIntervalInSecs);
+                }
+            }
+        }
+
+        internal void DetachFromCardio()
+        {
+            if (m_ProbeAttached && !Disposed)
+                RedisCardio.Default.Detach(this);
+        }
+
         bool IRedisHeartBeatProbe.Pulse()
         {
             if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
@@ -444,9 +457,9 @@ namespace Sweet.Redis
             {
                 try
                 {
-                    if (!Disposed)
-                        return DoPulse();
-                    return false;
+                    return !Disposed ?
+                        DoPulse() :
+                        false;
                 }
                 catch (Exception)
                 {

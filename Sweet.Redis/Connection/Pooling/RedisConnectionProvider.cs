@@ -130,7 +130,7 @@ namespace Sweet.Redis
                     {
                         using (var cmd = new RedisCommand(-1, RedisCommandList.Ping))
                         {
-                            var pong = cmd.ExpectBulkString(connection);
+                            var pong = cmd.ExpectSimpleString(connection);
                             result = (pong == RedisConstants.PONG);
                         }
                     }
