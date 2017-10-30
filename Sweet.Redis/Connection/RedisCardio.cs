@@ -159,7 +159,7 @@ namespace Sweet.Redis
             public bool CanPulse()
             {
                 return !Disposed && !Pulsing &&
-                    (!m_IsDisposable || !((IRedisDisposableBase)m_Probe).IsAlive()) &&
+                    (!m_IsDisposable || ((IRedisDisposableBase)m_Probe).IsAlive()) &&
                     (!m_LastPulseTime.HasValue || (DateTime.UtcNow - m_LastPulseTime.Value).TotalSeconds >= IntervalInSecs);
             }
 
