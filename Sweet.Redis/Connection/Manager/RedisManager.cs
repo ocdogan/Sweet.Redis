@@ -334,11 +334,11 @@ namespace Sweet.Redis
                 if (!msGroup.IsAlive())
                     throw new RedisFatalException("Can not discover masters and slaves", RedisErrorCode.ConnectionError);
 
-                var group = SelectGroup(msGroup, readOnly);
-                if (!group.IsAlive())
+                var grp = SelectGroup(msGroup, readOnly);
+                if (!grp.IsAlive())
                     throw new RedisFatalException(String.Format("No {0} group found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
-                var pool = group.Next();
+                var pool = grp.Next();
                 if (!pool.IsAlive())
                     throw new RedisFatalException(String.Format("No {0} node found", readOnly ? "slave" : "master"), RedisErrorCode.ConnectionError);
 
@@ -350,23 +350,23 @@ namespace Sweet.Redis
         {
             if (msGroup.IsAlive())
             {
-                var group = (RedisManagedNodesGroup)null;
+                var grp = (RedisManagedNodesGroup)null;
                 if (!readOnly)
-                    group = msGroup.Masters;
+                    grp = msGroup.Masters;
                 else
                 {
-                    group = msGroup.Slaves;
-                    if (!group.IsAlive())
-                        group = msGroup.Masters;
+                    grp = msGroup.Slaves;
+                    if (!grp.IsAlive())
+                        grp = msGroup.Masters;
                     else
                     {
-                        var nodes = group.Nodes;
+                        var nodes = grp.Nodes;
                         if (nodes.IsEmpty() ||
                             !nodes.Any(n => n.IsAlive() && n.Pool.IsAlive()))
-                            group = msGroup.Masters;
+                            grp = msGroup.Masters;
                     }
                 }
-                return group;
+                return grp;
             }
             return null;
         }
