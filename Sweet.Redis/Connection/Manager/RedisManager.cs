@@ -236,18 +236,18 @@ namespace Sweet.Redis
             }
         }
 
-        private void OnMasterSlavePulseStateChange(object sender, bool alive)
+        private void OnMasterSlavePulseStateChange(object sender, RedisCardioPulseStatus status)
         {
         }
 
-        private void OnSentinelPulseStateChange(object sender, bool alive)
+        private void OnSentinelPulseStateChange(object sender, RedisCardioPulseStatus status)
         {
             if (!Disposed)
             {
                 var pubSubChannel = sender as RedisPubSubChannel;
                 if (pubSubChannel.IsAlive())
                 {
-                    if (alive)
+                    if (status.Heathty)
                     {
                         var probe = pubSubChannel as IRedisHeartBeatProbe;
                         if (!ReferenceEquals(probe, null))

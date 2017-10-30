@@ -168,7 +168,7 @@ namespace Sweet.Redis
                 Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
             }
 
-            public void PulseStateChanged(bool alive)
+            public void PulseStateChanged(RedisCardioPulseStatus status)
             {
             }
 
@@ -218,8 +218,8 @@ namespace Sweet.Redis
 
         public event EventHandler MonitorCompleted;
         public event EventHandler PubSubCompleted;
-        public event Action<object, bool> PoolPulseStateChanged;
-        public event Action<object, bool> PubSubPulseStateChanged;
+        public event Action<object, RedisCardioPulseStatus> PoolPulseStateChanged;
+        public event Action<object, RedisCardioPulseStatus> PubSubPulseStateChanged;
 
         #endregion Events
 
@@ -392,11 +392,11 @@ namespace Sweet.Redis
             }
         }
 
-        protected virtual void OnPubSubPulseStateChanged(object sender, bool alive)
+        protected virtual void OnPubSubPulseStateChanged(object sender, RedisCardioPulseStatus status)
         {
             var onPulseStateChange = PubSubPulseStateChanged;
             if (onPulseStateChange != null)
-                onPulseStateChange(sender, alive);
+                onPulseStateChange(sender, status);
         }
 
         protected override void ApplyRole(RedisRole role)
@@ -495,19 +495,19 @@ namespace Sweet.Redis
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }
 
-        void IRedisHeartBeatProbe.PulseStateChanged(bool alive)
+        void IRedisHeartBeatProbe.PulseStateChanged(RedisCardioPulseStatus status)
         {
-            OnPoolPulseStateChange(alive);
+            OnPoolPulseStateChange(status);
         }
 
-        protected virtual void OnPoolPulseStateChange(bool alive)
+        protected virtual void OnPoolPulseStateChange(RedisCardioPulseStatus status)
         {
             var onPulseStateChange = PoolPulseStateChanged;
             if (onPulseStateChange != null)
             {
                 Action failAction = () =>
                 {
-                    onPulseStateChange(this, alive);
+                    onPulseStateChange(this, status);
                 };
                 failAction.InvokeAsync();
             }

@@ -31,19 +31,19 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private Action<object, bool> m_OnPulseStateChange;
-
         private bool m_OwnsPool;
         private RedisRole m_Role;
         private RedisEndPoint m_EndPoint;
         private RedisManagedConnectionPool m_Pool;
+
+        private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
         #endregion Field Members
 
         #region .Ctors
 
         public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool,
-                                Action<object, bool> onPulseStateChange, bool ownsPool = true)
+                                Action<object, RedisCardioPulseStatus> onPulseStateChange, bool ownsPool = true)
         {
             m_Pool = pool;
             Role = role;
@@ -173,23 +173,23 @@ namespace Sweet.Redis
             return oldPool;
         }
 
-        internal void SetOnPulseStateChange(Action<object, bool> onPulseStateChange)
+        internal void SetOnPulseStateChange(Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             Interlocked.Exchange(ref m_OnPulseStateChange, onPulseStateChange);
         }
 
-        protected virtual void OnPoolPulseStateChange(object sender, bool alive)
+        protected virtual void OnPoolPulseStateChange(object sender, RedisCardioPulseStatus status)
         {
             var onPulseStateChange = m_OnPulseStateChange;
             if (onPulseStateChange != null)
-                onPulseStateChange(sender, alive);
+                onPulseStateChange(sender, status);
         }
 
-        protected virtual void OnPubSubPulseStateChange(object sender, bool alive)
+        protected virtual void OnPubSubPulseStateChange(object sender, RedisCardioPulseStatus status)
         {
             var onPulseStateChange = m_OnPulseStateChange;
             if (onPulseStateChange != null)
-                onPulseStateChange(sender, alive);
+                onPulseStateChange(sender, status);
         }
 
         #endregion Methods

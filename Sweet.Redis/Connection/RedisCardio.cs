@@ -46,13 +46,13 @@ namespace Sweet.Redis
             private bool m_IsDisposable;
             private DateTime? m_LastPulseTime;
             private IRedisHeartBeatProbe m_Probe;
-            private Action<IRedisHeartBeatProbe, bool> m_OnStateChange;
+            private Action<IRedisHeartBeatProbe, RedisCardioPulseStatus> m_OnStateChange;
 
             #endregion Field Members
 
             #region .Ctors
 
-            public CardioProbe(IRedisHeartBeatProbe probe, int intervalInSecs, Action<IRedisHeartBeatProbe, bool> onStateChange)
+            public CardioProbe(IRedisHeartBeatProbe probe, int intervalInSecs, Action<IRedisHeartBeatProbe, RedisCardioPulseStatus> onStateChange)
             {
                 m_Probe = probe;
                 m_OnStateChange = onStateChange;
@@ -61,6 +61,18 @@ namespace Sweet.Redis
             }
 
             #endregion .Ctors
+
+            #region Destructors
+
+            protected override void OnDispose(bool disposing)
+            {
+                base.OnDispose(disposing);
+
+                Interlocked.Exchange(ref m_OnStateChange, null);
+                Interlocked.Exchange(ref m_Probe, null);
+            }
+
+            #endregion Destructors
 
             #region Properties
 
@@ -74,23 +86,11 @@ namespace Sweet.Redis
                 get { return m_Healthy; }
                 set
                 {
-                    if (value)
-                    {
-                        Interlocked.Exchange(ref m_FailCount, RedisConstants.Zero);
-                        if (Interlocked.Read(ref m_SuccessCount) < long.MaxValue)
-                            Interlocked.Add(ref m_SuccessCount, RedisConstants.One);
-                    }
-                    else
-                    {
-                        Interlocked.Exchange(ref m_SuccessCount, RedisConstants.Zero);
-                        if (Interlocked.Read(ref m_FailCount) < long.MaxValue)
-                            Interlocked.Add(ref m_FailCount, RedisConstants.One);
-                    }
-
+                    SetCounters(value);
                     if (m_Healthy != value)
                     {
                         m_Healthy = value;
-                        OnStateChange(value);
+                        OnStateChange(new RedisCardioPulseStatus(value, FailCount, SuccessCount));
                     }
                 }
             }
@@ -113,12 +113,20 @@ namespace Sweet.Redis
 
             #region Methods
 
-            protected override void OnDispose(bool disposing)
+            private void SetCounters(bool healthy)
             {
-                base.OnDispose(disposing);
-
-                Interlocked.Exchange(ref m_OnStateChange, null);
-                Interlocked.Exchange(ref m_Probe, null);
+                if (healthy)
+                {
+                    Interlocked.Exchange(ref m_FailCount, RedisConstants.Zero);
+                    if (Interlocked.Read(ref m_SuccessCount) < long.MaxValue)
+                        Interlocked.Add(ref m_SuccessCount, RedisConstants.One);
+                }
+                else
+                {
+                    Interlocked.Exchange(ref m_SuccessCount, RedisConstants.Zero);
+                    if (Interlocked.Read(ref m_FailCount) < long.MaxValue)
+                        Interlocked.Add(ref m_FailCount, RedisConstants.One);
+                }
             }
 
             public bool Pulse()
@@ -155,13 +163,13 @@ namespace Sweet.Redis
                     (!m_LastPulseTime.HasValue || (DateTime.UtcNow - m_LastPulseTime.Value).TotalSeconds >= IntervalInSecs);
             }
 
-            private void OnStateChange(bool alive)
+            private void OnStateChange(RedisCardioPulseStatus status)
             {
                 try
                 {
                     var onStateChange = m_OnStateChange;
                     if (onStateChange != null)
-                        onStateChange(m_Probe, alive);
+                        onStateChange(m_Probe, status);
                 }
                 catch (Exception)
                 { }

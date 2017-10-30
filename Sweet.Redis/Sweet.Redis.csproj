@@ -78,6 +78,7 @@
     <Compile Include="Connection\Manager\RedisMasterSwitchedMessage.cs" />
     <Compile Include="Connection\Manager\RedisNodeStateChangedMessage.cs" />
     <Compile Include="Connection\Manager\RedisManagedSentinelGroup.cs" />
+    <Compile Include="Connection\RedisCardioPulseStatus.cs" />
     <Compile Include="Connection\RedisClient.cs" />
     <Compile Include="Connection\Manager\RedisManagerType.cs" />
     <Compile Include="Connection\RedisEndPointResolver.cs" />

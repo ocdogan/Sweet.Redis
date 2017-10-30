@@ -32,19 +32,18 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private Action<object, bool> m_OnPulseStateChange;
-
         private int m_NodeIndex;
         private readonly object m_SyncRoot = new object();
 
         private RedisManagedNode[] m_Nodes;
+        private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
         #endregion Field Members
 
         #region .Ctors
 
         public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes,
-                                      Action<object, bool> onPulseStateChange)
+                                      Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             Role = role;
             m_OnPulseStateChange = onPulseStateChange;
@@ -84,16 +83,16 @@ namespace Sweet.Redis
 
         #region Methods
 
-        internal void SetOnPulseStateChange(Action<object, bool> onPulseStateChange)
+        internal void SetOnPulseStateChange(Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             Interlocked.Exchange(ref m_OnPulseStateChange, onPulseStateChange);
         }
 
-        private void OnPulseStateChange(object sender, bool alive)
+        private void OnPulseStateChange(object sender, RedisCardioPulseStatus status)
         {
             var onPulseStateChange = m_OnPulseStateChange;
             if (onPulseStateChange != null)
-                onPulseStateChange(sender, alive);
+                onPulseStateChange(sender, status);
         }
 
         public virtual RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)

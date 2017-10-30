@@ -22,15 +22,35 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+
 namespace Sweet.Redis
 {
-    public interface IRedisHeartBeatProbe
+    public struct RedisCardioPulseStatus
     {
-        bool Pulsing { get; }
-        long PulseFailCount { get; }
+        #region .Ctors
 
-        bool Pulse();
-        void ResetPulseFailCounter();
-        void PulseStateChanged(RedisCardioPulseStatus status);
+        public RedisCardioPulseStatus(bool heathty, long failCount, long successCount)
+            : this()
+        {
+            Heathty = heathty;
+            FailCount = failCount;
+            SuccessCount = successCount;
+        }
+
+        #endregion .Ctors
+
+        #region Properties
+
+        public bool Heathty { get; private set; } 
+        
+        public long FailCount { get; private set; }
+
+        public long SuccessCount { get; private set; } 
+
+        #endregion Properties
     }
 }

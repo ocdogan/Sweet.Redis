@@ -76,7 +76,7 @@ namespace Sweet.Redis
         private long m_PulseFailCount;
 
         private Action<object> m_OnComplete;
-        private Action<object, bool> m_OnPulseStateChange;
+        private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
         private IRedisConnection m_Connection;
 
@@ -98,7 +98,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         internal RedisPubSubChannel(IRedisNamedObject namedObject, RedisPoolSettings settings,
-                                    Action<object> onComplete, Action<object, bool> onPulseStateChange)
+                                    Action<object> onComplete, Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
@@ -247,16 +247,16 @@ namespace Sweet.Redis
             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
         }
 
-        void IRedisHeartBeatProbe.PulseStateChanged(bool alive)
+        void IRedisHeartBeatProbe.PulseStateChanged(RedisCardioPulseStatus status)
         {
-            OnPulseStateChanged(alive);
+            OnPulseStateChanged(status);
         }
 
-        protected virtual void OnPulseStateChanged(bool alive)
+        protected virtual void OnPulseStateChanged(RedisCardioPulseStatus status)
         {
             var onPulseFail = m_OnPulseStateChange;
             if (onPulseFail != null)
-                onPulseFail.InvokeAsync(this, alive);
+                onPulseFail.InvokeAsync(this, status);
         }
 
         private IRedisConnection Connect()
