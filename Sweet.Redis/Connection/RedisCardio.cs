@@ -33,17 +33,17 @@ namespace Sweet.Redis
     {
         #region CardioProbe
 
-        private class CardioProbe : IDisposable, IEquatable<CardioProbe>
+        private class CardioProbe : RedisInternalDisposable, IEquatable<CardioProbe>
         {
             #region Field Members
 
             private bool m_Healthy = true;
+            private long m_PulseState;
+
             private bool m_IsDisposable;
             private DateTime? m_LastPulseTime;
             private IRedisHeartBeatProbe m_Probe;
             private Action<IRedisHeartBeatProbe, bool> m_OnStateChange;
-
-            private long m_PulseState;
 
             #endregion Field Members
 
@@ -78,40 +78,45 @@ namespace Sweet.Redis
 
             public IRedisHeartBeatProbe Probe { get { return m_Probe; } }
 
+            public bool Pulsing
+            {
+                get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+            }
+
             #endregion Properties
 
             #region Methods
 
-            public void Dispose()
+            protected override void OnDispose(bool disposing)
             {
+                base.OnDispose(disposing);
+
                 Interlocked.Exchange(ref m_OnStateChange, null);
                 Interlocked.Exchange(ref m_Probe, null);
             }
 
             public bool Pulse()
             {
-                if (CanPulse())
+                if (CanPulse() &&
+                    Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
+                    RedisConstants.Zero)
                 {
-                    if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
-                        RedisConstants.Zero)
+                    try
                     {
-                        try
-                        {
-                            m_LastPulseTime = DateTime.UtcNow;
+                        m_LastPulseTime = DateTime.UtcNow;
 
-                            var result = m_Probe.Pulse();
-                            Healthy = result;
+                        var result = m_Probe.Pulse();
+                        Healthy = result;
 
-                            return result;
-                        }
-                        catch (Exception)
-                        {
-                            Healthy = true;
-                        }
-                        finally
-                        {
-                            Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
-                        }
+                        return result;
+                    }
+                    catch (Exception)
+                    {
+                        Healthy = true;
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                     }
                 }
                 return false;
@@ -119,7 +124,7 @@ namespace Sweet.Redis
 
             public bool CanPulse()
             {
-                return !ReferenceEquals(m_Probe, null) &&
+                return !ReferenceEquals(m_Probe, null) && !Pulsing &&
                     (!m_IsDisposable || !((IRedisDisposableBase)m_Probe).Disposed) &&
                     (!m_LastPulseTime.HasValue || (DateTime.UtcNow - m_LastPulseTime.Value).TotalSeconds >= IntervalInSecs);
             }
@@ -279,12 +284,21 @@ namespace Sweet.Redis
                 {
                     lock (m_SyncRoot)
                     {
-                        m_Probes.Add(new CardioProbe(probe, interval, (prb, state) =>
+                        var probes = m_Probes;
+                        if (m_Probes != null)
                         {
-                            if (!ReferenceEquals(prb, null))
-                                probe.PulseStateChanged(state);
-                        }));
-                        Start();
+                            var exists = probes.Any(p => p.IsAlive() &&
+                                                    ReferenceEquals(probe, p.Probe));
+                            if (!exists)
+                            {
+                                m_Probes.Add(new CardioProbe(probe, interval, (prb, state) =>
+                                {
+                                    if (!ReferenceEquals(prb, null))
+                                        probe.PulseStateChanged(state);
+                                }));
+                                Start();
+                            }
+                        }
                     }
                 }
             }
