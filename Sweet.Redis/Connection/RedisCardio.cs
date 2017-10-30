@@ -150,8 +150,8 @@ namespace Sweet.Redis
 
             public bool CanPulse()
             {
-                return !ReferenceEquals(m_Probe, null) && !Pulsing &&
-                    (!m_IsDisposable || !((IRedisDisposableBase)m_Probe).Disposed) &&
+                return !Disposed && !Pulsing &&
+                    (!m_IsDisposable || !((IRedisDisposableBase)m_Probe).IsAlive()) &&
                     (!m_LastPulseTime.HasValue || (DateTime.UtcNow - m_LastPulseTime.Value).TotalSeconds >= IntervalInSecs);
             }
 
