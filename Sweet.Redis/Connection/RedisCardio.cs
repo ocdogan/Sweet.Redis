@@ -280,7 +280,20 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Interlocked.Exchange(ref m_Probes, null);
+            var probes = Interlocked.Exchange(ref m_Probes, null);
+            if (probes != null)
+            {
+                foreach (var cp in probes)
+                {
+                    try
+                    {
+                        if (!ReferenceEquals(cp, null))
+                            cp.Dispose();
+                    }
+                    catch (Exception)
+                    { }
+                }
+            }
 
             base.OnDispose(disposing);
             Stop();
@@ -311,13 +324,13 @@ namespace Sweet.Redis
                     lock (m_SyncRoot)
                     {
                         var probes = m_Probes;
-                        if (m_Probes != null)
+                        if (probes != null)
                         {
-                            var exists = probes.Any(p => p.IsAlive() &&
-                                                    ReferenceEquals(probe, p.Probe));
-                            if (!exists)
+                            var exists = probes.Any(cp => cp.IsAlive() &&
+                                                    ReferenceEquals(probe, cp.Probe));
+                            if (!exists && !Disposed)
                             {
-                                m_Probes.Add(new CardioProbe(probe, interval, (prb, state) =>
+                                probes.Add(new CardioProbe(probe, interval, (prb, state) =>
                                 {
                                     if (!ReferenceEquals(prb, null))
                                         probe.PulseStateChanged(state);
@@ -341,9 +354,20 @@ namespace Sweet.Redis
                         Stop();
                     else
                     {
-                        probes.RemoveWhere((c) => ReferenceEquals(c.Probe, probe));
-                        if (probes.Count == 0)
-                            Stop();
+                        var cp = probes.FirstOrDefault((c) => ReferenceEquals(c.Probe, probe));
+                        if (!ReferenceEquals(cp, null))
+                        {
+                            try
+                            {
+                                if (probes.Remove(cp))
+                                    cp.Dispose();
+                            }
+                            finally
+                            {
+                                if (probes.Count == 0)
+                                    Stop();
+                            }
+                        }
                     }
                 }
             }
@@ -351,11 +375,11 @@ namespace Sweet.Redis
 
         private void Start()
         {
-            if (m_Ticker == null)
+            if (m_Ticker == null && !Disposed)
             {
                 lock (m_SyncRoot)
                 {
-                    if (m_Ticker == null)
+                    if (m_Ticker == null && !Disposed)
                     {
                         Interlocked.Exchange(ref m_PulseState, RedisConstants.One);
                         Interlocked.Exchange(ref m_Ticker, new Timer((state) => { PulseAll(); },
@@ -382,30 +406,34 @@ namespace Sweet.Redis
                 return;
             }
 
-            CardioProbe[] probes = null;
-            lock (m_SyncRoot)
+            if (Pulsing)
             {
-                if (m_Probes != null && m_Probes.Count > 0)
-                    probes = m_Probes.ToArray();
-            }
-
-            if (probes != null)
-            {
-                foreach (var probe in probes)
+                CardioProbe[] probesList = null;
+                lock (m_SyncRoot)
                 {
-                    try
-                    {
-                        if (Disposed || !Pulsing)
-                            return;
+                    var probes = m_Probes;
+                    if (probes != null && probes.Count > 0)
+                        probesList = probes.ToArray();
+                }
 
-                        if (probe.CanPulse())
+                if (probesList != null)
+                {
+                    foreach (var cp in probesList)
+                    {
+                        try
                         {
-                            Func<bool> pulse = probe.Pulse;
-                            pulse.InvokeAsync();
+                            if (Disposed || !Pulsing)
+                                return;
+
+                            if (cp.CanPulse())
+                            {
+                                Func<bool> pulse = cp.Pulse;
+                                pulse.InvokeAsync();
+                            }
                         }
+                        catch (Exception)
+                        { }
                     }
-                    catch (Exception)
-                    { }
                 }
             }
         }
