@@ -21,3 +21,4 @@
 *.rar
 *.config
 *Temporary*.cs
+*.force

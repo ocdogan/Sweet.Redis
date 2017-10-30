@@ -132,8 +132,8 @@ namespace Sweet.Redis
         {
             get
             {
-                return Interlocked.Read(ref m_InitializationState) !=
-                  (long)InitializationState.Undefined;
+                return Interlocked.Read(ref m_InitializationState) ==
+                  (long)InitializationState.Initializing;
             }
         }
 
