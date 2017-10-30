@@ -395,6 +395,9 @@ namespace Sweet.Redis
                 {
                     try
                     {
+                        if (Disposed || !Pulsing)
+                            return;
+
                         if (probe.CanPulse())
                         {
                             Func<bool> pulse = probe.Pulse;
