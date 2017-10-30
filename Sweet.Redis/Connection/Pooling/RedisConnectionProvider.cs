@@ -100,6 +100,12 @@ namespace Sweet.Redis
             }
         }
 
+        public virtual bool IsDown
+        {
+            get { return !Disposed; }
+            protected internal set { }
+        }
+
         public virtual int SpareCount { get { return 0; } }
 
         public string Name
@@ -110,6 +116,33 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
+
+        #region Pulse
+
+        protected internal virtual bool Ping(bool forceNewConnection = false)
+        {
+            if (!Disposed)
+            {
+                try
+                {
+                    var result = false;
+                    using (var connection = NewConnection(Settings))
+                    {
+                        using (var cmd = new RedisCommand(-1, RedisCommandList.Ping))
+                        {
+                            var pong = cmd.ExpectBulkString(connection);
+                            result = (pong == RedisConstants.PONG);
+                        }
+                    }
+                    return result;
+                }
+                catch (Exception)
+                { }
+            }
+            return false;
+        }
+
+        #endregion Pulse
 
         #region IRedisConnectionProvider Methods
 
@@ -193,6 +226,11 @@ namespace Sweet.Redis
             OnConnectionTimeout(retryInfo);
             if (retryInfo.ThrowError)
                 throw new RedisFatalException("Connection timeout occured while trying to connect", RedisErrorCode.ConnectionError);
+            return null;
+        }
+
+        protected virtual IRedisConnection NewConnection(RedisConnectionSettings settings)
+        {
             return null;
         }
 

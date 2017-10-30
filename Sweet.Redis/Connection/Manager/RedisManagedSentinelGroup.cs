@@ -200,11 +200,11 @@ namespace Sweet.Redis
                     var channel = pool.PubSubChannel;
                     if (channel.IsAlive())
                     {
-                        if (!Ping(pool))
-                            return false;
-
                         try
                         {
+                            if (!Ping(pool))
+                                return false;
+
                             channel.Subscribe(PubSubMessageReceived,
                                     RedisCommandList.SentinelChanelSDownEntered,
                                     RedisCommandList.SentinelChanelSDownExited,
@@ -233,8 +233,7 @@ namespace Sweet.Redis
                         }
                         catch (Exception)
                         {
-                            pool.SDown = true;
-                            pool.ODown = true;
+                            pool.IsDown = true;
                         }
                     }
                 }
@@ -250,12 +249,14 @@ namespace Sweet.Redis
                 {
                     using (var db = pool.GetDb(-1))
                         db.Connection.Ping();
+
+                    pool.IsDown = false;
+
                     return true;
                 }
                 catch (Exception)
                 {
-                    pool.SDown = true;
-                    pool.ODown = true;
+                    pool.IsDown = true;
                 }
             }
             return false;

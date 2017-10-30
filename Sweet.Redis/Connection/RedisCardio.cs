@@ -90,7 +90,7 @@ namespace Sweet.Redis
                     if (m_Healthy != value)
                     {
                         m_Healthy = value;
-                        OnStateChange(new RedisCardioPulseStatus(value, FailCount, SuccessCount));
+                        OnStateChange(new RedisCardioPulseStatus(m_Probe, value, FailCount, SuccessCount));
                     }
                 }
             }
@@ -139,10 +139,14 @@ namespace Sweet.Redis
                     {
                         m_LastPulseTime = DateTime.UtcNow;
 
-                        var result = m_Probe.Pulse();
-                        Healthy = result;
+                        var probe = m_Probe;
+                        if (probe != null)
+                        {
+                            var result = probe.Pulse();
+                            Healthy = result;
 
-                        return result;
+                            return result;
+                        }
                     }
                     catch (Exception)
                     {

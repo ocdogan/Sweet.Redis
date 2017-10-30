@@ -33,9 +33,10 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisCardioPulseStatus(bool heathty, long failCount, long successCount)
+        public RedisCardioPulseStatus(IRedisHeartBeatProbe probe, bool heathty, long failCount, long successCount)
             : this()
         {
+            Probe = probe;
             Heathty = heathty;
             FailCount = failCount;
             SuccessCount = successCount;
@@ -45,9 +46,11 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public long FailCount { get; private set; }
+
         public bool Heathty { get; private set; } 
         
-        public long FailCount { get; private set; }
+        public IRedisHeartBeatProbe Probe { get; private set; }
 
         public long SuccessCount { get; private set; } 
 

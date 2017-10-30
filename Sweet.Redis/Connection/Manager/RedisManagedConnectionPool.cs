@@ -22,6 +22,8 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+
 namespace Sweet.Redis
 {
     public class RedisManagedConnectionPool : RedisConnectionPool
@@ -47,9 +49,14 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public bool IsDown
+        public override bool IsDown
         {
             get { return m_SDown || m_ODown; }
+            protected internal set
+            {
+                m_SDown = value;
+                m_ODown = value;
+            }
         }
 
         public bool ODown

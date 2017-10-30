@@ -577,7 +577,7 @@ namespace Sweet.Redis
             { }
         }
 
-        private static void TestNode(RedisManagedNode node, RedisManagedNodesGroup parent)
+        private void TestNode(RedisManagedNode node, RedisManagedNodesGroup parent)
         {
             try
             {
@@ -599,24 +599,22 @@ namespace Sweet.Redis
             { }
         }
 
-        private static bool PingPool(RedisManagedConnectionPool pool)
+        private bool PingPool(RedisManagedConnectionPool pool)
         {
             if (pool.IsAlive())
             {
+                var result = false;
                 try
                 {
-                    using (var db = pool.GetDb(-1))
-                        db.Connection.Ping();
-
-                    pool.SDown = false;
-                    pool.ODown = false;
-
-                    return true;
+                    result = pool.Ping(pool.IsDown);
+                    return result;
                 }
                 catch (Exception)
+                { }
+                finally
                 {
-                    pool.SDown = true;
-                    pool.ODown = true;
+                    pool.SDown = result;
+                    pool.ODown = result;
                 }
             }
             return false;
@@ -918,9 +916,7 @@ namespace Sweet.Redis
                             var changedPool = changedNode.Pool;
                             if (changedPool.IsAlive())
                             {
-                                changedPool.SDown = isDown;
-                                changedPool.ODown = isDown;
-
+                                changedPool.IsDown = isDown;
                                 return true;
                             }
                         }
@@ -1023,7 +1019,7 @@ namespace Sweet.Redis
             }
         }
 
-        private static void HealthCheckGroup(RedisManagedNodesGroup nodesGroup)
+        private void HealthCheckGroup(RedisManagedNodesGroup nodesGroup)
         {
             if (nodesGroup.IsAlive())
             {
@@ -1082,7 +1078,7 @@ namespace Sweet.Redis
             }
         }
 
-        private static RedisPoolSettings FindValidSetting(RedisManagedNodesGroup nodesGroup)
+        private RedisPoolSettings FindValidSetting(RedisManagedNodesGroup nodesGroup)
         {
             if (nodesGroup.IsAlive())
             {

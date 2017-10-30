@@ -445,37 +445,8 @@ namespace Sweet.Redis
                 try
                 {
                     if (!Disposed)
-                    {
-                        IRedisHeartBeatProbe[] members = null;
-                        lock (m_MemberStoreLock)
-                        {
-                            if (m_MemberStore != null && m_MemberStore.Count > 0)
-                                members = m_MemberStore.ToArray();
-                        }
-
-                        if (members != null && members.Length > 0)
-                        {
-                            Action<IRedisHeartBeatProbe> pulseAction =
-                                (member) =>
-                                {
-                                    try
-                                    {
-                                        if (!Disposed && !ReferenceEquals(member, null) && !member.Pulsing)
-                                            member.Pulse();
-                                    }
-                                    catch (Exception)
-                                    { }
-                                };
-
-                            if (members.Length == 1)
-                                pulseAction(members[0]);
-                            else
-                                Parallel.ForEach(members, (member) => { pulseAction(member); });
-                        }
-                    }
-
-                    Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
-                    return true;
+                        return DoPulse();
+                    return false;
                 }
                 catch (Exception)
                 {
@@ -488,6 +459,57 @@ namespace Sweet.Redis
                 }
             }
             return false;
+        }
+
+        protected virtual bool DoPulse()
+        {
+            var result = false;
+            try
+            {
+                try { result = Ping(IsDown); }
+                catch (Exception) { }
+
+                try { DoPulseMemberStore(); }
+                catch (Exception) { }
+            }
+            finally
+            {
+                IsDown = !result;
+            }
+            return result;
+        }
+
+        protected virtual void DoPulseMemberStore()
+        {
+            if (!Disposed)
+            {
+                IRedisHeartBeatProbe[] members = null;
+                lock (m_MemberStoreLock)
+                {
+                    if (m_MemberStore != null && m_MemberStore.Count > 0)
+                        members = m_MemberStore.ToArray();
+                }
+
+                if (members != null && members.Length > 0)
+                {
+                    Action<IRedisHeartBeatProbe> pulseAction =
+                        (member) =>
+                        {
+                            try
+                            {
+                                if (!Disposed && !ReferenceEquals(member, null) && !member.Pulsing)
+                                    member.Pulse();
+                            }
+                            catch (Exception)
+                            { }
+                        };
+
+                    if (members.Length == 1)
+                        pulseAction(members[0]);
+                    else
+                        Parallel.ForEach(members, (member) => { pulseAction(member); });
+                }
+            }
         }
 
         void IRedisHeartBeatProbe.ResetPulseFailCounter()
@@ -511,6 +533,26 @@ namespace Sweet.Redis
                 };
                 failAction.InvokeAsync();
             }
+        }
+
+        protected internal override bool Ping(bool forceNewConnection = false)
+        {
+            if (!Disposed)
+            {
+                try
+                {
+                    if (forceNewConnection || IsDown)
+                        return base.Ping(true);
+
+                    using (var db = GetDb(-1))
+                        db.Connection.Ping();
+
+                    return true;
+                }
+                catch (Exception)
+                { }
+            }
+            return false;
         }
 
         #endregion Pulse
@@ -543,6 +585,17 @@ namespace Sweet.Redis
         #endregion Processor Methods
 
         #region Connection Methods
+
+        protected override IRedisConnection NewConnection(RedisConnectionSettings settings)
+        {
+            return new RedisDbConnection(Name, RedisRole.Any, settings,
+                         null,
+                         (connection, socket) =>
+                         {
+                             socket.DisposeSocket();
+                         },
+                         RedisConstants.MinDbIndex, null, true);
+        }
 
         protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole expectedRole, bool connectImmediately = true)
         {
