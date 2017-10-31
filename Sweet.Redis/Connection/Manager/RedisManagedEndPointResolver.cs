@@ -91,7 +91,7 @@ namespace Sweet.Redis
                     throw;
                 }
 
-                mastersAndSlaves = new RedisManagedMSGroup(masters, slaves);
+                mastersAndSlaves = new RedisManagedMSGroup((RedisManagerSettings)Settings, masters, slaves);
                 return new Tuple<RedisManagedMSGroup, RedisManagedSentinelGroup>(mastersAndSlaves, sentinels);
             }
             return null;
@@ -138,7 +138,7 @@ namespace Sweet.Redis
                             var pool = new RedisManagedConnectionPool(role, Name, settings);
                             pool.ReuseSocket(socket);
 
-                            nodeList.Add(new RedisManagedNode(role, pool, null));
+                            nodeList.Add(new RedisManagedNode(settings, role, pool, null));
                         }
                     }
                     catch (Exception)
@@ -148,9 +148,13 @@ namespace Sweet.Redis
                 }
 
                 if (nodeList.Count > 0)
+                {
+                    var settings = (RedisManagerSettings)Settings;
+
                     return role == RedisRole.Sentinel ?
-                        new RedisManagedSentinelGroup(Settings.MasterName, nodeList.ToArray(), null) :
-                        new RedisManagedNodesGroup(role, nodeList.ToArray(), null);
+                        new RedisManagedSentinelGroup(settings, settings.MasterName, nodeList.ToArray(), null) :
+                        new RedisManagedNodesGroup(settings, role, nodeList.ToArray(), null);
+                }
             }
             return null;
         }

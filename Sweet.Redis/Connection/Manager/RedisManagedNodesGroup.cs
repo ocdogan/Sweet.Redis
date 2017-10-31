@@ -35,6 +35,8 @@ namespace Sweet.Redis
         private int m_NodeIndex;
         private readonly object m_SyncRoot = new object();
 
+        private RedisManagerSettings m_Settings;
+
         private RedisManagedNode[] m_Nodes;
         private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
@@ -42,12 +44,13 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNodesGroup(RedisRole role, RedisManagedNode[] nodes,
-                                      Action<object, RedisCardioPulseStatus> onPulseStateChange)
+        public RedisManagedNodesGroup(RedisManagerSettings settings, RedisRole role,
+                   RedisManagedNode[] nodes, Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             Role = role;
             m_OnPulseStateChange = onPulseStateChange;
             m_Nodes = nodes ?? new RedisManagedNode[0];
+            m_Settings = settings;
 
             if (nodes.IsEmpty())
                 m_NodeIndex = -1;
@@ -65,6 +68,7 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            Interlocked.Exchange(ref m_Settings, null);
             Interlocked.Exchange(ref m_OnPulseStateChange, null);
 
             base.OnDispose(disposing);
@@ -75,9 +79,11 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public RedisManagedNode[] Nodes { get { return m_Nodes; } }
+
         public RedisRole Role { get; internal set; }
 
-        public RedisManagedNode[] Nodes { get { return m_Nodes; } }
+        public RedisManagerSettings Settings { get { return m_Settings; } }
 
         #endregion Properties
 
@@ -262,6 +268,88 @@ namespace Sweet.Redis
                 }
             }
             return false;
+        }
+
+        public void AttachToCardio()
+        {
+            if (!Disposed && Settings.HeartBeatEnabled)
+            {
+                var nodes = m_Nodes;
+                if (nodes != null)
+                {
+                    foreach (var node in nodes)
+                    {
+                        if (node != null)
+                        {
+                            var pool = node.Pool;
+                            if (pool.IsAlive())
+                                pool.AttachToCardio();
+                        }
+                    }
+                }
+            }
+        }
+
+        public void DetachFromCardio()
+        {
+            if (!Disposed)
+            {
+                var nodes = m_Nodes;
+                if (nodes != null)
+                {
+                    foreach (var node in nodes)
+                    {
+                        if (node != null)
+                        {
+                            var pool = node.Pool;
+                            if (pool.IsAlive())
+                                pool.DetachFromCardio();
+                        }
+                    }
+                }
+            }
+        }
+
+        public RedisPoolSettings FindValidSetting()
+        {
+            if (!Disposed)
+            {
+                var nodes = m_Nodes;
+                if (nodes != null)
+                {
+                    foreach (var node in nodes)
+                    {
+                        try
+                        {
+                            if (node.IsAlive())
+                            {
+                                if (node.Ping())
+                                    return node.Settings;
+                            }
+                        }
+                        catch (Exception)
+                        { }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public RedisManagedNode FindNodeOf(RedisConnectionPool pool)
+        {
+            if (pool != null && !Disposed)
+            {
+                var nodes = m_Nodes;
+                if (nodes != null)
+                {
+                    var endPoint = pool.EndPoint;
+                    var hasEndPoint = (endPoint != null) && !endPoint.IsEmpty;
+
+                    return nodes.FirstOrDefault(n => !ReferenceEquals(n.Pool, null) &&
+                        (ReferenceEquals(n.Pool, pool) || (hasEndPoint && n.Pool.EndPoint == endPoint)));
+                }
+            }
+            return null;
         }
 
         #endregion Methods

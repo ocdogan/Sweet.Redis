@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace Sweet.Redis
@@ -36,19 +37,23 @@ namespace Sweet.Redis
         private RedisManagedNodesGroup m_Masters;
         private RedisManagedNodesGroup m_Slaves;
 
+        private RedisManagerSettings m_Settings;
+
         private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisManagedMSGroup(RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null,
+        public RedisManagedMSGroup(RedisManagerSettings settings,
+                                   RedisManagedNodesGroup masters, RedisManagedNodesGroup slaves = null,
                                    Action<object, RedisCardioPulseStatus> onPulseStateChange = null)
         {
             m_OnPulseStateChange = onPulseStateChange;
+            m_Settings = settings;
 
-            ExchangeSlavesInternal(slaves ?? new RedisManagedNodesGroup(RedisRole.Slave, null, null));
-            ExchangeMastersInternal(masters ?? new RedisManagedNodesGroup(RedisRole.Master, null, null));
+            ExchangeSlavesInternal(slaves ?? new RedisManagedNodesGroup(settings, RedisRole.Slave, null, null));
+            ExchangeMastersInternal(masters ?? new RedisManagedNodesGroup(settings, RedisRole.Master, null, null));
         }
 
         #endregion .Ctors
@@ -59,6 +64,7 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
+            Interlocked.Exchange(ref m_Settings, null);
             Interlocked.Exchange(ref m_OnPulseStateChange, null);
 
             var slaves = ExchangeSlavesInternal(null);
@@ -73,6 +79,8 @@ namespace Sweet.Redis
         #region Properties
 
         public RedisManagedNodesGroup Masters { get { return m_Masters; } }
+
+        public RedisManagerSettings Settings { get { return m_Settings; } }
 
         public RedisManagedNodesGroup Slaves { get { return m_Slaves; } }
 
@@ -134,9 +142,34 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisManagedNodesGroup SelectGroup(bool readOnly)
+        {
+            if (!Disposed)
+            {
+                var result = (RedisManagedNodesGroup)null;
+                if (!readOnly)
+                    result = m_Masters;
+                else
+                {
+                    result = m_Slaves;
+                    if (!result.IsAlive())
+                        result = m_Masters;
+                    else
+                    {
+                        var nodes = result.Nodes;
+                        if (nodes.IsEmpty() ||
+                            !nodes.Any(n => n.IsAlive() && n.Pool.IsAlive()))
+                            result = m_Masters;
+                    }
+                }
+                return result;
+            }
+            return null;
+        }
+
         public void ChangeGroup(RedisManagedNode node)
         {
-            if (node.IsAlive())
+            if (!Disposed && node.IsAlive())
             {
                 lock (m_SyncRoot)
                 {
@@ -158,6 +191,74 @@ namespace Sweet.Redis
                             }
                         }
                     }
+                }
+            }
+        }
+
+        public bool SetMasterIsDown(RedisEndPoint masterEndPoint, bool isDown)
+        {
+            if (!Disposed && !masterEndPoint.IsEmpty())
+            {
+                var masters = m_Masters;
+                if (masters.IsAlive())
+                {
+                    var masterNodes = masters.Nodes;
+                    if (masterNodes != null)
+                    {
+                        var updatedNode = masterNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == masterEndPoint);
+                        if (updatedNode.IsAlive())
+                        {
+                            var updatedPool = updatedNode.Pool;
+                            if (updatedPool.IsAlive())
+                            {
+                                if (updatedPool.IsDown != isDown)
+                                    updatedPool.IsDown = isDown;
+
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void PromoteToMaster(RedisEndPoint newEndPoint, RedisEndPoint oldEndPoint)
+        {
+            if (!Disposed && !newEndPoint.IsEmpty())
+            {
+                SetMasterIsDown(oldEndPoint, true);
+
+                var switched = false;
+                try
+                {
+                    var slaves = m_Slaves;
+                    if (slaves.IsAlive())
+                    {
+                        var slaveNodes = slaves.Nodes;
+                        if (slaveNodes != null)
+                        {
+                            var slaveNode = slaveNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == newEndPoint);
+                            if (slaveNode.IsAlive())
+                            {
+                                ChangeGroup(slaveNode);
+
+                                var changedPool = slaveNode.Pool;
+                                if (changedPool.IsAlive())
+                                {
+                                    changedPool.SDown = false;
+                                    changedPool.ODown = false;
+
+                                    switched = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    if (!switched)
+                        SetMasterIsDown(newEndPoint, false);
                 }
             }
         }

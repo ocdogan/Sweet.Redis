@@ -36,13 +36,15 @@ namespace Sweet.Redis
         private RedisEndPoint m_EndPoint;
         private RedisManagedConnectionPool m_Pool;
 
+        private RedisManagerSettings m_Settings;
+
         private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisManagedNode(RedisRole role, RedisManagedConnectionPool pool,
+        public RedisManagedNode(RedisManagerSettings settings, RedisRole role, RedisManagedConnectionPool pool,
                                 Action<object, RedisCardioPulseStatus> onPulseStateChange, bool ownsPool = true)
         {
             m_Pool = pool;
@@ -136,6 +138,8 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisManagerSettings Settings { get { return m_Settings; } }
+
         #endregion Properties
 
         #region Methods
@@ -173,7 +177,22 @@ namespace Sweet.Redis
             return oldPool;
         }
 
-        internal void SetOnPulseStateChange(Action<object, RedisCardioPulseStatus> onPulseStateChange)
+        public bool Ping()
+        {
+            var pool = m_Pool;
+            if (pool.IsAlive())
+            {
+                try
+                {
+                    return pool.Ping(pool.IsDown);
+                }
+                catch (Exception)
+                { }
+            }
+            return false;
+        }
+
+        public void SetOnPulseStateChange(Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             Interlocked.Exchange(ref m_OnPulseStateChange, onPulseStateChange);
         }
