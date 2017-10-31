@@ -73,6 +73,32 @@ namespace Sweet.Redis
 
         #region General
 
+        internal static bool IsConnectionError(this Exception exception)
+        {
+            while (exception != null)
+            {
+                var redisError = exception as RedisException;
+                if (redisError == null)
+                {
+                    if (exception is SocketException)
+                        return true;
+                }
+                else
+                {
+                    switch (redisError.ErrorCode)
+                    {
+                        case RedisErrorCode.ConnectionError:
+                        case RedisErrorCode.CorruptData:
+                        case RedisErrorCode.CorruptResponse:
+                        case RedisErrorCode.SocketError:
+                            return true;
+                    }
+                }               
+                exception = exception.InnerException;
+            }
+            return false;
+        }
+
         internal static bool IsEmpty(this ICollection obj)
         {
             return (obj == null || obj.Count == 0);
