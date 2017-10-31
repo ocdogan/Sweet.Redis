@@ -68,7 +68,7 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("settings"));
 
             if (onReleaseSocket == null)
-                throw new RedisFatalException(new ArgumentNullException("releaseAction"));
+                throw new RedisFatalException(new ArgumentNullException("onReleaseSocket"));
 
             m_Id = RedisIDGenerator<RedisConnection>.NextId();
 
@@ -303,6 +303,8 @@ namespace Sweet.Redis
                                     case "sentinel":
                                         role = RedisRole.Sentinel;
                                         break;
+                                    default:
+                                        break;
                                 }
                             }
 
@@ -322,6 +324,8 @@ namespace Sweet.Redis
                                             break;
                                         case "sentinel":
                                             role = RedisRole.Sentinel;
+                                            break;
+                                        default:
                                             break;
                                     }
                                 }
@@ -372,10 +376,7 @@ namespace Sweet.Redis
 
         public Task<RedisSocket> ConnectAsync()
         {
-            Func<RedisSocket> f = () =>
-            {
-                return ConnectInternal();
-            };
+            Func<RedisSocket> f = ConnectInternal;
             return f.InvokeAsync();
         }
 

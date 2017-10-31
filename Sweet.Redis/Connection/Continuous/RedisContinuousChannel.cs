@@ -35,9 +35,9 @@ namespace Sweet.Redis
         {
             #region Methods
 
-            public override void Invoke(T message)
+            public override void Invoke(T msg)
             {
-                if (!ReferenceEquals(message, null))
+                if (!ReferenceEquals(msg, null))
                 {
                     var callbacks = CallbacksOf("*");
                     if (callbacks != null && callbacks.Count > 0)
@@ -46,7 +46,7 @@ namespace Sweet.Redis
                         {
                             try
                             {
-                                callback.InvokeAsync(message);
+                                callback.InvokeAsync(msg);
                             }
                             catch (Exception)
                             { }
@@ -83,7 +83,7 @@ namespace Sweet.Redis
 
             m_Settings = settings;
 
-            Func<IRedisConnectionProvider> factory = () => { return NewConnectionProvider(); };
+            Func<IRedisConnectionProvider> factory = NewConnectionProvider;
             m_ConnectionProvider = factory();
         }
 

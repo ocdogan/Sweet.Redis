@@ -940,7 +940,7 @@ namespace Sweet.Redis
                                     var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
 
                                     if (nodesGroup.IsAlive())
-                                        ApplyStateChange(message.Channel, instanceRole, instanceEndPoint, nodesGroup);
+                                        ApplyStateChange(message.Channel, instanceEndPoint, nodesGroup);
                                 }
                             }
                         }
@@ -1013,6 +1013,8 @@ namespace Sweet.Redis
                                     else
                                         MasterIsDown(m_MSGroup, pool.EndPoint, true);
                                     break;
+                                default:
+                                    break;
                             }
                             return;
                         }
@@ -1035,6 +1037,8 @@ namespace Sweet.Redis
                     break;
                 case "sentinel":
                     instanceRole = RedisRole.Sentinel;
+                    break;
+                default:
                     break;
             }
             return instanceRole;
@@ -1128,11 +1132,13 @@ namespace Sweet.Redis
                         AttachToCardio(nodesGroup);
                     }
                     break;
+                default:
+                    break;
             }
             return nodesGroup;
         }
 
-        private void ApplyStateChange(string channel, RedisRole instanceRole, RedisEndPoint instanceEndPoint, RedisManagedNodesGroup nodesGroup)
+        private void ApplyStateChange(string channel, RedisEndPoint instanceEndPoint, RedisManagedNodesGroup nodesGroup)
         {
             if (nodesGroup.IsAlive())
             {
@@ -1209,6 +1215,8 @@ namespace Sweet.Redis
                             case RedisConstants.SentinelDiscovered:
                                 instancePool.SDown = false;
                                 instancePool.ODown = false;
+                                break;
+                            default:
                                 break;
                         }
                     }

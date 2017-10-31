@@ -39,7 +39,7 @@ namespace Sweet.Redis
         private Action<IRedisRawResponse> m_OnReceive;
 
         private long m_ProcessingReceivedQ;
-        private ConcurrentQueue<IRedisRawResponse> m_ReceivedResponseQ = new ConcurrentQueue<IRedisRawResponse>();
+        private readonly ConcurrentQueue<IRedisRawResponse> m_ReceivedResponseQ = new ConcurrentQueue<IRedisRawResponse>();
 
         #endregion Field Members
 

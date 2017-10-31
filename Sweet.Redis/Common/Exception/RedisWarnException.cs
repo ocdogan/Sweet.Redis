@@ -33,7 +33,6 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisWarnException()
-            : base()
         { }
 
         public RedisWarnException(int errorCode)

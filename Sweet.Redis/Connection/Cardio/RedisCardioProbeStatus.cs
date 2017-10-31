@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    public enum RedisCardioProbeStatus : int
+    public enum RedisCardioProbeStatus
     {
         OK = 0,
         Down = 1

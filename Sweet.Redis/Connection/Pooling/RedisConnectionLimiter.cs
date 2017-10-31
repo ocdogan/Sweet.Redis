@@ -31,12 +31,12 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private int m_MaxCount;
+        private readonly int m_MaxCount;
         private SemaphoreSlim m_CountSync;
         private readonly object m_SyncLock = new object();
 
         #endregion Field Members
-        
+
         #region .Ctors
 
         public RedisConnectionLimiter(int maxCount)
@@ -108,7 +108,7 @@ namespace Sweet.Redis
                 {
                     count = m_CountSync.Release();
                 }
-                return (int)count;
+                return count;
             }
         }
 

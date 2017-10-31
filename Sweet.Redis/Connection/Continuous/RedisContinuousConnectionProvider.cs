@@ -68,17 +68,14 @@ namespace Sweet.Redis
         {
             var settings = (Settings as RedisPoolSettings) ?? RedisPoolSettings.Default;
             return new RedisContinuousReaderConnection(Name, RedisRole.Master, settings,
-                (response) =>
-                {
-                    ResponseReceived(response);
-                },
+                OnReceiveResponse,
                 null,
                 OnReleaseSocket,
                 socket,
                 true);
         }
 
-        protected virtual void ResponseReceived(IRedisRawResponse response)
+        protected virtual void OnReceiveResponse(IRedisRawResponse response)
         {
             if (!Disposed)
             {

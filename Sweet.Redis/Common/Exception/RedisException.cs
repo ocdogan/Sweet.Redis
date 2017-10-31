@@ -40,11 +40,9 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisException()
-            : base()
         { }
 
         public RedisException(int errorCode)
-            : base()
         {
             m_ErrorCode = errorCode;
         }

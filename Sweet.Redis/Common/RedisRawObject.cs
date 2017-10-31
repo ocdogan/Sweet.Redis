@@ -90,6 +90,8 @@ namespace Sweet.Redis
                             if (data is double)
                                 return ((double)data).ToString(RedisConstants.InvariantCulture);
                             break;
+                        default:
+                            break;
                     }
                 }
                 return null;
@@ -148,6 +150,8 @@ namespace Sweet.Redis
                             throw new RedisException("Invalid integer value", RedisErrorCode.CorruptResponse);
 
                         data = l;
+                        break;
+                    default:
                         break;
                 }
             }

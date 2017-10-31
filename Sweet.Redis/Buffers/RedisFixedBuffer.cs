@@ -40,7 +40,8 @@ namespace Sweet.Redis
         #region Field Members
 
         private byte[] m_Buffer;
-        private int m_Capacity;
+        private readonly int m_Capacity;
+
         private int m_ReadPosition;
         private int m_WritePosition;
 

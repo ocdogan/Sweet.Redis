@@ -77,7 +77,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(value, null))
                 return "(nil)";
 
-            return "\"" + value.ToString() + "\"";
+            return "\"" + value + "\"";
         }
         #endregion Methods
 
@@ -85,7 +85,7 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator double[](RedisMultiDouble value)  // implicit RedisMultiDouble to double conversion operator
+        public static implicit operator double[] (RedisMultiDouble value)  // implicit RedisMultiDouble to double conversion operator
         {
             return value.Value;
         }
@@ -119,7 +119,7 @@ namespace Sweet.Redis
                 doubles = new double[length];
                 if (length > 0)
                     for (var i = 0; i < length; i++)
-                        doubles[i] = (double)value[i];
+                        doubles[i] = value[i];
             }
             return new RedisMultiDouble(doubles);
         }
@@ -134,7 +134,7 @@ namespace Sweet.Redis
                 doubles = new double[length];
                 if (length > 0)
                     for (var i = 0; i < length; i++)
-                        doubles[i] = (double)value[i];
+                        doubles[i] = value[i];
             }
             return new RedisMultiDouble(doubles);
         }
@@ -193,7 +193,7 @@ namespace Sweet.Redis
                 doubles = new double[length];
                 if (length > 0)
                     for (var i = 0; i < length; i++)
-                        doubles[i] = (double)value[i];
+                        doubles[i] = value[i];
             }
             return new RedisMultiDouble(doubles);
         }
@@ -208,7 +208,7 @@ namespace Sweet.Redis
                 doubles = new double[length];
                 if (length > 0)
                     for (var i = 0; i < length; i++)
-                        doubles[i] = (double)value[i];
+                        doubles[i] = value[i];
             }
             return new RedisMultiDouble(doubles);
         }
@@ -223,7 +223,7 @@ namespace Sweet.Redis
                 doubles = new double[length];
                 if (length > 0)
                     for (var i = 0; i < length; i++)
-                        doubles[i] = (double)value[i];
+                        doubles[i] = value[i];
             }
             return new RedisMultiDouble(doubles);
         }

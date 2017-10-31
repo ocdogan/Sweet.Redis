@@ -105,6 +105,9 @@ namespace Sweet.Redis
                                                 result.ParseInfo(rawObject);
                                                 return result;
                                             }
+
+                                        default:
+                                            break;
                                     }
                                 }
                             }

@@ -54,6 +54,7 @@ namespace Sweet.Redis
             {
                 DbIndex = dbIndex;
                 Socket = socket;
+                m_Settings = settings;
                 PooledTime = DateTime.UtcNow;
             }
 
@@ -481,18 +482,18 @@ namespace Sweet.Redis
         protected virtual bool DoPulse()
         {
             var result = false;
-            try 
-            { 
-                result = Ping(IsDown); 
+            try
+            {
+                result = Ping(IsDown);
             }
-            catch (Exception) 
+            catch (Exception)
             { }
 
-            try 
-            { 
-                DoPulseMemberStore(); 
+            try
+            {
+                DoPulseMemberStore();
             }
-            catch (Exception) 
+            catch (Exception)
             { }
             return result;
         }

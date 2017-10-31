@@ -45,7 +45,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
+        protected RedisRequest(RedisCommand command, RedisCommandExpect expectation,
             string okIf = null, object stateObject = null, RedisRequestType requestType = RedisRequestType.Default)
         {
             m_Id = RedisIDGenerator<RedisRequest>.NextId();

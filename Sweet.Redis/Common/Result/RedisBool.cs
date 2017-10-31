@@ -107,7 +107,7 @@ namespace Sweet.Redis
 
         public static implicit operator RedisBool(double value)  // implicit double to RedisBool conversion operator
         {
-            return new RedisBool(value == 1d);
+            return new RedisBool(value.Equals(1d));
         }
 
         public static implicit operator RedisBool(decimal value)  // implicit decimal to RedisBool conversion operator
@@ -117,7 +117,7 @@ namespace Sweet.Redis
 
         public static implicit operator RedisBool(float value)  // implicit float to RedisBool conversion operator
         {
-            return new RedisBool(value == 1f);
+            return new RedisBool(value.Equals(1f));
         }
 
         public static implicit operator RedisBool(ushort value)  // implicit ushort to RedisBool conversion operator

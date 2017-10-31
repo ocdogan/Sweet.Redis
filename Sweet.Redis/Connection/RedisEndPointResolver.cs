@@ -171,6 +171,8 @@ namespace Sweet.Redis
                                     case RedisRole.Sentinel:
                                         result[SentinelsPos] = tuple.Item2;
                                         break;
+                                    default:
+                                        break;
                                 }
                             }
 
@@ -309,6 +311,9 @@ namespace Sweet.Redis
                                     }
                                     break;
                                 }
+
+                            default:
+                                break;
                         }
                     }
                 }
@@ -341,6 +346,8 @@ namespace Sweet.Redis
                                 return RedisRole.Slave;
                             case "sentinel":
                                 return RedisRole.Sentinel;
+                            default:
+                                break;
                         }
                     }
                 }

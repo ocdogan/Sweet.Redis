@@ -269,6 +269,8 @@ namespace Sweet.Redis
                                 (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
                             }
                             break;
+                        default:
+                            break;
                     }
                 }
             }
@@ -472,6 +474,8 @@ namespace Sweet.Redis
                                         var result = command.ExpectSimpleStringBytes(context);
                                         (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
                                     }
+                                    break;
+                                default:
                                     break;
                             }
                         }

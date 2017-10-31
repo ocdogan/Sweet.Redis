@@ -87,10 +87,10 @@ namespace Sweet.Redis
         private readonly object m_SubscriptionLock = new object();
         private readonly object m_PSubscriptionLock = new object();
 
-        private RedisPubSubSubscriptions m_Subscriptions = new RedisPubSubSubscriptions();
+        private readonly RedisPubSubSubscriptions m_Subscriptions = new RedisPubSubSubscriptions();
         private RedisPubSubSubscriptions m_PSubscriptions = new RedisPubSubSubscriptions();
 
-        private RedisPubSubSubscriptions m_PendingSubscriptions = new RedisPubSubSubscriptions();
+        private readonly RedisPubSubSubscriptions m_PendingSubscriptions = new RedisPubSubSubscriptions();
         private RedisPubSubSubscriptions m_PendingPSubscriptions = new RedisPubSubSubscriptions();
 
         #endregion Field Members
@@ -398,6 +398,8 @@ namespace Sweet.Redis
                             }
                         }
                         break;
+                    default:
+                        break;
                 }
             }
         }
@@ -500,7 +502,7 @@ namespace Sweet.Redis
                 throw new ArgumentNullException("callback");
 
             if (channel.IsEmpty)
-                throw new ArgumentNullException("pattern");
+                throw new ArgumentNullException("channel");
 
             ValidateNotDisposed();
 

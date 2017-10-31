@@ -93,7 +93,7 @@ namespace Sweet.Redis
                         case RedisErrorCode.SocketError:
                             return true;
                     }
-                }               
+                }
                 exception = exception.InnerException;
             }
             return false;
@@ -447,6 +447,8 @@ namespace Sweet.Redis
                         return Encoding.UTF8.GetBytes(new char[] { (char)obj });
                     case TypeCode.Byte:
                         return new byte[] { (byte)obj };
+                    default:
+                        break;
                 }
             }
             return null;
@@ -533,6 +535,8 @@ namespace Sweet.Redis
                         return (RedisString)obj.ToString();
                     case TypeCode.Byte:
                         return (RedisBytes)(new byte[] { (byte)obj });
+                    default:
+                        break;
                 }
             }
             return null;
@@ -595,6 +599,8 @@ namespace Sweet.Redis
                         return (RedisResult<T>)(object)(RedisString)obj.ToString();
                     case TypeCode.Byte:
                         return (RedisResult<T>)(object)(RedisBytes)(new byte[] { (byte)(object)obj });
+                    default:
+                        break;
                 }
             }
             return null;

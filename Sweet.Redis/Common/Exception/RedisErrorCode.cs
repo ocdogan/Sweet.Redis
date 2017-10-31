@@ -24,11 +24,11 @@
 
 namespace Sweet.Redis
 {
-    public class RedisErrorCode
+    public static class RedisErrorCode
     {
         #region Constants
 
-        public const int GenericError = 0; 
+        public const int GenericError = 0;
         public const int ConnectionError = 1;
         public const int SocketError = 2;
         public const int ExecutionError = 3;

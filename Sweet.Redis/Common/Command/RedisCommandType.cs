@@ -27,7 +27,7 @@ using System;
 namespace Sweet.Redis
 {
     [Flags]
-    public enum RedisCommandType : int
+    public enum RedisCommandType
     {
         None = 0,
         SendAndReceive = 1 << 0,

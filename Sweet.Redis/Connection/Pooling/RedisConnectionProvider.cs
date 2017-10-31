@@ -54,7 +54,7 @@ namespace Sweet.Redis
                 String.Format("{0}, {1}", GetType().Name, Id.ToString());
 
             if (connectionLimiter == null)
-                connectionLimiter = (maxCount) => NewConnectionLimiter(maxCount);
+                connectionLimiter = NewConnectionLimiter;
 
             var maxConnectionCount = Math.Max(RedisConstants.MinConnectionCount, GetMaxConnectionCount());
             m_ConnectionLimiter = connectionLimiter(maxConnectionCount) ??

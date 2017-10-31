@@ -34,7 +34,7 @@ namespace Sweet.Redis
         #region Static Members
 
         private static readonly Dictionary<char, RedisClientInfoFlag> FlagDefs =
-            new Dictionary<char, RedisClientInfoFlag>()
+            new Dictionary<char, RedisClientInfoFlag>
             {
                 { 'N', RedisClientInfoFlag.None }, // no specific flag set
                 { 'O', RedisClientInfoFlag.MonitoringSlave }, // the client is a slave in MONITOR mode

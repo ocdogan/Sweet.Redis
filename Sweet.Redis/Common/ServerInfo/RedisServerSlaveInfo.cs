@@ -117,6 +117,8 @@ namespace Sweet.Redis
                                                     Lag = lag;
                                             }
                                             break;
+                                        default:
+                                            break;
                                     }
                                 }
                             }

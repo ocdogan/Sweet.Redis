@@ -634,10 +634,10 @@ namespace Sweet.Redis
 
             var endPoint = e.RemoteEndPoint;
             if (endPoint == null)
-                throw new RedisFatalException(new ArgumentNullException("endPoint"), RedisErrorCode.ConnectionError);
+                throw new RedisFatalException(new ArgumentNullException("e.RemoteEndPoint"), RedisErrorCode.ConnectionError);
 
             if (!(endPoint is IPEndPoint))
-                throw new RedisFatalException(new ArgumentNullException("EndPoint is not in expected form"), RedisErrorCode.ConnectionError);
+                throw new RedisFatalException(new ArgumentNullException("e.RemoteEndPoint", "EndPoint is not in expected form"), RedisErrorCode.ConnectionError);
 
             e.Completed += OnConnectComplete;
 

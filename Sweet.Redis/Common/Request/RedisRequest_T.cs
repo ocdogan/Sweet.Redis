@@ -66,7 +66,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisRequest(RedisCommand command, RedisCommandExpect expectation,
+        protected RedisRequest(RedisCommand command, RedisCommandExpect expectation,
             string okIf = null, RedisRequestType requestType = RedisRequestType.Default)
             : base(command, expectation, okIf, null, requestType)
         { }
@@ -229,6 +229,8 @@ namespace Sweet.Redis
                             break;
                         case RedisCommandExpect.SimpleStringBytes:
                             result.TrySetResult(value);
+                            break;
+                        default:
                             break;
                     }
                 }

@@ -67,7 +67,7 @@ namespace Sweet.Redis
         private Action<RedisMasterSwitchedMessage> m_OnSwitchMaster;
         private Action<RedisNodeStateChangedMessage> m_OnInstanceStateChange;
 
-        private List<RedisManagedConnectionPool> m_MonitoredPools = new List<RedisManagedConnectionPool>();
+        private readonly List<RedisManagedConnectionPool> m_MonitoredPools = new List<RedisManagedConnectionPool>();
 
         #endregion Field Members
 

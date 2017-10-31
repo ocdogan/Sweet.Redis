@@ -133,6 +133,8 @@ namespace Sweet.Redis
                                                     Sentinels = sentinels;
                                             }
                                             break;
+                                        default:
+                                            break;
                                     }
                                 }
                             }

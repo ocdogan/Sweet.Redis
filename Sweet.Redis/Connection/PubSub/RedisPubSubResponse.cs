@@ -118,6 +118,8 @@ namespace Sweet.Redis
                                     case "punsubscribe":
                                         type = RedisPubSubResponseType.PUnsubscribe;
                                         break;
+                                    default:
+                                        break;
                                 }
 
                                 if (type != RedisPubSubResponseType.Undefined)
@@ -159,6 +161,8 @@ namespace Sweet.Redis
                                                             channel = String.Empty;
                                                         }
                                                         break;
+                                                    default:
+                                                        break;
                                                 }
 
                                                 var dataItem = items[index++];
@@ -177,6 +181,8 @@ namespace Sweet.Redis
                                                             }
                                                         case RedisRawObjectType.BulkString:
                                                             return new RedisPubSubResponse(type, typeStr, channel, pattern, dataItem.Data);
+                                                        default:
+                                                            break;
                                                     }
                                                 }
                                             }

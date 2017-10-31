@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    public enum RedisRawObjectType : int
+    public enum RedisRawObjectType
     {
         Undefined,
         SimpleString,

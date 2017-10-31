@@ -137,7 +137,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        protected override RedisSocket DequeueSocket(int dbIndex, RedisRole role)
+        protected override RedisSocket DequeueSocket(int dbIndex, RedisRole expectedRole)
         {
             var socket = m_Socket;
             lock (m_SocketLock)

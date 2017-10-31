@@ -34,7 +34,7 @@ namespace Sweet.Redis
     {
         #region CRLFState
 
-        protected enum CRLFState : int
+        protected enum CRLFState
         {
             None = 0,
             CR = 1,
@@ -61,7 +61,7 @@ namespace Sweet.Redis
         protected long m_ReceiveStarted;
 
         private int m_BufferSize;
-        private byte[] m_Buffer;
+        private readonly byte[] m_Buffer;
 
         protected int m_WritePosition;
         protected int m_ReadPosition;

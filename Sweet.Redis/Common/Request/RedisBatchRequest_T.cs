@@ -167,6 +167,8 @@ namespace Sweet.Redis
                                 (result as RedisBytes).TrySetResult(expectation.Value);
                             }
                             break;
+                        default:
+                            break;
                     }
 
                     Interlocked.CompareExchange(ref m_State, (long)RequestState.Completed, (long)RequestState.Initiated);

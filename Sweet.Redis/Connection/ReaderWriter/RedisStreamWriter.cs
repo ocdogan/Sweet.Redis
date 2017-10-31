@@ -35,7 +35,7 @@ namespace Sweet.Redis
 
         private Stream m_Stream;
         private bool m_OwnsStream;
-        private bool m_UseAsyncIfNeeded;
+        private readonly bool m_UseAsyncIfNeeded;
 
         #endregion Field Members
 

@@ -327,6 +327,16 @@ namespace Sweet.Redis
                     case RedisCommandExpect.Nothing:
                         request.SetResult(RedisVoidVal.Value);
                         break;
+                    case RedisCommandExpect.Response:
+                    case RedisCommandExpect.Array:
+                    case RedisCommandExpect.Double:
+                    case RedisCommandExpect.Integer:
+                    case RedisCommandExpect.MultiDataBytes:
+                    case RedisCommandExpect.MultiDataStrings:
+                    case RedisCommandExpect.NullableDouble:
+                    case RedisCommandExpect.NullableInteger:
+                        request.SetResult(data);
+                        break;
                     default:
                         request.SetResult(data);
                         break;

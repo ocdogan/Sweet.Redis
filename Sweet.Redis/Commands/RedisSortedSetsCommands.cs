@@ -62,6 +62,8 @@ namespace Sweet.Redis
                     case RedisUpdateOption.OnlyNotExistings:
                         parameters = parameters.Join(RedisCommandList.NX);
                         break;
+                    default:
+                        break;
                 }
 
                 if (changed)
@@ -115,6 +117,8 @@ namespace Sweet.Redis
                     case RedisUpdateOption.OnlyNotExistings:
                         parameters = parameters.Join(RedisCommandList.NX);
                         break;
+                    default:
+                        break;
                 }
 
                 if (changed)
@@ -167,6 +171,8 @@ namespace Sweet.Redis
                         break;
                     case RedisUpdateOption.OnlyNotExistings:
                         parameters = parameters.Join(RedisCommandList.NX);
+                        break;
+                    default:
                         break;
                 }
 
@@ -318,6 +324,8 @@ namespace Sweet.Redis
                     case RedisAggregate.Max:
                         parameters = parameters.Join(RedisCommandList.Max);
                         break;
+                    default:
+                        break;
                 }
 
                 return ExpectInteger(RedisCommandList.ZInterStore, parameters);
@@ -373,6 +381,8 @@ namespace Sweet.Redis
                     case RedisAggregate.Max:
                         parameters = parameters.Join(RedisCommandList.Max);
                         break;
+                    default:
+                        break;
                 }
 
                 return ExpectInteger(RedisCommandList.ZInterStore, parameters);
@@ -427,6 +437,8 @@ namespace Sweet.Redis
                         break;
                     case RedisAggregate.Max:
                         parameters = parameters.Join(RedisCommandList.Max);
+                        break;
+                    default:
                         break;
                 }
 
@@ -569,7 +581,7 @@ namespace Sweet.Redis
 
             return ZRangeByLexString(key, start.ToBytes(), stop.ToBytes(), offset, count);
         }
-        
+
         public RedisMultiString ZRangeByLexString(RedisParam key, long start, long stop, int? offset = null, int? count = null)
         {
             if (key.IsNull)
@@ -625,7 +637,7 @@ namespace Sweet.Redis
 
             return ZRangeByScore(key, start.ToBytes(), stop.ToBytes(), offset, count);
         }
-        
+
         public RedisMultiBytes ZRangeByScore(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null)
         {
             if (key.IsNull)
@@ -725,7 +737,7 @@ namespace Sweet.Redis
             return ZRangeByScoreWithScores(key, start.ToBytes(), stop.ToBytes(), offset, count);
         }
 
-        public RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, RedisParam start, RedisParam stop, 
+        public RedisResult<RedisKeyValue<byte[], double>[]> ZRangeByScoreWithScores(RedisParam key, RedisParam start, RedisParam stop,
             int? offset = null, int? count = null)
         {
             if (key.IsNull)
@@ -806,7 +818,7 @@ namespace Sweet.Redis
             return ZRangeByScoreWithScoresString(key, start.ToBytes(), stop.ToBytes(), offset, count);
         }
 
-        public RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, RedisParam start, RedisParam stop, 
+        public RedisResult<RedisKeyValue<string, double>[]> ZRangeByScoreWithScoresString(RedisParam key, RedisParam start, RedisParam stop,
             int? offset = null, int? count = null)
         {
             if (key.IsNull)
@@ -1778,6 +1790,8 @@ namespace Sweet.Redis
                     case RedisAggregate.Max:
                         parameters = parameters.Join(RedisCommandList.Max);
                         break;
+                    default:
+                        break;
                 }
 
                 return ExpectInteger(RedisCommandList.ZUnionStore, parameters);
@@ -1833,6 +1847,8 @@ namespace Sweet.Redis
                     case RedisAggregate.Max:
                         parameters = parameters.Join(RedisCommandList.Max);
                         break;
+                    default:
+                        break;
                 }
 
                 return ExpectInteger(RedisCommandList.ZUnionStore, parameters);
@@ -1887,6 +1903,8 @@ namespace Sweet.Redis
                         break;
                     case RedisAggregate.Max:
                         parameters = parameters.Join(RedisCommandList.Max);
+                        break;
+                    default:
                         break;
                 }
 

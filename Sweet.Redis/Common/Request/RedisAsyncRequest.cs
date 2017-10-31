@@ -28,7 +28,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
+        protected RedisAsyncRequest(RedisCommand command, RedisCommandExpect expectation,
                                  string okIf = null, object stateObject = null)
             : base(command, expectation, okIf, stateObject, RedisRequestType.Async)
         { }

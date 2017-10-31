@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisCommandExecuter(RedisConnectionSettings settings)
+        protected RedisCommandExecuter(RedisConnectionSettings settings)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);

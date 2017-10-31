@@ -35,7 +35,7 @@ namespace Sweet.Redis
 
         private RedisSocket m_Socket;
         private bool m_OwnsSocket;
-        private bool m_UseAsyncIfNeeded;
+        private readonly bool m_UseAsyncIfNeeded;
 
         #endregion Field Members
 

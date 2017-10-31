@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    public enum RedisConnectionState : int
+    public enum RedisConnectionState
     {
         Idle = 0,
         Connecting = 1,

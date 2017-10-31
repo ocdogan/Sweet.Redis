@@ -24,7 +24,7 @@
 
 namespace Sweet.Redis
 {
-    internal enum RedisRequestType : int
+    internal enum RedisRequestType
     {
         Default = 0,
         Async = 1,

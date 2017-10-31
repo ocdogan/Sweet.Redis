@@ -83,7 +83,7 @@ namespace Sweet.Redis
                 return Eval(RedisCommandList.EvalSha, sha1, args);
 
             var response = ScriptExists(sha1);
-            var exists = (response != null && response.Length > 0) ? response[0] == RedisConstants.One : false;
+            var exists = (response != null && response.Length > 0) && response[0] == RedisConstants.One;
 
             if (!exists)
             {
@@ -112,7 +112,7 @@ namespace Sweet.Redis
                 }
                 throw;
             }
-        }        
+        }
 
         public RedisBool ScriptDebugNo()
         {

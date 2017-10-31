@@ -166,7 +166,7 @@ namespace Sweet.Redis
                 longs = new long[length];
                 if (length > 0)
                     for (var i = 0; i < length; i++)
-                        longs[i] = (long)value[i];
+                        longs[i] = value[i];
             }
             return new RedisMultiInteger(longs);
         }
@@ -216,7 +216,7 @@ namespace Sweet.Redis
             return new RedisMultiInteger(longs);
         }
 
-        public static implicit operator int[](RedisMultiInteger value)  // implicit RedisMultiInt to int[] conversion operator
+        public static implicit operator int[] (RedisMultiInteger value)  // implicit RedisMultiInt to int[] conversion operator
         {
             var longs = value.Value;
             if (longs != null)

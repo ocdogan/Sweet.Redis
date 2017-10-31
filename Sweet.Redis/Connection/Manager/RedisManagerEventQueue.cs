@@ -202,7 +202,7 @@ namespace Sweet.Redis
                 {
                     if (mEvent != null)
                         mEvent.Dispose();
-                };
+                }
             }
         }
 

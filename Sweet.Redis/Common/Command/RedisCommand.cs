@@ -538,7 +538,7 @@ namespace Sweet.Redis
             if (socket == null)
             {
                 if (throwException)
-                    throw new RedisFatalException(new ArgumentNullException("socket"), RedisErrorCode.MissingParameter);
+                    throw new RedisFatalException(new ArgumentNullException("context.Socket"), RedisErrorCode.MissingParameter);
                 return null;
             }
 
@@ -708,7 +708,7 @@ namespace Sweet.Redis
                         if (len < 0)
                             return null;
                         if (len == 0)
-                            return new string[0] { };
+                            return new string[] { };
 
                         var items = response.Items;
                         if (items != null)
@@ -746,6 +746,8 @@ namespace Sweet.Redis
 
                         return null;
                     }
+                default:
+                    break;
             }
             return null;
         }
@@ -819,6 +821,8 @@ namespace Sweet.Redis
 
                         return null;
                     }
+                default:
+                    break;
             }
             return null;
         }
