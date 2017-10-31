@@ -445,7 +445,9 @@ namespace Sweet.Redis
                 var strategy = m_StateUpdateStrategy;
                 if (strategy != null)
                     return strategy(sender, status);
-                return true;
+
+                return status.FailCount == RedisConstants.CardioProbeStatusChangeRetryCount ||
+                    status.SuccessCount == RedisConstants.CardioProbeStatusChangeRetryCount;
             }
             return false;
         }
