@@ -547,7 +547,7 @@ namespace Sweet.Redis
                         }
                         finally
                         {
-                            AttachToSentinel();
+                            AttachToSentinels();
                             DisposeObjects(objectsToDispose);
                         }
                     }
@@ -559,7 +559,7 @@ namespace Sweet.Redis
             }
         }
 
-        private void AttachToSentinel()
+        private void AttachToSentinels()
         {
             try
             {
