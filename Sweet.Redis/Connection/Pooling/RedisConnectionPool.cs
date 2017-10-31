@@ -139,9 +139,7 @@ namespace Sweet.Redis
                                     if (settings != null)
                                     {
                                         using (var cmd = new RedisCommand(-1, RedisCommandList.Ping))
-                                        {
-                                            cmd.ExpectSimpleString(new RedisSocketContext(socket, settings), "PONG");
-                                        }
+                                            cmd.ExpectSimpleString(new RedisSocketContext(socket, settings), RedisConstants.PONG);
                                     }
                                 }
                             }
@@ -457,9 +455,15 @@ namespace Sweet.Redis
             {
                 try
                 {
-                    return !Disposed ?
-                        DoPulse() :
-                        false;
+                    if (!Disposed)
+                    {
+                        var result = DoPulse();
+                        if (result)
+                            Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
+                        return result;
+                    }
+
+                    return false;
                 }
                 catch (Exception)
                 {
@@ -477,18 +481,19 @@ namespace Sweet.Redis
         protected virtual bool DoPulse()
         {
             var result = false;
-            try
-            {
-                try { result = Ping(IsDown); }
-                catch (Exception) { }
+            try 
+            { 
+                result = Ping(IsDown); 
+            }
+            catch (Exception) 
+            { }
 
-                try { DoPulseMemberStore(); }
-                catch (Exception) { }
+            try 
+            { 
+                DoPulseMemberStore(); 
             }
-            finally
-            {
-                IsDown = !result;
-            }
+            catch (Exception) 
+            { }
             return result;
         }
 
@@ -496,31 +501,46 @@ namespace Sweet.Redis
         {
             if (!Disposed)
             {
-                IRedisHeartBeatProbe[] members = null;
                 lock (m_MemberStoreLock)
                 {
-                    if (m_MemberStore != null && m_MemberStore.Count > 0)
-                        members = m_MemberStore.ToArray();
-                }
-
-                if (members != null && members.Length > 0)
-                {
-                    Action<IRedisHeartBeatProbe> pulseAction =
-                        (member) =>
+                    if (m_MemberStore != null)
+                    {
+                        var members = m_MemberStore.ToArray();
+                        if (members.Length > 0)
                         {
-                            try
-                            {
-                                if (!Disposed && !ReferenceEquals(member, null) && !member.Pulsing)
-                                    member.Pulse();
-                            }
-                            catch (Exception)
-                            { }
-                        };
+                            Action<RedisConnectionPoolMember> pulseAction =
+                                (member) =>
+                                {
+                                    if (!Disposed && member.IsAlive() && !member.Pulsing)
+                                    {
+                                        var result = false;
+                                        try
+                                        {
+                                            result = member.Pulse();
+                                        }
+                                        catch (Exception)
+                                        { }
+                                        finally
+                                        {
+                                            if (!result)
+                                            {
+                                                var memberList = m_MemberStore;
+                                                if (memberList != null)
+                                                {
+                                                    memberList.Remove(member);
+                                                    member.Dispose();
+                                                }
+                                            }
+                                        }
+                                    }
+                                };
 
-                    if (members.Length == 1)
-                        pulseAction(members[0]);
-                    else
-                        Parallel.ForEach(members, (member) => { pulseAction(member); });
+                            if (members.Length == 1)
+                                pulseAction(members[0]);
+                            else
+                                Parallel.ForEach(members, (member) => { pulseAction(member); });
+                        }
+                    }
                 }
             }
         }
