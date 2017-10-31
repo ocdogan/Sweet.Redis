@@ -78,7 +78,8 @@
     <Compile Include="Connection\Manager\RedisMasterSwitchedMessage.cs" />
     <Compile Include="Connection\Manager\RedisNodeStateChangedMessage.cs" />
     <Compile Include="Connection\Manager\RedisManagedSentinelGroup.cs" />
-    <Compile Include="Connection\RedisCardioPulseStatus.cs" />
+    <Compile Include="Connection\Cardio\RedisCardioProbeStatus.cs" />
+    <Compile Include="Connection\Cardio\RedisCardioPulseStatus.cs" />
     <Compile Include="Connection\RedisClient.cs" />
     <Compile Include="Connection\Manager\RedisManagerType.cs" />
     <Compile Include="Connection\RedisEndPointResolver.cs" />
@@ -269,7 +270,7 @@
     <Compile Include="Connection\Interfaces\IRedisConnectionInfoProvider.cs" />
     <Compile Include="Connection\Interfaces\IRedisHeartBeatProbe.cs" />
     <Compile Include="Connection\Interfaces\IRedisCardio.cs" />
-    <Compile Include="Connection\RedisCardio.cs" />
+    <Compile Include="Connection\Cardio\RedisCardio.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

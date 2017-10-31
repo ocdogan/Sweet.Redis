@@ -22,42 +22,11 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-
 namespace Sweet.Redis
 {
-    public struct RedisCardioPulseStatus
+    public enum RedisCardioProbeStatus : int
     {
-        #region .Ctors
-
-        public RedisCardioPulseStatus(IRedisHeartBeatProbe probe, bool currentHealth,
-                  bool newHealth, long failCount, long successCount)
-            : this()
-        {
-            Probe = probe;
-            NewHealth = newHealth;
-            CurrentHealth = currentHealth;
-            FailCount = failCount;
-            SuccessCount = successCount;
-        }
-
-        #endregion .Ctors
-
-        #region Properties
-
-        public long FailCount { get; private set; }
-
-        public bool CurrentHealth { get; private set; }
-
-        public bool NewHealth { get; private set; }
-
-        public IRedisHeartBeatProbe Probe { get; private set; }
-
-        public long SuccessCount { get; private set; }
-
-        #endregion Properties
+        OK = 0,
+        Down = 1
     }
 }

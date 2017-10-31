@@ -259,7 +259,7 @@ namespace Sweet.Redis
                             if (node != null)
                             {
                                 refreshAll = false;
-                                if (status.NewHealth)
+                                if (status.NewStatus == RedisCardioProbeStatus.OK)
                                     PoolConnectionEstablished(node, nodesGroup);
                                 else
                                     PoolConnectionDropped(node, nodesGroup);

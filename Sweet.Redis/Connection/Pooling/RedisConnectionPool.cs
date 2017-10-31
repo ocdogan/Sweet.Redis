@@ -431,7 +431,7 @@ namespace Sweet.Redis
 
         #region Pulse
 
-        internal void AttachToCardio()
+        public void AttachToCardio()
         {
             if (!Disposed && !m_ProbeAttached)
             {
@@ -444,7 +444,7 @@ namespace Sweet.Redis
             }
         }
 
-        internal void DetachFromCardio()
+        public void DetachFromCardio()
         {
             if (m_ProbeAttached && !Disposed)
                 RedisCardio.Default.Detach(this);
