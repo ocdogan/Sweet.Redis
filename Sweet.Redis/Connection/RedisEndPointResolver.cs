@@ -311,7 +311,6 @@ namespace Sweet.Redis
                                     }
                                     break;
                                 }
-
                             default:
                                 break;
                         }

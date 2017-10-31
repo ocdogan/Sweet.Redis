@@ -106,7 +106,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(value, null))
                 return "(nil)";
 
-            return "\"" + value.ToString() + "\"";
+            return "\"" + value + "\"";
         }
         #endregion Methods
 

@@ -45,7 +45,8 @@ namespace Sweet.Redis
         private RedisRole m_Role = RedisRole.Undefined;
 
         private bool m_UseSsl;
-        private Socket m_Socket;
+        private readonly Socket m_Socket;
+
         private Action<RedisSocket> m_OnConnect;
         private Action<RedisSocket> m_OnDisconnect;
 

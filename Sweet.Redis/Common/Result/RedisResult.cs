@@ -32,7 +32,6 @@ namespace Sweet.Redis
     public class RedisResult<T> : RedisResult<T, T>
     {
         internal RedisResult()
-            : base()
         { }
 
         public RedisResult(T value)
