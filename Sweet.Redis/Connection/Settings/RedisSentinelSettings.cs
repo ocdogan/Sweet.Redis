@@ -37,6 +37,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
+        public RedisSentinelSettings()
+            : this(endPoints: (RedisEndPoint[])null)
+        { }
+
         public RedisSentinelSettings(string connectionString)
             : base(connectionString)
         { }

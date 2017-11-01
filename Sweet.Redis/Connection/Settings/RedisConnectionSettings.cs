@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Security;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -39,10 +40,9 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisConnectionSettings(string connectionString)
-        {
-            LoadFrom(connectionString);
-        }
+        public RedisConnectionSettings()
+            : this(endPoints: (RedisEndPoint[])null)
+        { }
 
         public RedisConnectionSettings(string host = RedisConstants.LocalHost,
             int port = RedisConstants.DefaultPort,
@@ -186,6 +186,128 @@ namespace Sweet.Redis
                             SslCertificateSelection,
                             SslCertificateValidation);
         }
+
+        #region Overrides
+
+        public override string ToString()
+        {
+            var sBuilder = new StringBuilder();
+            WriteTo(sBuilder);
+
+            return sBuilder.ToString();
+        }
+
+        protected virtual void WriteTo(StringBuilder sBuilder)
+        {
+            var endPoints = EndPoints;
+            if (!endPoints.IsEmpty())
+            {
+                sBuilder.Append("host=");
+
+                var index = 0;
+                foreach (var endPoint in endPoints)
+                {
+                    if (!endPoint.IsEmpty())
+                    {
+                        sBuilder.Append(endPoint.Host);
+                        sBuilder.Append(':');
+                        sBuilder.Append(endPoint.Port);
+
+                        if (index++ > 0)
+                            sBuilder.Append(',');
+                    }
+                }
+
+                if (sBuilder.Length > 0)
+                    sBuilder.Append(';');
+            }
+
+            if (!String.IsNullOrEmpty(MasterName))
+            {
+                sBuilder.Append("masterName=");
+                sBuilder.Append(MasterName);
+                sBuilder.Append(';');
+            }
+
+            if (!String.IsNullOrEmpty(Password))
+            {
+                sBuilder.Append("password=");
+                sBuilder.Append(Password);
+                sBuilder.Append(';');
+            }
+
+            if (!String.IsNullOrEmpty(ClientName))
+            {
+                sBuilder.Append("clientName=");
+                sBuilder.Append(ClientName);
+                sBuilder.Append(';');
+            }
+
+            if (ConnectionTimeout != RedisConstants.DefaultConnectionTimeout)
+            {
+                sBuilder.Append("connectionTimeout=");
+                sBuilder.Append(ConnectionTimeout);
+                sBuilder.Append(';');
+            }
+
+            if (ReceiveTimeout != RedisConstants.DefaultReceiveTimeout)
+            {
+                sBuilder.Append("receiveTimeout=");
+                sBuilder.Append(ReceiveTimeout);
+                sBuilder.Append(';');
+            }
+
+            if (SendTimeout != RedisConstants.DefaultSendTimeout)
+            {
+                sBuilder.Append("sendTimeout=");
+                sBuilder.Append(SendTimeout);
+                sBuilder.Append(';');
+            }
+
+            if (ConnectionWaitTimeout != RedisConstants.DefaultWaitTimeout)
+            {
+                sBuilder.Append("connectionWaitTimeout=");
+                sBuilder.Append(ConnectionWaitTimeout);
+                sBuilder.Append(';');
+            }
+
+            if (ReadBufferSize > 0)
+            {
+                sBuilder.Append("readBufferSize=");
+                sBuilder.Append(ReadBufferSize);
+                sBuilder.Append(';');
+            }
+
+            if (WriteBufferSize > 0)
+            {
+                sBuilder.Append("writeBufferSize=");
+                sBuilder.Append(WriteBufferSize);
+                sBuilder.Append(';');
+            }
+
+            if (!HeartBeatEnabled)
+            {
+                sBuilder.Append("heartBeatEnabled=");
+                sBuilder.Append(HeartBeatEnabled);
+                sBuilder.Append(';');
+            }
+
+            if (HearBeatIntervalInSecs != RedisConstants.DefaultHeartBeatIntervalSecs)
+            {
+                sBuilder.Append("hearBeatIntervalInSecs=");
+                sBuilder.Append(HearBeatIntervalInSecs);
+                sBuilder.Append(';');
+            }
+
+            if (UseSsl)
+            {
+                sBuilder.Append("useSsl=");
+                sBuilder.Append(UseSsl);
+                sBuilder.Append(';');
+            }
+        }
+
+        #endregion Overrides
 
         #region Settings
 
@@ -439,6 +561,15 @@ namespace Sweet.Redis
                     }
                 }
             }
+        }
+
+        public static T Parse<T>(string connectionString)
+            where T : RedisConnectionSettings, new()
+        {
+            var result = new T();
+            result.LoadFrom(connectionString);
+
+            return result;
         }
 
         #endregion Settings

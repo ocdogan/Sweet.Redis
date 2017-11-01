@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Security;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -38,8 +39,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisPoolSettings(string connectionString)
-            : base(connectionString)
+        public RedisPoolSettings()
+            : this(endPoints: (RedisEndPoint[])null)
         { }
 
         public RedisPoolSettings(string host = RedisConstants.LocalHost,
@@ -151,6 +152,32 @@ namespace Sweet.Redis
                             UseSsl,
                             SslCertificateSelection,
                             SslCertificateValidation);
+        }
+
+        protected override void WriteTo(StringBuilder sBuilder)
+        {
+            base.WriteTo(sBuilder);
+
+            if (ConnectionIdleTimeout != RedisConstants.DefaultIdleTimeout)
+            {
+                sBuilder.Append("connectionIdleTimeout=");
+                sBuilder.Append(ConnectionIdleTimeout);
+                sBuilder.Append(';');
+            }
+
+            if (MaxConnectionCount != RedisConstants.DefaultMaxConnectionCount)
+            {
+                sBuilder.Append("maxConnectionCount=");
+                sBuilder.Append(MaxConnectionCount);
+                sBuilder.Append(';');
+            }
+
+            if (!UseAsyncCompleter)
+            {
+                sBuilder.Append("useAsyncCompleter=");
+                sBuilder.Append(UseAsyncCompleter);
+                sBuilder.Append(';');
+            }
         }
 
         #region Settings

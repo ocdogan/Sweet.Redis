@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Security;
+using System.Text;
 
 namespace Sweet.Redis
 {
@@ -38,8 +39,8 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagerSettings(string connectionString)
-            : base(connectionString)
+        public RedisManagerSettings()
+            : this(endPoints: (RedisEndPoint[])null)
         { }
 
         public RedisManagerSettings(string host = RedisConstants.LocalHost,
@@ -151,6 +152,18 @@ namespace Sweet.Redis
                             SslCertificateValidation);
         }
 
+        protected override void WriteTo(StringBuilder sBuilder)
+        {
+            base.WriteTo(sBuilder);
+
+            if (ManagerType != RedisManagerType.Sentinel)
+            {
+                sBuilder.Append("managerType=");
+                sBuilder.Append(ManagerType.ToString("F"));
+                sBuilder.Append(';');
+            }
+        }
+
         #region Settings
 
         protected override int GetDefaultPort()
@@ -188,7 +201,6 @@ namespace Sweet.Redis
         }
 
         #endregion Settings
-
 
         #endregion Methods
     }
