@@ -323,6 +323,16 @@ namespace Sweet.Redis
                     if (!String.IsNullOrEmpty(kv.Value))
                         ParseProperty(settingsWithDefaults, kv.Key.ToLowerInvariant(), kv.Value);
                 }
+
+                var port = -1;
+                string str;
+                if (settings.TryGetValue("port", out str) && !String.IsNullOrEmpty(str))
+                    port = int.Parse(str);
+
+                string host;
+                settings.TryGetValue("host", out host);
+
+                settingsWithDefaults["host"] = ToRedisEndPoints(host, port);
             }
 
             SetSettings(settingsWithDefaults);
@@ -456,22 +466,6 @@ namespace Sweet.Redis
         {
             switch (key)
             {
-                case "host":
-                    if (value.IndexOfAny(new[] { ':', ',', '|' }) == -1)
-                        settings[key] = new RedisEndPoint(value, GetDefaultPort());
-                    else
-                    {
-                        HashSet<RedisEndPoint> endPoints = null;
-
-                        object hostList;
-                        if (settings.TryGetValue("hosts", out hostList))
-                            endPoints = hostList as HashSet<RedisEndPoint>;
-
-                        endPoints = ToRedisEndPoints(value, endPoints);
-                        if (endPoints != null)
-                            settings["hosts"] = endPoints;
-                    }
-                    break;
                 case "mastername":
                     settings[key] = value;
                     break;
@@ -514,26 +508,39 @@ namespace Sweet.Redis
             return true;
         }
 
-        private static HashSet<RedisEndPoint> ToRedisEndPoints(string value, HashSet<RedisEndPoint> endPoints)
+        private HashSet<RedisEndPoint> ToRedisEndPoints(string host, int port)
         {
-            var hosts = value.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries);
-            if (hosts != null)
-            {
-                var length = hosts.Length;
-                if (length > 0)
-                {
-                    if (endPoints == null)
-                        endPoints = new HashSet<RedisEndPoint>();
+            host = (host ?? String.Empty).Trim();
+            port = port > 0 ? port : GetDefaultPort();
 
-                    for (var i = 0; i < length; i++)
+            if (!String.IsNullOrEmpty(host))
+            {
+                if (host.IndexOfAny(new[] { ':', ',', '|' }) == -1)
+                    return new HashSet<RedisEndPoint> { new RedisEndPoint(host, port) };
+
+                var hosts = host.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries);
+                if (hosts != null)
+                {
+                    var length = hosts.Length;
+                    if (length > 0)
                     {
-                        var endPoint = hosts[i].ToRedisEndPoint();
-                        if (!endPoint.IsEmpty())
-                            endPoints.Add(endPoint);
+                        var endPoints = new HashSet<RedisEndPoint>();
+
+                        for (var i = 0; i < length; i++)
+                        {
+                            var endPoint = hosts[i].ToRedisEndPoint(port);
+                            if (!endPoint.IsEmpty())
+                                endPoints.Add(endPoint);
+                        }
+
+                        if (endPoints.Count == 0)
+                            endPoints.Add(RedisEndPoint.LocalHostEndPoint);
+
+                        return endPoints;
                     }
                 }
             }
-            return endPoints;
+            return new HashSet<RedisEndPoint> { RedisEndPoint.LocalHostEndPoint };
         }
 
         private void HostToEndPoint(HashSet<RedisEndPoint> hostList, string host)
