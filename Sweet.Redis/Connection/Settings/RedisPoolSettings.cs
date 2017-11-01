@@ -38,6 +38,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
+        public RedisPoolSettings(string connectionString)
+            : base(connectionString)
+        { }
+
         public RedisPoolSettings(string host = RedisConstants.LocalHost,
             int port = RedisConstants.DefaultPort,
             string masterName = null,
@@ -148,6 +152,66 @@ namespace Sweet.Redis
                             SslCertificateSelection,
                             SslCertificateValidation);
         }
+
+        #region Settings
+
+        protected override void SetSettings(IDictionary<string, object> settings)
+        {
+            base.SetSettings(settings);
+
+            foreach (var kv in settings)
+            {
+                switch (kv.Key)
+                {
+                    case "connectionidletimeout":
+                        ConnectionIdleTimeout = (int)kv.Value;
+                        break;
+                    case "maxconnectioncount":
+                        MaxConnectionCount = (int)kv.Value;
+                        break;
+                    case "useasynccompleter":
+                        UseAsyncCompleter = (bool)kv.Value;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        protected override IDictionary<string, object> GetSettingsWithDefaults()
+        {
+            var settings = base.GetSettingsWithDefaults();
+
+            settings["connectionidletimeout"] = RedisConstants.DefaultIdleTimeout;
+            settings["maxconnectioncount"] = RedisConstants.DefaultMaxConnectionCount;
+            settings["useasynccompleter"] = true;
+
+            return settings;
+        }
+
+        protected override bool ParseProperty(IDictionary<string, object> settings, string key, string value)
+        {
+            if (base.ParseProperty(settings, key, value))
+                return true;
+
+            switch (key)
+            {
+                case "connectionidletimeout":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "maxconnectioncount":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "useasynccompleter":
+                    settings[key] = bool.Parse(value);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+
+        #endregion Settings
 
         #endregion Methods
     }

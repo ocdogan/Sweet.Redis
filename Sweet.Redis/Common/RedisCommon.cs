@@ -25,6 +25,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 
@@ -72,6 +73,41 @@ namespace Sweet.Redis
         #region Methods
 
         #region General
+
+        internal static RedisEndPoint ToRedisEndPoint(this string host)
+        {
+            host = (host ?? String.Empty).Trim();
+            if (!String.IsNullOrEmpty(host))
+            {
+                var colonPos = host.LastIndexOf(':');
+                if (colonPos == -1 || colonPos == host.Length - 1)
+                    return new RedisEndPoint(host, RedisConstants.DefaultPort);
+
+                var isIP4 = host.IndexOf('.') > -1;
+                if (!isIP4)
+                {
+                    var colonCount = host.Count((ch) => ch == ':');
+                    
+                    var isIP6 = (colonCount > 1);
+                    if (isIP6 && colonCount == 2)
+                        colonPos = -1;
+                }
+
+                var name = (host.Substring(0, colonPos) ?? String.Empty).TrimEnd();
+                if (String.IsNullOrEmpty(name))
+                    name = RedisConstants.LocalHost;
+
+                if (colonPos == host.Length - 1)
+                    return new RedisEndPoint(name, RedisConstants.DefaultPort);
+
+                var portStr = (host.Substring(colonPos + 1) ?? String.Empty).TrimStart();
+                if (String.IsNullOrEmpty(portStr))
+                    return new RedisEndPoint(name, RedisConstants.DefaultPort);
+
+                return new RedisEndPoint(name, int.Parse(portStr));
+            }
+            return RedisEndPoint.Empty;
+        }
 
         internal static RedisRole ToRedisRole(this string roleStr)
         {

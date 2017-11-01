@@ -22,6 +22,7 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
 using System.Collections.Generic;
 using System.Net.Security;
 
@@ -36,6 +37,10 @@ namespace Sweet.Redis
         #endregion Static Members
 
         #region .Ctors
+
+        public RedisManagerSettings(string connectionString)
+            : base(connectionString)
+        { }
 
         public RedisManagerSettings(string host = RedisConstants.LocalHost,
             int port = RedisConstants.DefaultPort,
@@ -145,6 +150,45 @@ namespace Sweet.Redis
                             SslCertificateSelection,
                             SslCertificateValidation);
         }
+
+        #region Settings
+
+        protected override int GetDefaultPort()
+        {
+            return RedisConstants.DefaultSentinelPort;
+        }
+
+        protected override void SetSettings(IDictionary<string, object> settings)
+        {
+            base.SetSettings(settings);
+
+            object obj;
+            if (settings.TryGetValue("managertype", out obj))
+                ManagerType = (RedisManagerType)obj;
+        }
+
+        protected override IDictionary<string, object> GetSettingsWithDefaults()
+        {
+            var settings = base.GetSettingsWithDefaults();
+            settings["managertype"] = RedisManagerType.Sentinel;
+            return settings;
+        }
+
+        protected override bool ParseProperty(IDictionary<string, object> settings, string key, string value)
+        {
+            if (base.ParseProperty(settings, key, value))
+                return true;
+
+            if (key == "managertype")
+            {
+                settings[key] = Enum.Parse(typeof(RedisManagerType), value);
+                return true;
+            }
+            return true;
+        }
+
+        #endregion Settings
+
 
         #endregion Methods
     }

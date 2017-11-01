@@ -39,6 +39,11 @@ namespace Sweet.Redis
 
         #region .Ctors
 
+        public RedisConnectionSettings(string connectionString)
+        {
+            LoadFrom(connectionString);
+        }
+
         public RedisConnectionSettings(string host = RedisConstants.LocalHost,
             int port = RedisConstants.DefaultPort,
             string masterName = null,
@@ -152,19 +157,14 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected static RedisEndPoint[] ToEndPointList(HashSet<RedisEndPoint> endPoints, int defaultPort = RedisConstants.DefaultPort)
+        public void SetSslCertificateSelection(LocalCertificateSelectionCallback sslCertificateSelection)
         {
-            if (endPoints != null)
-            {
-                var count = endPoints.Count;
-                if (count > 0)
-                {
-                    var result = endPoints.Where(ep => !ep.IsEmpty()).ToArray();
-                    if (!result.IsEmpty())
-                        return result;
-                }
-            }
-            return new[] { new RedisEndPoint(RedisConstants.LocalHost, defaultPort) };
+            SslCertificateSelection = sslCertificateSelection;
+        }
+
+        public void SetSslCertificateValidation(RemoteCertificateValidationCallback sslCertificateValidation)
+        {
+            SslCertificateValidation = sslCertificateValidation;
         }
 
         public virtual RedisConnectionSettings Clone(string host = null, int port = -1)
@@ -187,6 +187,281 @@ namespace Sweet.Redis
                             SslCertificateValidation);
         }
 
+        #region Settings
+
+        private void LoadFrom(string connectionString)
+        {
+            var settingsWithDefaults = GetSettingsWithDefaults();
+
+            var settings = ParseConnectionString(connectionString);
+            if (settings != null)
+            {
+                foreach (var kv in settings)
+                {
+                    if (!String.IsNullOrEmpty(kv.Value))
+                        ParseProperty(settingsWithDefaults, kv.Key.ToLowerInvariant(), kv.Value);
+                }
+            }
+
+            SetSettings(settingsWithDefaults);
+        }
+
+        private static IDictionary<string, string> ParseConnectionString(string connectionString)
+        {
+            if (!String.IsNullOrEmpty(connectionString))
+            {
+                var parts = connectionString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts != null)
+                {
+                    var length = parts.Length;
+                    if (length > 0)
+                    {
+                        var result = new Dictionary<string, string>(length);
+
+                        for (var i = 0; i < length; i++)
+                        {
+                            var part = (parts[i] ?? String.Empty).Trim();
+                            if (!String.IsNullOrEmpty(part))
+                            {
+                                var pos = part.IndexOf('=');
+                                if (pos == -1)
+                                    result[part] = null;
+                                else
+                                {
+                                    var key = (part.Substring(0, pos) ?? String.Empty).TrimEnd();
+                                    if (!String.IsNullOrEmpty(key))
+                                    {
+                                        if (pos == part.Length - 1)
+                                            result[key] = null;
+                                        else
+                                            result[key] = (part.Substring(pos + 1) ?? String.Empty).TrimStart();
+                                    }
+                                }
+                            }
+                        }
+                        return result;
+                    }
+                }
+            }
+            return null;
+        }
+
+        protected virtual void SetSettings(IDictionary<string, object> settings)
+        {
+            object obj;
+            RedisEndPoint[] endPoints = null;
+            if (settings.TryGetValue("host", out obj))
+            {
+                var endPointList = obj as HashSet<RedisEndPoint>;
+                if (endPointList != null)
+                    endPoints = endPointList.ToArray();
+            }
+
+            EndPoints = !endPoints.IsEmpty() ? endPoints :
+                new[] { new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort) };
+
+            foreach (var kv in settings)
+            {
+                switch (kv.Key)
+                {
+                    case "mastername":
+                        MasterName = kv.Value as string;
+                        break;
+                    case "password":
+                        Password = kv.Value as string;
+                        break;
+                    case "clientname":
+                        ClientName = kv.Value as string;
+                        break;
+                    case "connectiontimeout":
+                        ConnectionTimeout = (int)kv.Value;
+                        break;
+                    case "receivetimeout":
+                        ReceiveTimeout = (int)kv.Value;
+                        break;
+                    case "sendtimeout":
+                        SendTimeout = (int)kv.Value;
+                        break;
+                    case "connectionwaittimeout":
+                        ConnectionWaitTimeout = (int)kv.Value;
+                        break;
+                    case "readbuffersize":
+                        ReadBufferSize = (int)kv.Value;
+                        break;
+                    case "writebuffersize":
+                        WriteBufferSize = (int)kv.Value;
+                        break;
+                    case "heartbeatenabled":
+                        HeartBeatEnabled = (bool)kv.Value;
+                        break;
+                    case "hearbeatintervalinsecs":
+                        HearBeatIntervalInSecs = (int)kv.Value;
+                        break;
+                    case "usessl":
+                        UseSsl = (bool)kv.Value;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        protected virtual IDictionary<string, object> GetSettingsWithDefaults()
+        {
+            return new Dictionary<string, object>
+            {
+                { "mastername", null },
+                { "password", null },
+                { "clientname", null },
+                { "connectiontimeout", RedisConstants.DefaultConnectionTimeout },
+                { "receivetimeout", RedisConstants.DefaultReceiveTimeout },
+                { "sendtimeout", RedisConstants.DefaultSendTimeout },
+                { "connectionwaittimeout", RedisConstants.DefaultWaitTimeout },
+                { "readbuffersize", 0 },
+                { "writebuffersize", 0 },
+                { "heartbeatenabled", true },
+                { "hearbeatintervalinsecs", RedisConstants.DefaultHeartBeatIntervalSecs },
+                { "usessl", false }
+            };
+        }
+
+        protected virtual int GetDefaultPort()
+        {
+            return RedisConstants.DefaultPort;
+        }
+
+        protected virtual bool ParseProperty(IDictionary<string, object> settings, string key, string value)
+        {
+            switch (key)
+            {
+                case "host":
+                    if (value.IndexOfAny(new[] { ':', ',', '|' }) == -1)
+                        settings[key] = new RedisEndPoint(value, GetDefaultPort());
+                    else
+                    {
+                        HashSet<RedisEndPoint> endPoints = null;
+
+                        object hostList;
+                        if (settings.TryGetValue("hosts", out hostList))
+                            endPoints = hostList as HashSet<RedisEndPoint>;
+
+                        endPoints = ToRedisEndPoints(value, endPoints);
+                        if (endPoints != null)
+                            settings["hosts"] = endPoints;
+                    }
+                    break;
+                case "mastername":
+                    settings[key] = value;
+                    break;
+                case "password":
+                    settings[key] = value;
+                    break;
+                case "clientname":
+                    settings[key] = value;
+                    break;
+                case "connectiontimeout":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "receivetimeout":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "sendtimeout":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "connectionwaittimeout":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "readbuffersize":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "writebuffersize":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "heartbeatenabled":
+                    settings[key] = bool.Parse(value);
+                    break;
+                case "hearbeatintervalinsecs":
+                    settings[key] = int.Parse(value);
+                    break;
+                case "usessl":
+                    settings[key] = bool.Parse(value);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+
+        private static HashSet<RedisEndPoint> ToRedisEndPoints(string value, HashSet<RedisEndPoint> endPoints)
+        {
+            var hosts = value.Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries);
+            if (hosts != null)
+            {
+                var length = hosts.Length;
+                if (length > 0)
+                {
+                    if (endPoints == null)
+                        endPoints = new HashSet<RedisEndPoint>();
+
+                    for (var i = 0; i < length; i++)
+                    {
+                        var endPoint = hosts[i].ToRedisEndPoint();
+                        if (!endPoint.IsEmpty())
+                            endPoints.Add(endPoint);
+                    }
+                }
+            }
+            return endPoints;
+        }
+
+        private void HostToEndPoint(HashSet<RedisEndPoint> hostList, string host)
+        {
+            if (!String.IsNullOrEmpty(host))
+            {
+                var pos = host.IndexOf(':');
+                if (pos == -1)
+                    hostList.Add(new RedisEndPoint(host, GetDefaultPort()));
+                else
+                {
+                    var name = (host.Substring(0, pos) ?? String.Empty).TrimEnd();
+                    if (!String.IsNullOrEmpty(name))
+                    {
+                        if (pos == host.Length - 1)
+                            hostList.Add(RedisEndPoint.IP4LoopbackEndPoint);
+                        else
+                        {
+                            var port = (host.Substring(pos + 1) ?? String.Empty).TrimStart();
+                            if (String.IsNullOrEmpty(port))
+                                hostList.Add(new RedisEndPoint(name, GetDefaultPort()));
+                            else
+                                hostList.Add(new RedisEndPoint(name, int.Parse(port)));
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion Settings
+
         #endregion Methods
+
+        #region Static Methods
+
+        protected static RedisEndPoint[] ToEndPointList(HashSet<RedisEndPoint> endPoints, int defaultPort = RedisConstants.DefaultPort)
+        {
+            if (endPoints != null)
+            {
+                var count = endPoints.Count;
+                if (count > 0)
+                {
+                    var result = endPoints.Where(ep => !ep.IsEmpty()).ToArray();
+                    if (!result.IsEmpty())
+                        return result;
+                }
+            }
+            return new[] { new RedisEndPoint(RedisConstants.LocalHost, defaultPort) };
+        }
+
+        #endregion Static Methods
     }
 }

@@ -37,6 +37,10 @@ namespace Sweet.Redis
 
         #region .Ctors
 
+        public RedisSentinelSettings(string connectionString)
+            : base(connectionString)
+        { }
+
         public RedisSentinelSettings(string host = RedisConstants.LocalHost,
             int port = RedisConstants.DefaultSentinelPort,
             string masterName = null,
@@ -122,6 +126,15 @@ namespace Sweet.Redis
                             SslCertificateSelection,
                             SslCertificateValidation);
         }
+
+        #region Settings
+
+        protected override int GetDefaultPort()
+        {
+            return RedisConstants.DefaultSentinelPort;
+        }
+
+        #endregion Settings
 
         #endregion Methods
     }
