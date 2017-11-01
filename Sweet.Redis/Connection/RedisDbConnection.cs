@@ -64,7 +64,7 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Member Methods
+        #region Methods
 
         protected override int GetReceiveTimeout()
         {
@@ -88,7 +88,7 @@ namespace Sweet.Redis
                 if (socket != null)
                 {
                     if (dbIndex != RedisConstants.MinDbIndex)
-                        SelectInternal(null, m_DbIndex, true);
+                        SelectInternal(socket, m_DbIndex, true);
                     socket.SetDb(m_DbIndex);
                 }
                 Interlocked.Exchange(ref m_DbIndex, dbIndex);
@@ -108,6 +108,6 @@ namespace Sweet.Redis
             return true;
         }
 
-        #endregion Member Methods
+        #endregion Methods
     }
 }

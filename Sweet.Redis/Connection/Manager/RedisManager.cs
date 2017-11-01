@@ -268,6 +268,106 @@ namespace Sweet.Redis
 
         #endregion Initialization
 
+        #region Attached Events
+
+        private void OnProbeStateChange(object sender, RedisCardioPulseStatus status)
+        {
+            if (!Disposed)
+            {
+                var pool = sender as RedisConnectionPool;
+                if (pool != null)
+                {
+                    var refreshSentinels = true;
+                    try
+                    {
+                        RedisManagedNode node;
+                        RedisManagedNodesGroup nodesGroup;
+
+                        if (TryToIdentifyPool(pool, out nodesGroup, out node))
+                        {
+                            refreshSentinels = false;
+                            InvokeNodeStateChanged(node);
+                        }
+                    }
+                    finally
+                    {
+                        if (refreshSentinels)
+                            RefreshSentinels();
+                    }
+                }
+            }
+        }
+
+        private void OnSentinelMessage(RedisNodeStateChangedMessage message)
+        {
+            if (!Disposed && message != null)
+            {
+                var eventQ = m_EventQ;
+                if (eventQ.IsAlive())
+                {
+                    eventQ.Enqueu(() =>
+                    {
+                        if (!Disposed)
+                        {
+                            var instanceEndPoint = message.InstanceEndPoint;
+                            if (!instanceEndPoint.IsEmpty())
+                            {
+                                lock (m_SyncRoot)
+                                {
+                                    var instanceRole = message.InstanceType.ToRedisRole();
+                                    var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
+
+                                    if (nodesGroup.IsAlive())
+                                        ApplyStateChange(message.Channel, instanceEndPoint, nodesGroup);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        private void OnSentinelConnectionDrop(object sender)
+        {
+            if (!Disposed && !ReferenceEquals(sender, null))
+            {
+                var task = new Task(() =>
+                {
+                    var node = sender as RedisManagedNode;
+                    if (node.IsAlive())
+                        TestNode(node);
+
+                    RefreshSentinels();
+                });
+                task.Start();
+            }
+        }
+
+        private void OnMasterSwitch(RedisMasterSwitchedMessage message)
+        {
+            if (!Disposed && message != null)
+            {
+                var eventQ = m_EventQ;
+                if (eventQ.IsAlive())
+                {
+                    eventQ.Enqueu(() =>
+                    {
+                        if (!Disposed)
+                        {
+                            lock (m_SyncRoot)
+                            {
+                                var msGroup = m_MSGroup;
+                                if (msGroup.IsAlive())
+                                    msGroup.PromoteToMaster(message.NewEndPoint, message.OldEndPoint);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        #endregion Attached Events
+
         #region Node Selection
 
         private RedisManagedConnectionPool SelectMasterOrSlavePool(Func<RedisManagedNodeInfo, bool> nodeSelector)
@@ -796,106 +896,6 @@ namespace Sweet.Redis
 
         #endregion Refresh
 
-        #region Attached Events
-
-        private void OnProbeStateChange(object sender, RedisCardioPulseStatus status)
-        {
-            if (!Disposed)
-            {
-                var pool = sender as RedisConnectionPool;
-                if (pool != null)
-                {
-                    var refreshSentinels = true;
-                    try
-                    {
-                        RedisManagedNode node;
-                        RedisManagedNodesGroup nodesGroup;
-
-                        if (TryToIdentifyPool(pool, out nodesGroup, out node))
-                        {
-                            refreshSentinels = false;
-                            InvokeNodeStateChanged(node);
-                        }
-                    }
-                    finally
-                    {
-                        if (refreshSentinels)
-                            RefreshSentinels();
-                    }
-                }
-            }
-        }
-
-        private void OnSentinelMessage(RedisNodeStateChangedMessage message)
-        {
-            if (!Disposed && message != null)
-            {
-                var eventQ = m_EventQ;
-                if (eventQ.IsAlive())
-                {
-                    eventQ.Enqueu(() =>
-                    {
-                        if (!Disposed)
-                        {
-                            var instanceEndPoint = message.InstanceEndPoint;
-                            if (!instanceEndPoint.IsEmpty())
-                            {
-                                lock (m_SyncRoot)
-                                {
-                                    var instanceRole = ToRedisRole(message.InstanceType);
-                                    var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
-
-                                    if (nodesGroup.IsAlive())
-                                        ApplyStateChange(message.Channel, instanceEndPoint, nodesGroup);
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-        }
-
-        private void OnSentinelConnectionDrop(object sender)
-        {
-            if (!Disposed && !ReferenceEquals(sender, null))
-            {
-                var task = new Task(() =>
-                {
-                    var node = sender as RedisManagedNode;
-                    if (node.IsAlive())
-                        TestNode(node);
-
-                    RefreshSentinels();
-                });
-                task.Start();
-            }
-        }
-
-        private void OnMasterSwitch(RedisMasterSwitchedMessage message)
-        {
-            if (!Disposed && message != null)
-            {
-                var eventQ = m_EventQ;
-                if (eventQ.IsAlive())
-                {
-                    eventQ.Enqueu(() =>
-                    {
-                        if (!Disposed)
-                        {
-                            lock (m_SyncRoot)
-                            {
-                                var msGroup = m_MSGroup;
-                                if (msGroup.IsAlive())
-                                    msGroup.PromoteToMaster(message.NewEndPoint, message.OldEndPoint);
-                            }
-                        }
-                    });
-                }
-            }
-        }
-
-        #endregion Attached Events
-
         private void InvokeNodeStateChanged(object sender)
         {
             if (!Disposed && !ReferenceEquals(sender, null))
@@ -934,26 +934,6 @@ namespace Sweet.Redis
                 });
                 task.Start();
             }
-        }
-
-        private static RedisRole ToRedisRole(string instanceType)
-        {
-            var instanceRole = RedisRole.Undefined;
-            switch (instanceType)
-            {
-                case "master":
-                    instanceRole = RedisRole.Master;
-                    break;
-                case "slave":
-                    instanceRole = RedisRole.Slave;
-                    break;
-                case "sentinel":
-                    instanceRole = RedisRole.Sentinel;
-                    break;
-                default:
-                    break;
-            }
-            return instanceRole;
         }
 
         private RedisManagedNodesGroup GetNodesGroup(RedisRole instanceRole, string masterName)

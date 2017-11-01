@@ -171,7 +171,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        #region Member Methods
+        #region Methods
 
         public void Enqueu(Action action)
         {
@@ -206,7 +206,7 @@ namespace Sweet.Redis
             }
         }
 
-        #endregion Member Methods
+        #endregion Methods
 
         #region Static Methods
 

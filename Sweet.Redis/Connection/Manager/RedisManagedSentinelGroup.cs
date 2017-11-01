@@ -343,10 +343,11 @@ namespace Sweet.Redis
                                 if (onInstanceStateChange != null)
                                 {
                                     var instanceType = (parts[0] ?? String.Empty).ToLowerInvariant();
-
-                                    switch (instanceType)
+                                    
+                                    var role = instanceType.ToRedisRole();
+                                    switch (role)
                                     {
-                                        case "master":
+                                        case RedisRole.Master:
                                             {
                                                 var masterName = parts[1];
                                                 if (masterName == MasterName)
@@ -357,8 +358,8 @@ namespace Sweet.Redis
                                                 }
                                                 break;
                                             }
-                                        case "slave":
-                                        case "sentinel":
+                                        case RedisRole.Slave:
+                                        case RedisRole.Sentinel:
                                             {
                                                 if (partsLength > 4)
                                                 {

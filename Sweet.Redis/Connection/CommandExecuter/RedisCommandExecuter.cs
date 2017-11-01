@@ -252,7 +252,7 @@ namespace Sweet.Redis
 
             using (var connection = Connect(command.DbIndex, command.Role))
             {
-                return command.ExpectSimpleString(connection, "OK", throwException);
+                return command.ExpectSimpleString(connection, RedisConstants.OK, throwException);
             }
         }
 

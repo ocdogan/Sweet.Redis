@@ -143,7 +143,7 @@ namespace Sweet.Redis
                     }
                     catch (Exception)
                     {
-                        socket.DisposeSocket();
+                        socket.DisposeSocket(true);
                     }
                 }
 

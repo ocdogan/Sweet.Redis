@@ -99,24 +99,18 @@ namespace Sweet.Redis
             Interlocked.Exchange(ref m_Settings, null);
             Interlocked.Exchange(ref m_CreateAction, null);
 
-            var socket = Interlocked.Exchange(ref m_Socket, null);
             var onReleaseSocket = Interlocked.Exchange(ref m_ReleaseAction, null);
-
-            if (socket != null)
+            if (onReleaseSocket != null)
             {
-                var disposeSocket = disposing;
+                var socket = Interlocked.Exchange(ref m_Socket, null);
                 try
                 {
                     if (onReleaseSocket != null)
                         onReleaseSocket(this, socket);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    disposeSocket = true;
-                }
-                finally
-                {
-                    if (!disposeSocket)
+                    if (e.IsSocketError())
                         socket.DisposeSocket();
                 }
             }
@@ -177,11 +171,23 @@ namespace Sweet.Redis
 
         #endregion Properties
 
-        #region Member Methods
+        #region Methods
 
         protected RedisSocket GetSocket()
         {
             return m_Socket;
+        }
+
+        void IRedisConnection.FreeAndNilSocket()
+        {
+            this.FreeAndNilSocket();
+        }
+
+        protected void FreeAndNilSocket()
+        {
+            var socket = Interlocked.Exchange(ref m_Socket, null);
+            if (socket != null)
+                socket.DisposeSocket();
         }
 
         protected bool Auth(RedisSocket socket, string password)
@@ -231,7 +237,7 @@ namespace Sweet.Redis
         {
             try
             {
-                var socket = m_Socket;
+                var socket = GetSocket();
                 if (socket.IsConnected())
                 {
                     using (var cmd = new RedisCommand(-1, RedisCommandList.Info, RedisCommandType.SendAndReceive))
@@ -290,45 +296,13 @@ namespace Sweet.Redis
                         {
                             var serverSection = serverInfo.Server;
                             if (serverSection != null)
-                            {
-                                var roleStr = (serverSection.RedisMode ?? String.Empty).Trim().ToLowerInvariant();
-                                switch (roleStr)
-                                {
-                                    case "master":
-                                        role = RedisRole.Master;
-                                        break;
-                                    case "slave":
-                                        role = RedisRole.Slave;
-                                        break;
-                                    case "sentinel":
-                                        role = RedisRole.Sentinel;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
+                                role = (serverSection.RedisMode ?? String.Empty).Trim().ToRedisRole();
 
                             if (role == RedisRole.Undefined)
                             {
                                 var replicationSection = serverInfo.Replication;
                                 if (replicationSection != null)
-                                {
-                                    var roleStr = (replicationSection.Role ?? String.Empty).Trim().ToLowerInvariant();
-                                    switch (roleStr)
-                                    {
-                                        case "master":
-                                            role = RedisRole.Master;
-                                            break;
-                                        case "slave":
-                                            role = RedisRole.Slave;
-                                            break;
-                                        case "sentinel":
-                                            role = RedisRole.Sentinel;
-                                            break;
-                                        default:
-                                            break;
-                                    }
-                                }
+                                    role = (replicationSection.Role ?? String.Empty).Trim().ToRedisRole();
 
                                 if (role == RedisRole.Undefined)
                                 {
@@ -424,7 +398,7 @@ namespace Sweet.Redis
                 {
                     if (socket != null)
                     {
-                        Interlocked.Exchange(ref m_Socket, null);
+                        Interlocked.CompareExchange(ref m_Socket, null, socket);
                         socket.DisposeSocket();
                     }
 
@@ -526,9 +500,9 @@ namespace Sweet.Redis
                     {
                         SetState((long)RedisConnectionState.Connected);
 
-                        var prevSocket = Interlocked.Exchange(ref m_Socket, socket);
-                        if (prevSocket != null && prevSocket != socket)
-                            prevSocket.DisposeSocket();
+                        var oldSocket = Interlocked.Exchange(ref m_Socket, socket);
+                        if (oldSocket != null && oldSocket != socket)
+                            oldSocket.DisposeSocket();
                     }
                 }).Wait();
             return socket;
@@ -653,7 +627,12 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
 
-            socket.SendAsync(data, 0, data.Length).Wait();
+            var task = socket.SendAsync(data, 0, data.Length);
+            task.ContinueWith((asyncTask) => {
+                if (asyncTask.IsFaulted && asyncTask.Exception.IsSocketError())
+                    FreeAndNilSocket();
+            });
+            task.Wait();
         }
 
         public void Send(IRedisCommand cmd)
@@ -673,7 +652,16 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new SocketException((int)SocketError.NotConnected), RedisErrorCode.ConnectionError);
             }
 
-            cmd.WriteTo(socket);
+            try
+            {
+                cmd.WriteTo(socket);
+            }
+            catch (Exception e)
+            {
+                if (e.IsSocketError())
+                    FreeAndNilSocket();
+                throw;
+            }
         }
 
         public Task SendAsync(byte[] data, RedisRole commandRole)
@@ -689,7 +677,14 @@ namespace Sweet.Redis
 
                 throw new RedisFatalException(new SocketException((int)SocketError.NotConnected), RedisErrorCode.ConnectionError);
             }
-            return socket.SendAsync(data, 0, data.Length);
+
+            var task = socket.SendAsync(data, 0, data.Length);
+            task.ContinueWith((asyncTask) =>
+            {
+                if (asyncTask.IsFaulted && asyncTask.Exception.IsSocketError())
+                    FreeAndNilSocket();
+            });
+            return task;
         }
 
         public Task SendAsync(IRedisCommand cmd)
@@ -708,9 +703,16 @@ namespace Sweet.Redis
 
                 throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
-            return cmd.WriteToAsync(socket);
+            
+            var task = cmd.WriteToAsync(socket);
+            task.ContinueWith((asyncTask) =>
+            {
+                if (asyncTask.IsFaulted && asyncTask.Exception.IsSocketError())
+                    FreeAndNilSocket();
+            });
+            return task;
         }
 
-        #endregion Member Methods
+        #endregion Methods
     }
 }

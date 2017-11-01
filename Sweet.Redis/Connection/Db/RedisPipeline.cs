@@ -73,10 +73,11 @@ namespace Sweet.Redis
                     var socket = context.Socket;
                     if (socket.IsConnected())
                     {
-                        var anySend = false;
-                        var stream = socket.GetBufferedStream();
                         try
                         {
+                            var anySend = false;
+                            var stream = socket.GetBufferedStream();
+
                             for (var i = 0; i < requestCount; i++)
                             {
                                 try
@@ -92,13 +93,17 @@ namespace Sweet.Redis
                                     break;
                                 }
                             }
-                        }
-                        finally
-                        {
-                            if (anySend)
+
+                            if (anySend) 
                                 stream.Flush();
+                            return anySend;
                         }
-                        return anySend;
+                        catch (Exception e)
+                        {
+                            if (e.IsSocketError())
+                                socket.DisposeSocket();
+                            throw;
+                        }
                     }
                 }
             }

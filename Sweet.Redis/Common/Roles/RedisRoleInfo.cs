@@ -30,24 +30,12 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        internal RedisRoleInfo(string role)
+        internal RedisRoleInfo(string roleName)
         {
-            RoleName = (role ?? String.Empty).ToLowerInvariant();
-            switch (role)
-            {
-                case "master":
-                    Role = RedisRole.Master;
-                    break;
-                case "slave":
-                    Role = RedisRole.Slave;
-                    break;
-                case "sentinel":
-                    Role = RedisRole.Sentinel;
-                    break;
-                default:
-                    Role = RedisRole.Undefined;
-                    break;
-            }
+            roleName = (roleName ?? String.Empty).ToLowerInvariant();
+            
+            RoleName = roleName;
+            Role = roleName.ToRedisRole();
         }
 
         #endregion .Ctors
@@ -81,31 +69,22 @@ namespace Sweet.Redis
                             var data = item.Data;
                             if (data != null)
                             {
-                                var role = item.DataText;
-                                if (!String.IsNullOrEmpty(role))
+                                var roleStr = item.DataText;
+                                if (!String.IsNullOrEmpty(roleStr))
                                 {
-                                    role = role.ToLowerInvariant();
+                                    roleStr = roleStr.ToLowerInvariant();
+                                    var role = roleStr.ToRedisRole();
+
                                     switch (role)
                                     {
-                                        case "master":
+                                        case RedisRole.Master:
+                                        case RedisRole.Slave:
+                                        case RedisRole.Sentinel:
                                             {
-                                                var result = new RedisMasterRoleInfo(role);
+                                                var result = new RedisSentinelRoleInfo(roleStr);
                                                 result.ParseInfo(rawObject);
                                                 return result;
                                             }
-                                        case "slave":
-                                            {
-                                                var result = new RedisSlaveRoleInfo(role);
-                                                result.ParseInfo(rawObject);
-                                                return result;
-                                            }
-                                        case "sentinel":
-                                            {
-                                                var result = new RedisSentinelRoleInfo(role);
-                                                result.ParseInfo(rawObject);
-                                                return result;
-                                            }
-
                                         default:
                                             break;
                                     }

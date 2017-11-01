@@ -335,20 +335,7 @@ namespace Sweet.Redis
 
                     var replicationSection = serverInfo.Replication;
                     if (replicationSection != null)
-                    {
-                        var roleStr = (replicationSection.Role ?? String.Empty).ToLowerInvariant();
-                        switch (roleStr)
-                        {
-                            case "master":
-                                return RedisRole.Master;
-                            case "slave":
-                                return RedisRole.Slave;
-                            case "sentinel":
-                                return RedisRole.Sentinel;
-                            default:
-                                break;
-                        }
-                    }
+                        return replicationSection.Role.ToRedisRole();
                 }
             }
             return RedisRole.Undefined;

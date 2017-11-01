@@ -36,6 +36,8 @@ namespace Sweet.Redis
         RedisConnectionState State { get; }
 
         void ReleaseSocket();
+        void FreeAndNilSocket();
+
         RedisSocket RemoveSocket();
         RedisServerInfo GetServerInfo();
 

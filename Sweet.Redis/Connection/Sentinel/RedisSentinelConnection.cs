@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         #endregion .Ctors
 
-        #region Member Methods
+        #region Methods
 
         protected override RedisRole DiscoverRole(RedisSocket socket)
         {
@@ -47,6 +47,6 @@ namespace Sweet.Redis
             return role;
         }
 
-        #endregion Member Methods
+        #endregion Methods
     }
 }

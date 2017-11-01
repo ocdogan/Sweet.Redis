@@ -24,6 +24,7 @@
 
 using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
@@ -60,9 +61,20 @@ namespace Sweet.Redis
             var stream = Interlocked.Exchange(ref m_Stream, null);
             if (stream != null)
             {
-                stream.Flush();
-                if (m_OwnsStream)
-                    stream.Dispose();
+                var dispose = m_OwnsStream;
+                try
+                {
+                    stream.Flush();
+                }
+                catch (Exception e) 
+                { 
+                    dispose = (e is IOException) || 
+                        (e is SocketException); 
+                }
+                finally
+                {
+                    if (dispose) stream.Dispose();
+                }
             }
         }
 

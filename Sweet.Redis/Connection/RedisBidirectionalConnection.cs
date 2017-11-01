@@ -39,7 +39,7 @@ namespace Sweet.Redis
 
         #endregion .Ctors
 
-        #region Member Methods
+        #region Methods
 
         public override RedisRawResponse SendReceive(byte[] data, RedisRole commandRole)
         {
@@ -56,9 +56,15 @@ namespace Sweet.Redis
             }
 
             var task = socket.SendAsync(data, 0, data.Length)
-                .ContinueWith<RedisRawResponse>((ret) =>
+                .ContinueWith<RedisRawResponse>((asyncTask) =>
                 {
-                    if (ret.IsCompleted && ret.Result > 0)
+                    if (asyncTask.IsFaulted && asyncTask.Exception.IsSocketError())
+                    {
+                        FreeAndNilSocket();
+                        return null;
+                    }
+
+                    if (asyncTask.IsCompleted && asyncTask.Result > 0)
                         using (var reader = new RedisSingleResponseReader(Settings))
                             return reader.Execute(socket);
                     return null;
@@ -83,11 +89,20 @@ namespace Sweet.Redis
                 throw new SocketException((int)SocketError.NotConnected);
             }
 
-            cmd.WriteTo(socket);
-            using (var reader = new RedisSingleResponseReader(Settings))
-                return reader.Execute(socket);
+            try
+            {
+                cmd.WriteTo(socket);
+                using (var reader = new RedisSingleResponseReader(Settings))
+                    return reader.Execute(socket);
+            }
+            catch (Exception e)
+            {
+                if (e.IsSocketError())
+                    FreeAndNilSocket();
+                throw;
+            }
         }
 
-        #endregion Member Methods
+        #endregion Methods
     }
 }

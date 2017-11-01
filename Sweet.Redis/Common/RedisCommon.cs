@@ -73,7 +73,27 @@ namespace Sweet.Redis
 
         #region General
 
-        internal static bool IsConnectionError(this Exception exception)
+        internal static RedisRole ToRedisRole(this string roleStr)
+        {
+            if (!String.IsNullOrEmpty(roleStr))
+            {
+                roleStr = roleStr.ToLowerInvariant();
+                switch (roleStr)
+                {
+                    case "master":
+                        return RedisRole.Master;
+                    case "slave":
+                        return RedisRole.Slave;
+                    case "sentinel":
+                        return RedisRole.Sentinel;
+                    default:
+                        break;
+                }
+            }
+            return RedisRole.Undefined;
+        }
+
+        internal static bool IsSocketError(this Exception exception)
         {
             while (exception != null)
             {
@@ -1408,9 +1428,9 @@ namespace Sweet.Redis
             return false;
         }
 
-        internal static void DisposeSocket(this Socket socket)
+        internal static void DisposeSocket(this Socket socket, bool waitForComplete = false)
         {
-            if (socket != null && socket.IsBound)
+            if ((socket != null) && socket.IsBound)
             {
                 if (!socket.Connected)
                 {
@@ -1423,23 +1443,33 @@ namespace Sweet.Redis
                 }
                 else
                 {
-                    socket.DisconnectAsync(false).ContinueWith(_ =>
+                    var task = socket.DisconnectAsync(false).ContinueWith(_ =>
                     {
-                        try
+                        if (socket != null)
                         {
-                            if (socket != null)
-                                socket.Dispose();
+                            try
+                            {
+                                if (socket.IsConnected(10))
+                                    socket.Close();
+                            }
+                            catch (Exception)
+                            { }
+                            finally
+                            {
+                                try { socket.Dispose(); }
+                                catch (Exception) { }
+                            }
                         }
-                        catch (Exception)
-                        { }
                     });
+                    if (waitForComplete)
+                        task.Wait();
                 }
             }
         }
 
-        internal static void DisposeSocket(this RedisSocket socket)
+        internal static void DisposeSocket(this RedisSocket socket, bool waitForComplete = false)
         {
-            if (socket != null && socket.IsBound)
+            if ((socket != null) && socket.IsBound)
             {
                 if (!socket.Connected)
                 {
@@ -1452,16 +1482,26 @@ namespace Sweet.Redis
                 }
                 else
                 {
-                    socket.DisconnectAsync(false).ContinueWith(_ =>
+                    var task = socket.DisconnectAsync(false).ContinueWith(_ =>
                     {
-                        try
+                        if (socket != null)
                         {
-                            if (socket != null)
-                                socket.Dispose();
+                            try
+                            {
+                                if (socket.IsConnected(10))
+                                    socket.Close();
+                            }
+                            catch (Exception)
+                            { }
+                            finally
+                            {
+                                try { socket.Dispose(); }
+                                catch (Exception) { }
+                            }
                         }
-                        catch (Exception)
-                        { }
                     });
+                    if (waitForComplete)
+                        task.Wait();
                 }
             }
         }

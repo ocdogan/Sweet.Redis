@@ -140,7 +140,9 @@ namespace Sweet.Redis
                                     if (settings != null)
                                     {
                                         using (var cmd = new RedisCommand(-1, RedisCommandList.Ping))
+                                        {
                                             cmd.ExpectSimpleString(new RedisSocketContext(socket, settings), RedisConstants.PONG);
+                                        }
                                     }
                                 }
                             }
@@ -831,8 +833,11 @@ namespace Sweet.Redis
                             try
                             {
                                 var member = node.Value;
-                                if ((member == null) || !member.Socket.IsConnected(100) ||
-                                    ((idleTimeout > 0) && (now - member.PooledTime).TotalSeconds >= idleTimeout))
+
+                                var removeMember = (member == null) || !(member.Socket.IsConnected(100) && member.Pulse()) ||
+                                    ((idleTimeout > 0) && (now - member.PooledTime).TotalSeconds >= idleTimeout);
+
+                                if (removeMember)
                                 {
                                     store.Remove(node);
                                     if (member != null)
@@ -1184,7 +1189,7 @@ namespace Sweet.Redis
                 connection = Connect(command.DbIndex, command.Role);
                 if (connection == null)
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, "OK");
+                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, RedisConstants.OK);
                     StartToProcessQ();
 
                     return asyncRequest.Task.Result;
@@ -1193,7 +1198,7 @@ namespace Sweet.Redis
 
             using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
             {
-                return command.ExpectSimpleString(connection, "OK", throwException);
+                return command.ExpectSimpleString(connection, RedisConstants.OK, throwException);
             }
         }
 

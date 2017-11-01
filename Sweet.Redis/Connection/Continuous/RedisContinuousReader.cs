@@ -87,11 +87,11 @@ namespace Sweet.Redis
                 RedisConstants.Zero)
             {
                 m_Connection.ConnectAsync().
-                    ContinueWith(t =>
+                    ContinueWith((asyncTask) =>
                     {
                         RedisSocket socket = null;
-                        if (t.IsCompleted)
-                            socket = t.Result;
+                        if (asyncTask.IsCompleted)
+                            socket = asyncTask.Result;
 
                         Interlocked.Exchange(ref m_Socket, socket);
                         try
@@ -117,18 +117,7 @@ namespace Sweet.Redis
                             Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
                             Interlocked.Exchange(ref m_Socket, null);
 
-                            if (socket != null)
-                            {
-                                try
-                                {
-                                    if (socket.IsConnected())
-                                        socket.Close();
-                                }
-                                catch (Exception)
-                                { }
-
-                                socket.DisposeSocket();
-                            }
+                            socket.DisposeSocket();
                         }
                     }).ContinueWith(t =>
                     {

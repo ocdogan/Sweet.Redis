@@ -125,7 +125,7 @@ namespace Sweet.Redis
                         }
                         catch (SocketException e)
                         {
-                            socket.DisposeSocket();
+                            connection.FreeAndNilSocket();
                             throw new RedisFatalException(e, RedisErrorCode.SocketError);
                         }
                     }
