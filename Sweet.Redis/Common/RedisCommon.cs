@@ -74,20 +74,22 @@ namespace Sweet.Redis
 
         #region General
 
-        internal static RedisEndPoint ToRedisEndPoint(this string host)
+        internal static RedisEndPoint ToRedisEndPoint(this string host, int port = RedisConstants.DefaultPort)
         {
             host = (host ?? String.Empty).Trim();
             if (!String.IsNullOrEmpty(host))
             {
+                port = port < 1 ? RedisConstants.DefaultPort : port;
+
                 var colonPos = host.LastIndexOf(':');
                 if (colonPos == -1 || colonPos == host.Length - 1)
-                    return new RedisEndPoint(host, RedisConstants.DefaultPort);
+                    return new RedisEndPoint(host, port);
 
                 var isIP4 = host.IndexOf('.') > -1;
                 if (!isIP4)
                 {
                     var colonCount = host.Count((ch) => ch == ':');
-                    
+
                     var isIP6 = (colonCount > 1);
                     if (isIP6 && colonCount == 2)
                         colonPos = -1;
@@ -98,13 +100,16 @@ namespace Sweet.Redis
                     name = RedisConstants.LocalHost;
 
                 if (colonPos == host.Length - 1)
-                    return new RedisEndPoint(name, RedisConstants.DefaultPort);
+                    return new RedisEndPoint(name, port);
 
                 var portStr = (host.Substring(colonPos + 1) ?? String.Empty).TrimStart();
                 if (String.IsNullOrEmpty(portStr))
-                    return new RedisEndPoint(name, RedisConstants.DefaultPort);
+                    return new RedisEndPoint(name, port);
 
-                return new RedisEndPoint(name, int.Parse(portStr));
+                var portInt = int.Parse(portStr);
+                port = portInt < 1 ? port : portInt;
+
+                return new RedisEndPoint(name, port);
             }
             return RedisEndPoint.Empty;
         }
