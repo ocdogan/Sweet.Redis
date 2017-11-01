@@ -99,7 +99,7 @@ namespace Sweet.Redis.ConsoleTest
             {
                 var i = 0;
                 using (var manager = new RedisManager("My Manager",
-                    RedisConnectionSettings.Parse<RedisManagerSettings>("host=127.0.0.1:26379;masterName=mymaster")))
+                    RedisConnectionSettings.Parse<RedisManagerSettings>("host=127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381;masterName=mymaster")))
                 {
                     Console.Clear();
 
