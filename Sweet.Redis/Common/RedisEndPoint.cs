@@ -111,13 +111,13 @@ namespace Sweet.Redis
 
         static RedisEndPoint()
         {
-            try 
+            try
             {
                 var hostNameIPs = Dns.GetHostAddresses(Dns.GetHostName());
                 if (hostNameIPs != null)
                     LocalIPs.UnionWith(hostNameIPs);
             }
-            catch (Exception) 
+            catch (Exception)
             { }
         }
 
@@ -238,9 +238,9 @@ namespace Sweet.Redis
 
                                 if (!ipAddresses.IsEmpty())
                                 {
-                                    isIp = isIp || 
+                                    isIp = isIp ||
                                         ipAddresses.All(ip => IPAddress.IsLoopback(ip) || LocalIPs.Contains(ip));
-                                    
+
                                     if (ipAddresses.Length > 1)
                                     {
                                         ipAddresses = ipAddresses
@@ -303,5 +303,25 @@ namespace Sweet.Redis
         }
 
         #endregion Methods
+
+        #region Operator Overloads
+
+        public static bool operator ==(RedisEndPoint a, RedisEndPoint b)
+        {
+            if (ReferenceEquals(a, null))
+                return ReferenceEquals(b, null);
+
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(RedisEndPoint a, RedisEndPoint b)
+        {
+            if (ReferenceEquals(a, null))
+                return !ReferenceEquals(b, null);
+
+            return !a.Equals(b);
+        }
+
+        #endregion Operator Overloads
     }
 }
