@@ -116,8 +116,8 @@ namespace Sweet.Redis
 
         RedisInteger SRem(RedisParam key, RedisParam member, params RedisParam[] members);
 
-        RedisMultiBytes SScan(RedisParam key, int count = 10, RedisParam? match = null);
-        RedisMultiString SScanString(RedisParam key, int count = 10, RedisParam? match = null);
+        RedisScanBytes SScan(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null);
+        RedisScanStrings SScanString(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null);
 
         RedisMultiBytes SUnion(RedisParam key, params RedisParam[] keys);
         RedisInteger SUnionStore(RedisParam intoKey, params RedisParam[] keys);

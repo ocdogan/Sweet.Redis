@@ -139,30 +139,7 @@ namespace Sweet.Redis
                     parameters = parameters.Join(m);
             }
 
-            return ToGeoPosition(ExpectArray(RedisCommandList.GeoPos, parameters));
-        }
-
-        private static RedisResult<RedisGeoPosition[]> ToGeoPosition(RedisRaw array)
-        {
-            if (array == null)
-                return new RedisResult<RedisGeoPosition[]>(new RedisGeoPosition[0]);
-
-            var value = array.Value;
-            if (value == null)
-                return new RedisResult<RedisGeoPosition[]>(new RedisGeoPosition[0]);
-
-            var items = value.Items;
-            if (items == null)
-                return new RedisResult<RedisGeoPosition[]>(new RedisGeoPosition[0]);
-
-            var count = items.Count;
-
-            var result = new RedisGeoPosition[count];
-            if (count > 0)
-                for (var i = 0; i < count; i++)
-                    result[i] = ToGeoPosition(items[i]);
-
-            return new RedisResult<RedisGeoPosition[]>(result);
+            return RedisCommandUtils.ToGeoPosition(ExpectArray(RedisCommandList.GeoPos, parameters));
         }
 
         public RedisResult<RedisGeoRadiusResult[]> GeoRadius(RedisParam key, RedisGeoPosition position, double radius,
@@ -202,7 +179,7 @@ namespace Sweet.Redis
             if (storeDistanceKey.HasValue && !storeDistanceKey.Value.IsEmpty)
                 parameters = parameters.Join(RedisCommandList.StoreDist).Join(storeDistanceKey.ToBytes());
 
-            return ToGeoRadiusArray(ExpectArray(RedisCommandList.GeoRadius, parameters));
+            return RedisCommandUtils.ToGeoRadiusArray(ExpectArray(RedisCommandList.GeoRadius, parameters));
         }
 
         public RedisResult<RedisGeoRadiusResult[]> GeoRadiusByMember(RedisParam key, RedisParam member, double radius,
@@ -244,131 +221,7 @@ namespace Sweet.Redis
             if (storeDistanceKey.HasValue && !storeDistanceKey.Value.IsEmpty)
                 parameters = parameters.Join(RedisCommandList.StoreDist).Join(storeDistanceKey.ToBytes());
 
-            return ToGeoRadiusArray(ExpectArray(RedisCommandList.GeoRadiusByMember, parameters));
-        }
-
-        private static RedisResult<RedisGeoRadiusResult[]> ToGeoRadiusArray(RedisRaw array)
-        {
-            if (array == null)
-                return new RedisResult<RedisGeoRadiusResult[]>(new RedisGeoRadiusResult[0]);
-
-            var value = array.Value;
-            if (value == null || value.Type != RedisRawObjectType.Array)
-                return new RedisResult<RedisGeoRadiusResult[]>(new RedisGeoRadiusResult[0]);
-
-            var items = value.Items;
-            if (items == null)
-                return new RedisResult<RedisGeoRadiusResult[]>(new RedisGeoRadiusResult[0]);
-
-            var count = items.Count;
-            if (count == 0)
-                return new RedisResult<RedisGeoRadiusResult[]>(new RedisGeoRadiusResult[0]);
-
-            var list = new List<RedisGeoRadiusResult>(count);
-            for (var i = 0; i < count; i++)
-                list.Add(ToGeoRadiusResult(items[i]));
-
-            return new RedisResult<RedisGeoRadiusResult[]>(list.ToArray());
-        }
-
-        private static RedisGeoRadiusResult ToGeoRadiusResult(RedisRawObject obj)
-        {
-            if (obj != null)
-            {
-                if (obj.Type == RedisRawObjectType.BulkString)
-                {
-                    var member = obj.DataText;
-                    if (member != null)
-                        return new RedisGeoRadiusResult(member);
-                }
-                else if (obj.Type == RedisRawObjectType.Array)
-                {
-                    var items = obj.Items;
-                    if (items == null)
-                        return null;
-
-                    var count = items.Count;
-                    if (count < 1)
-                        return null;
-
-                    object data;
-                    string member = null;
-                    double? distance = null;
-                    long? hash = null;
-                    RedisGeoPosition? coord = null;
-
-                    var item = items[0];
-                    if (item != null && item.Type == RedisRawObjectType.BulkString)
-                        member = item.DataText;
-
-                    for (var i = 1; i < count; i++)
-                    {
-                        var child = items[i];
-                        if (child != null)
-                        {
-                            if (child.Type == RedisRawObjectType.Array)
-                                coord = ToGeoPosition(child);
-                            else
-                            {
-                                if (child.Type == RedisRawObjectType.Integer)
-                                {
-                                    data = child.Data;
-                                    if (data is long)
-                                        hash = (long)data;
-                                }
-                                else if (child.Type == RedisRawObjectType.BulkString)
-                                {
-                                    var str = child.DataText;
-                                    if (str != null)
-                                    {
-                                        var d = 0d;
-                                        if (double.TryParse(str, out d))
-                                            distance = d;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    return new RedisGeoRadiusResult(member, coord, distance, hash);
-                }
-            }
-            return null;
-        }
-
-        private static RedisGeoPosition ToGeoPosition(RedisRawObject obj)
-        {
-            if (obj != null && obj.Type == RedisRawObjectType.Array)
-            {
-                var items = obj.Items;
-                if (items != null && items.Count >= 2)
-                {
-                    var item = items[0];
-                    if (item != null && item.Type == RedisRawObjectType.BulkString)
-                    {
-                        var data = item.Data;
-                        if (data != null && data is string)
-                        {
-                            double longitude;
-                            if (double.TryParse((string)data, out longitude))
-                            {
-                                item = items[1];
-                                if (item != null && item.Type == RedisRawObjectType.BulkString)
-                                {
-                                    data = item.Data;
-                                    if (data != null && data is string)
-                                    {
-                                        double latitude;
-                                        if (double.TryParse((string)data, out latitude))
-                                            return new RedisGeoPosition(longitude, latitude);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return RedisGeoPosition.Empty;
+            return RedisCommandUtils.ToGeoRadiusArray(ExpectArray(RedisCommandList.GeoRadiusByMember, parameters));
         }
 
         #endregion Methods

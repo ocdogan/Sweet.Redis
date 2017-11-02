@@ -262,14 +262,60 @@ namespace Sweet.Redis
             return ExpectInteger(RedisCommandList.SRem, key, member);
         }
 
-        public RedisMultiBytes SScan(RedisParam key, int count = 10, RedisParam? match = null)
+        public RedisScanBytes SScan(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null)
         {
-            throw new NotImplementedException();
+            if (key.IsNull)
+                throw new ArgumentNullException("key");
+
+            ValidateNotDisposed();
+
+            var parameters = new byte[][] { key.Data, cursor.ToBytes() };
+
+            if (match.HasValue)
+            {
+                var value = match.Value;
+                if (!value.IsEmpty)
+                {
+                    parameters = parameters.Join(RedisCommandList.Match);
+                    parameters = parameters.Join(value.Data);
+                }
+            }
+
+            if (count > 0)
+            {
+                parameters = parameters.Join(RedisCommandList.Count);
+                parameters = parameters.Join(count.ToBytes());
+            }
+
+            return RedisCommandUtils.ToScanBytes(ExpectArray(RedisCommandList.SScan, parameters));
         }
 
-        public RedisMultiString SScanString(RedisParam key, int count = 10, RedisParam? match = null)
+        public RedisScanStrings SScanString(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null)
         {
-            throw new NotImplementedException();
+            if (key.IsNull)
+                throw new ArgumentNullException("key");
+
+            ValidateNotDisposed();
+
+            var parameters = new byte[][] { key.Data, cursor.ToBytes() };
+
+            if (match.HasValue)
+            {
+                var value = match.Value;
+                if (!value.IsEmpty)
+                {
+                    parameters = parameters.Join(RedisCommandList.Match);
+                    parameters = parameters.Join(value.Data);
+                }
+            }
+
+            if (count > 0)
+            {
+                parameters = parameters.Join(RedisCommandList.Count);
+                parameters = parameters.Join(count.ToBytes());
+            }
+
+            return RedisCommandUtils.ToScanStrings(ExpectArray(RedisCommandList.SScan, parameters));
         }
 
         public RedisMultiBytes SUnion(RedisParam key, params RedisParam[] keys)

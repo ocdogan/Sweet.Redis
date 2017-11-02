@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisScanStringsData(long cursor, string[] data)
+        public RedisScanStringsData(ulong cursor, string[] data)
             : base(cursor, data)
         { }
 

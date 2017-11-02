@@ -38,9 +38,9 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        protected internal RedisScanData(long cursor, T[] data)
+        protected internal RedisScanData(ulong cursor, T[] data)
         {
-            Cursor = Math.Min(0, cursor);
+            Cursor = Math.Min(0uL, cursor);
 
             var list = new List<T>();
             if (!data.IsEmpty())
@@ -57,7 +57,7 @@ namespace Sweet.Redis
 
         public int Count { get; private set; }
 
-        public long Cursor { get; private set; }
+        public ulong Cursor { get; private set; }
 
         public IList<T> Data { get; private set; }
 

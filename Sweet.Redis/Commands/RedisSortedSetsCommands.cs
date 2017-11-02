@@ -1620,114 +1620,60 @@ namespace Sweet.Redis
             return ExpectNullableInteger(RedisCommandList.ZRevRank, key, member);
         }
 
-        public RedisMultiBytes ZScan(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null)
+        public RedisScanBytes ZScan(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
 
-            if ((matchPattern.HasValue && !matchPattern.Value.IsEmpty) || count != null)
+            var parameters = new byte[][] { key.Data, cursor.ToBytes() };
+
+            if (match.HasValue)
             {
-                var parameters = key.Join(cursor.ToBytes());
-
-                if (matchPattern.HasValue && !matchPattern.Value.IsEmpty)
-                    parameters = parameters.Join(RedisCommandList.Match).Join(matchPattern.ToBytes());
-
-                if (count != null)
-                    parameters = parameters.Join(RedisCommandList.Count).Join(count.ToBytes());
-
-                return ExpectMultiDataBytes(RedisCommandList.ZScan, parameters);
-            }
-
-            return ExpectMultiDataBytes(RedisCommandList.ZScan, key, cursor.ToBytes());
-        }
-
-        public RedisKeyValue<byte[], byte[]>[] ZScanKeyValue(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null)
-        {
-            var bytes = ZScan(key, cursor, matchPattern, count);
-            if (bytes != null)
-            {
-                var bLength = bytes.Length;
-                if (bLength > 0)
+                var value = match.Value;
+                if (!value.IsEmpty)
                 {
-                    var c = bLength / 2;
-                    if (bLength % 2 != 0)
-                        c++;
-
-                    var result = new RedisKeyValue<byte[], byte[]>[c];
-                    for (int i = 0, index = 0; i < c; i++, index += 2)
-                    {
-                        var k = bytes[index];
-
-                        var v = (byte[])null;
-                        if (index < bLength - 1)
-                            v = bytes[index + 1];
-
-                        result[i] = new RedisKeyValue<byte[], byte[]>(k, v);
-                    }
+                    parameters = parameters.Join(RedisCommandList.Match);
+                    parameters = parameters.Join(value.Data);
                 }
             }
-            return null;
-        }
 
-        public RedisResult<RedisKeyValue<string, double>[]> ZScanKeyValueString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null)
-        {
-            var bytes = ZScan(key, cursor, matchPattern, count);
-            if (bytes != null)
+            if (count > 0)
             {
-                var bLength = bytes.Length;
-                if (bLength > 0)
-                {
-                    var c = bLength / 2;
-                    if (bLength % 2 != 0)
-                        c++;
-
-                    var result = new RedisKeyValue<string, double>[c];
-                    for (int i = 0, index = 0; i < c; i++, index += 2)
-                    {
-                        var d = 0d;
-                        var k = String.Empty;
-
-                        var b = bytes[index];
-                        if (!b.IsEmpty())
-                            k = Encoding.UTF8.GetString(b);
-
-                        if (index < bLength - 1)
-                        {
-                            b = bytes[index + 1];
-                            if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
-                        }
-
-                        result[i] = new RedisKeyValue<string, double>(k, d);
-                    }
-                }
+                parameters = parameters.Join(RedisCommandList.Count);
+                parameters = parameters.Join(count.ToBytes());
             }
-            return null;
+
+            return RedisCommandUtils.ToScanBytes(ExpectArray(RedisCommandList.ZScan, parameters));
         }
 
-        public RedisMultiString ZScanString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null)
+        public RedisScanStrings ZScanString(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null)
         {
             if (key.IsNull)
                 throw new ArgumentNullException("key");
 
             ValidateNotDisposed();
 
-            if ((matchPattern.HasValue && !matchPattern.Value.IsEmpty) || count != null)
+            var parameters = new byte[][] { key.Data, cursor.ToBytes() };
+
+            if (match.HasValue)
             {
-                var parameters = key.Join(cursor.ToBytes());
-
-                if (matchPattern.HasValue && !matchPattern.Value.IsEmpty)
-                    parameters = parameters.Join(RedisCommandList.Match).Join(matchPattern.ToBytes());
-
-                if (count != null)
-                    parameters = parameters.Join(RedisCommandList.Count).Join(count.ToBytes());
-
-                return ExpectMultiDataStrings(RedisCommandList.ZScan, parameters);
+                var value = match.Value;
+                if (!value.IsEmpty)
+                {
+                    parameters = parameters.Join(RedisCommandList.Match);
+                    parameters = parameters.Join(value.Data);
+                }
             }
 
-            return ExpectMultiDataStrings(RedisCommandList.ZScan, key, cursor.ToBytes());
+            if (count > 0)
+            {
+                parameters = parameters.Join(RedisCommandList.Count);
+                parameters = parameters.Join(count.ToBytes());
+            }
+
+            return RedisCommandUtils.ToScanStrings(ExpectArray(RedisCommandList.ZScan, parameters));
         }
 
         public RedisDouble ZScore(RedisParam key, RedisParam member)

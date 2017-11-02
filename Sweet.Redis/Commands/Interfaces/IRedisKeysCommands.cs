@@ -155,8 +155,8 @@ namespace Sweet.Redis
 
         RedisBool Restore(RedisParam key, long ttl, RedisParam value);
 
-        RedisMultiBytes Scan(int count = 10, RedisParam? match = null);
-        RedisMultiString ScanString(int count = 10, RedisParam? match = null);
+        RedisScanBytes Scan(ulong cursor = 0uL, int count = 10, RedisParam? match = null);
+        RedisScanStrings ScanString(ulong cursor = 0uL, int count = 10, RedisParam? match = null);
 
         RedisMultiBytes Sort(RedisParam key, bool descending, bool alpha = false,
                       int start = -1, int end = -1, RedisParam? by = null, RedisParam? get = null);

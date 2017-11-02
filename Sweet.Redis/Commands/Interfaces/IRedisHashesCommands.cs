@@ -121,8 +121,8 @@ namespace Sweet.Redis
         RedisBool HMSet(RedisParam key, IDictionary<string, string> values);
         RedisBool HMSet(RedisParam key, IDictionary<RedisParam, RedisParam> values);
 
-        RedisMultiBytes HScan(RedisParam key, int count = 10, RedisParam? match = null);
-        RedisMultiString HScanString(RedisParam key, int count = 10, RedisParam? match = null);
+        RedisScanBytes HScan(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null);
+        RedisScanStrings HScanString(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null);
 
         RedisBool HSet(RedisParam key, RedisParam field, RedisParam value);
 

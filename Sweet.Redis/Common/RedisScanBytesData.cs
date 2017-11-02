@@ -28,7 +28,7 @@ namespace Sweet.Redis
     {
         #region .Ctors
 
-        public RedisScanBytesData(long cursor, RedisByteArray[] data)
+        public RedisScanBytesData(ulong cursor, RedisByteArray[] data)
             : base(cursor, data)
         { }
 
@@ -50,7 +50,7 @@ namespace Sweet.Redis
             return new RedisScanBytesData(0, data);
         }
 
-        public static implicit operator byte[][](RedisScanBytesData value)  // implicit RedisScanData conversion operator
+        public static implicit operator byte[][] (RedisScanBytesData value)  // implicit RedisScanData conversion operator
         {
             if (ReferenceEquals(value, null))
                 return null;

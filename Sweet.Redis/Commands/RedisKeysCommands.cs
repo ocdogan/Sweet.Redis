@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
 
 namespace Sweet.Redis
 {
@@ -93,7 +94,7 @@ namespace Sweet.Redis
             return ExpectMultiDataStrings(RedisCommandList.Keys, pattern);
         }
 
-        public RedisBool Migrate(RedisParam host, int port, RedisParam key, int destinationDb, long timeoutMs, bool copy = false, 
+        public RedisBool Migrate(RedisParam host, int port, RedisParam key, int destinationDb, long timeoutMs, bool copy = false,
             bool replace = false, params RedisParam[] keys)
         {
             if (host.IsNull)
@@ -231,14 +232,54 @@ namespace Sweet.Redis
             return ExpectOK(RedisCommandList.Rename, key, ttl.ToBytes(), value);
         }
 
-        public RedisMultiBytes Scan(int count = 10, RedisParam? match = null)
+        public RedisScanBytes Scan(ulong cursor = 0uL, int count = 10, RedisParam? match = null)
         {
-            throw new NotImplementedException();
+            ValidateNotDisposed();
+
+            var parameters = new byte[][] { cursor.ToBytes() };
+
+            if (match.HasValue)
+            {
+                var value = match.Value;
+                if (!value.IsEmpty)
+                {
+                    parameters = parameters.Join(RedisCommandList.Match);
+                    parameters = parameters.Join(value.Data);
+                }
+            }
+
+            if (count > 0)
+            {
+                parameters = parameters.Join(RedisCommandList.Count);
+                parameters = parameters.Join(count.ToBytes());
+            }
+
+            return RedisCommandUtils.ToScanBytes(ExpectArray(RedisCommandList.Scan, parameters));
         }
 
-        public RedisMultiString ScanString(int count = 10, RedisParam? match = null)
+        public RedisScanStrings ScanString(ulong cursor = 0uL, int count = 10, RedisParam? match = null)
         {
-            throw new NotImplementedException();
+            ValidateNotDisposed();
+
+            var parameters = new byte[][] { cursor.ToBytes() };
+
+            if (match.HasValue)
+            {
+                var value = match.Value;
+                if (!value.IsEmpty)
+                {
+                    parameters = parameters.Join(RedisCommandList.Match);
+                    parameters = parameters.Join(value.Data);
+                }
+            }
+
+            if (count > 0)
+            {
+                parameters = parameters.Join(RedisCommandList.Count);
+                parameters = parameters.Join(count.ToBytes());
+            }
+
+            return RedisCommandUtils.ToScanStrings(ExpectArray(RedisCommandList.Scan, parameters));
         }
 
         public RedisMultiBytes Sort(RedisParam key, bool descending, bool alpha = false,

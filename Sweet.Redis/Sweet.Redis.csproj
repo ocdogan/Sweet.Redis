@@ -276,6 +276,7 @@
     <Compile Include="Connection\Interfaces\IRedisCardio.cs" />
     <Compile Include="Common\Cardio\RedisCardio.cs" />
     <Compile Include="Common\Result\RedisScanStrings.cs" />
+    <Compile Include="Commands\RedisCommandUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

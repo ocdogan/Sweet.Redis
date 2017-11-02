@@ -165,7 +165,7 @@ namespace Sweet.Redis
         RedisMultiBytes ZRangeByScore(RedisParam key, int start, int stop, int? offset = null, int? count = null);
         RedisMultiBytes ZRangeByScore(RedisParam key, long start, long stop, int? offset = null, int? count = null);
         RedisMultiBytes ZRangeByScore(RedisParam key, RedisParam start, RedisParam stop, int? offset = null, int? count = null);
-        
+
         RedisMultiString ZRangeByScoreString(RedisParam key, double start, double stop, int? offset = null, int? count = null);
         RedisMultiString ZRangeByScoreString(RedisParam key, int start, int stop, int? offset = null, int? count = null);
         RedisMultiString ZRangeByScoreString(RedisParam key, long start, long stop, int? offset = null, int? count = null);
@@ -249,10 +249,8 @@ namespace Sweet.Redis
 
         RedisNullableInteger ZRevRank(RedisParam key, RedisParam member);
 
-        RedisMultiBytes ZScan(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
-        RedisMultiString ZScanString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
-        RedisKeyValue<byte[], byte[]>[] ZScanKeyValue(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
-        RedisResult<RedisKeyValue<string, double>[]> ZScanKeyValueString(RedisParam key, int cursor, RedisParam? matchPattern = null, long? count = null);
+        RedisScanBytes ZScan(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null);
+        RedisScanStrings ZScanString(RedisParam key, ulong cursor = 0uL, int count = 10, RedisParam? match = null);
 
         RedisDouble ZScore(RedisParam key, RedisParam member);
 
