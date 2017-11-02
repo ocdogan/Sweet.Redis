@@ -203,7 +203,7 @@ namespace Sweet.Redis
 
         public static bool operator !=(bool a, RedisBool b)
         {
-            return b != a;
+            return !(b == a);
         }
 
         public static bool operator ==(RedisBool a, bool b)

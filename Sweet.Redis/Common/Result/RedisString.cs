@@ -155,22 +155,6 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
-        public static bool operator ==(string a, RedisString b)
-        {
-            if (ReferenceEquals(a, null))
-                return ReferenceEquals(b, null);
-
-            if (ReferenceEquals(b, null))
-                return false;
-
-            return (b.m_Status == RedisResultStatus.Completed) && ((string)b.m_RawData == a);
-        }
-
-        public static bool operator !=(string a, RedisString b)
-        {
-            return b != a;
-        }
-
         public static bool operator ==(RedisString a, string b)
         {
             if (ReferenceEquals(a, null))
@@ -185,6 +169,16 @@ namespace Sweet.Redis
         public static bool operator !=(RedisString a, string b)
         {
             return !(a == b);
+        }
+
+        public static bool operator ==(string a, RedisString b)
+        {
+            return (b == a);
+        }
+
+        public static bool operator !=(string a, RedisString b)
+        {
+            return !(b == a);
         }
 
         public static bool operator ==(RedisString a, RedisString b)

@@ -146,7 +146,7 @@ namespace Sweet.Redis
 
         public static bool operator !=(string a, RedisError b)
         {
-            return b != a;
+            return !(b == a);
         }
 
         public static bool operator ==(RedisError a, string b)

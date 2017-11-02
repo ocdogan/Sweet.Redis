@@ -123,7 +123,7 @@ namespace Sweet.Redis
 
         public static bool operator !=(DateTime a, RedisDate b)
         {
-            return b != a;
+            return !(b == a);
         }
 
         public static bool operator ==(RedisDate a, DateTime b)

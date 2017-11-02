@@ -316,10 +316,7 @@ namespace Sweet.Redis
 
         public static bool operator !=(RedisEndPoint a, RedisEndPoint b)
         {
-            if (ReferenceEquals(a, null))
-                return !ReferenceEquals(b, null);
-
-            return !a.Equals(b);
+            return !(a == b);
         }
 
         #endregion Operator Overloads
