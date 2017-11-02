@@ -66,28 +66,24 @@ namespace Sweet.Redis
                         var item = list[0];
                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                         {
-                            var data = item.Data;
-                            if (data != null)
+                            var roleStr = item.DataText;
+                            if (!roleStr.IsEmpty())
                             {
-                                var roleStr = item.DataText;
-                                if (!roleStr.IsEmpty())
-                                {
-                                    roleStr = roleStr.ToLowerInvariant();
-                                    var role = roleStr.ToRedisRole();
+                                roleStr = roleStr.ToLowerInvariant();
+                                var role = roleStr.ToRedisRole();
 
-                                    switch (role)
-                                    {
-                                        case RedisRole.Master:
-                                        case RedisRole.Slave:
-                                        case RedisRole.Sentinel:
-                                            {
-                                                var result = new RedisSentinelRoleInfo(roleStr);
-                                                result.ParseInfo(rawObject);
-                                                return result;
-                                            }
-                                        default:
-                                            break;
-                                    }
+                                switch (role)
+                                {
+                                    case RedisRole.Master:
+                                    case RedisRole.Slave:
+                                    case RedisRole.Sentinel:
+                                        {
+                                            var result = new RedisSentinelRoleInfo(roleStr);
+                                            result.ParseInfo(rawObject);
+                                            return result;
+                                        }
+                                    default:
+                                        break;
                                 }
                             }
                         }
