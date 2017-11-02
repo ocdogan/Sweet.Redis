@@ -117,13 +117,13 @@ namespace Sweet.Redis.ConsoleTest
                             using (var db = manager.GetDb())
                             {
                                 Ping(db, false);
-                                SetGet(db, "tinytext", text, false);
+                                SetGet(db, "tinytext", text, true);
                             }
 
                             using (var db = manager.GetDb(true))
                             {
-                                Ping(db, false);
-                                Get(db, "tinytext", false);
+                                Ping(db, true);
+                                Get(db, "tinytext", true);
                             }
                         }
                         catch (Exception e)
@@ -131,8 +131,8 @@ namespace Sweet.Redis.ConsoleTest
                             Console.WriteLine(e);
                             Console.WriteLine();
                             Console.WriteLine("Press any key to continue, ESC to escape ...");
-                            if (Console.ReadKey(true).Key == ConsoleKey.Escape)
-                                return;
+                            /* if (Console.ReadKey(true).Key == ConsoleKey.Escape)
+                                return; */
                         }
 
                         modKey = (modKey + 1) % 100;
