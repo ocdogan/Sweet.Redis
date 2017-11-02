@@ -85,13 +85,13 @@ namespace Sweet.Redis
 
         protected override string OnSetValue(string name, string value)
         {
-            if (!String.IsNullOrEmpty(name))
+            if (!name.IsEmpty())
             {
                 var masterLength = "master".Length;
                 if ((name.Length > masterLength) && name.StartsWith("master", StringComparison.OrdinalIgnoreCase))
                 {
                     var indexStr = name.Substring(masterLength);
-                    if (!String.IsNullOrEmpty(indexStr))
+                    if (!indexStr.IsEmpty())
                     {
                         int index;
                         if (int.TryParse(indexStr, out index))

@@ -27,11 +27,11 @@ using System.Text;
 
 namespace Sweet.Redis
 {
-    public class RedisScanStringData : RedisScanData<string>
+    public class RedisScanStringsData : RedisScanData<string>
     {
         #region .Ctors
 
-        public RedisScanStringData(long cursor, string[] data)
+        public RedisScanStringsData(long cursor, string[] data)
             : base(cursor, data)
         { }
 
@@ -39,10 +39,10 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisScanStringData(byte[][] value)  // implicit RedisScanData conversion operator
+        public static implicit operator RedisScanStringsData(byte[][] value)  // implicit RedisScanData conversion operator
         {
             if (value.IsEmpty())
-                return new RedisScanStringData(0, null);
+                return new RedisScanStringsData(0, null);
 
             var length = value.Length;
             var data = new string[length];
@@ -51,13 +51,13 @@ namespace Sweet.Redis
             for (var i = 0; i < length; i++)
             {
                 val = value[i];
-                data[i] = (val != null ? ( val.Length == 0 ? String.Empty : Encoding.UTF8.GetString(val)) : null);
+                data[i] = (val != null ? (val.Length == 0 ? String.Empty : Encoding.UTF8.GetString(val)) : null);
             }
 
-            return new RedisScanStringData(0, data);
+            return new RedisScanStringsData(0, data);
         }
 
-        public static implicit operator byte[][](RedisScanStringData value)  // implicit RedisScanData conversion operator
+        public static implicit operator byte[][] (RedisScanStringsData value)  // implicit RedisScanData conversion operator
         {
             if (ReferenceEquals(value, null))
                 return null;
@@ -74,7 +74,7 @@ namespace Sweet.Redis
             for (var i = 0; i < count; i++)
             {
                 val = data[i];
-                result[i] = (val != null ? ( val.Length == 0 ? (byte[])null : Encoding.UTF8.GetBytes(val)) : null);
+                result[i] = (val != null ? (val.Length == 0 ? (byte[])null : Encoding.UTF8.GetBytes(val)) : null);
             }
 
             return result;

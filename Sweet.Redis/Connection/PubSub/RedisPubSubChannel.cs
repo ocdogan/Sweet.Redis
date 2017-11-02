@@ -43,7 +43,7 @@ namespace Sweet.Redis
                     msg.Type == RedisPubSubMessageType.PMessage))
                 {
                     var channel = msg.Type == RedisPubSubMessageType.Message ? msg.Channel : msg.Pattern;
-                    if (!String.IsNullOrEmpty(channel))
+                    if (!channel.IsEmpty())
                     {
                         var callbacks = CallbacksOf(channel);
                         if (callbacks != null && callbacks.Count > 0)
@@ -107,7 +107,7 @@ namespace Sweet.Redis
             var id = RedisIDGenerator<RedisPubSubChannel>.NextId();
 
             var name = !ReferenceEquals(namedObject, null) ? namedObject.Name : null;
-            if (String.IsNullOrEmpty(name))
+            if (name.IsEmpty())
                 name = String.Format("{0}, {1}", GetType().Name, id);
 
             m_Name = name;
@@ -367,7 +367,7 @@ namespace Sweet.Redis
                         {
                             lock (m_SubscriptionLock)
                             {
-                                if (String.IsNullOrEmpty(pubSubResp.Channel))
+                                if (pubSubResp.Channel.IsEmpty())
                                 {
                                     m_PendingSubscriptions.UnregisterAll();
                                     m_Subscriptions.UnregisterAll();
@@ -385,7 +385,7 @@ namespace Sweet.Redis
                         {
                             lock (m_PSubscriptionLock)
                             {
-                                if (String.IsNullOrEmpty(pubSubResp.Pattern))
+                                if (pubSubResp.Pattern.IsEmpty())
                                 {
                                     m_PendingPSubscriptions.UnregisterAll();
                                     m_PSubscriptions.UnregisterAll();

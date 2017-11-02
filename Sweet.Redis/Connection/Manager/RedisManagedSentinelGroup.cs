@@ -78,7 +78,7 @@ namespace Sweet.Redis
             : base(settings, RedisRole.Sentinel, nodes, onPulseStateChange)
         {
             masterName = (masterName ?? String.Empty).Trim();
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new RedisFatalException(new ArgumentNullException("masterName"), RedisErrorCode.MissingParameter);
 
             m_MasterName = masterName;
@@ -293,7 +293,7 @@ namespace Sweet.Redis
             {
                 var msgText = Encoding.UTF8.GetString(data);
 
-                if (!String.IsNullOrEmpty(msgText))
+                if (!msgText.IsEmpty())
                 {
                     var parts = msgText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -343,7 +343,7 @@ namespace Sweet.Redis
                                 if (onInstanceStateChange != null)
                                 {
                                     var instanceType = (parts[0] ?? String.Empty).ToLowerInvariant();
-                                    
+
                                     var role = instanceType.ToRedisRole();
                                     switch (role)
                                     {
@@ -370,7 +370,7 @@ namespace Sweet.Redis
                                                         var instanceEndPoint = ToEndPoint(parts[2], parts[3]);
                                                         var masterEndPoint = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : null;
 
-                                                        if (instanceEndPoint.IsEmpty() && !String.IsNullOrEmpty(instanceName))
+                                                        if (instanceEndPoint.IsEmpty() && !instanceName.IsEmpty())
                                                         {
                                                             var nameParts = instanceName.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                                                             if (!nameParts.IsEmpty())
@@ -394,7 +394,7 @@ namespace Sweet.Redis
 
         private static RedisEndPoint ToEndPoint(string ip, string port)
         {
-            if (!String.IsNullOrEmpty(ip) && !String.IsNullOrEmpty(port))
+            if (!ip.IsEmpty() && !port.IsEmpty())
             {
                 int p;
                 if (int.TryParse(port, out p))

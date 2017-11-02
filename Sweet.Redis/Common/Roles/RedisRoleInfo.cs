@@ -33,7 +33,7 @@ namespace Sweet.Redis
         internal RedisRoleInfo(string roleName)
         {
             roleName = (roleName ?? String.Empty).ToLowerInvariant();
-            
+
             RoleName = roleName;
             Role = roleName.ToRedisRole();
         }
@@ -70,7 +70,7 @@ namespace Sweet.Redis
                             if (data != null)
                             {
                                 var roleStr = item.DataText;
-                                if (!String.IsNullOrEmpty(roleStr))
+                                if (!roleStr.IsEmpty())
                                 {
                                     roleStr = roleStr.ToLowerInvariant();
                                     var role = roleStr.ToRedisRole();

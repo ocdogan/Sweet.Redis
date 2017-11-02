@@ -59,8 +59,8 @@
     <Compile Include="Common\RedisRole.cs" />
     <Compile Include="Common\RedisScanBytesData.cs" />
     <Compile Include="Common\RedisScanData.cs" />
-    <Compile Include="Common\RedisScanStringData.cs" />
-    <Compile Include="Common\Result\RedisScan.cs" />
+    <Compile Include="Common\RedisScanStringsData.cs" />
+    <Compile Include="Common\Result\RedisScanBytes.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelClusterNodeInfo.cs" />
@@ -275,6 +275,7 @@
     <Compile Include="Common\Interfaces\IRedisHeartBeatProbe.cs" />
     <Compile Include="Connection\Interfaces\IRedisCardio.cs" />
     <Compile Include="Common\Cardio\RedisCardio.cs" />
+    <Compile Include="Common\Result\RedisScanStrings.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

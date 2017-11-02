@@ -206,7 +206,7 @@ namespace Sweet.Redis
                 case RedisRawObjectType.BulkString:
                     {
                         var lenStr = Encoding.UTF8.GetString(data);
-                        if (String.IsNullOrEmpty(lenStr))
+                        if (lenStr.IsEmpty())
                             throw new RedisException("Corrupted redis response, empty length for bulk string", RedisErrorCode.CorruptResponse);
 
                         int msgLength;
@@ -240,7 +240,7 @@ namespace Sweet.Redis
                 case RedisRawObjectType.Array:
                     {
                         var lenStr = Encoding.UTF8.GetString(data);
-                        if (String.IsNullOrEmpty(lenStr))
+                        if (lenStr.IsEmpty())
                             throw new RedisException("Corrupted redis response, empty length for array", RedisErrorCode.CorruptResponse);
 
                         int arrayLen;

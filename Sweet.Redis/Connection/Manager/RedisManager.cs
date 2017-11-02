@@ -80,7 +80,7 @@ namespace Sweet.Redis
 
             m_Id = RedisIDGenerator<RedisManager>.NextId();
             m_Settings = settings;
-            m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
+            m_Name = !name.IsEmpty() ? name : (GetType().Name + ", " + m_Id.ToString());
             m_MasterName = (settings.MasterName ?? String.Empty).Trim();
 
             m_MSGroup = new RedisManagedMSGroup(settings, null, null, OnProbeStateChange);

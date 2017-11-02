@@ -137,7 +137,7 @@ namespace Sweet.Redis
 
         public bool IsEmpty
         {
-            get { return String.IsNullOrEmpty(Host) || Port < 1; }
+            get { return Host.IsEmpty() || Port < 1; }
         }
 
         #endregion Properties
@@ -202,7 +202,7 @@ namespace Sweet.Redis
 
         private static RedisIPAddressEntry GetEntry(string host)
         {
-            if (!String.IsNullOrEmpty(host))
+            if (!host.IsEmpty())
             {
                 RedisIPAddressEntry entry;
                 if (!s_DnsEntries.TryGetValue(host, out entry) || entry.Expired)

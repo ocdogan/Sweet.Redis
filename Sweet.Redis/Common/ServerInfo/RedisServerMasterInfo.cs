@@ -63,7 +63,7 @@ namespace Sweet.Redis
 
         private void Parse(string masterInfo)
         {
-            if (!String.IsNullOrEmpty(masterInfo))
+            if (!masterInfo.IsEmpty())
             {
                 var parts = masterInfo.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts != null)
@@ -74,7 +74,7 @@ namespace Sweet.Redis
                         for (var i = 0; i < length; i++)
                         {
                             var part = parts[i].Trim();
-                            if (!String.IsNullOrEmpty(part))
+                            if (!part.IsEmpty())
                             {
                                 string name, value = null;
 
@@ -88,14 +88,14 @@ namespace Sweet.Redis
                                         value = part.Substring(pos + 1).TrimStart();
                                 }
 
-                                if (!String.IsNullOrEmpty(name))
+                                if (!name.IsEmpty())
                                 {
                                     switch (name)
                                     {
                                         case "address":
                                             {
                                                 var str = (value ?? String.Empty).Trim();
-                                                if (!String.IsNullOrEmpty(str))
+                                                if (!str.IsEmpty())
                                                 {
                                                     pos = str.IndexOf(':');
                                                     if (pos == -1)

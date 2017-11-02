@@ -159,7 +159,7 @@ namespace Sweet.Redis
 
         public int Write(string val)
         {
-            if (!String.IsNullOrEmpty(val))
+            if (!val.IsEmpty())
                 return Write(Encoding.UTF8.GetBytes(val));
             return 0;
         }

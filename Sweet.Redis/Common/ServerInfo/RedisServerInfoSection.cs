@@ -59,19 +59,19 @@ namespace Sweet.Redis
                 for (var index = 0; index < length; index++)
                 {
                     var line = (lines[index] ?? String.Empty);
-                    if (!String.IsNullOrEmpty(line))
+                    if (!line.IsEmpty())
                     {
                         var pos = line.IndexOf(':');
                         if (pos == -1)
                         {
                             var name = (ToItemName(line) ?? String.Empty).TrimEnd();
-                            if (!String.IsNullOrEmpty(name))
+                            if (!name.IsEmpty())
                                 this[name] = OnSetValue(name, null);
                         }
                         else
                         {
                             var name = (ToItemName(line.Substring(0, pos)) ?? String.Empty).TrimEnd();
-                            if (!String.IsNullOrEmpty(name))
+                            if (!name.IsEmpty())
                             {
                                 if (pos == line.Length - 1)
                                     this[name] = OnSetValue(name, null);

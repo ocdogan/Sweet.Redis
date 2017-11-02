@@ -69,7 +69,7 @@ namespace Sweet.Redis
                             if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                             {
                                 var port = item.DataText;
-                                if (!String.IsNullOrEmpty(port))
+                                if (!port.IsEmpty())
                                 {
                                     int i;
                                     if (int.TryParse(port, out i))
@@ -83,7 +83,7 @@ namespace Sweet.Redis
                                 if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                                 {
                                     var offset = item.DataText;
-                                    if (!String.IsNullOrEmpty(offset))
+                                    if (!offset.IsEmpty())
                                     {
                                         long l;
                                         if (long.TryParse(offset, out l))

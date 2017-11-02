@@ -70,7 +70,7 @@ namespace Sweet.Redis
 
         public RedisActionBag<T> CallbacksOf(string keyword)
         {
-            if (!String.IsNullOrEmpty(keyword))
+            if (!keyword.IsEmpty())
             {
                 lock (m_SyncObj)
                 {
@@ -104,7 +104,7 @@ namespace Sweet.Redis
 
         public bool Exists(string keyword, Action<T> callback)
         {
-            if (!String.IsNullOrEmpty(keyword) && callback != null)
+            if (!keyword.IsEmpty() && callback != null)
             {
                 lock (m_SyncObj)
                 {
@@ -125,7 +125,7 @@ namespace Sweet.Redis
 
         public bool Exists(string keyword)
         {
-            if (!String.IsNullOrEmpty(keyword))
+            if (!keyword.IsEmpty())
             {
                 lock (m_SyncObj)
                 {
@@ -137,7 +137,7 @@ namespace Sweet.Redis
 
         public bool HasCallbacks(string keyword)
         {
-            if (!String.IsNullOrEmpty(keyword))
+            if (!keyword.IsEmpty())
             {
                 lock (m_SyncObj)
                 {
@@ -171,7 +171,7 @@ namespace Sweet.Redis
 
         public bool Register(string keyword, Action<T> callback)
         {
-            if (String.IsNullOrEmpty(keyword))
+            if (keyword.IsEmpty())
                 return false;
 
             var result = false;
@@ -212,7 +212,7 @@ namespace Sweet.Redis
 
         public bool Register(string keyword, RedisActionBag<T> callbacks)
         {
-            if (String.IsNullOrEmpty(keyword) || callbacks == null ||
+            if (keyword.IsEmpty() || callbacks == null ||
                 callbacks.Count == 0)
                 return false;
 
@@ -277,7 +277,7 @@ namespace Sweet.Redis
 
         public RedisActionBag<T> Drop(string keyword)
         {
-            if (!String.IsNullOrEmpty(keyword))
+            if (!keyword.IsEmpty())
             {
                 lock (m_SyncObj)
                 {
@@ -295,7 +295,7 @@ namespace Sweet.Redis
 
         public bool Unregister(string keyword)
         {
-            if (!String.IsNullOrEmpty(keyword))
+            if (!keyword.IsEmpty())
             {
                 lock (m_SyncObj)
                 {
@@ -317,7 +317,7 @@ namespace Sweet.Redis
 
         public bool Unregister(string keyword, Action<T> callback)
         {
-            if (callback != null && !String.IsNullOrEmpty(keyword))
+            if (callback != null && !keyword.IsEmpty())
             {
                 lock (m_SyncObj)
                 {

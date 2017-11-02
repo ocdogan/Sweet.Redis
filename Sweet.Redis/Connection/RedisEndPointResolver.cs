@@ -250,7 +250,7 @@ namespace Sweet.Redis
                         {
                             try
                             {
-                                if (!Disposed && siblingEndPoint != null && !String.IsNullOrEmpty(siblingEndPoint.Host))
+                                if (!Disposed && siblingEndPoint != null && !siblingEndPoint.Host.IsEmpty())
                                 {
                                     var siblingSettings = (RedisPoolSettings)settings.Clone(siblingEndPoint.Host, siblingEndPoint.Port);
 
@@ -351,7 +351,7 @@ namespace Sweet.Redis
                     try
                     {
                         if (replicationSection.MasterPort.HasValue &&
-                            !String.IsNullOrEmpty(replicationSection.MasterHost))
+                            !replicationSection.MasterHost.IsEmpty())
                         {
                             var endPoint = new RedisEndPoint(replicationSection.MasterHost,
                                                              (int)replicationSection.MasterPort.Value);
@@ -382,7 +382,7 @@ namespace Sweet.Redis
                         {
                             try
                             {
-                                if (slave.Port.HasValue && !String.IsNullOrEmpty(slave.IPAddress))
+                                if (slave.Port.HasValue && !slave.IPAddress.IsEmpty())
                                 {
                                     var endPoint = new RedisEndPoint(slave.IPAddress, slave.Port.Value);
                                     slaveEndPoints.Add(endPoint);
@@ -412,14 +412,14 @@ namespace Sweet.Redis
                         var mastersLength = masters.Length;
                         if (mastersLength > 0)
                         {
-                            if (String.IsNullOrEmpty(masterName))
+                            if (masterName.IsEmpty())
                             {
                                 if (mastersLength == 1)
                                 {
                                     var master = masters[0];
                                     try
                                     {
-                                        if (master.Port.HasValue && !String.IsNullOrEmpty(master.IPAddress))
+                                        if (master.Port.HasValue && !master.IPAddress.IsEmpty())
                                         {
                                             var endPoint = new RedisEndPoint(master.IPAddress, master.Port.Value);
                                             return new NodeRoleAndSiblings(RedisRole.Sentinel, new[] { endPoint });
@@ -438,7 +438,7 @@ namespace Sweet.Redis
                                 try
                                 {
                                     if (master.Name == masterName &&
-                                        master.Port.HasValue && !String.IsNullOrEmpty(master.IPAddress))
+                                        master.Port.HasValue && !master.IPAddress.IsEmpty())
                                     {
                                         var endPoint = new RedisEndPoint(master.IPAddress, master.Port.Value);
                                         masterEndPoints.Add(endPoint);
@@ -458,7 +458,7 @@ namespace Sweet.Redis
 
         private NodeRoleAndSiblings GetSiblingSentinelsOfSentinel(string masterName, IRedisConnection connection)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             try
@@ -483,7 +483,7 @@ namespace Sweet.Redis
                                     {
                                         var sentinelInfo = sentinelInfos[i];
 
-                                        if (!Disposed && sentinelInfo != null && sentinelInfo.Port.HasValue && !String.IsNullOrEmpty(sentinelInfo.IPAddress))
+                                        if (!Disposed && sentinelInfo != null && sentinelInfo.Port.HasValue && !sentinelInfo.IPAddress.IsEmpty())
                                             siblingEndPoints.Add(new RedisEndPoint(sentinelInfo.IPAddress, (int)sentinelInfo.Port.Value));
                                     }
 

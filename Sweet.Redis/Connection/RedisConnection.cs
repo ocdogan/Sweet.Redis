@@ -76,7 +76,7 @@ namespace Sweet.Redis
             m_Settings = settings ?? RedisConnectionSettings.Default;
             m_CreateAction = onCreateSocket;
             m_ReleaseAction = onReleaseSocket;
-            m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
+            m_Name = !name.IsEmpty() ? name : (GetType().Name + ", " + m_Id.ToString());
 
             if ((socket != null) && socket.Connected)
             {
@@ -192,7 +192,7 @@ namespace Sweet.Redis
 
         protected bool Auth(RedisSocket socket, string password)
         {
-            if (!String.IsNullOrEmpty(password))
+            if (!password.IsEmpty())
             {
                 ValidateNotDisposed();
                 using (var cmd = new RedisCommand(-1, RedisCommandList.Auth, RedisCommandType.SendAndReceive, password.ToBytes()))
@@ -330,7 +330,7 @@ namespace Sweet.Redis
         {
             if (Disposed)
             {
-                if (!String.IsNullOrEmpty(Name))
+                if (!Name.IsEmpty())
                     throw new RedisFatalException(new ObjectDisposedException(Name), RedisErrorCode.ObjectDisposed);
                 base.ValidateNotDisposed();
             }
@@ -360,11 +360,11 @@ namespace Sweet.Redis
             {
                 var settings = (Settings ?? RedisPoolSettings.Default);
 
-                if (!String.IsNullOrEmpty(settings.Password) &&
+                if (!settings.Password.IsEmpty() &&
                     Auth(socket, settings.Password))
                     socket.SetAuthenticated(true);
 
-                if (!String.IsNullOrEmpty(settings.ClientName))
+                if (!settings.ClientName.IsEmpty())
                     SetClientName(socket, settings.ClientName);
 
                 if (!NeedsToDiscoverRole())
@@ -628,7 +628,8 @@ namespace Sweet.Redis
             }
 
             var task = socket.SendAsync(data, 0, data.Length);
-            task.ContinueWith((asyncTask) => {
+            task.ContinueWith((asyncTask) =>
+            {
                 if (asyncTask.IsFaulted && asyncTask.Exception.IsSocketError())
                     FreeAndNilSocket();
             });
@@ -703,7 +704,7 @@ namespace Sweet.Redis
 
                 throw new RedisFatalException(new SocketException((int)SocketError.NotConnected));
             }
-            
+
             var task = cmd.WriteToAsync(socket);
             task.ContinueWith((asyncTask) =>
             {

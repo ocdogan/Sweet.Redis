@@ -80,10 +80,10 @@ namespace Sweet.Redis
             sBuilder.AppendFormat("[Id={0}, Time={1}, Duration={2}",
                 Id, Time, Duration);
 
-            if (!String.IsNullOrEmpty(ClientInfo))
+            if (!ClientInfo.IsEmpty())
                 sBuilder.AppendFormat(", ClientInfo={0}", ClientInfo);
 
-            if (!String.IsNullOrEmpty(ClientName))
+            if (!ClientName.IsEmpty())
                 sBuilder.AppendFormat(", ClientName={0}", ClientName);
 
             sBuilder.Append(']');

@@ -100,7 +100,7 @@ namespace Sweet.Redis
             if (response != (string)null)
             {
                 var value = response.Value;
-                if (!String.IsNullOrEmpty(value))
+                if (!value.IsEmpty())
                 {
                     var lines = value.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     if (!lines.IsEmpty())
@@ -125,7 +125,7 @@ namespace Sweet.Redis
             if (response != (string)null)
             {
                 var value = response.Value;
-                if (!String.IsNullOrEmpty(value))
+                if (!value.IsEmpty())
                 {
                     var lines = value.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     if (!lines.IsEmpty())
@@ -187,7 +187,7 @@ namespace Sweet.Redis
                     for (var i = 0; i < linesLength; i += 2)
                     {
                         var key = (lines[i] ?? String.Empty).Trim();
-                        if (!String.IsNullOrEmpty(key))
+                        if (!key.IsEmpty())
                             result[key] = (lines[i + 1] ?? String.Empty).Trim();
                     }
                     return new RedisResult<IDictionary<string, string>>(result);

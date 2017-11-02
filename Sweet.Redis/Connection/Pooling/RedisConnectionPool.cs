@@ -381,7 +381,7 @@ namespace Sweet.Redis
         {
             if (Disposed)
             {
-                if (!String.IsNullOrEmpty(Name))
+                if (!Name.IsEmpty())
                     throw new RedisFatalException(new ObjectDisposedException(Name), RedisErrorCode.ObjectDisposed);
                 base.ValidateNotDisposed();
             }

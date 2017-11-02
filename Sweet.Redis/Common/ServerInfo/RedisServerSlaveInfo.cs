@@ -61,7 +61,7 @@ namespace Sweet.Redis
 
         private void Parse(string slaveInfo)
         {
-            if (!String.IsNullOrEmpty(slaveInfo))
+            if (!slaveInfo.IsEmpty())
             {
                 var parts = slaveInfo.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts != null)
@@ -72,7 +72,7 @@ namespace Sweet.Redis
                         for (var i = 0; i < length; i++)
                         {
                             var part = parts[i].Trim();
-                            if (!String.IsNullOrEmpty(part))
+                            if (!part.IsEmpty())
                             {
                                 string name, value = null;
 
@@ -86,7 +86,7 @@ namespace Sweet.Redis
                                         value = part.Substring(pos + 1).TrimStart();
                                 }
 
-                                if (!String.IsNullOrEmpty(name))
+                                if (!name.IsEmpty())
                                 {
                                     switch (name)
                                     {

@@ -24,14 +24,14 @@
 
 namespace Sweet.Redis
 {
-    public class RedisScan : RedisResult<RedisScanBytesData>
+    public class RedisScanBytes : RedisResult<RedisScanBytesData>
     {
         #region .Ctors
 
-        internal RedisScan()
+        internal RedisScanBytes()
         { }
 
-        public RedisScan(RedisScanBytesData value)
+        public RedisScanBytes(RedisScanBytesData value)
             : base(value)
         { }
 
@@ -53,11 +53,11 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var bObj = obj as RedisScan;
+            var bObj = obj as RedisScanBytes;
             if (!ReferenceEquals(bObj, null))
                 return (bObj.m_Status == m_Status) && (bObj.m_RawData == m_RawData);
 
-            var rObj = obj as RedisResult<RedisScan>;
+            var rObj = obj as RedisResult<RedisScanBytes>;
             if (!ReferenceEquals(rObj, null))
                 return (rObj.Status == m_Status) && (rObj.RawData == m_RawData);
 
@@ -76,12 +76,12 @@ namespace Sweet.Redis
 
         #region Conversion Methods
 
-        public static implicit operator RedisScan(RedisScanBytesData value)  // implicit RedisScan conversion operator
+        public static implicit operator RedisScanBytes(RedisScanBytesData value)  // implicit RedisScan conversion operator
         {
-            return new RedisScan(value);
+            return new RedisScanBytes(value);
         }
 
-        public static implicit operator RedisScanBytesData(RedisScan value)  // implicit RedisScan conversion operator
+        public static implicit operator RedisScanBytesData(RedisScanBytes value)  // implicit RedisScan conversion operator
         {
             return value.Value;
         }
@@ -90,7 +90,7 @@ namespace Sweet.Redis
 
         #region Operator Overloads
 
-        public static bool operator ==(RedisScan a, RedisScan b)
+        public static bool operator ==(RedisScanBytes a, RedisScanBytes b)
         {
             if (ReferenceEquals(a, null))
                 return ReferenceEquals(b, null);
@@ -101,7 +101,7 @@ namespace Sweet.Redis
             return a.Equals(b);
         }
 
-        public static bool operator !=(RedisScan a, RedisScan b)
+        public static bool operator !=(RedisScanBytes a, RedisScanBytes b)
         {
             return !(b == a);
         }

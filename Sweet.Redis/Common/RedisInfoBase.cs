@@ -43,7 +43,7 @@ namespace Sweet.Redis
 
         public string Get(string key)
         {
-            if (!String.IsNullOrEmpty(key))
+            if (!key.IsEmpty())
             {
                 string result;
                 TryGetValue(key, out result);
@@ -63,20 +63,20 @@ namespace Sweet.Redis
 
         public double? GetDouble(string key)
         {
-            if (!String.IsNullOrEmpty(key))
+            if (!key.IsEmpty())
             {
                 string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
+                if (TryGetValue(key, out value) && !value.IsEmpty())
                 {
                     if (value.EndsWith("%", StringComparison.OrdinalIgnoreCase))
                         value = value.Substring(0, value.Length - 1);
 
-                    if (!String.IsNullOrEmpty(value))
+                    if (!value.IsEmpty())
                     {
                         if (value.StartsWith("%", StringComparison.OrdinalIgnoreCase))
                             value = value.Substring(1, value.Length - 1);
 
-                        if (!String.IsNullOrEmpty(value))
+                        if (!value.IsEmpty())
                         {
                             double result;
                             if (double.TryParse(value, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign,
@@ -91,10 +91,10 @@ namespace Sweet.Redis
 
         public long? GetInteger(string key)
         {
-            if (!String.IsNullOrEmpty(key))
+            if (!key.IsEmpty())
             {
                 string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
+                if (TryGetValue(key, out value) && !value.IsEmpty())
                 {
                     long result;
                     if (long.TryParse(value, out result))
@@ -106,10 +106,10 @@ namespace Sweet.Redis
 
         public IDictionary<string, string> GetAttributes(string key, char itemSeparator = ',', char valueSeparator = '=')
         {
-            if (!String.IsNullOrEmpty(key))
+            if (!key.IsEmpty())
             {
                 string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
+                if (TryGetValue(key, out value) && !value.IsEmpty())
                 {
                     var result = new Dictionary<string, string>();
 
@@ -118,7 +118,7 @@ namespace Sweet.Redis
                     {
                         foreach (var item in items)
                         {
-                            if (!String.IsNullOrEmpty(item))
+                            if (!item.IsEmpty())
                             {
                                 var pos = item.IndexOf(valueSeparator);
                                 if (pos == -1)
@@ -145,10 +145,10 @@ namespace Sweet.Redis
 
         public string[] GetItems(string key, char separator = ',')
         {
-            if (!String.IsNullOrEmpty(key))
+            if (!key.IsEmpty())
             {
                 string value;
-                if (TryGetValue(key, out value) && !String.IsNullOrEmpty(value))
+                if (TryGetValue(key, out value) && !value.IsEmpty())
                     return value.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
             }
             return null;
@@ -156,7 +156,7 @@ namespace Sweet.Redis
 
         public bool GetOK(string key)
         {
-            if (!String.IsNullOrEmpty(key))
+            if (!key.IsEmpty())
             {
                 string value;
                 if (TryGetValue(key, out value) && (value != null))

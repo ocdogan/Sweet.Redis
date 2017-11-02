@@ -842,7 +842,7 @@ namespace Sweet.Redis
         private string GetConnectedHost()
         {
             var remoteEP = GetConnectedHost(m_RemoteEP);
-            if (String.IsNullOrEmpty(remoteEP))
+            if (remoteEP.IsEmpty())
                 remoteEP = GetConnectedHost(LocalEndPoint);
             return remoteEP;
         }
@@ -875,7 +875,7 @@ namespace Sweet.Redis
                 if (UseSsl)
                 {
                     var host = GetConnectedHost();
-                    if (String.IsNullOrEmpty(host))
+                    if (host.IsEmpty())
                         throw new RedisFatalException("Remote end-point can not be defined for ssl usage", RedisErrorCode.ConnectionError);
 
                     var ssl = new SslStream(rs, false, m_SslCertificateValidation, m_SslCertificateSelection);

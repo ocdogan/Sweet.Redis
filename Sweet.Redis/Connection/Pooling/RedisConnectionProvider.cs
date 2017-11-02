@@ -50,7 +50,7 @@ namespace Sweet.Redis
             : base(settings)
         {
             name = (name ?? String.Empty).Trim();
-            m_Name = !String.IsNullOrEmpty(name) ? name :
+            m_Name = !name.IsEmpty() ? name :
                 String.Format("{0}, {1}", GetType().Name, Id.ToString());
 
             if (connectionLimiter == null)

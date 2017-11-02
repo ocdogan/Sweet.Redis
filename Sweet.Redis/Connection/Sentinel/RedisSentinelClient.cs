@@ -152,11 +152,11 @@ namespace Sweet.Redis
                     case RedisCommandExpect.One:
                         return (T)(object)command.ExpectOne(connection, ThrowOnError);
                     case RedisCommandExpect.SimpleString:
-                        if (!String.IsNullOrEmpty(okIf))
+                        if (!okIf.IsEmpty())
                             return (T)(object)command.ExpectSimpleString(connection, okIf, ThrowOnError);
                         return (T)(object)command.ExpectSimpleString(connection, ThrowOnError);
                     case RedisCommandExpect.SimpleStringBytes:
-                        if (!String.IsNullOrEmpty(okIf))
+                        if (!okIf.IsEmpty())
                             return (T)(object)command.ExpectSimpleStringBytes(connection, okIf.ToBytes(), ThrowOnError);
                         return (T)(object)command.ExpectSimpleStringBytes(connection, ThrowOnError);
                     default:

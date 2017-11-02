@@ -298,7 +298,7 @@ namespace Sweet.Redis
                             var str = ReferenceEquals(data, null) ? null :
                                 (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
 
-                            if (String.IsNullOrEmpty(request.OKIf))
+                            if (request.OKIf.IsEmpty())
                                 request.SetResult(str);
                             else
                                 request.SetResult(String.Equals(request.OKIf, str));
@@ -309,7 +309,7 @@ namespace Sweet.Redis
                             data = ReferenceEquals(data, null) ? null :
                                 (data is string ? Encoding.UTF8.GetBytes((string)data) : data);
 
-                            if (String.IsNullOrEmpty(request.OKIf))
+                            if (request.OKIf.IsEmpty())
                                 request.SetResult(data);
                             else
                                 request.SetResult(Encoding.UTF8.GetBytes(request.OKIf).Equals(data));

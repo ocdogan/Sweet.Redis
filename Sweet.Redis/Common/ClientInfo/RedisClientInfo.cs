@@ -231,7 +231,7 @@ namespace Sweet.Redis
         private static RedisClientInfoFlag ParseFlags(string flags)
         {
             var result = RedisClientInfoFlag.None;
-            if (!String.IsNullOrEmpty(flags))
+            if (!flags.IsEmpty())
             {
                 RedisClientInfoFlag flag;
                 foreach (var ch in flags)

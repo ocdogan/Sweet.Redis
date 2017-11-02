@@ -313,7 +313,7 @@ namespace Sweet.Redis
 
         public RedisServerInfoSection Get(string sectionName)
         {
-            if (!String.IsNullOrEmpty(sectionName))
+            if (!sectionName.IsEmpty())
             {
                 RedisServerInfoSection result;
                 TryGetValue(sectionName, out result);
@@ -327,7 +327,7 @@ namespace Sweet.Redis
 
         public static RedisServerInfo Parse(string info)
         {
-            if (!String.IsNullOrEmpty(info))
+            if (!info.IsEmpty())
             {
                 var lines = info.Split(new[] { RedisConstants.CRLF }, StringSplitOptions.RemoveEmptyEntries);
                 if (lines != null)
@@ -340,18 +340,18 @@ namespace Sweet.Redis
                         for (var i = 0; i < length; i++)
                         {
                             var line = (lines[i] ?? String.Empty).TrimStart();
-                            if (!String.IsNullOrEmpty(line) && line[0] == '#')
+                            if (!line.IsEmpty() && line[0] == '#')
                             {
                                 var sectionName = line.TrimStart('#').Trim();
 
-                                var sectionLines = !String.IsNullOrEmpty(sectionName) ?
+                                var sectionLines = !sectionName.IsEmpty() ?
                                                           new List<string>() : null;
 
                                 i++;
                                 for (; i < length; i++)
                                 {
                                     line = (lines[i] ?? String.Empty).TrimStart();
-                                    if (!String.IsNullOrEmpty(line))
+                                    if (!line.IsEmpty())
                                     {
                                         if (line[0] == '#')
                                         {
@@ -364,7 +364,7 @@ namespace Sweet.Redis
                                     }
                                 }
 
-                                if (!String.IsNullOrEmpty(sectionName))
+                                if (!sectionName.IsEmpty())
                                 {
                                     var section = ParseSection(sectionName, sectionLines);
                                     if (section != null)

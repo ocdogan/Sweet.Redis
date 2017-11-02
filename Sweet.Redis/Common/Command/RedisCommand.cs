@@ -118,7 +118,7 @@ namespace Sweet.Redis
         public RedisBool ExpectOK(IRedisConnection connection, bool throwException = true)
         {
             var result = ExpectSimpleStringInternal(connection, throwException);
-            if (!String.IsNullOrEmpty(result))
+            if (!result.IsEmpty())
                 return result.Equals(RedisConstants.OK, StringComparison.OrdinalIgnoreCase);
             return false;
         }
@@ -126,9 +126,9 @@ namespace Sweet.Redis
         public RedisBool ExpectSimpleString(IRedisConnection connection, string expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleStringInternal(connection, throwException);
-            if (!String.IsNullOrEmpty(result))
+            if (!result.IsEmpty())
             {
-                if (!String.IsNullOrEmpty(expectedResult))
+                if (!expectedResult.IsEmpty())
                     return result.Equals(expectedResult, StringComparison.OrdinalIgnoreCase);
 
                 if (result.StartsWith("-", StringComparison.Ordinal))
@@ -336,7 +336,7 @@ namespace Sweet.Redis
         public RedisBool ExpectOK(RedisSocketContext context, bool throwException = true)
         {
             var result = ExpectSimpleStringInternal(context, throwException);
-            if (!String.IsNullOrEmpty(result))
+            if (!result.IsEmpty())
                 return result.Equals(RedisConstants.OK, StringComparison.OrdinalIgnoreCase);
             return false;
         }
@@ -344,9 +344,9 @@ namespace Sweet.Redis
         public RedisBool ExpectSimpleString(RedisSocketContext context, string expectedResult, bool throwException = true)
         {
             var result = ExpectSimpleStringInternal(context, throwException);
-            if (!String.IsNullOrEmpty(result))
+            if (!result.IsEmpty())
             {
-                if (!String.IsNullOrEmpty(expectedResult))
+                if (!expectedResult.IsEmpty())
                     return result.Equals(expectedResult, StringComparison.OrdinalIgnoreCase);
 
                 if (result.StartsWith("-", StringComparison.Ordinal))

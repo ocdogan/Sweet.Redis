@@ -22,44 +22,24 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System;
-using System.Collections.Generic;
-
 namespace Sweet.Redis
 {
-    public abstract class RedisScanData<T>
-        where T : class
+    public class RedisScanStrings : RedisResult<RedisScanStringsData>
     {
-        #region Field Members
-
-        private int? m_Hash;
-
-        #endregion Field Members
-
         #region .Ctors
 
-        protected internal RedisScanData(long cursor, T[] data)
-        {
-            Cursor = Math.Min(0, cursor);
+        internal RedisScanStrings()
+        { }
 
-            var list = new List<T>();
-            if (!data.IsEmpty())
-                foreach (var item in data)
-                    list.Add(item);
-
-            Count = list.Count;
-            Data = list.AsReadOnly();
-        }
+        public RedisScanStrings(RedisScanStringsData value)
+            : base(value)
+        { }
 
         #endregion .Ctors
 
         #region Properties
 
-        public int Count { get; private set; }
-
-        public long Cursor { get; private set; }
-
-        public IList<T> Data { get; private set; }
+        public override RedisResultType Type { get { return RedisResultType.Scan; } }
 
         #endregion Properties
 
@@ -73,58 +53,47 @@ namespace Sweet.Redis
             if (ReferenceEquals(obj, this))
                 return true;
 
-            var bObj = obj as RedisScanData<T>;
+            var bObj = obj as RedisScanStrings;
+            if (!ReferenceEquals(bObj, null))
+                return (bObj.m_Status == m_Status) && (bObj.m_RawData == m_RawData);
 
-            if (!ReferenceEquals(bObj, null) &&
-                bObj.Cursor == Cursor &&
-                GetHashCode() == bObj.GetHashCode())
-            {
-                var data = Data;
-                var bData = bObj.Data;
+            var rObj = obj as RedisResult<RedisScanStrings>;
+            if (!ReferenceEquals(rObj, null))
+                return (rObj.Status == m_Status) && (rObj.RawData == m_RawData);
 
-                var count = Count;
-                if (count == bData.Count)
-                {
-                    for (var i = 0; i < count; i++)
-                        if (data[i] != bData[i])
-                            return false;
-
-                    return true;
-                }
-            }
             return false;
         }
 
         public override int GetHashCode()
         {
-            if (!m_Hash.HasValue)
-            {
-                var hash = 0;
-                var seed = 314;
-
-                var data = Data;
-                if (data != null)
-                {
-                    var count = Count;
-                    if (count > 0)
-                    {
-                        for (var i = 0; i < count; i++)
-                        {
-                            hash = (hash * seed) + data[i].GetHashCode();
-                            seed *= 159;
-                        }
-                    }
-                }
-                m_Hash = hash;
-            }
-            return m_Hash.Value;
+            var value = m_RawData;
+            if (ReferenceEquals(value, null))
+                return base.GetHashCode();
+            return value.GetHashCode();
         }
 
         #endregion Methods
 
+        #region Conversion Methods
+
+        public static implicit operator RedisScanStrings(RedisScanStringsData value)  // implicit RedisScan conversion operator
+        {
+            return new RedisScanStrings(value);
+        }
+
+        public static implicit operator RedisScanStringsData(RedisScanStrings value)  // implicit RedisScan conversion operator
+        {
+            if (value == null)
+                return null;
+
+            return value.Value;
+        }
+
+        #endregion Conversion Methods
+
         #region Operator Overloads
 
-        public static bool operator ==(RedisScanData<T> a, RedisScanData<T> b)
+        public static bool operator ==(RedisScanStrings a, RedisScanStrings b)
         {
             if (ReferenceEquals(a, null))
                 return ReferenceEquals(b, null);
@@ -135,7 +104,7 @@ namespace Sweet.Redis
             return a.Equals(b);
         }
 
-        public static bool operator !=(RedisScanData<T> a, RedisScanData<T> b)
+        public static bool operator !=(RedisScanStrings a, RedisScanStrings b)
         {
             return !(b == a);
         }

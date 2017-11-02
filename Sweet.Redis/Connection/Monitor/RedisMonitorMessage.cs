@@ -83,7 +83,7 @@ namespace Sweet.Redis
                     {
                         var timeStr = Encoding.UTF8.GetString(data, 0, timeEndPos);
 
-                        if (!String.IsNullOrEmpty(timeStr))
+                        if (!timeStr.IsEmpty())
                         {
                             var clientStartPos = data.IndexOf((byte)'[', timeEndPos + 1, 10);
                             if (clientStartPos > -1)

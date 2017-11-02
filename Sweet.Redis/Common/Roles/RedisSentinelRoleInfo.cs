@@ -71,7 +71,7 @@ namespace Sweet.Redis
                                         if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                                         {
                                             var masterName = item.DataText;
-                                            if (!String.IsNullOrEmpty(masterName))
+                                            if (!masterName.IsEmpty())
                                                 masterNames.Add(masterName);
                                         }
                                     }

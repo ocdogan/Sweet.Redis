@@ -77,7 +77,7 @@ namespace Sweet.Redis
         internal static RedisEndPoint ToRedisEndPoint(this string host, int port = RedisConstants.DefaultPort)
         {
             host = (host ?? String.Empty).Trim();
-            if (!String.IsNullOrEmpty(host))
+            if (!host.IsEmpty())
             {
                 port = port < 1 ? RedisConstants.DefaultPort : port;
 
@@ -96,14 +96,14 @@ namespace Sweet.Redis
                 }
 
                 var name = (host.Substring(0, colonPos) ?? String.Empty).TrimEnd();
-                if (String.IsNullOrEmpty(name))
+                if (name.IsEmpty())
                     name = RedisConstants.LocalHost;
 
                 if (colonPos == host.Length - 1)
                     return new RedisEndPoint(name, port);
 
                 var portStr = (host.Substring(colonPos + 1) ?? String.Empty).TrimStart();
-                if (String.IsNullOrEmpty(portStr))
+                if (portStr.IsEmpty())
                     return new RedisEndPoint(name, port);
 
                 var portInt = int.Parse(portStr);
@@ -116,7 +116,7 @@ namespace Sweet.Redis
 
         internal static RedisRole ToRedisRole(this string roleStr)
         {
-            if (!String.IsNullOrEmpty(roleStr))
+            if (!roleStr.IsEmpty())
             {
                 roleStr = roleStr.ToLowerInvariant();
                 switch (roleStr)
@@ -158,6 +158,11 @@ namespace Sweet.Redis
                 exception = exception.InnerException;
             }
             return false;
+        }
+
+        internal static bool IsEmpty(this string obj)
+        {
+            return (obj == null || obj.Length == 0);
         }
 
         internal static bool IsEmpty(this ICollection obj)
@@ -517,7 +522,7 @@ namespace Sweet.Redis
 
         internal static int ToInt(this string s, int defaultValue = int.MinValue)
         {
-            if (!String.IsNullOrEmpty(s))
+            if (!s.IsEmpty())
             {
                 int result;
                 if (int.TryParse(s, out result))
@@ -528,7 +533,7 @@ namespace Sweet.Redis
 
         internal static long ToLong(this string s, long defaultValue = long.MinValue)
         {
-            if (!String.IsNullOrEmpty(s))
+            if (!s.IsEmpty())
             {
                 long result;
                 if (long.TryParse(s, out result))

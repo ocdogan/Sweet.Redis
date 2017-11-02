@@ -82,37 +82,37 @@ namespace Sweet.Redis
         protected static void ValidateKeyAndValue(string key, byte[] value, string keyName = null, string valueName = null)
         {
             if (key == null)
-                throw new RedisFatalException(new ArgumentNullException(String.IsNullOrEmpty(keyName) ? "key" : keyName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentNullException(keyName.IsEmpty() ? "key" : keyName), RedisErrorCode.MissingParameter);
 
             if (value == null)
-                throw new RedisFatalException(new ArgumentNullException(String.IsNullOrEmpty(valueName) ? "value" : valueName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentNullException(valueName.IsEmpty() ? "value" : valueName), RedisErrorCode.MissingParameter);
 
             if (value.Length > RedisConstants.MaxValueLength)
-                throw new RedisFatalException(new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentException("Redis values are limited to 1GB", valueName.IsEmpty() ? "value" : valueName), RedisErrorCode.MissingParameter);
         }
 
         protected static void ValidateKeyAndValue(RedisParam key, byte[] value, string keyName = null, string valueName = null)
         {
             if (key.IsEmpty)
-                throw new RedisFatalException(new ArgumentNullException(String.IsNullOrEmpty(keyName) ? "key" : keyName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentNullException(keyName.IsEmpty() ? "key" : keyName), RedisErrorCode.MissingParameter);
 
             if (value == null)
-                throw new RedisFatalException(new ArgumentNullException(String.IsNullOrEmpty(valueName) ? "value" : valueName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentNullException(valueName.IsEmpty() ? "value" : valueName), RedisErrorCode.MissingParameter);
 
             if (value.Length > RedisConstants.MaxValueLength)
-                throw new RedisFatalException(new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentException("Redis values are limited to 1GB", valueName.IsEmpty() ? "value" : valueName), RedisErrorCode.MissingParameter);
         }
 
         protected static void ValidateKeyAndValue(RedisParam key, RedisParam value, string keyName = null, string valueName = null)
         {
             if (key.IsEmpty)
-                throw new RedisFatalException(new ArgumentNullException(String.IsNullOrEmpty(keyName) ? "key" : keyName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentNullException(keyName.IsEmpty() ? "key" : keyName), RedisErrorCode.MissingParameter);
 
             if (value.IsNull)
-                throw new RedisFatalException(new ArgumentNullException(String.IsNullOrEmpty(valueName) ? "value" : valueName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentNullException(valueName.IsEmpty() ? "value" : valueName), RedisErrorCode.MissingParameter);
 
             if (value.Data.Length > RedisConstants.MaxValueLength)
-                throw new RedisFatalException(new ArgumentException("Redis values are limited to 1GB", String.IsNullOrEmpty(valueName) ? "value" : valueName), RedisErrorCode.MissingParameter);
+                throw new RedisFatalException(new ArgumentException("Redis values are limited to 1GB", valueName.IsEmpty() ? "value" : valueName), RedisErrorCode.MissingParameter);
         }
 
         #endregion Validation Methods

@@ -222,21 +222,21 @@ namespace Sweet.Redis
                     sBuilder.Append(';');
             }
 
-            if (!String.IsNullOrEmpty(MasterName))
+            if (!MasterName.IsEmpty())
             {
                 sBuilder.Append("masterName=");
                 sBuilder.Append(MasterName);
                 sBuilder.Append(';');
             }
 
-            if (!String.IsNullOrEmpty(Password))
+            if (!Password.IsEmpty())
             {
                 sBuilder.Append("password=");
                 sBuilder.Append(Password);
                 sBuilder.Append(';');
             }
 
-            if (!String.IsNullOrEmpty(ClientName))
+            if (!ClientName.IsEmpty())
             {
                 sBuilder.Append("clientName=");
                 sBuilder.Append(ClientName);
@@ -320,13 +320,13 @@ namespace Sweet.Redis
             {
                 foreach (var kv in settings)
                 {
-                    if (!String.IsNullOrEmpty(kv.Value))
+                    if (!kv.Value.IsEmpty())
                         ParseProperty(settingsWithDefaults, kv.Key.ToLowerInvariant(), kv.Value);
                 }
 
                 var port = -1;
                 string str;
-                if (settings.TryGetValue("port", out str) && !String.IsNullOrEmpty(str))
+                if (settings.TryGetValue("port", out str) && !str.IsEmpty())
                     port = int.Parse(str);
 
                 string host;
@@ -340,7 +340,7 @@ namespace Sweet.Redis
 
         private static IDictionary<string, string> ParseConnectionString(string connectionString)
         {
-            if (!String.IsNullOrEmpty(connectionString))
+            if (!connectionString.IsEmpty())
             {
                 var parts = connectionString.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                 if (parts != null)
@@ -353,7 +353,7 @@ namespace Sweet.Redis
                         for (var i = 0; i < length; i++)
                         {
                             var part = (parts[i] ?? String.Empty).Trim();
-                            if (!String.IsNullOrEmpty(part))
+                            if (!part.IsEmpty())
                             {
                                 var pos = part.IndexOf('=');
                                 if (pos == -1)
@@ -361,7 +361,7 @@ namespace Sweet.Redis
                                 else
                                 {
                                     var key = (part.Substring(0, pos) ?? String.Empty).TrimEnd();
-                                    if (!String.IsNullOrEmpty(key))
+                                    if (!key.IsEmpty())
                                     {
                                         if (pos == part.Length - 1)
                                             result[key] = null;
@@ -513,7 +513,7 @@ namespace Sweet.Redis
             host = (host ?? String.Empty).Trim();
             port = port > 0 ? port : GetDefaultPort();
 
-            if (!String.IsNullOrEmpty(host))
+            if (!host.IsEmpty())
             {
                 if (host.IndexOfAny(new[] { ':', ',', '|' }) == -1)
                     return new HashSet<RedisEndPoint> { new RedisEndPoint(host, port) };
@@ -545,7 +545,7 @@ namespace Sweet.Redis
 
         private void HostToEndPoint(HashSet<RedisEndPoint> hostList, string host)
         {
-            if (!String.IsNullOrEmpty(host))
+            if (!host.IsEmpty())
             {
                 var pos = host.IndexOf(':');
                 if (pos == -1)
@@ -553,14 +553,14 @@ namespace Sweet.Redis
                 else
                 {
                     var name = (host.Substring(0, pos) ?? String.Empty).TrimEnd();
-                    if (!String.IsNullOrEmpty(name))
+                    if (!name.IsEmpty())
                     {
                         if (pos == host.Length - 1)
                             hostList.Add(RedisEndPoint.IP4LoopbackEndPoint);
                         else
                         {
                             var port = (host.Substring(pos + 1) ?? String.Empty).TrimStart();
-                            if (String.IsNullOrEmpty(port))
+                            if (port.IsEmpty())
                                 hostList.Add(new RedisEndPoint(name, GetDefaultPort()));
                             else
                                 hostList.Add(new RedisEndPoint(name, int.Parse(port)));

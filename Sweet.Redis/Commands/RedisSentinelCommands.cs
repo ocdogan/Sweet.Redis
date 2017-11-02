@@ -41,7 +41,7 @@ namespace Sweet.Redis
 
         public RedisString CheckQuorum(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             return ExpectSimpleString(RedisCommandList.Sentinel, RedisCommandList.SentinelCheckQuorum);
@@ -49,7 +49,7 @@ namespace Sweet.Redis
 
         public RedisBool Failover(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             return ExpectOK(RedisCommandList.Sentinel, RedisCommandList.SentinelFailover, masterName.ToBytes());
@@ -62,7 +62,7 @@ namespace Sweet.Redis
 
         public RedisResult<RedisEndPointInfo> GetMasterAddrByName(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             var raw = ExpectArray(RedisCommandList.Sentinel, RedisCommandList.SentinelGetMasterAddrByName, masterName.ToBytes());
@@ -81,7 +81,7 @@ namespace Sweet.Redis
                             if (!ReferenceEquals(rawIP, null) && rawIP.Type == RedisRawObjectType.BulkString)
                             {
                                 var ipAddress = rawIP.DataText;
-                                if (!String.IsNullOrEmpty(ipAddress))
+                                if (!ipAddress.IsEmpty())
                                 {
                                     int port = 0;
                                     if (count > 1)
@@ -90,7 +90,7 @@ namespace Sweet.Redis
                                         if (!ReferenceEquals(rawPort, null) && rawPort.Type == RedisRawObjectType.BulkString)
                                         {
                                             var data = rawPort.DataText;
-                                            if (!String.IsNullOrEmpty(data))
+                                            if (!data.IsEmpty())
                                             {
                                                 long l;
                                                 if (long.TryParse(data, out l))
@@ -123,10 +123,10 @@ namespace Sweet.Redis
 
         public RedisResult<RedisIsMasterDownInfo> IsMasterDownByAddr(string ipAddress, int port, string runId)
         {
-            if (String.IsNullOrEmpty(ipAddress))
+            if (ipAddress.IsEmpty())
                 throw new ArgumentNullException("ipAddress");
 
-            if (String.IsNullOrEmpty(runId))
+            if (runId.IsEmpty())
                 throw new ArgumentNullException("runId");
 
             var raw = ExpectArray(RedisCommandList.Sentinel, RedisCommandList.SentinelIsMasterDownByAddr,
@@ -146,7 +146,7 @@ namespace Sweet.Redis
 
         public RedisResult<RedisSentinelMasterInfo> Master(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             var raw = ExpectArray(RedisCommandList.Sentinel, RedisCommandList.SentinelMaster, masterName.ToBytes());
@@ -198,10 +198,10 @@ namespace Sweet.Redis
 
         public RedisBool Monitor(string masterName, string ipAddress, int port, int quorum)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
-            if (String.IsNullOrEmpty(ipAddress))
+            if (ipAddress.IsEmpty())
                 throw new ArgumentNullException("ipAddress");
 
             return ExpectOK(RedisCommandList.Sentinel, RedisCommandList.SentinelMonitor,
@@ -216,7 +216,7 @@ namespace Sweet.Redis
 
         public RedisBool Remove(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             return ExpectOK(RedisCommandList.Sentinel, RedisCommandList.SentinelRemove, masterName.ToBytes());
@@ -243,7 +243,7 @@ namespace Sweet.Redis
 
         public RedisResult<RedisSentinelNodeInfo[]> Sentinels(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             var raw = ExpectArray(RedisCommandList.Sentinel, RedisCommandList.Sentinels, masterName.ToBytes());
@@ -262,7 +262,7 @@ namespace Sweet.Redis
 
         public RedisBool Set(string masterName, RedisParam parameter, RedisParam value)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             if (parameter.IsNull)
@@ -276,7 +276,7 @@ namespace Sweet.Redis
 
         public RedisResult<RedisSentinelSlaveInfo[]> Slaves(string masterName)
         {
-            if (String.IsNullOrEmpty(masterName))
+            if (masterName.IsEmpty())
                 throw new ArgumentNullException("masterName");
 
             var raw = ExpectArray(RedisCommandList.Sentinel, RedisCommandList.SentinelSlaves, masterName.ToBytes());

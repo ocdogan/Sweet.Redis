@@ -110,7 +110,7 @@ namespace Sweet.Redis
                             if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
                             {
                                 var key = item.DataText;
-                                if (!String.IsNullOrEmpty(key))
+                                if (!key.IsEmpty())
                                 {
                                     var value = (string)null;
                                     if (i < count - 1)

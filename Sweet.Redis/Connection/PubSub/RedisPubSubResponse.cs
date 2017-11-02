@@ -95,7 +95,7 @@ namespace Sweet.Redis
                         if (data != null)
                         {
                             var typeStr = Encoding.UTF8.GetString(data).ToLowerInvariant();
-                            if (!String.IsNullOrEmpty(typeStr))
+                            if (!typeStr.IsEmpty())
                             {
                                 var type = RedisPubSubResponseType.Undefined;
                                 switch (typeStr)
@@ -134,7 +134,7 @@ namespace Sweet.Redis
                                         if (data != null)
                                         {
                                             var channel = Encoding.UTF8.GetString(data);
-                                            if (!String.IsNullOrEmpty(channel))
+                                            if (!channel.IsEmpty())
                                             {
                                                 var pattern = String.Empty;
                                                 switch (type)

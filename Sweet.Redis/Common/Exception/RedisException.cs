@@ -106,7 +106,7 @@ namespace Sweet.Redis
 
         public string Prefix
         {
-            get { return String.IsNullOrEmpty(m_Prefix) ? "ERR" : m_Prefix; }
+            get { return m_Prefix.IsEmpty() ? "ERR" : m_Prefix; }
             set
             {
                 if (value == null)

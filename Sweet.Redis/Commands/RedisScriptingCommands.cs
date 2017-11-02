@@ -101,7 +101,7 @@ namespace Sweet.Redis
             catch (RedisException e)
             {
                 var msg = e.Message;
-                if (!String.IsNullOrEmpty(msg) &&
+                if (!msg.IsEmpty() &&
                     msg.StartsWith("NOSCRIPT", StringComparison.OrdinalIgnoreCase))
                 {
                     var sha1S = ScriptLoad(script);
