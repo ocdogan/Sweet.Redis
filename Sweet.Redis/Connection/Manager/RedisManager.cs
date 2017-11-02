@@ -73,7 +73,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManager(string name, RedisManagerSettings settings = null)
+        public RedisManager(string name, RedisManagerSettings settings)
         {
             if (settings == null)
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
