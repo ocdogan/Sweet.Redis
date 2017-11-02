@@ -277,22 +277,32 @@ namespace Sweet.Redis
                 var pool = sender as RedisConnectionPool;
                 if (pool != null)
                 {
-                    var refreshSentinels = true;
-                    try
+                    var eventQ = m_EventQ;
+                    if (eventQ.IsAlive())
                     {
-                        RedisManagedNode node;
-                        RedisManagedNodesGroup nodesGroup;
-
-                        if (TryToIdentifyPool(pool, out nodesGroup, out node))
+                        eventQ.Enqueu(() =>
                         {
-                            refreshSentinels = false;
-                            InvokeNodeStateChanged(node);
-                        }
-                    }
-                    finally
-                    {
-                        if (refreshSentinels)
-                            RefreshSentinels();
+                            if (!Disposed)
+                            {
+                                var refreshSentinels = true;
+                                try
+                                {
+                                    RedisManagedNode node;
+                                    RedisManagedNodesGroup nodesGroup;
+
+                                    if (TryToIdentifyPool(pool, out nodesGroup, out node))
+                                    {
+                                        refreshSentinels = false;
+                                        InvokeNodeStateChanged(node);
+                                    }
+                                }
+                                finally
+                                {
+                                    if (refreshSentinels)
+                                        RefreshSentinels();
+                                }
+                            }
+                        });
                     }
                 }
             }
@@ -331,15 +341,23 @@ namespace Sweet.Redis
         {
             if (!Disposed && !ReferenceEquals(sender, null))
             {
-                var task = new Task(() =>
+                var node = sender as RedisManagedNode;
+                if (node.IsAlive())
                 {
-                    var node = sender as RedisManagedNode;
-                    if (node.IsAlive())
-                        TestNode(node);
-
-                    RefreshSentinels();
-                });
-                task.Start();
+                    var eventQ = m_EventQ;
+                    if (eventQ.IsAlive())
+                    {
+                        eventQ.Enqueu(() =>
+                        {
+                            if (!Disposed)
+                            {
+                                if (node.IsAlive())
+                                    TestNode(node);
+                                RefreshSentinels();
+                            }
+                        });
+                    }
+                }
             }
         }
 
