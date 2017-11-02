@@ -65,13 +65,26 @@ namespace Sweet.Redis
                         if (count > 2)
                         {
                             item = list[2];
-                            if (!ReferenceEquals(item, null) && item.Type == RedisRawObjectType.BulkString)
+                            if (!ReferenceEquals(item, null))
                             {
-                                var data = item.Data;
-                                if (data is long)
-                                    Port = (int)(long)data;
-                                else if (data is int)
-                                    Port = (int)data;
+                                if (item.Type == RedisRawObjectType.Integer)
+                                {
+                                    var data = item.Data;
+                                    if (data is long)
+                                        Port = (int)(long)data;
+                                    else if (data is int)
+                                        Port = (int)data;
+                                }
+                                else if (item.Type == RedisRawObjectType.BulkString)
+                                {
+                                    var data = item.DataText;
+                                    if (!string.IsNullOrEmpty(data))
+                                    {
+                                        long l;
+                                        if (long.TryParse(data, out l))
+                                            Port = (int)l;
+                                    }
+                                }
                             }
 
                             if (count > 3)
