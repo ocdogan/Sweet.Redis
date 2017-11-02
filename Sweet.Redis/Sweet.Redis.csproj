@@ -57,6 +57,10 @@
     <Compile Include="Common\RedisParam.cs" />
     <Compile Include="Common\RedisProcessState.cs" />
     <Compile Include="Common\RedisRole.cs" />
+    <Compile Include="Common\RedisScanBytesData.cs" />
+    <Compile Include="Common\RedisScanData.cs" />
+    <Compile Include="Common\RedisScanStringData.cs" />
+    <Compile Include="Common\Result\RedisScan.cs" />
     <Compile Include="Common\RedisSlowLogInfo.cs" />
     <Compile Include="Common\RedisVoidResponse.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelClusterNodeInfo.cs" />

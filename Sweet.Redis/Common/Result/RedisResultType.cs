@@ -42,6 +42,7 @@ namespace Sweet.Redis
         NullableInteger,
         Object,
         Raw,
+        Scan,
         String,
         Void
     }

@@ -218,31 +218,6 @@ namespace Sweet.Redis
 
             #region Operator Overloads
 
-            public static bool operator ==(CardioProbe a, CardioProbe b)
-            {
-                if (ReferenceEquals(a, null))
-                    return ReferenceEquals(b, null);
-                return ReferenceEquals(a.m_Probe, b.m_Probe);
-            }
-
-            public static bool operator !=(CardioProbe a, CardioProbe b)
-            {
-                return b != a;
-            }
-
-            public static bool operator ==(IRedisHeartBeatProbe a, CardioProbe b)
-            {
-                if (ReferenceEquals(a, null))
-                    return ReferenceEquals(b, null);
-                return ReferenceEquals(a, b.m_Probe);
-            }
-
-            public static bool operator !=(IRedisHeartBeatProbe a, CardioProbe b)
-            {
-                var bProbe = !ReferenceEquals(b, null) ? b.m_Probe : null;
-                return !ReferenceEquals(a, bProbe);
-            }
-
             public static bool operator ==(CardioProbe a, IRedisHeartBeatProbe b)
             {
                 if (ReferenceEquals(a, null))
@@ -252,8 +227,29 @@ namespace Sweet.Redis
 
             public static bool operator !=(CardioProbe a, IRedisHeartBeatProbe b)
             {
-                var aProbe = !ReferenceEquals(a, null) ? a.m_Probe : null;
-                return !ReferenceEquals(aProbe, b);
+                return !(a == b);
+            }
+
+            public static bool operator ==(IRedisHeartBeatProbe a, CardioProbe b)
+            {
+                return (b == a);
+            }
+
+            public static bool operator !=(IRedisHeartBeatProbe a, CardioProbe b)
+            {
+                return !(b == a);
+            }
+
+            public static bool operator ==(CardioProbe a, CardioProbe b)
+            {
+                if (ReferenceEquals(a, null))
+                    return ReferenceEquals(b, null);
+                return ReferenceEquals(a.m_Probe, b.m_Probe);
+            }
+
+            public static bool operator !=(CardioProbe a, CardioProbe b)
+            {
+                return !(b == a);
             }
 
             #endregion Operator Overloads

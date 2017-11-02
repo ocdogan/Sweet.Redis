@@ -117,13 +117,13 @@ namespace Sweet.Redis.ConsoleTest
                             using (var db = manager.GetDb())
                             {
                                 Ping(db, false);
-                                SetGet(db, "tinytext", text, true);
+                                SetGet(db, "tinytext", text, false);
                             }
 
                             using (var db = manager.GetDb(true))
                             {
-                                Ping(db, true);
-                                Get(db, "tinytext", true);
+                                Ping(db, false);
+                                Get(db, "tinytext", false);
                             }
                         }
                         catch (Exception e)
