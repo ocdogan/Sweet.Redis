@@ -208,7 +208,7 @@ namespace Sweet.Redis
 
         public const int CardioProbeStatusChangeRetryCount = 3;
 
-        public const int DefaultHeartBeatIntervalSecs = 5;
+        public const int DefaultHeartBeatIntervalSecs = 3;
         public const int MinHeartBeatIntervalSecs = 2;
         public const int MaxHeartBeatIntervalSecs = 120;
 
