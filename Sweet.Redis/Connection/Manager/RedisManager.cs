@@ -83,6 +83,9 @@ namespace Sweet.Redis
             m_Name = !String.IsNullOrEmpty(name) ? name : (GetType().Name + ", " + m_Id.ToString());
             m_MasterName = (settings.MasterName ?? String.Empty).Trim();
 
+            m_MSGroup = new RedisManagedMSGroup(settings, null, null, OnProbeStateChange);
+            m_Sentinels = new RedisManagedSentinelGroup(settings, m_MasterName, null, OnProbeStateChange);
+
             m_EventQ = new RedisManagerEventQueue(this);
             m_EndPointResolver = new RedisManagedEndPointResolver(m_Name, settings);
         }
