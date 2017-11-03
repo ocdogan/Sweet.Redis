@@ -102,15 +102,15 @@ namespace Sweet.Redis
 
             var bytes = obj as byte[];
             if (!ReferenceEquals(bytes, null))
-                return (Encoding.UTF8.GetBytes((string)m_RawData) == bytes);
+                return bytes.EqualTo(((string)m_RawData).ToBytes());
 
             var bObj = obj as RedisBytes;
             if (!ReferenceEquals(bObj, null))
-                return (bObj.Status == m_Status) && ((byte[])bObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+                return (bObj.Status == m_Status) && ((byte[])bObj.RawData).EqualTo(((string)m_RawData).ToBytes());
 
             var rbObj = obj as RedisResult<byte[]>;
             if (!ReferenceEquals(rbObj, null))
-                return (rbObj.Status == m_Status) && ((byte[])rbObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+                return (rbObj.Status == m_Status) && ((byte[])rbObj.RawData).EqualTo(((string)m_RawData).ToBytes());
 
             return false;
         }

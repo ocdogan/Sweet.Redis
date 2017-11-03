@@ -74,7 +74,7 @@ namespace Sweet.Redis
             for (var i = 0; i < count; i++)
             {
                 val = data[i];
-                result[i] = (val != null ? (val.Length == 0 ? (byte[])null : Encoding.UTF8.GetBytes(val)) : null);
+                result[i] = (val != null ? (val.Length == 0 ? (byte[])null : val.ToBytes()) : null);
             }
 
             return result;

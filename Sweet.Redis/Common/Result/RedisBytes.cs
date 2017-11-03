@@ -86,31 +86,31 @@ namespace Sweet.Redis
 
             var bObj = obj as RedisBytes;
             if (!ReferenceEquals(bObj, null))
-                return (bObj.Status == m_Status) && ((byte[])bObj.RawData == (byte[])m_RawData);
+                return (bObj.Status == m_Status) && ((byte[])bObj.RawData).EqualTo((byte[])m_RawData);
 
             var bytes = obj as byte[];
             if (!ReferenceEquals(bytes, null))
-                return ((byte[])m_RawData == bytes);
+                return bytes.EqualTo((byte[])m_RawData);
 
             var sObj = obj as RedisString;
             if (!ReferenceEquals(sObj, null))
-                return (sObj.Status == m_Status) && ((byte[])sObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+                return (sObj.Status == m_Status) && ((byte[])sObj.RawData).EqualTo(((string)m_RawData).ToBytes());
 
             var str = obj as string;
             if (!ReferenceEquals(str, null))
-                return ((byte[])m_RawData == Encoding.UTF8.GetBytes(str));
+                return ((byte[])m_RawData).EqualTo(str.ToBytes());
 
             var eObj = obj as RedisError;
             if (!ReferenceEquals(eObj, null))
-                return (eObj.Status == m_Status) && ((byte[])eObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+                return (eObj.Status == m_Status) && ((byte[])eObj.RawData).EqualTo(((string)m_RawData).ToBytes());
 
             var rObj = obj as RedisResult<string>;
             if (!ReferenceEquals(rObj, null))
-                return (rObj.Status == m_Status) && ((byte[])rObj.RawData == Encoding.UTF8.GetBytes((string)m_RawData));
+                return (rObj.Status == m_Status) && ((byte[])rObj.RawData).EqualTo(((string)m_RawData).ToBytes());
 
             var rbObj = obj as RedisResult<byte[]>;
             if (!ReferenceEquals(rbObj, null))
-                return (rbObj.Status == m_Status) && ((byte[])rbObj.RawData == (byte[])m_RawData);
+                return (rbObj.Status == m_Status) && ((byte[])rbObj.RawData).EqualTo((byte[])m_RawData);
 
             return false;
         }

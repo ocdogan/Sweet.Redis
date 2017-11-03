@@ -52,7 +52,7 @@ namespace Sweet.Redis
         public RedisParam(string data)
             : this()
         {
-            m_Data = (data != null) ? Encoding.UTF8.GetBytes(data) : null;
+            m_Data = (data != null) ? data.ToBytes() : null;
         }
 
         public RedisParam(DateTime? data)

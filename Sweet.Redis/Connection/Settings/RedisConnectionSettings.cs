@@ -163,7 +163,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public uint GetCRCHashCode()
+        public virtual uint GetCRCHashCode()
         {
             if (!m_CRCHash.HasValue)
                 m_CRCHash = RedisCommon.CRC32ChecksumOf(ToString().ToBytes());
