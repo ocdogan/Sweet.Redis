@@ -38,6 +38,12 @@ namespace Sweet.Redis
 
         #endregion Static Members
 
+        #region Field Members
+
+        private uint? m_CRCHash;
+
+        #endregion Field Members
+
         #region .Ctors
 
         public RedisConnectionSettings()
@@ -156,6 +162,11 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
+
+        {
+            if (!m_CRCHash.HasValue)
+            return m_CRCHash.Value;
+        }
 
         public void SetSslCertificateSelection(LocalCertificateSelectionCallback sslCertificateSelection)
         {
