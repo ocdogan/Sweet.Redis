@@ -91,6 +91,7 @@
     <Compile Include="Connection\Sentinel\RedisSentinel.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelClient.cs" />
     <Compile Include="Connection\Sentinel\RedisSentinelConnection.cs" />
+    <Compile Include="Connection\Sentinel\RedisSentinelHelloMessage.cs" />
     <Compile Include="Connection\Settings\RedisManagerSettings.cs" />
     <Compile Include="Connection\Settings\RedisSentinelSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

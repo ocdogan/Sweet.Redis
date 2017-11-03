@@ -45,7 +45,7 @@ namespace Sweet.Redis
 
         public RedisManagerSettings(string host = RedisConstants.LocalHost,
             int port = RedisConstants.DefaultPort,
-            RedisManagerType managerType = RedisManagerType.Sentinel,
+            RedisManagerType managerType = RedisManagerType.MasterSlave,
             string masterName = null,
             string password = null,
             string clientName = null,
@@ -69,7 +69,7 @@ namespace Sweet.Redis
         { }
 
         public RedisManagerSettings(HashSet<RedisEndPoint> endPoints,
-            RedisManagerType managerType = RedisManagerType.Sentinel,
+            RedisManagerType managerType = RedisManagerType.MasterSlave,
             string masterName = null,
             string password = null,
             string clientName = null,
@@ -93,7 +93,7 @@ namespace Sweet.Redis
         { }
 
         public RedisManagerSettings(RedisEndPoint[] endPoints = null,
-            RedisManagerType managerType = RedisManagerType.Sentinel,
+            RedisManagerType managerType = RedisManagerType.MasterSlave,
             string masterName = null,
             string password = null,
             string clientName = null,
@@ -183,7 +183,7 @@ namespace Sweet.Redis
         protected override IDictionary<string, object> GetSettingsWithDefaults()
         {
             var settings = base.GetSettingsWithDefaults();
-            settings["managertype"] = RedisManagerType.Sentinel;
+            settings["managertype"] = RedisManagerType.MasterSlave;
             return settings;
         }
 

@@ -310,7 +310,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisPoolSettings FindValidSetting()
+        public RedisPoolSettings FindValidSettings()
         {
             if (!Disposed)
             {
@@ -349,6 +349,14 @@ namespace Sweet.Redis
                         (ReferenceEquals(n.Pool, pool) || (hasEndPoint && n.Pool.EndPoint == endPoint)));
                 }
             }
+            return null;
+        }
+
+        public RedisEndPoint[] GetEndPoints()
+        {
+            var nodes = m_Nodes;
+            if (!nodes.IsEmpty())
+                return nodes.GroupBy(n => n.EndPoint).Select(g => g.Key).Where(ep => !ep.IsEmpty()).ToArray();
             return null;
         }
 

@@ -263,6 +263,29 @@ namespace Sweet.Redis
             }
         }
 
+        public RedisEndPoint[] GetEndPoints()
+        {
+            var slaves = m_Slaves;
+            var masters = m_Masters;
+
+            if (slaves != null || masters != null)
+            {
+                var masterEndPoints = masters.GetEndPoints();
+                if (masterEndPoints.IsEmpty())
+                    return slaves.GetEndPoints();
+
+                var slaveEndPoints = slaves.GetEndPoints();
+                if (slaveEndPoints.IsEmpty())
+                    return masters.GetEndPoints();
+
+                return masterEndPoints
+                    .Union(slaveEndPoints)
+                    .Distinct()
+                    .ToArray();
+            }
+            return null;
+        }
+
         #endregion Methods
     }
 }

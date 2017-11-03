@@ -180,6 +180,8 @@ namespace Sweet.Redis
         public const string QUEUED = "QUEUED";
         public const string PONG = "PONG";
 
+        public const string SentinelHelloChannel = "__sentinel__:hello";
+
         public const string CRLF = "\r\n";
 
         public const int DefaultPort = 6379;

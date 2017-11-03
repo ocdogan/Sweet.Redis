@@ -54,8 +54,13 @@ namespace Sweet.Redis
             get { return m_SDown || m_ODown; }
             protected internal set
             {
+                var wasDown = IsDown;
+
                 m_SDown = value;
                 m_ODown = value;
+
+                if (IsDown != wasDown && !Disposed)
+                    DownStateChanged(!wasDown);
             }
         }
 
@@ -67,7 +72,10 @@ namespace Sweet.Redis
                 if (m_ODown != value)
                 {
                     var wasDown = IsDown;
+
                     m_ODown = value;
+                    m_SDown = value;
+
                     if (IsDown != wasDown && !Disposed)
                         DownStateChanged(!wasDown);
                 }

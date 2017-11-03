@@ -26,6 +26,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -57,6 +58,7 @@ namespace Sweet.Redis
         private string m_Name;
         private string m_MasterName;
 
+        private RedisManagerType m_ManagerType;
         private RedisManagerSettings m_Settings;
         private RedisManagedEndPointResolver m_EndPointResolver;
 
@@ -66,6 +68,9 @@ namespace Sweet.Redis
         private long m_RefreshState;
         private long m_InitializationState;
         private readonly object m_SyncRoot = new object();
+
+        private long m_SentinelHelloChannelState;
+        private RedisPubSubChannel m_SentinelHelloChannel;
 
         private RedisManagerEventQueue m_EventQ;
 
@@ -82,6 +87,7 @@ namespace Sweet.Redis
             m_Settings = settings;
             m_Name = !name.IsEmpty() ? name : (GetType().Name + ", " + m_Id.ToString());
             m_MasterName = (settings.MasterName ?? String.Empty).Trim();
+            m_ManagerType = settings.ManagerType;
 
             m_MSGroup = new RedisManagedMSGroup(settings, null, null, OnProbeStateChange);
             m_Sentinels = new RedisManagedSentinelGroup(settings, m_MasterName, null, OnProbeStateChange);
@@ -97,6 +103,10 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
+
+            var helloChannel = Interlocked.Exchange(ref m_SentinelHelloChannel, null);
+            if (helloChannel != null)
+                helloChannel.Dispose();
 
             var eventQ = Interlocked.Exchange(ref m_EventQ, null);
             if (eventQ != null)
@@ -138,6 +148,11 @@ namespace Sweet.Redis
                 return Interlocked.Read(ref m_InitializationState) ==
                   (long)InitializationState.Initializing;
             }
+        }
+
+        public RedisManagerType ManagerType
+        {
+            get { return m_ManagerType; }
         }
 
         public string Name
@@ -257,6 +272,11 @@ namespace Sweet.Redis
                         try
                         {
                             RefreshAllNodes(false);
+
+                            if (m_ManagerType != RedisManagerType.Sentinel &&
+                                m_Sentinels.IsAlive() && !m_Sentinels.Nodes.IsEmpty())
+                                m_ManagerType = RedisManagerType.Sentinel;
+
                             Interlocked.Exchange(ref m_InitializationState, (long)InitializationState.Initialized);
                         }
                         catch (Exception)
@@ -273,117 +293,141 @@ namespace Sweet.Redis
 
         #region Attached Events
 
+        private void RegisterToEventQ(Action action)
+        {
+            if (!Disposed && (action != null))
+            {
+                var eventQ = m_EventQ;
+                if (eventQ.IsAlive())
+                    eventQ.Enqueu(() =>
+                    {
+                        if (!Disposed)
+                        {
+                            try { action(); }
+                            catch (Exception) { }
+                        }
+                    });
+            }
+        }
+
+        private void OnSentinelHelloMessage(RedisPubSubMessage msg)
+        {
+            try
+            {
+                if (!msg.IsEmpty && 
+                    msg.Channel == RedisConstants.SentinelHelloChannel)
+                {
+                    RegisterToEventQ(() =>
+                        {
+                            var sentinels = m_Sentinels;
+                            if (!sentinels.IsAlive())
+                                return;
+
+                            if (msg.Data.IsEmpty())
+                                return;
+
+                            var msgText = Encoding.UTF8.GetString(msg.Data);
+                            if (msgText.IsEmpty())
+                                return;
+
+                            var helloMsg = RedisSentinelHelloMessage.Parse(msgText);
+
+                            if (helloMsg.MasterName == m_MasterName &&
+                                helloMsg.SentinelPort.HasValue &&
+                                !helloMsg.SentinelIPAddress.IsEmpty())
+                            {
+                                var endPoints = sentinels.GetEndPoints();
+                                var sentinelEP = new RedisEndPoint(helloMsg.SentinelIPAddress, helloMsg.SentinelPort.Value);
+
+                                if (endPoints.IsEmpty() ||
+                                    endPoints.Any(ep => !ep.IsEmpty() && ep == sentinelEP))
+                                {
+                                    var sentinelMsg = new RedisNodeStateChangedMessage(RedisConstants.ODownExited, "sentinel",
+                                        helloMsg.SentinelIPAddress + ":" + helloMsg.SentinelPort.Value,
+                                        sentinelEP, helloMsg.MasterName,
+                                        new RedisEndPoint(helloMsg.MasterIPAddress, helloMsg.MasterPort.Value));
+
+                                    OnSentinelMessage(sentinelMsg);
+                                }
+                            }
+                        });
+                }
+            }
+            catch (Exception)
+            { }
+        }
+
         private void OnProbeStateChange(object sender, RedisCardioPulseStatus status)
         {
-            if (!Disposed)
+            if (!ReferenceEquals(sender, null))
             {
                 var pool = sender as RedisConnectionPool;
                 if (pool != null)
                 {
-                    var eventQ = m_EventQ;
-                    if (eventQ.IsAlive())
-                    {
-                        eventQ.Enqueu(() =>
+                    RegisterToEventQ(() =>
                         {
-                            if (!Disposed)
-                            {
-                                var refreshSentinels = true;
-                                try
-                                {
-                                    RedisManagedNode node;
-                                    RedisManagedNodesGroup nodesGroup;
+                            RedisManagedNode node;
+                            RedisManagedNodesGroup nodesGroup;
 
-                                    if (TryToIdentifyPool(pool, out nodesGroup, out node))
-                                    {
-                                        refreshSentinels = false;
-                                        InvokeNodeStateChanged(node);
-                                    }
-                                }
-                                finally
-                                {
-                                    if (refreshSentinels)
-                                        RefreshSentinels();
-                                }
-                            }
+                            if (TryToIdentifyPool(pool, out nodesGroup, out node))
+                                InvokeNodeStateChanged(node);
                         });
-                    }
                 }
             }
         }
 
         private void OnSentinelMessage(RedisNodeStateChangedMessage message)
         {
-            if (!Disposed && message != null)
+            if (message != null)
             {
-                var eventQ = m_EventQ;
-                if (eventQ.IsAlive())
-                {
-                    eventQ.Enqueu(() =>
+                RegisterToEventQ(() =>
                     {
-                        if (!Disposed)
+                        var instanceEndPoint = message.InstanceEndPoint;
+                        if (!instanceEndPoint.IsEmpty())
                         {
-                            var instanceEndPoint = message.InstanceEndPoint;
-                            if (!instanceEndPoint.IsEmpty())
+                            lock (m_SyncRoot)
                             {
-                                lock (m_SyncRoot)
-                                {
-                                    var instanceRole = message.InstanceType.ToRedisRole();
-                                    var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
+                                var instanceRole = message.InstanceType.ToRedisRole();
+                                var nodesGroup = GetNodesGroup(instanceRole, message.MasterName);
 
-                                    if (nodesGroup.IsAlive())
-                                        ApplyStateChange(message.Channel, instanceEndPoint, nodesGroup);
-                                }
+                                if (nodesGroup.IsAlive())
+                                    ApplyStateChange(message.Channel, instanceEndPoint, nodesGroup);
                             }
                         }
                     });
-                }
             }
         }
 
         private void OnSentinelConnectionDrop(object sender)
         {
-            if (!Disposed && !ReferenceEquals(sender, null))
+            if (!ReferenceEquals(sender, null))
             {
                 var node = sender as RedisManagedNode;
                 if (node.IsAlive())
                 {
-                    var eventQ = m_EventQ;
-                    if (eventQ.IsAlive())
-                    {
-                        eventQ.Enqueu(() =>
+                    RegisterToEventQ(() =>
                         {
-                            if (!Disposed)
-                            {
-                                if (node.IsAlive())
-                                    TestNode(node);
-                                RefreshSentinels();
-                            }
+                            if (node.IsAlive())
+                                TestNode(node);
+                            RefreshSentinels();
                         });
-                    }
                 }
             }
         }
 
         private void OnMasterSwitch(RedisMasterSwitchedMessage message)
         {
-            if (!Disposed && message != null)
+            if (message != null)
             {
-                var eventQ = m_EventQ;
-                if (eventQ.IsAlive())
-                {
-                    eventQ.Enqueu(() =>
+                RegisterToEventQ(() =>
                     {
-                        if (!Disposed)
+                        lock (m_SyncRoot)
                         {
-                            lock (m_SyncRoot)
-                            {
-                                var msGroup = m_MSGroup;
-                                if (msGroup.IsAlive())
-                                    msGroup.PromoteToMaster(message.NewEndPoint, message.OldEndPoint);
-                            }
+                            var msGroup = m_MSGroup;
+                            if (msGroup.IsAlive())
+                                msGroup.PromoteToMaster(message.NewEndPoint, message.OldEndPoint);
                         }
                     });
-                }
             }
         }
 
@@ -665,6 +709,10 @@ namespace Sweet.Redis
                                                return oldSentinels;
                                            },
                                            objectsToDispose);
+
+                            if ((!sentinels.IsAlive() || sentinels.Nodes.IsEmpty()) && 
+                                Settings.ManagerType == RedisManagerType.Sentinel)
+                                RefreshSentinels();
                         }
                         finally
                         {
@@ -682,17 +730,15 @@ namespace Sweet.Redis
 
         private void AttachToSentinels()
         {
-            try
-            {
-                var sentinels = m_Sentinels;
-                if (sentinels != null)
+            RegisterToEventQ(() =>
                 {
-                    sentinels.RegisterMessageEvents(OnMasterSwitch, OnSentinelMessage);
-                    sentinels.Monitor(OnSentinelConnectionDrop);
-                }
-            }
-            catch (Exception)
-            { }
+                    var sentinels = m_Sentinels;
+                    if (sentinels.IsAlive())
+                    {
+                        sentinels.RegisterMessageEvents(OnMasterSwitch, OnSentinelMessage);
+                        sentinels.Monitor(OnSentinelConnectionDrop);
+                    }
+                });
         }
 
         private RedisRole TestNode(RedisManagedNode node)
@@ -957,6 +1003,34 @@ namespace Sweet.Redis
             }
         }
 
+        private void NodeIsUp(RedisManagedNode node)
+        {
+            if (node.IsAlive())
+            {
+                var nodesGroup = FindNodesGroupOf(node);
+                if (!nodesGroup.IsAlive())
+                {
+                    var pool = node.Pool;
+                    if (pool.IsAlive() && pool.IsDown)
+                        pool.IsDown = false;
+
+                    return;
+                }
+
+                var masterNodes = nodesGroup.Nodes;
+                if (masterNodes != null)
+                {
+                    var updatedNode = masterNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == node.EndPoint);
+                    if (updatedNode.IsAlive())
+                    {
+                        var updatedPool = updatedNode.Pool;
+                        if (updatedPool.IsAlive() && updatedPool.IsDown)
+                            updatedPool.IsDown = false;
+                    }
+                }
+            }
+        }
+
         private RedisManagedNodesGroup GetNodesGroup(RedisRole instanceRole, string masterName)
         {
             var msGroup = m_MSGroup;
@@ -1104,7 +1178,6 @@ namespace Sweet.Redis
                             channel == RedisConstants.ODownExited ||
                             channel == RedisConstants.SentinelDiscovered)
                         {
-                            // TODO: Try to add as new node
                             var endPointResolver = m_EndPointResolver;
                             if (endPointResolver.IsAlive())
                             {
@@ -1130,7 +1203,7 @@ namespace Sweet.Redis
                                         if (newPool.IsDown != isDown)
                                             newPool.IsDown = isDown;
 
-                                        if (!newPool.IsDown && role == RedisRole.Sentinel)
+                                        if (role == RedisRole.Sentinel)
                                             RefreshSentinels();
                                     }
                                 }
@@ -1168,68 +1241,31 @@ namespace Sweet.Redis
             }
         }
 
-        private void NodeIsUp(RedisManagedNode node)
-        {
-            if (node.IsAlive())
-            {
-                var nodesGroup = FindNodesGroupOf(node);
-                if (!nodesGroup.IsAlive())
-                {
-                    var pool = node.Pool;
-                    if (pool.IsAlive() && pool.IsDown)
-                        pool.IsDown = false;
-
-                    return;
-                }
-
-                var masterNodes = nodesGroup.Nodes;
-                if (masterNodes != null)
-                {
-                    var updatedNode = masterNodes.FirstOrDefault(n => n.IsAlive() && n.EndPoint == node.EndPoint);
-                    if (updatedNode.IsAlive())
-                    {
-                        var updatedPool = updatedNode.Pool;
-                        if (updatedPool.IsAlive() && updatedPool.IsDown)
-                            updatedPool.IsDown = false;
-                    }
-                }
-            }
-        }
+        #region Sentinels
 
         private void RefreshSentinels()
         {
-            if (!Disposed)
+            if (m_ManagerType == RedisManagerType.Sentinel)
             {
-                try
-                {
-                    HealthCheckGroup(m_Sentinels);
-
-                    var sentinels = GetSentinelsGroups();
-                    if (sentinels.IsAlive())
+                RegisterToEventQ(() =>
                     {
-                        var nodes = sentinels.Nodes;
-                        if (!nodes.IsEmpty())
+                        var sentinels = m_Sentinels;
+                        if (sentinels.IsAlive())
                         {
-                            sentinels.RegisterMessageEvents(OnMasterSwitch, OnSentinelMessage);
-                            sentinels.Monitor(OnSentinelConnectionDrop);
-                        }
-                    }
-                }
-                catch (Exception)
-                { }
-            }
-        }
+                            HealthCheckGroup(sentinels);
 
-        private void RefreshMSGroup()
-        {
-            if (!Disposed)
-            {
-                var msGroup = m_MSGroup;
-                if (msGroup.IsAlive())
-                {
-                    HealthCheckGroup(msGroup.Masters);
-                    HealthCheckGroup(msGroup.Slaves);
-                }
+                            var nodes = sentinels.Nodes;
+
+                            if (sentinels == null || nodes.IsEmpty() ||
+                                nodes.All(n => ReferenceEquals(n, null) || n.IsDown))
+                            {
+                                AttachToSentinelHelloChannel();
+                                return;
+                            }
+
+                            AttachToSentinels();
+                        }
+                    });
             }
         }
 
@@ -1250,61 +1286,104 @@ namespace Sweet.Redis
             }
         }
 
-        private RedisManagedSentinelGroup GetSentinelsGroups()
+        private void AttachToSentinelHelloChannel()
         {
-            var sentinels = m_Sentinels;
-
-            var discover = sentinels == null;
-            if (!discover)
+            // TODO: Discover the sentinel nodes over any master or slave's '__sentinel__:hello' pub/sub channel
+            if (!Disposed &&
+                Interlocked.CompareExchange(ref m_SentinelHelloChannelState, RedisConstants.One, RedisConstants.Zero) ==
+                RedisConstants.Zero)
             {
-                var nodes = sentinels.Nodes;
-                discover = nodes.IsEmpty();
-            }
-
-            if (discover)
-            {
-                DiscoverSentinels();
-                sentinels = m_Sentinels;
-            }
-            return sentinels;
-        }
-
-        private void DiscoverSentinels()
-        {
-            if (!Disposed)
-            {
-                var msGroup = m_MSGroup;
-
-                var settings = (RedisPoolSettings)null;
-                if (msGroup.IsAlive())
+                var attached = false;
+                try
                 {
-                    var masters = msGroup.Masters;
-                    if (masters.IsAlive())
-                        settings = masters.FindValidSetting();
+                    var helloChannel = m_SentinelHelloChannel;
+                    if (helloChannel.IsAlive())
+                        return;
 
-                    if (settings == null)
+                    var settings = Settings;
+
+                    var masterName = settings.MasterName;
+                    if (settings.MasterName.IsEmpty())
+                        return;
+
+                    var msGroup = m_MSGroup;
+                    if (msGroup == null)
+                        return;
+
+                    var endPoints = msGroup.GetEndPoints();
+                    if (endPoints.IsEmpty())
+                        return;
+
+                    foreach (var endPoint in endPoints)
                     {
-                        var slaves = msGroup.Slaves;
-                        if (slaves.IsAlive())
-                            settings = slaves.FindValidSetting();
-
-                        if (settings == null)
+                        try
                         {
-                            var sentinels = m_Sentinels;
-                            if (sentinels.IsAlive())
-                                settings = sentinels.FindValidSetting();
+                            if (!endPoint.IsEmpty())
+                            {
+                                var epSettings = (RedisPoolSettings)settings.Clone(endPoint.Host, endPoint.Port);
+
+                                helloChannel = new RedisPubSubChannel(this, epSettings,
+                                    (sender) =>
+                                    {
+                                        var senderChannel = sender as RedisPubSubChannel;
+
+                                        Interlocked.Exchange(ref m_SentinelHelloChannelState, RedisConstants.Zero);
+
+                                        var oldChannel = Interlocked.CompareExchange(ref m_SentinelHelloChannel, null, senderChannel);
+                                        if (oldChannel.IsAlive())
+                                            oldChannel.Dispose();
+                                    },
+                                    null);
+
+                                try
+                                {
+                                    var mre = new ManualResetEvent(false);
+
+                                    helloChannel.Subscribe((msg) => {
+                                            mre.Set();
+                                            OnSentinelHelloMessage(msg);
+                                        }, 
+                                        RedisConstants.SentinelHelloChannel);
+
+                                    mre.WaitOne(5000);
+
+                                    attached = true;
+                                    var oldChannel = Interlocked.Exchange(ref m_SentinelHelloChannel, helloChannel);
+                                    if (oldChannel.IsAlive())
+                                        oldChannel.Dispose();
+
+                                    break;
+                                }
+                                catch (Exception)
+                                {
+                                    helloChannel.Dispose();
+                                }
+                            }
                         }
+                        catch (Exception)
+                        { }
                     }
                 }
-
-                if (settings == null)
-                    Refresh();
-                else
+                finally
                 {
-                    // TODO: Get the settings and discover healthy nodes
+                    if (!attached)
+                        Interlocked.Exchange(ref m_SentinelHelloChannelState, RedisConstants.Zero);
                 }
             }
         }
+
+        private void DetachFromSentinelHelloChannel()
+        {
+            if (Interlocked.CompareExchange(ref m_SentinelHelloChannelState, RedisConstants.Zero, RedisConstants.One) ==
+                RedisConstants.One)
+            {
+                var helloChannel = Interlocked.Exchange(ref m_SentinelHelloChannel, null);
+                if (helloChannel.IsAlive())
+                    helloChannel.Dispose();
+            }
+        }
+
+        #endregion Sentinels
 
         #endregion Node State Management
 
