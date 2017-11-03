@@ -1288,7 +1288,6 @@ namespace Sweet.Redis
 
         private void AttachToSentinelHelloChannel()
         {
-            // TODO: Discover the sentinel nodes over any master or slave's '__sentinel__:hello' pub/sub channel
             if (!Disposed &&
                 Interlocked.CompareExchange(ref m_SentinelHelloChannelState, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
