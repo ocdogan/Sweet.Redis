@@ -135,7 +135,7 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_MonitoringStatus, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
             {
-                var monitoring = false;
+                var attached = false;
                 try
                 {
                     var nodes = Nodes;
@@ -143,9 +143,9 @@ namespace Sweet.Redis
                     {
                         var monitoredPools = m_MonitoredPools;
 
-                        monitoring = TryToMonitorOneOf(nodes, monitoredPools, onComplete, false);
-                        if (!monitoring)
-                            monitoring = TryToMonitorOneOf(nodes, monitoredPools, onComplete, true);
+                        attached = TryToMonitorOneOf(nodes, monitoredPools, onComplete, false);
+                        if (!attached)
+                            attached = TryToMonitorOneOf(nodes, monitoredPools, onComplete, true);
                     }
                 }
                 catch (Exception)
@@ -154,7 +154,7 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    if (!monitoring)
+                    if (!attached)
                         Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
                 }
             }
