@@ -387,7 +387,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return b.m_Data.IsEqualTo(a);
+            return b.m_Data.EqualTo(a);
         }
 
         public static bool operator !=(object a, RedisParam b)
@@ -406,7 +406,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(a, b))
                 return true;
 
-            return a.m_Data.IsEqualTo(b);
+            return a.m_Data.EqualTo(b);
         }
 
         public static bool operator !=(RedisParam a, object b)

@@ -290,7 +290,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            var parameters = new byte[1][] { key.Data };
+            var parameters = new byte[][] { key.Data };
 
             if (descending)
                 parameters = parameters.Join(RedisCommandList.Descending);

@@ -121,15 +121,11 @@ namespace Sweet.Redis
             if (item.Type != RedisRawObjectType.BulkString)
                 throw new RedisException("Invalid scan cursor type");
 
-            var data = item.Data;
-            if (data == null || !(data is string))
+            var data = item.DataText;
+            if (data.IsEmpty())
                 throw new RedisException("Invalid scan cursor type");
 
-            var str = data as string;
-            if (str.IsEmpty())
-                throw new RedisException("Invalid scan cursor type");
-
-            var cursor = ulong.Parse(str);
+            var cursor = ulong.Parse(data);
 
             var result = (string[])null;
             if (items.Count > 1)

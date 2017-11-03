@@ -621,7 +621,7 @@ namespace Sweet.Redis
                 return null;
             }
 
-            if (data == RedisConstants.Nil)
+            if (data.EqualTo(RedisConstants.Nil))
                 return null;
 
             long result;
@@ -663,7 +663,7 @@ namespace Sweet.Redis
                 return null;
             }
 
-            if (data == RedisConstants.Nil)
+            if (data.EqualTo(RedisConstants.Nil))
                 return null;
 
             double result;
@@ -767,12 +767,12 @@ namespace Sweet.Redis
                 case RedisRawObjectType.SimpleString:
                 case RedisRawObjectType.BulkString:
                 case RedisRawObjectType.Integer:
-                    return data != null ? new byte[1][] { data } : null;
+                    return data != null ? new byte[][] { data } : null;
                 case RedisRawObjectType.Error:
                     {
                         if (!throwException)
-                            return data != null ? new byte[1][] { data } : null;
-                        throw new RedisException(data.IsEmpty() ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
+                            return data != null ? new byte[][] { data } : null;
+                        throw new RedisException(!data.IsEmpty() ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
                     }
                 case RedisRawObjectType.Undefined:
                     if (throwException)

@@ -64,7 +64,7 @@ namespace Sweet.Redis
                     return true;
 
                 if (GetHashCode() == other.GetHashCode())
-                    return Equals(m_Bytes, other.m_Bytes);
+                    return m_Bytes.EqualTo(other.m_Bytes);
             }
 
             return false;
@@ -81,7 +81,7 @@ namespace Sweet.Redis
 
             var ba = obj as byte[];
             if (!ReferenceEquals(rba, null))
-                return RedisByteArray.Equals(ba, m_Bytes);
+                return m_Bytes.EqualTo(ba);
 
             return false;
         }
@@ -109,31 +109,7 @@ namespace Sweet.Redis
             }
             return m_Hash.Value;
         }
-
-        public static bool Equals(byte[] x, byte[] y)
-        {
-            if (x == y)
-                return true;
-
-            if (x == null)
-                return y == null;
-
-            if (y == null)
-                return false;
-
-            var l1 = x.Length;
-            var l2 = y.Length;
-
-            if (l1 != l2)
-                return false;
-
-            for (var i = 0; i < l1; i++)
-                if (x[i] != y[i])
-                    return false;
-
-            return true;
-        }
-
+       
         #endregion Methods
 
         #region Conversion Methods
@@ -154,14 +130,14 @@ namespace Sweet.Redis
 
         #region From RedisByteArray
 
-        public static implicit operator byte[] (RedisByteArray value)  // implicit from RedisByteArray conversion operator
+        public static implicit operator byte[](RedisByteArray value)  // implicit from RedisByteArray conversion operator
         {
-            return value != (byte[])null ? value.Bytes : null;
+            return !ReferenceEquals(value, null) ? value.Bytes : null;
         }
 
         public static implicit operator string(RedisByteArray value)  // implicit from RedisByteArray conversion operator
         {
-            return value == (byte[])null || value.Bytes == null ? null : Encoding.UTF8.GetString(value.Bytes);
+            return ReferenceEquals(value, null) || value.Bytes == null ? null : Encoding.UTF8.GetString(value.Bytes);
         }
 
         #endregion From RedisByteArray
@@ -178,7 +154,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(b, null))
                 return false;
 
-            return RedisByteArray.Equals(b.m_Bytes, a);
+            return a.EqualTo(b.m_Bytes);
         }
 
         public static bool operator !=(byte[] a, RedisByteArray b)
@@ -194,7 +170,7 @@ namespace Sweet.Redis
             if (ReferenceEquals(b, null))
                 return false;
 
-            return RedisByteArray.Equals(a.m_Bytes, b);
+            return b.EqualTo(a.m_Bytes);
         }
 
         public static bool operator !=(RedisByteArray a, byte[] b)

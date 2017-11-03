@@ -180,7 +180,31 @@ namespace Sweet.Redis
             return (obj != null) && !obj.Disposed;
         }
 
-        internal static bool IsEqualTo(this byte[] data, object obj)
+        internal static bool EqualTo(this byte[] x, byte[] y)
+        {
+            if (x == y)
+                return true;
+
+            if (x == null)
+                return y == null;
+
+            if (y == null)
+                return false;
+
+            var l1 = x.Length;
+            var l2 = y.Length;
+
+            if (l1 != l2)
+                return false;
+
+            for (var i = 0; i < l1; i++)
+                if (x[i] != y[i])
+                    return false;
+
+            return true;
+        }
+
+        internal static bool EqualTo(this byte[] data, object obj)
         {
             if (ReferenceEquals(data, null))
                 return ReferenceEquals(obj, null);
@@ -191,120 +215,121 @@ namespace Sweet.Redis
             if (ReferenceEquals(data, obj))
                 return true;
 
+            if (obj is byte[])
+                return data.EqualTo((byte[])obj);
+
             if (obj is RedisParam)
-                return (data == ((RedisParam)obj).Data);
+                return data.EqualTo(((RedisParam)obj).Data);
 
             if (obj is string)
-                return (data == Encoding.UTF8.GetBytes((string)obj));
-
-            if (obj is byte[])
-                return (data == (byte[])obj);
+                return data.EqualTo(Encoding.UTF8.GetBytes((string)obj));
 
             if (obj is long)
-                return (data == BitConverter.GetBytes((long)obj));
+                return data.EqualTo(BitConverter.GetBytes((long)obj));
 
             if (obj is int)
-                return (data == BitConverter.GetBytes((int)obj));
+                return data.EqualTo(BitConverter.GetBytes((int)obj));
 
             if (obj is short)
-                return (data == BitConverter.GetBytes((short)obj));
+                return data.EqualTo(BitConverter.GetBytes((short)obj));
 
             if (obj is double)
-                return (data == BitConverter.GetBytes((double)obj));
+                return data.EqualTo(BitConverter.GetBytes((double)obj));
 
             if (obj is byte)
-                return (data == new byte[] { (byte)obj });
+                return data.EqualTo(new byte[] { (byte)obj });
 
             if (obj is ulong)
-                return (data == BitConverter.GetBytes((ulong)obj));
+                return data.EqualTo(BitConverter.GetBytes((ulong)obj));
 
             if (obj is uint)
-                return (data == BitConverter.GetBytes((uint)obj));
+                return data.EqualTo(BitConverter.GetBytes((uint)obj));
 
             if (obj is ushort)
-                return (data == BitConverter.GetBytes((ushort)obj));
+                return data.EqualTo(BitConverter.GetBytes((ushort)obj));
 
             if (obj is DateTime)
-                return (data == BitConverter.GetBytes(((DateTime)obj).Ticks));
+                return data.EqualTo(BitConverter.GetBytes(((DateTime)obj).Ticks));
 
             if (obj is TimeSpan)
-                return (data == BitConverter.GetBytes(((TimeSpan)obj).Ticks));
+                return data.EqualTo(BitConverter.GetBytes(((TimeSpan)obj).Ticks));
 
             if (obj is char)
-                return (data == BitConverter.GetBytes((char)obj));
+                return data.EqualTo(BitConverter.GetBytes((char)obj));
 
             if (obj is bool)
-                return (data == BitConverter.GetBytes((bool)obj));
+                return data.EqualTo(BitConverter.GetBytes((bool)obj));
 
             if (obj is long?)
             {
                 var nullable = (long?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is int?)
             {
                 var nullable = (int?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is short?)
             {
                 var nullable = (short?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is double?)
             {
                 var nullable = (long?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is byte?)
             {
                 var nullable = (byte?)obj;
-                return nullable.HasValue && (data == new byte[] { nullable.Value });
+                return nullable.HasValue && data.EqualTo(new byte[] { nullable.Value });
             }
 
             if (obj is ulong?)
             {
                 var nullable = (ulong?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is uint?)
             {
                 var nullable = (uint?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is ushort?)
             {
                 var nullable = (ushort?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
+
             if (obj is DateTime?)
             {
                 var nullable = (DateTime?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value.Ticks));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value.Ticks));
             }
 
             if (obj is TimeSpan?)
             {
                 var nullable = (TimeSpan?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value.Ticks));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value.Ticks));
             }
 
             if (obj is char?)
             {
                 var nullable = (char?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             if (obj is bool?)
             {
                 var nullable = (bool?)obj;
-                return nullable.HasValue && (data == BitConverter.GetBytes(nullable.Value));
+                return nullable.HasValue && data.EqualTo(BitConverter.GetBytes(nullable.Value));
             }
 
             return false;
@@ -743,7 +768,7 @@ namespace Sweet.Redis
         internal static byte[][] ToBytesArray(this byte[] bytes)
         {
             if (bytes != null)
-                return new byte[1][] { bytes };
+                return new byte[][] { bytes };
             return null;
         }
 
@@ -1125,10 +1150,10 @@ namespace Sweet.Redis
             var valuesLength = (values != null) ? values.Length : -1;
 
             if (valueLength < 0 && valuesLength < 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             if (valueLength == 0 && valuesLength == 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             valueLength = Math.Max(0, valueLength);
             valuesLength = Math.Max(0, valuesLength);
@@ -1149,10 +1174,10 @@ namespace Sweet.Redis
             var valuesLength = (values != null) ? values.Length : -1;
 
             if (valueLength < 0 && valuesLength < 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             if (valueLength == 0 && valuesLength == 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             valueLength = Math.Max(0, valueLength);
             valuesLength = Math.Max(0, valuesLength);
@@ -1173,10 +1198,10 @@ namespace Sweet.Redis
             var valuesLength = (values != null) ? values.Length : -1;
 
             if (valueLength < 0 && valuesLength < 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             if (valueLength == 0 && valuesLength == 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             valueLength = Math.Max(0, valueLength);
             valuesLength = Math.Max(0, valuesLength);
@@ -1197,10 +1222,10 @@ namespace Sweet.Redis
             var valuesLength = (values != null) ? values.Length : -1;
 
             if (valueLength < 0 && valuesLength < 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             if (valueLength == 0 && valuesLength == 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             valueLength = Math.Max(0, valueLength);
             valuesLength = Math.Max(0, valuesLength);
@@ -1225,10 +1250,10 @@ namespace Sweet.Redis
             var valuesLength = (values != null) ? values.Length : -1;
 
             if (valueLength < 0 && valuesLength < 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             if (valueLength == 0 && valuesLength == 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             valueLength = Math.Max(0, valueLength);
             valuesLength = Math.Max(0, valuesLength);
@@ -1250,10 +1275,10 @@ namespace Sweet.Redis
             var valuesLength = (values != null) ? values.Length : -1;
 
             if (valueLength < 0 && valuesLength < 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             if (valueLength == 0 && valuesLength == 0)
-                return new byte[1][] { value };
+                return new byte[][] { value };
 
             valueLength = Math.Max(0, valueLength);
             valuesLength = Math.Max(0, valuesLength);

@@ -52,7 +52,7 @@ namespace Sweet.Redis
             if (updateOption != RedisUpdateOption.Default ||
                 changed || increment || samsLength > 0)
             {
-                var parameters = new byte[1][] { keyBytes };
+                var parameters = new byte[][] { keyBytes };
 
                 switch (updateOption)
                 {
@@ -107,7 +107,7 @@ namespace Sweet.Redis
             if (updateOption != RedisUpdateOption.Default ||
                 changed || increment || samsLength > 0)
             {
-                var parameters = new byte[1][] { keyBytes };
+                var parameters = new byte[][] { keyBytes };
 
                 switch (updateOption)
                 {
@@ -162,7 +162,7 @@ namespace Sweet.Redis
             if (updateOption != RedisUpdateOption.Default ||
                 changed || increment || samsLength > 0)
             {
-                var parameters = new byte[1][] { keyBytes };
+                var parameters = new byte[][] { keyBytes };
 
                 switch (updateOption)
                 {
@@ -295,7 +295,7 @@ namespace Sweet.Redis
 
             if (aggregate != RedisAggregate.Default || kawsLength > 0)
             {
-                var parameters = new byte[1][] { destinationBytes }
+                var parameters = new byte[][] { destinationBytes }
                     .Join(numkeys.ToBytes())
                     .Join(key)
                     .Join(weight.ToBytes());
@@ -352,7 +352,7 @@ namespace Sweet.Redis
 
             if (aggregate != RedisAggregate.Default || kawsLength > 0)
             {
-                var parameters = new byte[1][] { destinationBytes }
+                var parameters = new byte[][] { destinationBytes }
                     .Join(numkeys.ToBytes())
                     .Join(key)
                     .Join(weight.ToBytes());
@@ -409,7 +409,7 @@ namespace Sweet.Redis
 
             if (aggregate != RedisAggregate.Default || kawsLength > 0)
             {
-                var parameters = new byte[1][] { destinationBytes }
+                var parameters = new byte[][] { destinationBytes }
                     .Join(numkeys.ToBytes())
                     .Join(key)
                     .Join(weight.ToBytes());
@@ -1707,7 +1707,7 @@ namespace Sweet.Redis
 
             if (aggregate != RedisAggregate.Default || kawsLength > 0)
             {
-                var parameters = new byte[1][] { destinationBytes }
+                var parameters = new byte[][] { destinationBytes }
                     .Join(numkeys.ToBytes())
                     .Join(key)
                     .Join(weight.ToBytes());
@@ -1764,7 +1764,7 @@ namespace Sweet.Redis
 
             if (aggregate != RedisAggregate.Default || kawsLength > 0)
             {
-                var parameters = new byte[1][] { destinationBytes }
+                var parameters = new byte[][] { destinationBytes }
                     .Join(numkeys.ToBytes())
                     .Join(key)
                     .Join(weight.ToBytes());
@@ -1821,7 +1821,7 @@ namespace Sweet.Redis
 
             if (aggregate != RedisAggregate.Default || kawsLength > 0)
             {
-                var parameters = new byte[1][] { destinationBytes }
+                var parameters = new byte[][] { destinationBytes }
                     .Join(numkeys.ToBytes())
                     .Join(key)
                     .Join(weight.ToBytes());
