@@ -44,7 +44,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNodesGroup(RedisManagerSettings settings, RedisRole role,
+        protected RedisManagedNodesGroup(RedisManagerSettings settings, RedisRole role,
                    RedisManagedNode[] nodes, Action<object, RedisCardioPulseStatus> onPulseStateChange)
         {
             Role = role;
@@ -145,7 +145,7 @@ namespace Sweet.Redis
                     {
                         try
                         {
-                            if (node != null)
+                            if (node.IsAlive())
                                 node.Dispose();
                         }
                         catch (Exception)
@@ -155,7 +155,7 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisManagedConnectionPool Next()
+        protected virtual RedisManagedNode NextNode()
         {
             if (m_NodeIndex > -1)
             {
@@ -168,6 +168,7 @@ namespace Sweet.Redis
                         var maxLength = nodes.Length;
                         if (maxLength > 0)
                         {
+                            var role = Role;
                             var visitCount = 0;
                             while (visitCount++ < maxLength)
                             {
@@ -178,9 +179,9 @@ namespace Sweet.Redis
                                     Interlocked.Exchange(ref m_NodeIndex, 0);
                                 }
 
-                                var result = nodes[index].Pool;
-                                if (result.IsAlive() && !result.IsDown)
-                                    return result;
+                                var node = nodes[index];
+                                if (node.IsAlive() && !node.IsClosed && node.Role == role)
+                                    return node;
                             }
                         }
                     }
@@ -189,7 +190,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        public bool RemoveNode(RedisManagedNode node)
+        public virtual bool RemoveNode(RedisManagedNode node)
         {
             if (node != null)
             {
@@ -204,7 +205,7 @@ namespace Sweet.Redis
                             if (length == 1)
                             {
                                 Interlocked.Exchange(ref m_NodeIndex, -1);
-                                Interlocked.Exchange(ref m_Nodes, null);
+                                Interlocked.Exchange(ref m_Nodes, new RedisManagedNode[0]);
                                 return true;
                             }
 
@@ -229,7 +230,25 @@ namespace Sweet.Redis
             return false;
         }
 
-        public bool AppendNode(RedisManagedNode node)
+        public bool ContainsNode(RedisManagedNode node)
+        {
+            if (node != null)
+            {
+                lock (m_SyncRoot)
+                {
+                    var nodes = m_Nodes;
+
+                    var length = (nodes != null) ? nodes.Length : 0;
+                    if (length == 0)
+                        return false;
+
+                    return nodes.Contains(node);
+                }
+            }
+            return false;
+        }
+
+        public virtual bool AppendNode(RedisManagedNode node)
         {
             if (node != null)
             {
@@ -240,6 +259,7 @@ namespace Sweet.Redis
                     var length = (nodes != null) ? nodes.Length : 0;
                     if (length == 0)
                     {
+                        node.Role = Role;
                         Interlocked.Exchange(ref m_Nodes, new[] { node });
                         Interlocked.Exchange(ref m_NodeIndex, 0);
                         return true;
@@ -247,13 +267,7 @@ namespace Sweet.Redis
 
                     if (!nodes.Contains(node))
                     {
-                        var isDown = node.Disposed;
-                        if (!isDown)
-                        {
-                            var pool = node.Pool;
-                            isDown = !pool.IsAlive() || pool.IsDown;
-                        }
-
+                        var isDown = node.IsClosed;
                         var newNodes = new RedisManagedNode[length + 1];
 
                         var index = isDown ? 0 : 1;
@@ -262,6 +276,7 @@ namespace Sweet.Redis
                         for (var i = 0; i < length; i++)
                             newNodes[index++] = nodes[i];
 
+                        node.Role = Role;
                         Interlocked.Exchange(ref m_Nodes, newNodes);
                         return true;
                     }
@@ -278,14 +293,8 @@ namespace Sweet.Redis
                 if (nodes != null)
                 {
                     foreach (var node in nodes)
-                    {
-                        if (node != null)
-                        {
-                            var pool = node.Pool;
-                            if (pool.IsAlive())
-                                pool.AttachToCardio();
-                        }
-                    }
+                        if (node.IsAlive())
+                            node.AttachToCardio();
                 }
             }
         }
@@ -298,14 +307,8 @@ namespace Sweet.Redis
                 if (nodes != null)
                 {
                     foreach (var node in nodes)
-                    {
-                        if (node != null)
-                        {
-                            var pool = node.Pool;
-                            if (pool.IsAlive())
-                                pool.DetachFromCardio();
-                        }
-                    }
+                        if (node.IsAlive())
+                            node.DetachFromCardio();
                 }
             }
         }
@@ -335,19 +338,13 @@ namespace Sweet.Redis
             return null;
         }
 
-        public RedisManagedNode FindNodeOf(RedisConnectionPool pool)
+        public RedisManagedNode FindNodeOf(RedisEndPoint endPoint)
         {
-            if (pool != null && !Disposed)
+            if (!(Disposed || endPoint.IsEmpty()))
             {
                 var nodes = m_Nodes;
                 if (nodes != null)
-                {
-                    var endPoint = pool.EndPoint;
-                    var hasEndPoint = (endPoint != null) && !endPoint.IsEmpty;
-
-                    return nodes.FirstOrDefault(n => !ReferenceEquals(n.Pool, null) &&
-                        (ReferenceEquals(n.Pool, pool) || (hasEndPoint && n.Pool.EndPoint == endPoint)));
-                }
+                    return nodes.FirstOrDefault(n => !ReferenceEquals(n, null) && (n.EndPoint == endPoint));
             }
             return null;
         }

@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisPubSubChannel : RedisInternalDisposable, IRedisPubSubChannel, IRedisHeartBeatProbe
+    public class RedisPubSubChannel : RedisInternalDisposable, IRedisPubSubChannel, IRedisHeartBeatProbe, IRedisIdentifiedObject
     {
         #region RedisPubSubSubscriptions
 
@@ -69,6 +69,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private long m_Id = RedisIDGenerator<RedisPubSubChannel>.NextId();
         private DateTime m_LastMessageSeenTime;
 
         private long m_PulseState;
@@ -78,6 +79,7 @@ namespace Sweet.Redis
         private Action<object> m_OnComplete;
         private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
 
+        private long m_ReceiveState;
         private IRedisConnection m_Connection;
 
         private string m_Name;
@@ -104,17 +106,17 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
 
             m_Settings = settings;
-            var id = RedisIDGenerator<RedisPubSubChannel>.NextId();
+
 
             var name = !ReferenceEquals(namedObject, null) ? namedObject.Name : null;
             if (name.IsEmpty())
-                name = String.Format("{0}, {1}", GetType().Name, id);
+                name = String.Format("{0}, {1}", GetType().Name, m_Id);
 
             m_Name = name;
             m_OnComplete = onComplete;
             m_OnPulseStateChange = onPulseStateChange;
 
-            var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, id);
+            var providerName = String.Format("{0}, {1}", typeof(RedisContinuousConnectionProvider).Name, m_Id);
             m_ConnectionProvider = new RedisContinuousConnectionProvider(providerName, m_Settings, ResponseReceived);
         }
 
@@ -126,7 +128,11 @@ namespace Sweet.Redis
         {
             Interlocked.Exchange(ref m_OnPulseStateChange, null);
             Interlocked.Exchange(ref m_OnComplete, null);
-            Interlocked.Exchange(ref m_Connection, null);
+            Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+
+            var connection = Interlocked.Exchange(ref m_Connection, null);
+            if (connection.IsAlive())
+                connection.Dispose();
 
             if (m_ProbeAttached)
                 RedisCardio.Default.Detach(this);
@@ -163,6 +169,8 @@ namespace Sweet.Redis
                 return RedisEndPoint.Empty;
             }
         }
+
+        public long Id { get { return m_Id; } }
 
         public DateTime LastMessageSeenTime { get { return m_LastMessageSeenTime; } }
 
@@ -206,6 +214,30 @@ namespace Sweet.Redis
             return result;
         }
 
+        public virtual bool Ping()
+        {
+            if (!Disposed)
+            {
+                try
+                {
+                    Send(RedisCommandList.Ping);
+                    return true;
+                }
+                catch (Exception)
+                { }
+            }
+            return false;
+        }
+
+        internal void ReuseSocket(RedisSocket socket)
+        {
+            var provider = m_ConnectionProvider;
+            if (provider.IsAlive())
+                provider.ReuseSocket(socket);
+            else if (socket.IsAlive())
+                socket.DisposeSocket();
+        }
+
         #region Pulse
 
         internal void AttachToCardio()
@@ -234,11 +266,8 @@ namespace Sweet.Redis
             {
                 try
                 {
-                    if (!Disposed)
+                    if (Ping())
                     {
-                        if (!ReferenceEquals(m_Connection, null) || HasSubscription())
-                            Send(RedisCommandList.Ping);
-
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
                         return true;
                     }
@@ -280,25 +309,42 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             var connection = m_Connection;
-            if (connection == null)
+            if (Interlocked.CompareExchange(ref m_ReceiveState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero)
             {
-                var connectionProvider = m_ConnectionProvider;
-                if (connectionProvider != null)
+                try
                 {
-                    m_Connection = (connection = connectionProvider.Connect(-1, RedisRole.Master));
+                    if (!connection.IsAlive())
+                    {
+                        connection = null;
+
+                        var connectionProvider = m_ConnectionProvider;
+                        if (connectionProvider.IsAlive())
+                        {
+                            connection = connectionProvider.Connect(-1, RedisRole.Master);
+                            Interlocked.Exchange(ref m_Connection, connection);
+                        }
+                    }
+
                     if (connection != null && !connection.Connected)
                         connection.Connect();
 
                     ((RedisContinuousReaderConnection)connection).BeginReceive((sender) =>
                     {
                         Interlocked.Exchange(ref m_Connection, null);
+                        Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
 
                         var onComplete = m_OnComplete;
                         if (onComplete != null)
                             onComplete(this);
                     });
+                }
+                catch (Exception)
+                {
+                    Interlocked.Exchange(ref m_ReceiveState, RedisConstants.Zero);
+                    Interlocked.Exchange(ref m_Connection, null);
 
-                    return connection;
+                    if (connection.IsAlive())
+                        connection.Dispose();
                 }
             }
             return connection;

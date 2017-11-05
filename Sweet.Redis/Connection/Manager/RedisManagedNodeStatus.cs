@@ -26,19 +26,12 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisManager : IRedisNamedObject, IRedisIdentifiedObject, IRedisDisposable
+    [Flags]
+    public enum RedisManagedNodeStatus : long
     {
-        RedisManagerSettings Settings { get; }
-
-        IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0);
-        IRedisTransaction BeginTransaction(Func<RedisNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(Func<RedisNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisAdmin GetAdmin(Func<RedisNodeInfo, bool> nodeSelector);
-        IRedisDb GetDb(bool readOnly, int dbIndex = 0);
-        IRedisDb GetDb(Func<RedisNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisMonitorChannel GetMonitorChannel(Func<RedisNodeInfo, bool> nodeSelector);
-        IRedisPubSubChannel GetPubSubChannel(Func<RedisNodeInfo, bool> nodeSelector);
-        void Refresh();
+        Open = 0,
+        HalfClosed = 1 << 0,
+        Closed = 1 << 1,
+        Disposed = 1 << 2
     }
 }

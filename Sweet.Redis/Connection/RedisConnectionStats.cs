@@ -22,29 +22,43 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System.Threading;
+
 namespace Sweet.Redis
 {
-    public class RedisMasterSwitchedMessage
+    public static class RedisConnectionStats
     {
-        #region .Ctors
+        #region Static Members
 
-        public RedisMasterSwitchedMessage(string masterName, RedisEndPoint oldEndPoint, RedisEndPoint newEndPoint)
-        {
-            MasterName = masterName;
-            OldEndPoint = oldEndPoint;
-            NewEndPoint = newEndPoint;
-        }
+        private static long s_InUseConnections;
 
-        #endregion .Ctors
+        #endregion Static Members
 
         #region Properties
 
-        public string MasterName { get; private set; }
-
-        public RedisEndPoint OldEndPoint { get; private set; }
-
-        public RedisEndPoint NewEndPoint { get; private set; }
+        public static long InUseConnections
+        {
+            get { return Interlocked.Read(ref s_InUseConnections); }
+        }
 
         #endregion Properties
+
+        #region Methods
+
+        public static void IncrInUseConnections()
+        {
+            var count = Interlocked.Add(ref s_InUseConnections, RedisConstants.One);
+            if (count > int.MaxValue)
+                Interlocked.Exchange(ref s_InUseConnections, int.MaxValue);
+        }
+
+        public static void DecrInUseConnections()
+        {
+            var count = Interlocked.Add(ref s_InUseConnections, RedisConstants.MinusOne);
+            if (count < int.MinValue)
+                Interlocked.Exchange(ref s_InUseConnections, int.MinValue);
+        }
+
+        #endregion Methods
     }
 }

@@ -208,6 +208,7 @@ namespace Sweet.Redis
         public const int MinDbIndex = -1;
         public const int MaxDbIndex = 16;
 
+        public const int MaxConnectionRetryCountLimit = 10;
         public const int CardioProbeStatusChangeRetryCount = 3;
 
         public const int DefaultHeartBeatIntervalSecs = 3;

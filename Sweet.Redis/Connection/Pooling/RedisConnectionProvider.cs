@@ -197,8 +197,11 @@ namespace Sweet.Redis
             var connectionTimeout = settings.ConnectionTimeout;
             connectionTimeout = connectionTimeout <= 0 ? RedisConstants.MaxConnectionTimeout : connectionTimeout;
 
-            var retryInfo = new RedisConnectionRetryEventArgs((int)Math.Ceiling((double)settings.ConnectionWaitTimeout / spinStepTimeoutMs),
-                spinStepTimeoutMs, connectionTimeout, connectionTimeout);
+            var retryCountLimit = (int)Math.Ceiling((double)settings.ConnectionWaitTimeout / spinStepTimeoutMs);
+            retryCountLimit = Math.Min(RedisConstants.MaxConnectionRetryCountLimit, retryCountLimit);
+
+            var retryInfo = new RedisConnectionRetryEventArgs(retryCountLimit, spinStepTimeoutMs,
+                                                              connectionTimeout, connectionTimeout);
 
             var maxConnectionCount = Math.Max(RedisConstants.MinConnectionCount, GetMaxConnectionCount());
 
@@ -208,7 +211,17 @@ namespace Sweet.Redis
             {
                 var signaled = m_ConnectionLimiter.Wait(limiterWait);
                 if (signaled)
-                    return NewConnection(DequeueSocket(dbIndex, expectedRole), dbIndex, expectedRole, true);
+                {
+                    try
+                    {
+                        return NewConnection(DequeueSocket(dbIndex, expectedRole), dbIndex, expectedRole, true);
+                    }
+                    catch (Exception)
+                    {
+                        m_ConnectionLimiter.Release();
+                        throw;
+                    }
+                }
 
                 retryInfo.Entered();
                 OnConnectionRetry(retryInfo);

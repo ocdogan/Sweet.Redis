@@ -26,19 +26,28 @@ using System;
 
 namespace Sweet.Redis
 {
-    public interface IRedisManager : IRedisNamedObject, IRedisIdentifiedObject, IRedisDisposable
+    internal interface IRedisManagedNode
     {
+        object Seed { get; }
+        bool OwnsSeed { get; }
+
+        RedisRole Role { get; }
+        RedisEndPoint EndPoint { get; }
+        RedisManagedNodeStatus Status { get; set; }
+
+        bool Disposed { get; }
+        bool IsClosed { get; set; }
+        bool IsHalfClosed { get; set; }
+        bool IsOpen { get; set; }
+        bool IsSeedAlive { get; }
+        bool IsSeedDown { get; }
+
         RedisManagerSettings Settings { get; }
 
-        IRedisTransaction BeginTransaction(bool readOnly, int dbIndex = 0);
-        IRedisTransaction BeginTransaction(Func<RedisNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(bool readOnly, int dbIndex = 0);
-        IRedisPipeline CreatePipeline(Func<RedisNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisAdmin GetAdmin(Func<RedisNodeInfo, bool> nodeSelector);
-        IRedisDb GetDb(bool readOnly, int dbIndex = 0);
-        IRedisDb GetDb(Func<RedisNodeInfo, bool> nodeSelector, int dbIndex = 0);
-        IRedisMonitorChannel GetMonitorChannel(Func<RedisNodeInfo, bool> nodeSelector);
-        IRedisPubSubChannel GetPubSubChannel(Func<RedisNodeInfo, bool> nodeSelector);
-        void Refresh();
+        RedisNodeInfo GetNodeInfo();
+        object ExchangeSeed(object seed);
+        bool Ping();
+
+        void SetOnPulseStateChange(Action<object, RedisCardioPulseStatus> onPulseStateChange);
     }
 }

@@ -40,12 +40,12 @@ namespace Sweet.Redis
         private int m_DbIndex = -1;
         private bool m_Authenticated;
 
-        private long m_Id;
+        private long m_Id = RedisIDGenerator<RedisSocket>.NextId();
 
         private RedisRole m_Role = RedisRole.Undefined;
 
         private bool m_UseSsl;
-        private readonly Socket m_Socket;
+        private Socket m_Socket;
 
         private Action<RedisSocket> m_OnConnect;
         private Action<RedisSocket> m_OnDisconnect;
@@ -66,7 +66,6 @@ namespace Sweet.Redis
                            RemoteCertificateValidationCallback sslCertificateValidation = null,
                            Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
-            m_Id = RedisIDGenerator<RedisSocket>.NextId();
             m_Socket = socket;
             m_UseSsl = useSsl;
             m_OnConnect = onConnect;
@@ -80,7 +79,6 @@ namespace Sweet.Redis
                            RemoteCertificateValidationCallback sslCertificateValidation = null,
                            Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
-            m_Id = RedisIDGenerator<RedisSocket>.NextId();
             m_UseSsl = useSsl;
             m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
@@ -95,7 +93,6 @@ namespace Sweet.Redis
                            RemoteCertificateValidationCallback sslCertificateValidation = null,
                            Action<RedisSocket> onConnect = null, Action<RedisSocket> onDisconnect = null)
         {
-            m_Id = RedisIDGenerator<RedisSocket>.NextId();
             m_UseSsl = useSsl;
             m_OnConnect = onConnect;
             m_OnDisconnect = onDisconnect;
@@ -108,26 +105,48 @@ namespace Sweet.Redis
 
         #region Destructors
 
+        protected override bool SuppressFinalization()
+        {
+            return false;
+        }
+
+        protected override void OnFinalize()
+        {
+            base.OnFinalize();
+
+            var socket = Interlocked.Exchange(ref m_Socket, null);
+            socket.DisposeSocket();
+        }
+
         protected override void OnDispose(bool disposing)
         {
+            var wasConnected = true;
+
+            var socket = Interlocked.Exchange(ref m_Socket, null);
             var onDisconnect = Interlocked.Exchange(ref m_OnDisconnect, null);
-            var wasConnected = (onDisconnect != null) && m_Socket.IsConnected();
+            try
+            {
+                wasConnected = (onDisconnect != null) && socket.IsConnected();
 
-            Interlocked.Exchange(ref m_SslCertificateSelection, null);
-            Interlocked.Exchange(ref m_SslCertificateValidation, null);
+                Interlocked.Exchange(ref m_SslCertificateSelection, null);
+                Interlocked.Exchange(ref m_SslCertificateValidation, null);
 
-            var rs = Interlocked.Exchange(ref m_RealStream, null);
-            if (rs != null)
-                rs.Dispose();
+                var rs = Interlocked.Exchange(ref m_RealStream, null);
+                if (rs != null)
+                    rs.Dispose();
 
-            var ws = Interlocked.Exchange(ref m_BufferedStream, null);
-            if (ws != null)
-                ws.Dispose();
+                var ws = Interlocked.Exchange(ref m_BufferedStream, null);
+                if (ws != null)
+                    ws.Dispose();
 
-            base.OnDispose(disposing);
-
-            if (wasConnected && (onDisconnect != null) && !m_Socket.IsConnected())
-                onDisconnect(this);
+                base.OnDispose(disposing);
+            }
+            finally
+            {
+                socket.DisposeSocket();
+                if (wasConnected && (onDisconnect != null))
+                    onDisconnect(this);
+            }
         }
 
         #endregion Destructors

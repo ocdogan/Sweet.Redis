@@ -31,7 +31,7 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private long m_Id;
+        private long m_Id = RedisIDGenerator<RedisClient>.NextId();
 
         #endregion Field Members
 
@@ -39,7 +39,6 @@ namespace Sweet.Redis
 
         public RedisClient(bool throwOnError = true)
         {
-            m_Id = RedisIDGenerator<RedisClient>.NextId();
             ThrowOnError = throwOnError;
         }
 

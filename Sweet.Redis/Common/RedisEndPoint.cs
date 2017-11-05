@@ -82,7 +82,7 @@ namespace Sweet.Redis
 
         #region Static Members
 
-        public static readonly RedisEndPoint Empty = new RedisEndPoint(null, -1);
+        public static readonly RedisEndPoint Empty = new RedisEndPoint("", -1);
 
         public static readonly RedisEndPoint LocalHostEndPoint = new RedisEndPoint(RedisConstants.LocalHost, RedisConstants.DefaultPort);
         public static readonly RedisEndPoint IP4LoopbackEndPoint = new RedisEndPoint(RedisConstants.IP4Loopback, RedisConstants.DefaultPort);
@@ -123,7 +123,7 @@ namespace Sweet.Redis
 
         public RedisEndPoint(string host, int port)
         {
-            Host = host;
+            Host = host ?? String.Empty;
             Port = port;
         }
 
@@ -148,7 +148,7 @@ namespace Sweet.Redis
 
         public override string ToString()
         {
-            return String.Format("[RedisEndPoint: Host={0}, Port={1}, IsEmpty={2}]", Host, Port, IsEmpty);
+            return String.Format("{0}:{1}", Host, Port);
         }
 
         public override int GetHashCode()
@@ -168,7 +168,7 @@ namespace Sweet.Redis
                 return true;
 
             var other = obj as RedisEndPoint;
-            if (!ReferenceEquals(obj, null))
+            if (!ReferenceEquals(other, null))
                 return Port == other.Port &&
                      String.Equals(Host, other.Host, StringComparison.OrdinalIgnoreCase);
 

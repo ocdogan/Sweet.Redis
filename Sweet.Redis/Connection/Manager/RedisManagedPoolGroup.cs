@@ -22,62 +22,32 @@
 //      THE SOFTWARE.
 #endregion License
 
-using System.Net.Sockets;
-using System.Threading;
+using System;
 
 namespace Sweet.Redis
 {
-    public class RedisNativeSocket : Socket, IRedisDisposable
+    internal class RedisManagedPoolGroup : RedisManagedNodesGroup
     {
-        #region Field Members
-
-        private long m_Disposed;
-        private long m_Id = RedisIDGenerator<RedisNativeSocket>.NextId();
-
-        #endregion Field Members
-
         #region .Ctors
 
-        public RedisNativeSocket(SocketInformation socketInformation)
-            : base(socketInformation)
-        { }
-
-        public RedisNativeSocket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType)
-            : base(addressFamily, socketType, protocolType)
-        { }
+        public RedisManagedPoolGroup(RedisManagerSettings settings, RedisRole role,
+                   RedisManagedPoolNode[] nodes, Action<object, RedisCardioPulseStatus> onPulseStateChange)
+            : base(settings, role, nodes, onPulseStateChange)
+        {
+            if (!(role == RedisRole.Slave || role == RedisRole.Master))
+                throw new RedisException("Role must be master or slave");
+        }
 
         #endregion .Ctors
 
-        #region Destructors
-
-        protected override void Dispose(bool disposing)
-        {
-            Interlocked.Exchange(ref m_Disposed, RedisConstants.One);
-            base.Dispose(disposing);
-        }
-
-        #endregion Destructors
-
-        #region Properties
-
-        public bool Disposed
-        {
-            get { return Interlocked.Read(ref m_Disposed) != RedisConstants.False; }
-        }
-
-        public long Id
-        {
-            get { return m_Id; }
-        }
-
-        #endregion Properties
-
         #region Methods
 
-        public virtual void ValidateNotDisposed()
+        public RedisManagedPool Next()
         {
-            if (Disposed)
-                throw new RedisFatalException(GetType().Name + " is disposed");
+            var node = NextNode();
+            if (node.IsAlive())
+                return (RedisManagedPool)node.Seed;
+            return null;
         }
 
         #endregion Methods

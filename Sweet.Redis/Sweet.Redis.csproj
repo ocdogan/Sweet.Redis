@@ -72,15 +72,11 @@
     <Compile Include="Connection\Interfaces\IRedisClient.cs" />
     <Compile Include="Connection\Interfaces\IRedisManager.cs" />
     <Compile Include="Connection\Interfaces\IRedisSentinelClient.cs" />
-    <Compile Include="Connection\Manager\RedisManagedConnectionPool.cs" />
+    <Compile Include="Connection\Manager\RedisManagedPool.cs" />
     <Compile Include="Connection\Manager\RedisManagedMSGroup.cs" />
     <Compile Include="Connection\Manager\RedisManagedNode.cs" />
     <Compile Include="Connection\Interfaces\IRedisPubSubChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisMonitorChannel.cs" />
-    <Compile Include="Connection\Manager\RedisManagedNodeInfo.cs" />
-    <Compile Include="Connection\Manager\RedisManagerEventQueue.cs" />
-    <Compile Include="Connection\Manager\RedisMasterSwitchedMessage.cs" />
-    <Compile Include="Connection\Manager\RedisNodeStateChangedMessage.cs" />
     <Compile Include="Connection\Manager\RedisManagedSentinelGroup.cs" />
     <Compile Include="Common\Cardio\RedisCardioProbeStatus.cs" />
     <Compile Include="Common\Cardio\RedisCardioPulseStatus.cs" />
@@ -278,6 +274,17 @@
     <Compile Include="Common\Cardio\RedisCardio.cs" />
     <Compile Include="Common\Result\RedisScanStrings.cs" />
     <Compile Include="Commands\RedisCommandUtils.cs" />
+    <Compile Include="Connection\Manager\RedisManagedSentinelListener.cs" />
+    <Compile Include="Connection\Interfaces\IRedisManagedNode.cs" />
+    <Compile Include="Connection\Manager\RedisManagedNodeStatus.cs" />
+    <Compile Include="Connection\Manager\RedisManagedPoolNode.cs" />
+    <Compile Include="Connection\Manager\RedisManagedSentinelNode.cs" />
+    <Compile Include="Connection\Manager\RedisManagedPoolGroup.cs" />
+    <Compile Include="Connection\Sentinel\RedisSentinelMessage.cs" />
+    <Compile Include="Connection\Sentinel\RedisSentinelMessageType.cs" />
+    <Compile Include="Connection\RedisNodeInfo.cs" />
+    <Compile Include="Common\RedisEventQueue.cs" />
+    <Compile Include="Connection\RedisConnectionStats.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

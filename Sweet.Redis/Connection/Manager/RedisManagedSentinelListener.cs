@@ -23,53 +23,59 @@
 #endregion License
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
 
 namespace Sweet.Redis
 {
-    public class RedisManagedConnectionPool : RedisConnectionPool
+    internal class RedisManagedSentinelListener : RedisPubSubChannel
     {
         #region Field Members
 
         private bool m_SDown;
         private bool m_ODown;
 
-        private RedisRole m_Role;
-
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisManagedConnectionPool(RedisRole role, string name, RedisPoolSettings settings)
-            : base(name, settings)
+        public RedisManagedSentinelListener(RedisPoolSettings settings,
+                                    Action<object> onComplete, Action<object, RedisCardioPulseStatus> onPulseStateChange)
+            : base(null, settings, onComplete, onPulseStateChange)
         {
-            Role = role;
         }
 
         #endregion .Ctors
 
         #region Properties
 
-        public override bool IsDown
+        public bool IsDown
         {
-            get { return m_SDown || m_ODown; }
+            get { return m_SDown || m_ODown || Disposed; }
             protected internal set
             {
-                var wasDown = IsDown;
+                if (!Disposed || !value)
+                {
+                    var wasDown = IsDown;
 
-                m_SDown = value;
-                m_ODown = value;
+                    m_SDown = value;
+                    m_ODown = value;
 
-                if (IsDown != wasDown && !Disposed)
-                    DownStateChanged(!wasDown);
+                    if (IsDown != wasDown && !Disposed)
+                        DownStateChanged(!wasDown);
+                }
             }
         }
 
         public bool ODown
         {
-            get { return m_ODown; }
+            get { return m_ODown || Disposed; }
             set
             {
-                if (m_ODown != value)
+                if (m_ODown != value && (!Disposed || !value))
                 {
                     var wasDown = IsDown;
 
@@ -84,20 +90,20 @@ namespace Sweet.Redis
 
         public RedisRole Role
         {
-            get { return m_Role; }
-            internal set
+            get { return RedisRole.Sentinel; }
+            set
             {
-                m_Role = value;
-                ApplyRole(value);
+                if (value != RedisRole.Sentinel)
+                    throw new RedisException("Can not set a role different than Sentinel");
             }
         }
 
         public bool SDown
         {
-            get { return m_SDown; }
+            get { return m_SDown || Disposed; }
             set
             {
-                if (m_SDown != value)
+                if (m_SDown != value && (!Disposed || !value))
                 {
                     var wasDown = IsDown;
                     m_SDown = value;
@@ -111,15 +117,11 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected override void OnBeforeConnect(int dbIndex, RedisRole expectedRole)
-        {
-            if (IsDown) throw new RedisFatalException("Pool is down");
-        }
-
         protected virtual void DownStateChanged(bool down)
         {
         }
 
         #endregion Methods
+
     }
 }

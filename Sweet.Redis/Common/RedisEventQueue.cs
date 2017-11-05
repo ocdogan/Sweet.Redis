@@ -30,7 +30,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisManagerEventQueue : RedisDisposable
+    internal class RedisEventQueue : RedisDisposable
     {
         #region ManagerEvent
 
@@ -38,69 +38,30 @@ namespace Sweet.Redis
         {
             #region Field Members
 
-            private WeakReference m_Action;
-            private WeakReference m_EventQ;
-            private WeakReference m_Manager;
+            private Action<object> m_Action;
+            private RedisEventQueue m_EventQ;
+            private object m_State;
 
             #endregion Field Members
 
             #region .Ctors
 
-            public ManagerEvent(RedisManagerEventQueue eventQ, IRedisManager manager, Action action)
+            public ManagerEvent(RedisEventQueue eventQ, Action<object> action, object state)
             {
-                m_Action = new WeakReference(action);
-                m_EventQ = new WeakReference(eventQ);
-                m_Manager = new WeakReference(manager);
+                m_Action = action;
+                m_EventQ = eventQ;
+                m_State = state;
             }
 
             #endregion .Ctors
 
             #region Properties
 
-            public Action Action
-            {
-                get
-                {
-                    var reference = m_Action;
-                    if (reference != null && reference.IsAlive)
-                        return (Action)reference.Target;
-                    return null;
-                }
-            }
+            public Action<object> Action { get { return m_Action; } }
 
-            public RedisManagerEventQueue EventQ
-            {
-                get
-                {
-                    var reference = m_EventQ;
-                    if (reference != null && reference.IsAlive)
-                    {
-                        var eventQ = (RedisManagerEventQueue)reference.Target;
-                        if (eventQ.IsAlive())
-                            return eventQ;
-                        Interlocked.Exchange(ref m_EventQ, null);
-                    }
-                    return null;
-                }
-            }
+            public RedisEventQueue EventQ { get { return m_EventQ; } }
 
-            public IRedisManager Manager
-            {
-                get
-                {
-                    var reference = m_Manager;
-                    if (reference != null && reference.IsAlive)
-                    {
-                        var manager = (IRedisManager)reference.Target;
-                        if (manager.IsAlive())
-                            return manager;
-
-                        if (manager != null)
-                            Interlocked.Exchange(ref m_Manager, null);
-                    }
-                    return null;
-                }
-            }
+            public object State { get { return m_State; } }
 
             #endregion Properties
 
@@ -110,7 +71,7 @@ namespace Sweet.Redis
             {
                 Interlocked.Exchange(ref m_Action, null);
                 Interlocked.Exchange(ref m_EventQ, null);
-                Interlocked.Exchange(ref m_Manager, null);
+                Interlocked.Exchange(ref m_State, null);
             }
 
             #endregion Methods
@@ -125,23 +86,23 @@ namespace Sweet.Redis
 
         private static int s_ProcessedQIndex = -1;
         private static readonly object s_EventQRegistryLock = new object();
-        private static readonly List<RedisManagerEventQueue> s_EventQRegistry = new List<RedisManagerEventQueue>();
+        private static readonly List<RedisEventQueue> s_EventQRegistry = new List<RedisEventQueue>();
+
+        public static readonly RedisEventQueue Default = new RedisEventQueue();
 
         #endregion Static Members
 
         #region Field Members
 
         private bool m_Registered;
-        private IRedisManager m_Manager;
         private ConcurrentQueue<ManagerEvent> m_ActionQ = new ConcurrentQueue<ManagerEvent>();
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisManagerEventQueue(IRedisManager manager)
+        public RedisEventQueue()
         {
-            m_Manager = manager;
             RegisterEventQ(this);
         }
 
@@ -151,7 +112,6 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
-            Interlocked.Exchange(ref m_Manager, null);
             base.OnDispose(disposing);
 
             UnregisterEventQ(this);
@@ -161,6 +121,15 @@ namespace Sweet.Redis
         #endregion Destructors
 
         #region Properties
+
+        public int Count
+        {
+            get
+            {
+                var queue = m_ActionQ;
+                return (queue != null) ? queue.Count : 0;
+            }
+        }
 
         public static bool Processing
         {
@@ -173,14 +142,14 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public void Enqueu(Action action)
+        public void Enqueu(Action<object> action, object state = null)
         {
             if (action != null && !Disposed)
             {
                 var actionQ = m_ActionQ;
                 if (actionQ != null)
                 {
-                    actionQ.Enqueue(new ManagerEvent(this, m_Manager, action));
+                    actionQ.Enqueue(new ManagerEvent(this, action, state));
                     Start();
                 }
             }
@@ -210,7 +179,7 @@ namespace Sweet.Redis
 
         #region Static Methods
 
-        private static void RegisterEventQ(RedisManagerEventQueue eventQ)
+        private static void RegisterEventQ(RedisEventQueue eventQ)
         {
             if ((eventQ != null) && !eventQ.m_Registered)
             {
@@ -225,7 +194,7 @@ namespace Sweet.Redis
             }
         }
 
-        private static void UnregisterEventQ(RedisManagerEventQueue eventQ)
+        private static void UnregisterEventQ(RedisEventQueue eventQ)
         {
             if ((eventQ != null) && eventQ.m_Registered)
             {
@@ -282,22 +251,43 @@ namespace Sweet.Redis
             }
         }
 
-        private static RedisManagerEventQueue NextQueue()
+        private static RedisEventQueue NextQueue()
+        {
+            lock (s_EventQRegistryLock)
+            {
+                var index = NextIndex();
+                var startIndex = index;
+                do
+                {
+                    if (index < 0)
+                        break;
+
+                    var eventQ = s_EventQRegistry[index];
+                    if (eventQ.Count > 0)
+                        return eventQ;
+
+                    index = NextIndex();
+                    if (startIndex >= s_EventQRegistry.Count)
+                        startIndex = 0;
+                } while (index != startIndex);
+                return null;
+            }
+        }
+
+        private static int NextIndex()
         {
             lock (s_EventQRegistryLock)
             {
                 var maxIndex = s_EventQRegistry.Count - 1;
                 if (maxIndex < 0)
-                {
                     s_ProcessedQIndex = -1;
-                    return null;
+                else
+                {
+                    s_ProcessedQIndex++;
+                    if (s_ProcessedQIndex > maxIndex)
+                        s_ProcessedQIndex = 0;
                 }
-
-                s_ProcessedQIndex++;
-                if (s_ProcessedQIndex > maxIndex)
-                    s_ProcessedQIndex = 0;
-
-                return s_EventQRegistry[s_ProcessedQIndex];
+                return s_ProcessedQIndex;
             }
         }
 
@@ -307,22 +297,42 @@ namespace Sweet.Redis
             {
                 Interlocked.Exchange(ref s_ProcessState, (long)RedisProcessState.Processing);
 
+                var processed = false;
+                var idleTime = (DateTime?)null;
+
                 while (Processing && !token.IsCancellationRequested)
                 {
+                    processed = false;
                     try
                     {
                         var eventQ = NextQueue();
-                        if (eventQ == null)
-                            break;
+                        if (eventQ != null)
+                            processed = eventQ.ProcessEvent();
 
-                        try { eventQ.ProcessEvent(); }
-                        finally
+                        if (processed)
+                            idleTime = null;
+                        else
                         {
-                            Thread.Sleep(1);
+                            if (!idleTime.HasValue)
+                                idleTime = DateTime.UtcNow;
+                            else if ((DateTime.UtcNow - idleTime.Value).TotalSeconds >= 30)
+                            {
+                                lock (s_EventQRegistryLock)
+                                {
+                                    var count = s_EventQRegistry.Count;
+                                    if (count == 0)
+                                        break;
+                                }
+                            }
                         }
                     }
                     catch (Exception)
                     { }
+                    finally
+                    {
+                        if (!processed)
+                            Thread.Sleep(1);
+                    }
                 }
             }
             catch (Exception)
@@ -345,15 +355,16 @@ namespace Sweet.Redis
                     {
                         try
                         {
-                            var manager = mEvent.Manager;
-                            if (manager.IsAlive())
+                            var action = mEvent.Action;
+                            if (action != null)
                             {
-                                var action = mEvent.Action;
-                                if (action != null)
-                                    action();
-                                return true;
+                                var state = mEvent.State;
+                                action(state);
                             }
+                            return true;
                         }
+                        catch (Exception)
+                        { }
                         finally
                         {
                             mEvent.Dispose();

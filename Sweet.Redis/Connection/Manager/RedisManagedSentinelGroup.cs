@@ -64,16 +64,15 @@ namespace Sweet.Redis
         private string m_MasterName;
         private long m_MonitoringStatus;
 
-        private Action<RedisMasterSwitchedMessage> m_OnSwitchMaster;
-        private Action<RedisNodeStateChangedMessage> m_OnInstanceStateChange;
+        private Action<RedisSentinelMessage> m_OnSentinelMessage;
 
-        private readonly List<RedisManagedConnectionPool> m_MonitoredPools = new List<RedisManagedConnectionPool>();
+        private readonly List<RedisManagedSentinelListener> m_MonitoredSentinels = new List<RedisManagedSentinelListener>();
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisManagedSentinelGroup(RedisManagerSettings settings, string masterName, RedisManagedNode[] nodes,
+        public RedisManagedSentinelGroup(RedisManagerSettings settings, string masterName, RedisManagedSentinelNode[] nodes,
                                          Action<object, RedisCardioPulseStatus> onPulseStateChange)
             : base(settings, RedisRole.Sentinel, nodes, onPulseStateChange)
         {
@@ -90,10 +89,9 @@ namespace Sweet.Redis
 
         protected override void OnBeforeDispose(bool disposing, bool alreadyDisposed)
         {
-            Interlocked.Exchange(ref m_OnSwitchMaster, null);
-            Interlocked.Exchange(ref m_OnInstanceStateChange, null);
-
+            Interlocked.Exchange(ref m_OnSentinelMessage, null);
             base.OnBeforeDispose(disposing, alreadyDisposed);
+
             Quit();
         }
 
@@ -117,15 +115,12 @@ namespace Sweet.Redis
 
         public override RedisManagedNode[] ExchangeNodes(RedisManagedNode[] nodes)
         {
-            var oldNodes = base.ExchangeNodes(nodes);
-            return oldNodes;
+            return base.ExchangeNodes((RedisManagedSentinelNode[])nodes);
         }
 
-        public void RegisterMessageEvents(Action<RedisMasterSwitchedMessage> onSwitchMaster,
-                                          Action<RedisNodeStateChangedMessage> onInstanceStateChange)
+        public void RegisterToMessageEvents(Action<RedisSentinelMessage> onSentinelMessage)
         {
-            Interlocked.Exchange(ref m_OnSwitchMaster, onSwitchMaster);
-            Interlocked.Exchange(ref m_OnInstanceStateChange, onInstanceStateChange);
+            Interlocked.Exchange(ref m_OnSentinelMessage, onSentinelMessage);
         }
 
         public void Monitor(Action<object> onComplete)
@@ -138,18 +133,19 @@ namespace Sweet.Redis
                 var attached = false;
                 try
                 {
-                    var nodes = Nodes;
+                    var nodes = (RedisManagedSentinelNode[])Nodes;
                     if (!nodes.IsEmpty())
                     {
-                        var monitoredPools = m_MonitoredPools;
+                        var monitoredSentinels = m_MonitoredSentinels;
 
-                        attached = TryToMonitorOneOf(nodes, monitoredPools, onComplete, false);
+                        attached = TryToMonitorOneOf(nodes, monitoredSentinels, onComplete, false);
                         if (!attached)
-                            attached = TryToMonitorOneOf(nodes, monitoredPools, onComplete, true);
+                            attached = TryToMonitorOneOf(nodes, monitoredSentinels, onComplete, true);
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine(e);
                     Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
                 }
                 finally
@@ -160,104 +156,78 @@ namespace Sweet.Redis
             }
         }
 
-        private bool TryToMonitorOneOf(RedisManagedNode[] nodes,
-                                List<RedisManagedConnectionPool> monitoredPools,
-                                Action<object> onComplete,
-                                 bool downNodes)
+        private bool TryToMonitorOneOf(RedisManagedSentinelNode[] nodes,
+                                       List<RedisManagedSentinelListener> monitoredSentinels,
+                                       Action<object> onComplete,
+                                       bool getDownNodes)
         {
-            if (!nodes.IsEmpty())
+            try
             {
-                var filteredNodes = nodes
-                    .Where(node =>
-                    {
-                        if (node.IsAlive())
-                        {
-                            var pool = node.Pool;
-                            return pool.IsAlive() && pool.IsDown == downNodes;
-                        }
-                        return false;
-                    })
-                    .ToArray();
-
-                foreach (var node in filteredNodes)
+                if (!nodes.IsEmpty())
                 {
-                    if (!Disposed &&
-                       TryToMonitor(node, monitoredPools, onComplete))
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        private bool TryToMonitor(RedisManagedNode node,
-                                List<RedisManagedConnectionPool> monitoredPools,
-                                Action<object> onComplete)
-        {
-            if (node.IsAlive())
-            {
-                var pool = node.Pool;
-                if (pool.IsAlive())
-                {
-                    var channel = pool.PubSubChannel;
-                    if (channel.IsAlive())
-                    {
-                        try
+                    var filteredNodes = nodes
+                        .Where(node =>
                         {
-                            if (!Ping(pool))
-                                return false;
+                            return node.IsAlive() &&
+                                       node.IsClosed == getDownNodes &&
+                                       node.IsSeedAlive &&
+                                       node.IsSeedDown == getDownNodes;
+                        })
+                        .ToArray();
 
-                            channel.Subscribe(PubSubMessageReceived,
-                                    RedisCommandList.SentinelChanelSDownEntered,
-                                    RedisCommandList.SentinelChanelSDownExited,
-                                    RedisCommandList.SentinelChanelODownEntered,
-                                    RedisCommandList.SentinelChanelODownExited,
-                                    RedisCommandList.SentinelChanelSwitchMaster,
-                                    RedisCommandList.SentinelChanelSentinel);
-
-                            monitoredPools.Add(pool);
-
-                            var pubSubChannel = pool.PubSubChannel as RedisPubSubChannel;
-                            if (pubSubChannel.IsAlive())
-                            {
-                                pubSubChannel.SetOnComplete((obj) =>
-                                {
-                                    Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
-                                    monitoredPools.Remove(pool);
-
-                                    Ping(pool);
-
-                                    if (onComplete != null)
-                                        onComplete(node);
-                                });
-                            }
+                    foreach (var node in filteredNodes)
+                    {
+                        if (!Disposed &&
+                           TryToMonitor(node, monitoredSentinels, onComplete))
                             return true;
-                        }
-                        catch (Exception)
-                        {
-                            pool.IsDown = true;
-                        }
                     }
                 }
             }
+            catch (Exception)
+            { }
             return false;
         }
 
-        private bool Ping(RedisManagedConnectionPool pool)
+        private bool TryToMonitor(RedisManagedSentinelNode node,
+                                  List<RedisManagedSentinelListener> monitoredSentinels,
+                                  Action<object> onComplete)
         {
-            if (pool.IsAlive())
+            if (node.IsAlive())
             {
                 try
                 {
-                    using (var db = pool.GetDb(-1))
-                        db.Connection.Ping();
+                    var channel = node.Listener;
+                    if (channel.IsAlive())
+                    {
+                        if (!channel.Ping())
+                            return false;
 
-                    pool.IsDown = false;
+                        channel.Subscribe(PubSubMessageReceived,
+                                RedisCommandList.SentinelChanelSDownEntered,
+                                RedisCommandList.SentinelChanelSDownExited,
+                                RedisCommandList.SentinelChanelODownEntered,
+                                RedisCommandList.SentinelChanelODownExited,
+                                RedisCommandList.SentinelChanelSwitchMaster,
+                                RedisCommandList.SentinelChanelSentinel);
 
-                    return true;
+                        monitoredSentinels.Add(channel);
+
+                        channel.SetOnComplete((obj) =>
+                            {
+                                Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
+                                monitoredSentinels.Remove(channel);
+
+                                channel.Ping();
+
+                                if (onComplete != null)
+                                    onComplete(node);
+                            });
+                        return true;
+                    }
                 }
                 catch (Exception)
                 {
-                    pool.IsDown = true;
+                    node.IsClosed = true;
                 }
             }
             return false;
@@ -265,28 +235,22 @@ namespace Sweet.Redis
 
         private void PubSubMessageReceived(RedisPubSubMessage message)
         {
-            try
+            if (!message.IsEmpty)
             {
-                if (!message.IsEmpty)
+                try
                 {
-                    var channel = message.Channel;
-
-                    if (channel == RedisConstants.SDownEntered ||
-                        channel == RedisConstants.SDownExited ||
-                        channel == RedisConstants.SDownEntered ||
-                        channel == RedisConstants.ODownExited ||
-                        channel == RedisConstants.SwitchMaster ||
-                        channel == RedisConstants.SentinelDiscovered)
-                        InvokeCallback(message);
+                    InvokeOnSentinelMessage(message);
                 }
+                catch (Exception)
+                { }
             }
-            catch (Exception)
-            { }
         }
 
-        private void InvokeCallback(RedisPubSubMessage message)
+        private void InvokeOnSentinelMessage(RedisPubSubMessage message)
         {
-            var channel = message.Channel;
+            var messageType = ToSentinelMessageType(message.Channel);
+            if (messageType == RedisSentinelMessageType.Undefined)
+                return;
 
             var data = message.Data;
             if (data != null)
@@ -305,20 +269,22 @@ namespace Sweet.Redis
                             /*
                             +switch-master mymaster 127.0.0.1 6379 127.0.0.1 6380
                              */
-                            if (channel == RedisConstants.SwitchMaster)
+                            if (messageType == RedisSentinelMessageType.MasterChanged)
                             {
                                 if (partsLength > 2)
                                 {
-                                    var onSwitchMaster = m_OnSwitchMaster;
-                                    if (onSwitchMaster != null)
+                                    var onSentinelMessage = m_OnSentinelMessage;
+                                    if (onSentinelMessage != null)
                                     {
                                         var masterName = parts[0];
                                         if (masterName == MasterName)
                                         {
                                             var oldEndPoint = ToEndPoint(parts[1], parts[2]);
-                                            var newEndPoint = (partsLength > 4) ? ToEndPoint(parts[3], parts[4]) : null;
+                                            var newEndPoint = (partsLength > 4) ? ToEndPoint(parts[3], parts[4]) : RedisEndPoint.Empty;
 
-                                            onSwitchMaster(new RedisMasterSwitchedMessage(masterName, oldEndPoint, newEndPoint));
+                                            onSentinelMessage(new RedisSentinelMessage(messageType, masterName,
+                                                                                       new RedisNodeInfo(newEndPoint, RedisRole.Master),
+                                                                                       new RedisNodeInfo(oldEndPoint, RedisRole.Master)));
                                         }
                                     }
                                 }
@@ -339,8 +305,8 @@ namespace Sweet.Redis
                              */
                             if (partsLength > 3)
                             {
-                                var onInstanceStateChange = m_OnInstanceStateChange;
-                                if (onInstanceStateChange != null)
+                                var onSentinelMessage = m_OnSentinelMessage;
+                                if (onSentinelMessage != null)
                                 {
                                     var instanceType = (parts[0] ?? String.Empty).ToLowerInvariant();
 
@@ -353,8 +319,10 @@ namespace Sweet.Redis
                                                 if (masterName == MasterName)
                                                 {
                                                     var masterEndPoint = ToEndPoint(parts[2], parts[3]);
-                                                    onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType,
-                                                            masterName, masterEndPoint, null, null));
+
+                                                    onSentinelMessage(new RedisSentinelMessage(messageType, masterName,
+                                                                                               new RedisNodeInfo(masterEndPoint, RedisRole.Master),
+                                                                                               new RedisNodeInfo(RedisEndPoint.Empty, RedisRole.Undefined)));
                                                 }
                                                 break;
                                             }
@@ -367,8 +335,9 @@ namespace Sweet.Redis
                                                     if (masterName == MasterName)
                                                     {
                                                         var instanceName = parts[1];
+
                                                         var instanceEndPoint = ToEndPoint(parts[2], parts[3]);
-                                                        var masterEndPoint = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : null;
+                                                        var masterEndPoint = (partsLength > 7) ? ToEndPoint(parts[6], parts[7]) : RedisEndPoint.Empty;
 
                                                         if (instanceEndPoint.IsEmpty() && !instanceName.IsEmpty())
                                                         {
@@ -377,8 +346,9 @@ namespace Sweet.Redis
                                                                 instanceEndPoint = ToEndPoint(nameParts[0], nameParts[1]);
                                                         }
 
-                                                        onInstanceStateChange(new RedisNodeStateChangedMessage(channel, instanceType,
-                                                                instanceName, instanceEndPoint, masterName, masterEndPoint));
+                                                        onSentinelMessage(new RedisSentinelMessage(messageType, masterName,
+                                                                                                   new RedisNodeInfo(instanceEndPoint, role, instanceName),
+                                                                                                   new RedisNodeInfo(masterEndPoint, !masterEndPoint.IsEmpty() ? RedisRole.Master : RedisRole.Undefined)));
                                                     }
                                                 }
                                                 break;
@@ -390,6 +360,31 @@ namespace Sweet.Redis
                     }
                 }
             }
+        }
+
+        private RedisSentinelMessageType ToSentinelMessageType(string channel)
+        {
+            if (!channel.IsEmpty())
+            {
+                switch (channel)
+                {
+                    case RedisConstants.ODownEntered:
+                        return RedisSentinelMessageType.ObjectivelyDown;
+                    case RedisConstants.ODownExited:
+                        return RedisSentinelMessageType.ObjectivelyUp;
+                    case RedisConstants.SDownEntered:
+                        return RedisSentinelMessageType.SubjectivelyDown;
+                    case RedisConstants.SDownExited:
+                        return RedisSentinelMessageType.SubjectivelyUp;
+                    case RedisConstants.SwitchMaster:
+                        return RedisSentinelMessageType.MasterChanged;
+                    case RedisConstants.SentinelDiscovered:
+                        return RedisSentinelMessageType.SentinelDiscovered;
+                    default:
+                        return RedisSentinelMessageType.Undefined;
+                }
+            }
+            return RedisSentinelMessageType.Undefined;
         }
 
         private static RedisEndPoint ToEndPoint(string ip, string port)
@@ -405,7 +400,7 @@ namespace Sweet.Redis
 
                 }
             }
-            return null;
+            return RedisEndPoint.Empty;
         }
 
         public void Quit()
@@ -413,40 +408,28 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_MonitoringStatus, RedisConstants.Zero, RedisConstants.One) ==
                 RedisConstants.One)
             {
-                try
+                var monitoredSentinels = m_MonitoredSentinels;
+                if (monitoredSentinels != null && monitoredSentinels.Count > 0)
                 {
-                    var monitoredPools = m_MonitoredPools;
-                    if (monitoredPools.Count > 0)
+                    var sentinels = monitoredSentinels.ToArray();
+                    if (!sentinels.IsEmpty())
                     {
-                        var pools = monitoredPools.ToArray();
-                        if (!pools.IsEmpty())
+                        foreach (var sentinel in sentinels)
                         {
-                            foreach (var pool in pools)
+                            try
                             {
-                                try
-                                {
-                                    if (pool.IsAlive())
-                                    {
-                                        var channel = pool.PubSubChannel;
-                                        if (channel.IsAlive())
-                                            channel.Unsubscribe();
-                                    }
-                                }
-                                catch (Exception)
-                                { }
-                                finally
-                                {
-                                    if (pool != null)
-                                        monitoredPools.Remove(pool);
-                                }
+                                if (sentinel.IsAlive())
+                                    sentinel.Unsubscribe();
+                            }
+                            catch (Exception)
+                            { }
+                            finally
+                            {
+                                if (sentinel != null)
+                                    monitoredSentinels.Remove(sentinel);
                             }
                         }
                     }
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref m_OnSwitchMaster, null);
-                    Interlocked.Exchange(ref m_OnInstanceStateChange, null);
                 }
             }
         }

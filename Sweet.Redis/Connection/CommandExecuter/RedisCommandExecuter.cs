@@ -31,8 +31,8 @@ namespace Sweet.Redis
     {
         #region Field Members
 
-        private long m_Id;
         private RedisConnectionSettings m_Settings;
+        private long m_Id = RedisIDGenerator<RedisCommandExecuter>.NextId();
 
         #endregion Field Members
 
@@ -44,7 +44,6 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
 
             m_Settings = settings;
-            m_Id = RedisIDGenerator<RedisCommandExecuter>.NextId();
         }
 
         #endregion .Ctors

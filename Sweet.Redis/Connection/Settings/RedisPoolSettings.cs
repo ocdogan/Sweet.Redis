@@ -59,12 +59,14 @@ namespace Sweet.Redis
             bool heartBeatEnabled = true,
             int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
             bool useAsyncCompleter = true,
+            bool useSlaveAsMasterIfNoMasterFound = false,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, masterName, password, clientName, connectionTimeout, receiveTimeout,
                 sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSlaveAsMasterIfNoMasterFound, useSsl,
+                sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisPoolSettings(HashSet<RedisEndPoint> endPoints,
@@ -82,12 +84,14 @@ namespace Sweet.Redis
             bool heartBeatEnabled = true,
             int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
             bool useAsyncCompleter = true,
+            bool useSlaveAsMasterIfNoMasterFound = false,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(ToEndPointList(endPoints), masterName, password, clientName, connectionTimeout, receiveTimeout,
                 sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSlaveAsMasterIfNoMasterFound, useSsl,
+                sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisPoolSettings(RedisEndPoint[] endPoints = null,
@@ -105,6 +109,7 @@ namespace Sweet.Redis
             bool heartBeatEnabled = true,
             int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
             bool useAsyncCompleter = true,
+            bool useSlaveAsMasterIfNoMasterFound = false,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
@@ -113,6 +118,7 @@ namespace Sweet.Redis
                    useSsl, sslCertificateSelection, sslCertificateValidation)
         {
             UseAsyncCompleter = useAsyncCompleter;
+            UseSlaveAsMasterIfNoMasterFound = useSlaveAsMasterIfNoMasterFound;
             ConnectionIdleTimeout = connectionIdleTimeout <= 0 ? 0 : Math.Max(RedisConstants.MinIdleTimeout, Math.Min(RedisConstants.MaxIdleTimeout, connectionIdleTimeout));
             MaxConnectionCount = Math.Max(Math.Min(maxConnectionCount, RedisConstants.MaxConnectionCount), RedisConstants.MinConnectionCount);
         }
@@ -126,6 +132,8 @@ namespace Sweet.Redis
         public int MaxConnectionCount { get; private set; }
 
         public bool UseAsyncCompleter { get; private set; }
+
+        public bool UseSlaveAsMasterIfNoMasterFound { get; private set; }
 
         # endregion Properties
 
@@ -149,6 +157,7 @@ namespace Sweet.Redis
                             HeartBeatEnabled,
                             HearBeatIntervalInSecs,
                             UseAsyncCompleter,
+                            UseSlaveAsMasterIfNoMasterFound,
                             UseSsl,
                             SslCertificateSelection,
                             SslCertificateValidation);
@@ -178,6 +187,13 @@ namespace Sweet.Redis
                 sBuilder.Append(UseAsyncCompleter);
                 sBuilder.Append(';');
             }
+
+            if (UseSlaveAsMasterIfNoMasterFound)
+            {
+                sBuilder.Append("useSlaveAsMasterIfNoMasterFound=");
+                sBuilder.Append(UseSlaveAsMasterIfNoMasterFound);
+                sBuilder.Append(';');
+            }
         }
 
         #region Settings
@@ -199,6 +215,9 @@ namespace Sweet.Redis
                     case "useasynccompleter":
                         UseAsyncCompleter = (bool)kv.Value;
                         break;
+                    case "useslaveasmasterifnomasterfound":
+                        UseSlaveAsMasterIfNoMasterFound = (bool)kv.Value;
+                        break;
                     default:
                         break;
                 }
@@ -212,6 +231,7 @@ namespace Sweet.Redis
             settings["connectionidletimeout"] = RedisConstants.DefaultIdleTimeout;
             settings["maxconnectioncount"] = RedisConstants.DefaultMaxConnectionCount;
             settings["useasynccompleter"] = true;
+            settings["useslaveasmasterifnomasterfound"] = false;
 
             return settings;
         }
@@ -230,6 +250,9 @@ namespace Sweet.Redis
                     settings[key] = int.Parse(value);
                     break;
                 case "useasynccompleter":
+                    settings[key] = bool.Parse(value);
+                    break;
+                case "useslaveasmasterifnomasterfound":
                     settings[key] = bool.Parse(value);
                     break;
                 default:

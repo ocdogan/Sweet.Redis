@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
-        private long m_Id;
+        private long m_Id = RedisIDGenerator<RedisConnection>.NextId();
         private string m_Name;
 
         private RedisRole m_ExpectedRole = RedisRole.Undefined;
@@ -70,7 +70,7 @@ namespace Sweet.Redis
             if (onReleaseSocket == null)
                 throw new RedisFatalException(new ArgumentNullException("onReleaseSocket"));
 
-            m_Id = RedisIDGenerator<RedisConnection>.NextId();
+            RedisConnectionStats.IncrInUseConnections();
 
             m_ExpectedRole = expectedRole;
             m_Settings = settings ?? RedisConnectionSettings.Default;
@@ -84,8 +84,13 @@ namespace Sweet.Redis
                 m_State = (int)RedisConnectionState.Connected;
             }
 
-            if (connectImmediately)
-                ConnectInternal();
+            try
+            {
+                if (connectImmediately)
+                    ConnectInternal();
+            }
+            catch (Exception)
+            { }
         }
 
         #endregion .Ctors
@@ -95,6 +100,8 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
+
+            RedisConnectionStats.DecrInUseConnections();
 
             Interlocked.Exchange(ref m_Settings, null);
             Interlocked.Exchange(ref m_CreateAction, null);
@@ -229,7 +236,8 @@ namespace Sweet.Redis
                 if (serverRole != RedisRole.Any && serverRole != commandRole &&
                     (serverRole == RedisRole.Sentinel || commandRole == RedisRole.Sentinel ||
                      (serverRole == RedisRole.Slave && commandRole == RedisRole.Master)))
-                    throw new RedisException("Connected server does not satisfy the command's desired role", RedisErrorCode.NotSupported);
+                    throw new RedisException(String.Format("Connected server's {0} role does not satisfy the command's desired {1} role",
+                                                           serverRole.ToString("F"), commandRole.ToString("F")), RedisErrorCode.NotSupported);
             }
         }
 
@@ -377,6 +385,21 @@ namespace Sweet.Redis
             }
         }
 
+        private RedisSocket NewSocketInternal(IPAddress ipAddress)
+        {
+            var socket = (RedisSocket)null;
+            try
+            {
+                socket = NewSocket(ipAddress);
+            }
+            catch (Exception)
+            {
+                socket.DisposeSocket();
+                throw;
+            }
+            return socket;
+        }
+
         protected virtual RedisSocket NewSocket(IPAddress ipAddress)
         {
             var socket = new RedisSocket(ipAddress != null ? ipAddress.AddressFamily : AddressFamily.InterNetwork,
@@ -385,7 +408,6 @@ namespace Sweet.Redis
             var onCreateSocket = m_CreateAction;
             if (onCreateSocket != null)
                 onCreateSocket(this, socket);
-
             return socket;
         }
 
@@ -400,20 +422,24 @@ namespace Sweet.Redis
                     {
                         Interlocked.CompareExchange(ref m_Socket, null, socket);
                         socket.DisposeSocket();
+                        socket = null;
                     }
 
                     SetState((long)RedisConnectionState.Connecting);
 
-                    RedisEndPoint endPoint;
-                    socket = CreateSocket(out endPoint);
-
-                    if (socket.IsConnected())
-                        OnConnect(socket);
-
-                    if (!socket.IsConnected())
+                    var tuple = CreateSocket();
+                    if (tuple != null)
                     {
-                        socket.DisposeSocket();
-                        socket = null;
+                        socket = tuple.Item2;
+
+                        if (socket.IsConnected())
+                            OnConnect(socket);
+
+                        if (!socket.IsConnected())
+                        {
+                            socket.DisposeSocket();
+                            socket = null;
+                        }
                     }
                 }
             }
@@ -424,87 +450,106 @@ namespace Sweet.Redis
                 Interlocked.CompareExchange(ref m_Socket, null, socket);
                 socket.DisposeSocket();
 
-                throw new RedisFatalException(e, RedisErrorCode.ConnectionError);
+                throw new RedisFatalException("Can not connect to end-point", e, RedisErrorCode.ConnectionError);
             }
             return socket;
         }
 
-        private RedisSocket CreateSocket(out RedisEndPoint endPoint)
+        private Tuple<RedisEndPoint, RedisSocket> CreateSocket()
         {
-            endPoint = null;
-
             var endPoints = m_Settings.EndPoints;
-            if (endPoints != null)
+            if (endPoints.IsEmpty())
+                throw new RedisFatalException("Can not resolve end-point address", RedisErrorCode.ConnectionError);
+
+            var lastError = (Exception)null;
+
+            foreach (var ep in endPoints)
             {
-                foreach (var ep in endPoints)
+                if (!ep.IsEmpty())
                 {
-                    if (!ep.IsEmpty())
+                    try
                     {
-                        try
+                        var ipAddresses = ep.ResolveHost();
+                        if (ipAddresses != null)
                         {
-                            var ipAddresses = ep.ResolveHost();
-                            if (ipAddresses != null)
+                            var length = ipAddresses.Length;
+                            if (length > 0)
                             {
-                                var length = ipAddresses.Length;
-                                if (length > 0)
+                                var socket = (RedisSocket)null;
+                                for (var i = 0; i < length; i++)
                                 {
-                                    for (var i = 0; i < length; i++)
+                                    try
                                     {
-                                        try
-                                        {
-                                            var socket = CreateSocket(ep, ipAddresses[i]);
-                                            if (socket.IsConnected())
-                                            {
-                                                endPoint = ep;
-                                                return socket;
-                                            }
-                                        }
-                                        catch (Exception)
-                                        { }
+                                        socket = CreateSocket(ep, ipAddresses[i]);
+                                        if (socket.IsConnected())
+                                            return new Tuple<RedisEndPoint, RedisSocket>(ep, socket);
+
+                                        socket.DisposeSocket();
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        lastError = e;
+
+                                        GC.KeepAlive(e);
+                                        GC.SuppressFinalize(e);
+
+                                        socket.DisposeSocket();
                                     }
                                 }
                             }
                         }
-                        catch (Exception)
-                        { }
+                    }
+                    catch (Exception e)
+                    {
+                        lastError = e;
+
+                        GC.KeepAlive(e);
+                        GC.SuppressFinalize(e);
                     }
                 }
             }
-            throw new RedisFatalException("Can not resolve end-point address", RedisErrorCode.ConnectionError);
+
+            if (lastError != null)
+                throw new RedisFatalException("Can not connect to end-point address", lastError, RedisErrorCode.ConnectionError);
+            throw new RedisFatalException("Can not connect to end-point address", RedisErrorCode.ConnectionError);
         }
 
         private RedisSocket CreateSocket(RedisEndPoint endPoint, IPAddress ipAddress)
         {
-            var socket = NewSocket(ipAddress);
-            ConfigureInternal(socket);
+            var socket = NewSocketInternal(ipAddress);
+            try
+            {
+                ConfigureInternal(socket);
 
-            socket.ConnectAsync(ipAddress, endPoint.Port)
-                .ContinueWith(ca =>
-                {
-                    if (ca.IsFaulted)
+                socket.ConnectAsync(ipAddress, endPoint.Port)
+                    .ContinueWith(ca =>
                     {
-                        SetState((long)RedisConnectionState.Failed);
-
-                        var exception = ca.Exception as Exception;
-                        while (exception != null)
+                        if (ca.IsFaulted)
                         {
-                            if (exception is SocketException)
-                                break;
-                            exception = exception.InnerException;
+                            SetState((long)RedisConnectionState.Failed);
+
+                            var errorCode = ca.Exception.GetSocketErrorCode();
+                            if (errorCode != SocketError.Success)
+                                SetLastError((long)errorCode);
+                            else
+                                SetLastError(RedisErrorCode.GenericError);
                         }
+                        else if (ca.IsCompleted)
+                        {
+                            SetLastError(0L);
+                            SetState((long)RedisConnectionState.Connected);
 
-                        if (exception is SocketException)
-                            SetLastError(((SocketException)exception).ErrorCode);
-                    }
-                    else if (ca.IsCompleted)
-                    {
-                        SetState((long)RedisConnectionState.Connected);
-
-                        var oldSocket = Interlocked.Exchange(ref m_Socket, socket);
-                        if (oldSocket != null && oldSocket != socket)
-                            oldSocket.DisposeSocket();
-                    }
-                }).Wait();
+                            var oldSocket = Interlocked.Exchange(ref m_Socket, socket);
+                            if (oldSocket != null && oldSocket != socket)
+                                oldSocket.DisposeSocket();
+                        }
+                    }).Wait();
+            }
+            catch (Exception)
+            {
+                socket.DisposeSocket();
+                throw;
+            }
             return socket;
         }
 
@@ -568,6 +613,9 @@ namespace Sweet.Redis
         {
             SetIOLoopbackFastPath(socket);
 
+            var linger = new LingerOption(false, 0);
+            socket.LingerState = linger;
+
             var sendTimeout = GetSendTimeout();
             var receiveTimeout = GetReceiveTimeout();
 
@@ -584,6 +632,7 @@ namespace Sweet.Redis
             }
 
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, linger);
             socket.NoDelay = true;
         }
 

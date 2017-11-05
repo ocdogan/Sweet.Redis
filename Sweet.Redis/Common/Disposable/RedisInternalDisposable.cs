@@ -32,6 +32,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_Disposed;
+        private bool m_FinalizationSuppressed;
         private event Action<RedisInternalDisposable> m_OnDispose;
 
         #endregion Field Members
@@ -60,6 +61,11 @@ namespace Sweet.Redis
             Dispose(true);
         }
 
+        protected virtual bool SuppressFinalization()
+        {
+            return true;
+        }
+
         private void Dispose(bool disposing)
         {
             var alreadyDisposed = SetDisposed();
@@ -77,13 +83,17 @@ namespace Sweet.Redis
                 }
                 finally
                 {
-                    if (!alreadyDisposed)
+                    if (disposing && !m_FinalizationSuppressed
+                        && SuppressFinalization())
                     {
-                        if (disposing)
-                            GC.SuppressFinalize(this);
-
-                        OnDispose(disposing);
+                        m_FinalizationSuppressed = true;
+                        GC.SuppressFinalize(this);
                     }
+
+                    if (!disposing)
+                        OnFinalize();
+                    else if (!alreadyDisposed)
+                        OnDispose(disposing);
                 }
             }
         }
@@ -92,6 +102,9 @@ namespace Sweet.Redis
         { }
 
         protected virtual void OnDispose(bool disposing)
+        { }
+
+        protected virtual void OnFinalize()
         { }
 
         internal void AddOnDispose(Action<RedisInternalDisposable> onDispose)
@@ -108,7 +121,7 @@ namespace Sweet.Redis
 
         #region Properties
 
-        public bool Disposed
+        public virtual bool Disposed
         {
             get { return Interlocked.Read(ref m_Disposed) != RedisConstants.Zero; }
         }

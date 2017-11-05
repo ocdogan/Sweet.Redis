@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Sweet.Redis
 {
@@ -49,14 +50,14 @@ namespace Sweet.Redis
                 RedisManagedSentinelGroup sentinels = null;
                 RedisManagedMSGroup mastersAndSlaves = null;
 
-                RedisManagedNodesGroup slaves = null;
-                RedisManagedNodesGroup masters = null;
+                RedisManagedPoolGroup slaves = null;
+                RedisManagedPoolGroup masters = null;
                 try
                 {
-                    masters = ToNodesGroup(RedisRole.Master, tuple.Masters);
+                    masters = (RedisManagedPoolGroup)ToNodesGroup(RedisRole.Master, tuple.Masters);
                     try
                     {
-                        slaves = ToNodesGroup(RedisRole.Slave, tuple.Slaves);
+                        slaves = (RedisManagedPoolGroup)ToNodesGroup(RedisRole.Slave, tuple.Slaves);
                         try
                         {
                             sentinels = (RedisManagedSentinelGroup)ToNodesGroup(RedisRole.Sentinel, tuple.Sentinels);
@@ -135,15 +136,25 @@ namespace Sweet.Redis
                             var endPoint = socket.RemoteEP;
                             var settings = (RedisManagerSettings)baseSettings.Clone(endPoint.Address.ToString(), endPoint.Port);
 
-                            var pool = new RedisManagedConnectionPool(role, Name, settings);
-                            pool.ReuseSocket(socket);
+                            if (role == RedisRole.Sentinel)
+                            {
+                                var listener = new RedisManagedSentinelListener(settings, null, null);
+                                listener.ReuseSocket(socket);
 
-                            nodeList.Add(new RedisManagedNode(settings, role, pool, null));
+                                nodeList.Add(new RedisManagedSentinelNode(settings, listener, null));
+                            }
+                            else
+                            {
+                                var pool = new RedisManagedPool(role, Name, settings);
+                                pool.ReuseSocket(socket);
+
+                                nodeList.Add(new RedisManagedPoolNode(settings, role, pool, null));
+                            }
                         }
                     }
                     catch (Exception)
                     {
-                        socket.DisposeSocket(true);
+                        socket.DisposeSocket();
                     }
                 }
 
@@ -151,9 +162,9 @@ namespace Sweet.Redis
                 {
                     var settings = (RedisManagerSettings)Settings;
 
-                    return role == RedisRole.Sentinel ?
-                        new RedisManagedSentinelGroup(settings, settings.MasterName, nodeList.ToArray(), null) :
-                        new RedisManagedNodesGroup(settings, role, nodeList.ToArray(), null);
+                    return role != RedisRole.Sentinel ?
+                            (RedisManagedNodesGroup)(new RedisManagedPoolGroup(settings, role, nodeList.Cast<RedisManagedPoolNode>().ToArray(), null)) :
+                            new RedisManagedSentinelGroup(settings, settings.MasterName, nodeList.Cast<RedisManagedSentinelNode>().ToArray(), null);
                 }
             }
             return null;

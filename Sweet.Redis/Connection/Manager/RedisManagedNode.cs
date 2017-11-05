@@ -27,15 +27,20 @@ using System.Threading;
 
 namespace Sweet.Redis
 {
-    internal class RedisManagedNode : RedisDisposable
+    internal class RedisManagedNode : RedisDisposable, IRedisHeartBeatProbe
     {
         #region Field Members
 
-        private bool m_OwnsPool;
-        private RedisRole m_Role;
-        private RedisEndPoint m_EndPoint;
-        private RedisManagedConnectionPool m_Pool;
+        private long m_PulseState;
+        private bool m_ProbeAttached;
+        private long m_PulseFailCount;
 
+        protected object m_Seed;
+        protected RedisRole m_Role;
+        protected RedisEndPoint m_EndPoint;
+        protected RedisManagedNodeStatus m_Status;
+
+        private bool m_OwnsSeed;
         private RedisManagerSettings m_Settings;
 
         private Action<object, RedisCardioPulseStatus> m_OnPulseStateChange;
@@ -44,21 +49,16 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisManagedNode(RedisManagerSettings settings, RedisRole role, RedisManagedConnectionPool pool,
-                                Action<object, RedisCardioPulseStatus> onPulseStateChange, bool ownsPool = true)
+        protected RedisManagedNode(RedisManagerSettings settings, RedisRole role, object seed,
+                                Action<object, RedisCardioPulseStatus> onPulseStateChange, bool ownsSeed = true)
         {
-            m_Pool = pool;
-            Role = role;
-            m_OwnsPool = ownsPool;
-            m_EndPoint = (pool != null) ? pool.EndPoint : RedisEndPoint.Empty;
+            m_Seed = seed;
+            m_Role = role;
+            m_OwnsSeed = ownsSeed;
+            m_EndPoint = RedisEndPoint.Empty;
 
+            m_Settings = settings;
             m_OnPulseStateChange = onPulseStateChange;
-
-            if (pool != null)
-            {
-                pool.PoolPulseStateChanged += OnPoolPulseStateChange;
-                pool.PubSubPulseStateChanged += OnPubSubPulseStateChange;
-            }
         }
 
         #endregion .Ctors
@@ -67,129 +67,167 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            m_Status |= RedisManagedNodeStatus.Disposed;
             Interlocked.Exchange(ref m_OnPulseStateChange, null);
 
             base.OnDispose(disposing);
 
-            var pool = ExchangePoolInternal(null);
-            if (m_OwnsPool && pool != null)
-                pool.Dispose();
+            var seed = ExchangeSeedInternal(null);
+            if (m_OwnsSeed && !ReferenceEquals(seed, null))
+            {
+                var disposable = seed as IDisposable;
+                if (!ReferenceEquals(disposable, null))
+                    disposable.Dispose();
+                else
+                {
+                    var rDisposable = seed as IRedisDisposable;
+                    if (!ReferenceEquals(rDisposable, null))
+                        rDisposable.Dispose();
+                    else
+                    {
+                        var iDisposable = seed as RedisInternalDisposable;
+                        if (!ReferenceEquals(iDisposable, null))
+                            iDisposable.Dispose();
+                    }
+                }
+            }
         }
 
         #endregion Destructors
 
         #region Properties
 
+        public override bool Disposed
+        {
+            get
+            {
+                return base.Disposed ||
+                       m_Status.HasFlag(RedisManagedNodeStatus.Disposed);
+            }
+        }
+
         public RedisEndPoint EndPoint { get { return m_EndPoint; } }
 
-        public bool IsDown
+        public virtual bool IsClosed
         {
-            get
-            {
-                var pool = m_Pool;
-                return !pool.IsAlive() || pool.SDown || pool.ODown;
-            }
-        }
-
-        public bool ODown
-        {
-            get
-            {
-                var pool = m_Pool;
-                return (pool == null) || pool.ODown;
-            }
+            get { return m_Status != RedisManagedNodeStatus.Open || base.Disposed; }
             set
             {
-                var pool = m_Pool;
-                if (pool != null)
-                    pool.ODown = value;
+                if (!Disposed)
+                {
+                    if (value)
+                        m_Status |= RedisManagedNodeStatus.Closed;
+                    else
+                        m_Status &= ~(RedisManagedNodeStatus.Closed | RedisManagedNodeStatus.HalfClosed);
+                }
             }
         }
 
-        public bool OwnsPool { get { return m_OwnsPool; } }
+        public virtual bool IsHalfClosed
+        {
+            get { return ((RedisManagedNodeStatus)m_Status).HasFlag(RedisManagedNodeStatus.HalfClosed); }
+            set
+            {
+                if (value)
+                    m_Status |= RedisManagedNodeStatus.HalfClosed;
+                else
+                    m_Status &= ~RedisManagedNodeStatus.HalfClosed;
+            }
+        }
 
-        public RedisManagedConnectionPool Pool { get { return m_Pool; } }
+        public bool IsOpen
+        {
+            get { return !IsClosed; }
+            set { IsClosed = !value; }
+        }
 
-        public RedisRole Role
+        public virtual bool IsSeedAlive
+        {
+            get
+            {
+                var seed = m_Seed;
+                if (!ReferenceEquals(seed, null))
+                {
+                    var rDisposable = seed as IRedisDisposable;
+                    if (!ReferenceEquals(rDisposable, null))
+                        return !rDisposable.Disposed;
+
+                    var iDisposable = seed as RedisInternalDisposable;
+                    if (!ReferenceEquals(iDisposable, null))
+                        return !iDisposable.Disposed;
+
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        public virtual bool IsSeedDown
+        {
+            get
+            {
+                var seed = m_Seed;
+                if (!ReferenceEquals(seed, null))
+                {
+                    var pool = seed as RedisConnectionPool;
+                    if (!ReferenceEquals(pool, null))
+                        return pool.IsDown;
+
+                    var channel = seed as RedisPubSubChannel;
+                    if (!ReferenceEquals(channel, null))
+                        return channel.Disposed;
+
+                    return true;
+                }
+                return true;
+            }
+        }
+
+        public bool OwnsSeed { get { return m_OwnsSeed; } }
+
+        public object Seed { get { return m_Seed; } }
+
+        public virtual RedisRole Role
         {
             get { return m_Role; }
-            internal set
-            {
-                m_Role = value;
-
-                var pool = m_Pool;
-                if (pool != null)
-                    pool.Role = value;
-            }
-        }
-
-        public bool SDown
-        {
-            get
-            {
-                var pool = m_Pool;
-                return (pool == null) || pool.SDown;
-            }
-            set
-            {
-                var pool = m_Pool;
-                if (pool != null)
-                    pool.SDown = value;
-            }
+            set { m_Role = value; }
         }
 
         public RedisManagerSettings Settings { get { return m_Settings; } }
+
+        long IRedisHeartBeatProbe.PulseFailCount
+        {
+            get { return Interlocked.Read(ref m_PulseFailCount); }
+        }
+
+        bool IRedisHeartBeatProbe.Pulsing
+        {
+            get { return Interlocked.Read(ref m_PulseState) != RedisConstants.Zero; }
+        }
 
         #endregion Properties
 
         #region Methods
 
-        public RedisManagedNodeInfo GetNodeInfo()
+        public RedisNodeInfo GetNodeInfo()
         {
-            return new RedisManagedNodeInfo(m_EndPoint, Role);
+            return new RedisNodeInfo(m_EndPoint, Role);
         }
 
-        public RedisConnectionPool ExchangePool(RedisManagedConnectionPool pool)
+        public object ExchangeSeed(object seed)
         {
             ValidateNotDisposed();
-            return ExchangePoolInternal(pool);
+            return ExchangeSeedInternal(seed);
         }
 
-        private RedisConnectionPool ExchangePoolInternal(RedisManagedConnectionPool pool)
+        protected virtual object ExchangeSeedInternal(object seed)
         {
-            var oldPool = Interlocked.Exchange(ref m_Pool, pool);
-            if (!Disposed)
-                m_EndPoint = pool.IsAlive() ? pool.EndPoint : RedisEndPoint.Empty;
-
-            if (pool.IsAlive())
-            {
-                pool.Role = m_Role;
-                pool.PoolPulseStateChanged += OnPoolPulseStateChange;
-                pool.PubSubPulseStateChanged += OnPubSubPulseStateChange;
-            }
-
-            if (oldPool != null)
-            {
-                oldPool.PoolPulseStateChanged -= OnPoolPulseStateChange;
-                oldPool.PubSubPulseStateChanged -= OnPubSubPulseStateChange;
-            }
-
-            return oldPool;
+            return Interlocked.Exchange(ref m_Seed, seed);
         }
 
-        public bool Ping()
+        public virtual bool Ping()
         {
-            var pool = m_Pool;
-            if (pool.IsAlive())
-            {
-                try
-                {
-                    return pool.Ping(pool.IsDown);
-                }
-                catch (Exception)
-                { }
-            }
-            return false;
+            return !IsClosed;
         }
 
         public void SetOnPulseStateChange(Action<object, RedisCardioPulseStatus> onPulseStateChange)
@@ -210,6 +248,72 @@ namespace Sweet.Redis
             if (onPulseStateChange != null)
                 onPulseStateChange(sender, status);
         }
+
+        #region Pulse
+
+        internal void AttachToCardio()
+        {
+            if (!Disposed && !m_ProbeAttached)
+            {
+                var settings = Settings;
+                if (settings != null && settings.HeartBeatEnabled)
+                {
+                    m_ProbeAttached = true;
+                    RedisCardio.Default.Attach(this, settings.HearBeatIntervalInSecs);
+                }
+            }
+        }
+
+        internal void DetachFromCardio()
+        {
+            if (m_ProbeAttached && !Disposed)
+                RedisCardio.Default.Detach(this);
+        }
+
+        bool IRedisHeartBeatProbe.Pulse()
+        {
+            if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
+                RedisConstants.Zero)
+            {
+                try
+                {
+                    if (Ping())
+                    {
+                        Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                    if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
+                        Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
+                }
+            }
+            return false;
+        }
+
+        void IRedisHeartBeatProbe.ResetPulseFailCounter()
+        {
+            Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
+        }
+
+        void IRedisHeartBeatProbe.PulseStateChanged(RedisCardioPulseStatus status)
+        {
+            OnPulseStateChanged(status);
+        }
+
+        protected virtual void OnPulseStateChanged(RedisCardioPulseStatus status)
+        {
+            var onPulseFail = m_OnPulseStateChange;
+            if (onPulseFail != null)
+                onPulseFail.InvokeAsync(this, status);
+        }
+
+        #endregion Pulse
 
         #endregion Methods
     }

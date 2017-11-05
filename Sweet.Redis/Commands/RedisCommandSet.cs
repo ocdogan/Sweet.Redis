@@ -32,7 +32,7 @@ namespace Sweet.Redis
         #region Field Members
 
         private RedisClient m_Client;
-        private long m_Id;
+        private long m_Id = RedisIDGenerator<RedisCommandSet>.NextId();
 
         #endregion Field Members
 
@@ -41,7 +41,6 @@ namespace Sweet.Redis
         public RedisCommandSet(RedisClient client)
         {
             m_Client = client;
-            m_Id = RedisIDGenerator<RedisCommandSet>.NextId();
         }
 
         #endregion .Ctors

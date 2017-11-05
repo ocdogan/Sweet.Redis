@@ -142,7 +142,6 @@ namespace Sweet.Redis
             var socket = m_Socket;
             lock (m_SocketLock)
             {
-                socket = m_Socket;
                 if (socket != null && !socket.IsConnected())
                 {
                     Interlocked.Exchange(ref m_Socket, null);

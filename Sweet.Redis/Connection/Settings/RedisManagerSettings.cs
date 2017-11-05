@@ -60,12 +60,14 @@ namespace Sweet.Redis
             bool heartBeatEnabled = true,
             int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
             bool useAsyncCompleter = true,
+            bool useSlaveAsMasterIfNoMasterFound = false,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(new[] { new RedisEndPoint(host, port) }, managerType, masterName, password, clientName, connectionTimeout, receiveTimeout,
                 sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSlaveAsMasterIfNoMasterFound, useSsl,
+                sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisManagerSettings(HashSet<RedisEndPoint> endPoints,
@@ -84,12 +86,14 @@ namespace Sweet.Redis
             bool heartBeatEnabled = true,
             int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
             bool useAsyncCompleter = true,
+            bool useSlaveAsMasterIfNoMasterFound = false,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : this(ToEndPointList(endPoints), managerType, masterName, password, clientName, connectionTimeout, receiveTimeout,
                 sendTimeout, maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSlaveAsMasterIfNoMasterFound, useSsl,
+                sslCertificateSelection, sslCertificateValidation)
         { }
 
         public RedisManagerSettings(RedisEndPoint[] endPoints = null,
@@ -108,12 +112,14 @@ namespace Sweet.Redis
             bool heartBeatEnabled = true,
             int hearBeatIntervalInSecs = RedisConstants.DefaultHeartBeatIntervalSecs,
             bool useAsyncCompleter = true,
+            bool useSlaveAsMasterIfNoMasterFound = false,
             bool useSsl = false,
             LocalCertificateSelectionCallback sslCertificateSelection = null,
             RemoteCertificateValidationCallback sslCertificateValidation = null)
             : base(endPoints, masterName, password, clientName, connectionTimeout, receiveTimeout, sendTimeout,
-                    maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
-                    heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSsl, sslCertificateSelection, sslCertificateValidation)
+                   maxConnectionCount, connectionWaitTimeout, connectionIdleTimeout, readBufferSize, writeBufferSize,
+                   heartBeatEnabled, hearBeatIntervalInSecs, useAsyncCompleter, useSlaveAsMasterIfNoMasterFound, useSsl,
+                   sslCertificateSelection, sslCertificateValidation)
         {
             ManagerType = managerType;
         }
@@ -147,6 +153,7 @@ namespace Sweet.Redis
                             HeartBeatEnabled,
                             HearBeatIntervalInSecs,
                             UseAsyncCompleter,
+                            UseSlaveAsMasterIfNoMasterFound,
                             UseSsl,
                             SslCertificateSelection,
                             SslCertificateValidation);
@@ -156,7 +163,7 @@ namespace Sweet.Redis
         {
             base.WriteTo(sBuilder);
 
-            if (ManagerType != RedisManagerType.Sentinel)
+            if (ManagerType != RedisManagerType.MasterSlave)
             {
                 sBuilder.Append("managerType=");
                 sBuilder.Append(ManagerType.ToString("F"));

@@ -207,6 +207,33 @@ namespace Sweet.Redis
             return RedisRole.Undefined;
         }
 
+        internal static SocketError GetSocketErrorCode(this Exception exception)
+        {
+            while (exception != null)
+            {
+                var redisError = exception as RedisException;
+                if (redisError == null)
+                {
+                    if (exception is SocketException)
+                        return ((SocketException)exception).SocketErrorCode;
+                }
+                else
+                {
+                    var errorCode = redisError.ErrorCode;
+                    switch (errorCode)
+                    {
+                        case RedisErrorCode.ConnectionError:
+                        case RedisErrorCode.CorruptData:
+                        case RedisErrorCode.CorruptResponse:
+                        case RedisErrorCode.SocketError:
+                            return (SocketError)errorCode;
+                    }
+                }
+                exception = exception.InnerException;
+            }
+            return SocketError.Success;
+        }
+
         internal static bool IsSocketError(this Exception exception)
         {
             while (exception != null)
@@ -1572,81 +1599,57 @@ namespace Sweet.Redis
             return false;
         }
 
-        internal static void DisposeSocket(this Socket socket, bool waitForComplete = false)
+        internal static void DisposeSocket(this Socket socket)
         {
-            if ((socket != null) && socket.IsBound)
+            if (socket != null)
             {
-                if (!socket.Connected)
+                RedisEventQueue.Default.Enqueu((state) =>
                 {
-                    try
+                    var sck = state as Socket;
+                    if (sck != null)
                     {
-                        socket.Dispose();
-                    }
-                    catch (Exception)
-                    { }
-                }
-                else
-                {
-                    var task = socket.DisconnectAsync(false).ContinueWith(_ =>
-                    {
-                        if (socket != null)
+                        try
                         {
-                            try
-                            {
-                                if (socket.IsConnected(10))
-                                    socket.Close();
-                            }
-                            catch (Exception)
-                            { }
-                            finally
-                            {
-                                try { socket.Dispose(); }
-                                catch (Exception) { }
-                            }
+                            if (sck.IsConnected(10))
+                                sck.Close();
                         }
-                    });
-                    if (waitForComplete)
-                        task.Wait();
-                }
+                        catch (Exception)
+                        { }
+                        try
+                        {
+                            sck.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    }
+                }, socket);
             }
         }
 
-        internal static void DisposeSocket(this RedisSocket socket, bool waitForComplete = false)
+        internal static void DisposeSocket(this RedisSocket socket)
         {
-            if ((socket != null) && socket.IsBound)
+            if (socket != null)
             {
-                if (!socket.Connected)
+                RedisEventQueue.Default.Enqueu((state) =>
                 {
-                    try
+                    var sck = state as RedisSocket;
+                    if (sck != null)
                     {
-                        socket.Dispose();
-                    }
-                    catch (Exception)
-                    { }
-                }
-                else
-                {
-                    var task = socket.DisconnectAsync(false).ContinueWith(_ =>
-                    {
-                        if (socket != null)
+                        try
                         {
-                            try
-                            {
-                                if (socket.IsConnected(10))
-                                    socket.Close();
-                            }
-                            catch (Exception)
-                            { }
-                            finally
-                            {
-                                try { socket.Dispose(); }
-                                catch (Exception) { }
-                            }
+                            if (sck.IsConnected(10))
+                                sck.Close();
                         }
-                    });
-                    if (waitForComplete)
-                        task.Wait();
-                }
+                        catch (Exception)
+                        { }
+                        try
+                        {
+                            sck.Dispose();
+                        }
+                        catch (Exception)
+                        { }
+                    }
+                }, socket);
             }
         }
 

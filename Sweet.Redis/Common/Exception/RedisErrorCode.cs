@@ -28,19 +28,19 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        public const int GenericError = 0;
-        public const int ConnectionError = 1;
-        public const int SocketError = 2;
-        public const int ExecutionError = 3;
-        public const int CommandError = 4;
-        public const int CorruptData = 5;
-        public const int CorruptResponse = 6;
-        public const int MissingParameter = 7;
-        public const int ObjectDisposed = 8;
-        public const int NotSupported = 9;
-        public const int InvalidParameter = 10;
-        public const int UncompleteTransaction = 10;
-        public const int ReturnedError = 10;
+        public const int GenericError = short.MinValue;
+        public const int ConnectionError = GenericError - 1;
+        public const int SocketError = GenericError - 2;
+        public const int ExecutionError = GenericError - 3;
+        public const int CommandError = GenericError - 4;
+        public const int CorruptData = GenericError - 5;
+        public const int CorruptResponse = GenericError - 6;
+        public const int MissingParameter = GenericError - 7;
+        public const int ObjectDisposed = GenericError - 8;
+        public const int NotSupported = GenericError - 9;
+        public const int InvalidParameter = GenericError - 10;
+        public const int UncompleteTransaction = GenericError - 11;
+        public const int ReturnedError = GenericError - 12;
 
         #endregion Constants
     }

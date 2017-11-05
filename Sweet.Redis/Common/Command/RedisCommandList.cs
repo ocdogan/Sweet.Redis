@@ -344,11 +344,6 @@ namespace Sweet.Redis
         public static readonly byte[] SentinelChanelConfigUpdateFrom = "+config-update-from".ToBytes();
         public static readonly byte[] SentinelChanelConvertToSlave = "+convert-to-slave".ToBytes();
         public static readonly byte[] SentinelChanelDupSentinel = "-dup-sentinel".ToBytes();
-        public static readonly byte[] SentinelChanelSentinel = "+sentinel".ToBytes();
-        public static readonly byte[] SentinelChanelSDownEntered = "+sdown".ToBytes();
-        public static readonly byte[] SentinelChanelSDownExited = "-sdown".ToBytes();
-        public static readonly byte[] SentinelChanelODownEntered = "+odown".ToBytes();
-        public static readonly byte[] SentinelChanelODownExited = "-odown".ToBytes();
         public static readonly byte[] SentinelChanelElectedLeader = "+elected-leader".ToBytes();
         public static readonly byte[] SentinelChanelFailoverAbortNoGoodSlave = "-failover-abort-no-good-slave".ToBytes();
         public static readonly byte[] SentinelChanelFailoverAbortNotElected = "-failover-abort-not-elected".ToBytes();
@@ -362,9 +357,15 @@ namespace Sweet.Redis
         public static readonly byte[] SentinelChanelFailoverStateWaitPromotion = "+failover-state-wait-promotion".ToBytes();
         public static readonly byte[] SentinelChanelFixSlaveConfig = "+fix-slave-config".ToBytes();
         public static readonly byte[] SentinelChanelNewEpoch = "+new-epoch".ToBytes();
+        public static readonly byte[] SentinelChanelODownEntered = "+odown".ToBytes();
+        public static readonly byte[] SentinelChanelODownExited = "-odown".ToBytes();
         public static readonly byte[] SentinelChanelReboot = "+reboot".ToBytes();
         public static readonly byte[] SentinelChanelResetMaster = "+reset-master".ToBytes();
+        public static readonly byte[] SentinelChanelSDownEntered = "+sdown".ToBytes();
+        public static readonly byte[] SentinelChanelSDownExited = "-sdown".ToBytes();
         public static readonly byte[] SentinelChanelSelectedSlave = "+selected-slave".ToBytes();
+        public static readonly byte[] SentinelChanelSentinel = "+sentinel".ToBytes();
+        public static readonly byte[] SentinelChanelSentinelAddressUpdate = "+sentinel-address-update".ToBytes();
         public static readonly byte[] SentinelChanelSlave = "+slave".ToBytes();
         public static readonly byte[] SentinelChanelSlaveReconfDone = "+slave-reconf-done".ToBytes();
         public static readonly byte[] SentinelChanelSlaveReconfInprog = "+slave-reconf-inprog".ToBytes();

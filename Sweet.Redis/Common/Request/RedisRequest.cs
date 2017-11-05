@@ -34,7 +34,7 @@ namespace Sweet.Redis
         private long m_Disposed;
         private DateTime m_CreationTime;
 
-        private long m_Id;
+        private long m_Id = RedisIDGenerator<RedisRequest>.NextId();
         private RedisRequestType m_RequestType;
         private string m_OKIf;
         private RedisCommand m_Command;
@@ -48,7 +48,6 @@ namespace Sweet.Redis
         protected RedisRequest(RedisCommand command, RedisCommandExpect expectation,
             string okIf = null, object stateObject = null, RedisRequestType requestType = RedisRequestType.Default)
         {
-            m_Id = RedisIDGenerator<RedisRequest>.NextId();
             m_OKIf = okIf;
             m_Expectation = expectation;
             m_Command = command;

@@ -24,36 +24,30 @@
 
 namespace Sweet.Redis
 {
-    public class RedisNodeStateChangedMessage
+    public class RedisSentinelMessage
     {
         #region .Ctors
 
-        public RedisNodeStateChangedMessage(string channel, string instanceType,
-            string instanceName, RedisEndPoint instanceEndPoint, string masterName, RedisEndPoint masterEndPoint)
+        public RedisSentinelMessage(RedisSentinelMessageType messageType, string masterName,
+                                    RedisNodeInfo primaryNode, RedisNodeInfo secondaryNode)
         {
-            Channel = channel;
-            InstanceType = instanceType;
-            InstanceName = instanceName;
             MasterName = masterName;
-            InstanceEndPoint = instanceEndPoint;
-            MasterEndPoint = masterEndPoint;
+            MessageType = messageType;
+            PrimaryNode = primaryNode;
+            SecondaryNode = secondaryNode;
         }
 
         #endregion .Ctors
 
         #region Properties
 
-        public string Channel { get; private set; }
-
-        public string InstanceType { get; private set; }
-        
-        public string InstanceName { get; private set; }
-
         public string MasterName { get; private set; }
 
-        public RedisEndPoint InstanceEndPoint { get; private set; }
-        
-        public RedisEndPoint MasterEndPoint { get; private set; }
+        public RedisSentinelMessageType MessageType { get; private set; }
+
+        public RedisNodeInfo PrimaryNode { get; private set; }
+
+        public RedisNodeInfo SecondaryNode { get; private set; }
 
         #endregion Properties
     }

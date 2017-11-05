@@ -89,10 +89,68 @@ namespace Sweet.Redis.ConsoleTest
             // ManagerTest9();
             // ManagerTest10();
             // ManagerTest11();
-            ManagerTest12();
+            // ManagerTest12();
+            ManagerTest14();
         }
 
         #region Manager
+
+        static void ManagerTest14()
+        {
+            try
+            {
+                var i = 0;
+                var connectionString = "host=127.0.0.1:26379;masterName=mymaster;useSlaveAsMasterIfNoMasterFound=true";
+
+                using (var manager = new RedisManager("My Manager",
+                     RedisConnectionSettings.Parse<RedisManagerSettings>(connectionString)))
+                {
+                    Console.Clear();
+
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+
+                    var modKey = 0;
+                    do
+                    {
+                        var ch = (char)('0' + (i++ % 10));
+                        var text = i.ToString() + "-" + new string(ch, 10);
+
+                        try
+                        {
+                            using (var db = manager.GetDb())
+                            {
+                                Ping(db, false);
+                                SetGet(db, "tinytext", text, false);
+                            }
+
+                            using (var db = manager.GetDb(true))
+                            {
+                                Ping(db, false);
+                                Get(db, "tinytext", false);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            Console.WriteLine();
+                            Console.WriteLine("Press any key to continue, ESC to escape ...");
+                            /* if (Console.ReadKey(true).Key == ConsoleKey.Escape)
+                                return; */
+                        }
+
+                        modKey = (modKey + 1) % 100;
+                        if (modKey == 99 && WaitForConsoleKey(50).Key == ConsoleKey.Escape)
+                            return;
+                    }
+                    while (true);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
 
         static void ManagerTest12()
         {

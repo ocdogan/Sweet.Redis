@@ -24,25 +24,14 @@
 
 namespace Sweet.Redis
 {
-    public struct RedisManagedNodeInfo
+    public enum RedisSentinelMessageType
     {
-        #region .Ctors
-
-        public RedisManagedNodeInfo(RedisEndPoint endPoint, RedisRole role)
-            : this()
-        {
-            Role = role;
-            EndPoint = endPoint;
-        }
-
-        #endregion .Ctors
-
-        #region Properties
-
-        public RedisEndPoint EndPoint { get; private set; }
-
-        public RedisRole Role { get; private set; }
-
-        #endregion Properties
+        Undefined = 0,
+        ObjectivelyDown = 1,
+        ObjectivelyUp = 2,
+        SubjectivelyDown = 3,
+        SubjectivelyUp = 4,
+        MasterChanged = 5,
+        SentinelDiscovered = 6
     }
 }
