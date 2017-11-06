@@ -52,13 +52,9 @@ namespace Sweet.Redis
         {
             get
             {
-                var result = base.Disposed;
-                if (!result)
-                {
-                    var pool = Pool;
-                    return !pool.IsAlive();
-                }
-                return result;
+                if (!base.Disposed)
+                    return !Pool.IsAlive();
+                return true;
             }
         }
 

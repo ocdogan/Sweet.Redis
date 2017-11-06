@@ -160,29 +160,37 @@ namespace Sweet.Redis
             if (m_NodeIndex > -1)
             {
                 ValidateNotDisposed();
-                lock (m_SyncRoot)
-                {
-                    var nodes = m_Nodes;
-                    if (nodes != null)
-                    {
-                        var maxLength = nodes.Length;
-                        if (maxLength > 0)
-                        {
-                            var role = Role;
-                            var visitCount = 0;
-                            while (visitCount++ < maxLength)
-                            {
-                                var index = Interlocked.Add(ref m_NodeIndex, 1);
-                                if (index > maxLength - 1)
-                                {
-                                    index = 0;
-                                    Interlocked.Exchange(ref m_NodeIndex, 0);
-                                }
 
-                                var node = nodes[index];
-                                if (node.IsAlive() && !node.IsClosed && node.Role == role)
-                                    return node;
+                var nodes = m_Nodes;
+                if (nodes != null)
+                {
+                    lock (m_SyncRoot)
+                    {
+                        nodes = m_Nodes;
+                        if (nodes != null)
+                            nodes = (RedisManagedNode[])nodes.Clone();
+                    }
+                }
+
+                if (nodes != null)
+                {
+                    var maxLength = nodes.Length;
+                    if (maxLength > 0)
+                    {
+                        var role = Role;
+                        var visitCount = 0;
+                        while (visitCount++ < maxLength)
+                        {
+                            var index = Interlocked.Add(ref m_NodeIndex, 1);
+                            if (index > maxLength - 1)
+                            {
+                                index = 0;
+                                Interlocked.Exchange(ref m_NodeIndex, 0);
                             }
+
+                            var node = nodes[index];
+                            if (node.IsAlive() && node.Role == role && !node.IsClosed)
+                                return node;
                         }
                     }
                 }
