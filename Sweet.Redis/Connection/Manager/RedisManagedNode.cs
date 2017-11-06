@@ -270,7 +270,7 @@ namespace Sweet.Redis
                 RedisCardio.Default.Detach(this);
         }
 
-        RedisBoolValue IRedisHeartBeatProbe.Pulse()
+        RedisHeartBeatPulseResult IRedisHeartBeatProbe.Pulse()
         {
             if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
@@ -280,22 +280,22 @@ namespace Sweet.Redis
                     if (Ping())
                     {
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
-                        return RedisBoolValue.True;
+                        return RedisHeartBeatPulseResult.Success;
                     }
-                    return RedisBoolValue.False;
+                    return RedisHeartBeatPulseResult.Failed;
                 }
                 catch (Exception)
                 {
                     if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
-                    return RedisBoolValue.False;
+                    return RedisHeartBeatPulseResult.Failed;
                 }
                 finally
                 {
                     Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                 }
             }
-            return RedisBoolValue.Unknown;
+            return RedisHeartBeatPulseResult.Unknown;
         }
 
         void IRedisHeartBeatProbe.ResetPulseFailCounter()

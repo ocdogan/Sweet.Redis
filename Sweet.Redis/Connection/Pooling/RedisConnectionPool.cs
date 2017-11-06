@@ -122,7 +122,7 @@ namespace Sweet.Redis
                 }
             }
 
-            public RedisBoolValue Pulse()
+            public RedisHeartBeatPulseResult Pulse()
             {
                 if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
                     RedisConstants.Zero)
@@ -148,21 +148,21 @@ namespace Sweet.Redis
                             }
 
                             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
-                            return RedisBoolValue.True;
+                            return RedisHeartBeatPulseResult.Success;
                         }
                     }
                     catch (Exception)
                     {
                         if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                             Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
-                        return RedisBoolValue.False;
+                        return RedisHeartBeatPulseResult.Failed;
                     }
                     finally
                     {
                         Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                     }
                 }
-                return RedisBoolValue.Unknown;
+                return RedisHeartBeatPulseResult.Unknown;
             }
 
             public void ResetPulseFailCounter()
@@ -452,7 +452,7 @@ namespace Sweet.Redis
                 RedisCardio.Default.Detach(this);
         }
 
-        RedisBoolValue IRedisHeartBeatProbe.Pulse()
+        RedisHeartBeatPulseResult IRedisHeartBeatProbe.Pulse()
         {
             if (Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
                 RedisConstants.Zero)
@@ -464,22 +464,22 @@ namespace Sweet.Redis
                         var result = DoPulse();
                         if (result)
                             Interlocked.Add(ref m_PulseFailCount, RedisConstants.Zero);
-                        return RedisBoolValue.True;
+                        return RedisHeartBeatPulseResult.Success;
                     }
-                    return RedisBoolValue.False;
+                    return RedisHeartBeatPulseResult.Failed;
                 }
                 catch (Exception)
                 {
                     if (Interlocked.Read(ref m_PulseFailCount) < long.MaxValue)
                         Interlocked.Add(ref m_PulseFailCount, RedisConstants.One);
-                    return RedisBoolValue.False;
+                    return RedisHeartBeatPulseResult.Failed;
                 }
                 finally
                 {
                     Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                 }
             }
-            return RedisBoolValue.Unknown;
+            return RedisHeartBeatPulseResult.Unknown;
         }
 
         protected virtual bool DoPulse()
@@ -517,7 +517,7 @@ namespace Sweet.Redis
                                 {
                                     if (!Disposed && member.IsAlive() && !member.Pulsing)
                                     {
-                                        var result = RedisBoolValue.Unknown;
+                                        var result = RedisHeartBeatPulseResult.Unknown;
                                         try
                                         {
                                             result = member.Pulse();
@@ -526,7 +526,7 @@ namespace Sweet.Redis
                                         { }
                                         finally
                                         {
-                                            if (result == RedisBoolValue.False)
+                                            if (result == RedisHeartBeatPulseResult.Failed)
                                             {
                                                 var memberList = m_MemberStore;
                                                 if (memberList != null)
@@ -837,7 +837,7 @@ namespace Sweet.Redis
 
                                 var removeMember = (member == null) ||
                                         !member.Socket.IsConnected(100) ||
-                                        member.Pulse() == RedisBoolValue.False ||
+                                        member.Pulse() == RedisHeartBeatPulseResult.Failed ||
                                         ((idleTimeout > 0) && (now - member.PooledTime).TotalSeconds >= idleTimeout);
 
                                 if (removeMember)

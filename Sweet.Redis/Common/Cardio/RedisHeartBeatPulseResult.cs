@@ -24,10 +24,10 @@
 
 namespace Sweet.Redis
 {
-    public enum RedisBoolValue
+    public enum RedisHeartBeatPulseResult
     {
-        False = 0,
-        True = 1,
+        Failed = 0,
+        Success = 1,
         Unknown = 2
     }
 }

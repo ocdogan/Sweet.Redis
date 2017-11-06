@@ -130,7 +130,7 @@ namespace Sweet.Redis
                 }
             }
 
-            public RedisBoolValue Pulse()
+            public RedisHeartBeatPulseResult Pulse()
             {
                 if (CanPulse() &&
                     Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
@@ -144,24 +144,24 @@ namespace Sweet.Redis
                         if (probe != null)
                         {
                             var result = probe.Pulse();
-                            if (result != RedisBoolValue.Unknown)
-                                Status = result == RedisBoolValue.True ? RedisCardioProbeStatus.OK : RedisCardioProbeStatus.Down;
+                            if (result != RedisHeartBeatPulseResult.Unknown)
+                                Status = result == RedisHeartBeatPulseResult.Success ? RedisCardioProbeStatus.OK : RedisCardioProbeStatus.Down;
 
                             return result;
                         }
-                        return RedisBoolValue.Unknown;
+                        return RedisHeartBeatPulseResult.Unknown;
                     }
                     catch (Exception)
                     {
                         Status = RedisCardioProbeStatus.Down;
-                        return RedisBoolValue.False;
+                        return RedisHeartBeatPulseResult.Failed;
                     }
                     finally
                     {
                         Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                     }
                 }
-                return RedisBoolValue.Unknown;
+                return RedisHeartBeatPulseResult.Unknown;
             }
 
             public bool CanPulse()
@@ -494,7 +494,7 @@ namespace Sweet.Redis
 
                             if (cp.CanPulse())
                             {
-                                Func<RedisBoolValue> pulse = cp.Pulse;
+                                Func<RedisHeartBeatPulseResult> pulse = cp.Pulse;
                                 pulse.InvokeAsync();
                             }
                         }

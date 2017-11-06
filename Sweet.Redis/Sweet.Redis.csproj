@@ -115,7 +115,6 @@
     <Compile Include="Commands\RedisPubSubCommands.cs" />
     <Compile Include="Connection\RedisConnection.cs" />
     <Compile Include="Commands\RedisServerCommands.cs" />
-    <Compile Include="Common\RedisBoolValue.cs" />
     <Compile Include="Common\RedisSortDirection.cs" />
     <Compile Include="Common\RedisAggregate.cs" />
     <Compile Include="Commands\RedisGeoCommands.cs" />
@@ -285,6 +284,7 @@
     <Compile Include="Connection\RedisNodeInfo.cs" />
     <Compile Include="Common\RedisEventQueue.cs" />
     <Compile Include="Connection\RedisConnectionStats.cs" />
+    <Compile Include="Common\Cardio\RedisHeartBeatPulseResult.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
