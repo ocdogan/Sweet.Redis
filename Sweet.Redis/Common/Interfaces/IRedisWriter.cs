@@ -28,6 +28,8 @@ namespace Sweet.Redis
 {
     public interface IRedisWriter
     {
+        bool UnderlyingDisposed { get; }
+
         int Write(char val);
         int Write(short val);
         int Write(int val);

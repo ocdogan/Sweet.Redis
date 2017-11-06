@@ -36,6 +36,7 @@ namespace Sweet.Redis
 
         private Stream m_Stream;
         private bool m_OwnsStream;
+        private bool m_UnderlyingDisposed;
         private readonly bool m_UseAsyncIfNeeded;
 
         #endregion Field Members
@@ -58,13 +59,16 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            base.OnDispose(disposing);
+
             var stream = Interlocked.Exchange(ref m_Stream, null);
             if (stream != null)
             {
                 var dispose = m_OwnsStream;
                 try
                 {
-                    stream.Flush();
+                    if (!(dispose && (stream is BufferedStream)))
+                        stream.Flush();
                 }
                 catch (Exception e) 
                 { 
@@ -73,6 +77,7 @@ namespace Sweet.Redis
                 }
                 finally
                 {
+                    m_UnderlyingDisposed = dispose;
                     if (dispose) stream.Dispose();
                 }
             }
@@ -85,6 +90,11 @@ namespace Sweet.Redis
         public bool UseAsyncIfNeeded
         {
             get { return m_UseAsyncIfNeeded; }
+        }
+
+        public bool UnderlyingDisposed
+        {
+            get { return m_UnderlyingDisposed; }
         }
 
         #endregion Properties

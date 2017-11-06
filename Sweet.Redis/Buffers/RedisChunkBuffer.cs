@@ -89,6 +89,11 @@ namespace Sweet.Redis
             }
         }
 
+        public bool UnderlyingDisposed
+        {
+            get { return false; }
+        }
+
         #endregion Properties
 
         #region Methods

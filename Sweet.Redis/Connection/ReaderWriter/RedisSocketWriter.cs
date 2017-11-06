@@ -37,6 +37,8 @@ namespace Sweet.Redis
         private bool m_OwnsSocket;
         private readonly bool m_UseAsyncIfNeeded;
 
+        private bool m_UnderlyingDisposed;
+
         #endregion Field Members
 
         #region .Ctors
@@ -59,7 +61,10 @@ namespace Sweet.Redis
         {
             var socket = Interlocked.Exchange(ref m_Socket, null);
             if (m_OwnsSocket && socket != null)
+            {
+                m_UnderlyingDisposed = true;
                 socket.DisposeSocket();
+            }
         }
 
         #endregion Destructors
@@ -69,6 +74,11 @@ namespace Sweet.Redis
         public bool UseAsyncIfNeeded
         {
             get { return m_UseAsyncIfNeeded; }
+        }
+
+        public bool UnderlyingDisposed
+        {
+            get { return m_UnderlyingDisposed; }
         }
 
         #endregion Properties
