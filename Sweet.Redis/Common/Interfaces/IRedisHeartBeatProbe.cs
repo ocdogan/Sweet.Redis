@@ -29,7 +29,7 @@ namespace Sweet.Redis
         bool Pulsing { get; }
         long PulseFailCount { get; }
 
-        bool Pulse();
+        RedisBoolValue Pulse();
         void ResetPulseFailCounter();
         void PulseStateChanged(RedisCardioPulseStatus status);
     }

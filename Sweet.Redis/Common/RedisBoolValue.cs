@@ -24,10 +24,10 @@
 
 namespace Sweet.Redis
 {
-    public enum RedisBoolParam
+    public enum RedisBoolValue
     {
-        Default,
-        True,
-        False
+        False = 0,
+        True = 1,
+        Unknown = 2
     }
 }

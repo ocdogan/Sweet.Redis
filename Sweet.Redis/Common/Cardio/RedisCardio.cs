@@ -130,7 +130,7 @@ namespace Sweet.Redis
                 }
             }
 
-            public bool Pulse()
+            public RedisBoolValue Pulse()
             {
                 if (CanPulse() &&
                     Interlocked.CompareExchange(ref m_PulseState, RedisConstants.One, RedisConstants.Zero) ==
@@ -144,21 +144,24 @@ namespace Sweet.Redis
                         if (probe != null)
                         {
                             var result = probe.Pulse();
-                            Status = result ? RedisCardioProbeStatus.OK : RedisCardioProbeStatus.Down;
+                            if (result != RedisBoolValue.Unknown)
+                                Status = result == RedisBoolValue.True ? RedisCardioProbeStatus.OK : RedisCardioProbeStatus.Down;
 
                             return result;
                         }
+                        return RedisBoolValue.Unknown;
                     }
                     catch (Exception)
                     {
                         Status = RedisCardioProbeStatus.Down;
+                        return RedisBoolValue.False;
                     }
                     finally
                     {
                         Interlocked.Exchange(ref m_PulseState, RedisConstants.Zero);
                     }
                 }
-                return false;
+                return RedisBoolValue.Unknown;
             }
 
             public bool CanPulse()
@@ -491,7 +494,7 @@ namespace Sweet.Redis
 
                             if (cp.CanPulse())
                             {
-                                Func<bool> pulse = cp.Pulse;
+                                Func<RedisBoolValue> pulse = cp.Pulse;
                                 pulse.InvokeAsync();
                             }
                         }
