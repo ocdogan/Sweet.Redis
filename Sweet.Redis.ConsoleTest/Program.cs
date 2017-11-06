@@ -33,6 +33,7 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest11();
             // PubSubTest12();
 
+            // MultiThreading0();
             // MultiThreading1();
             // MultiThreading2a();
             // MultiThreading2b();
@@ -1977,7 +1978,7 @@ namespace Sweet.Redis.ConsoleTest
             var mediumText = new string('x', 5000);
             var mediumBytes = Encoding.UTF8.GetBytes(mediumText);
 
-            MultiThreadingBase(12, 2, 10, 500, "medium_text", mediumText, true, 5,
+            MultiThreadingBasePool(12, 2, 10, 500, "medium_text", mediumText, true, 5,
                 (rdb, dbIndex) =>
                 {
                     var result = rdb.Strings.Get("medium_text");
@@ -1987,49 +1988,49 @@ namespace Sweet.Redis.ConsoleTest
 
         static void MultiThreading7b()
         {
-            MultiThreadingBase(12, 10, 10, 500, "medium_text", new string('x', 5000), true, 5,
+            MultiThreadingBasePool(12, 10, 10, 500, "medium_text", new string('x', 5000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
         }
 
         static void MultiThreading7a()
         {
-            MultiThreadingBase(12, 2, 1, 5000, "medium_text", new string('x', 5000), true, 5,
+            MultiThreadingBasePool(12, 2, 1, 5000, "medium_text", new string('x', 5000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
         }
 
         static void MultiThreading6()
         {
-            MultiThreadingBase(12, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
+            MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("tiny_text"); });
         }
 
         static void MultiThreading5()
         {
-            MultiThreadingBase(12, 1, 50, 100, "small_text", new string('x', 1000), false, 5,
+            MultiThreadingBasePool(12, 1, 50, 100, "small_text", new string('x', 1000), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading4()
         {
-            MultiThreadingBase(12, 1, 50, 100, "small_text", new string('x', 1000), true, 5,
+            MultiThreadingBasePool(12, 1, 50, 100, "small_text", new string('x', 1000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading3()
         {
-            MultiThreadingBase(12, 10, 50, 100, "small_text", new string('x', 1000), true, 5,
+            MultiThreadingBasePool(12, 10, 50, 100, "small_text", new string('x', 1000), true, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
         }
 
         static void MultiThreading2a()
         {
-            MultiThreadingBase(12, 10, 50, 100, "large_text", new string('x', 100000), false, 5,
+            MultiThreadingBasePool(12, 10, 50, 100, "large_text", new string('x', 100000), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
         }
 
         static void MultiThreading2b()
         {
-            MultiThreadingBase(12, 1, 50, 100, "large_text", new string('x', 100000), false, 5,
+            MultiThreadingBasePool(12, 1, 50, 100, "large_text", new string('x', 100000), false, 5,
                                (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
         }
 
@@ -2037,11 +2038,19 @@ namespace Sweet.Redis.ConsoleTest
         {
             var tinyText = new string('x', 10);
 
-            MultiThreadingBase(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
+            MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
                                (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); });
         }
 
-        static void MultiThreadingBase(int dbIndex, int maxCount, int threadCount, int loopCount,
+        static void MultiThreading0()
+        {
+            var tinyText = new string('x', 10);
+
+            MultiThreadingBaseManager(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); });
+        }
+
+        static void MultiThreadingBasePool(int dbIndex, int maxCount, int threadCount, int loopCount,
                                        string testKey, string testText, bool requireKeyPress,
                                        int sleepSecs, Func<IRedisDb, int, RedisResult> proc, bool transactional = false)
         {
@@ -2114,6 +2123,181 @@ namespace Sweet.Redis.ConsoleTest
 
                                 var autoReset = tupple.Item2;
                                 using (var rdb = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
+                                {
+                                    var results = new List<Tuple<string, long, RedisResult>>();
+                                    try
+                                    {
+                                        var @this = tupple.Item1;
+
+                                        var sw = new Stopwatch();
+
+                                        for (var j = 0; j < loopCount; j++)
+                                        {
+                                            sw.Restart();
+                                            var data = proc(rdb, dbIndex);
+                                            sw.Stop();
+
+                                            if (transactional)
+                                                results.Add(new Tuple<string, long, RedisResult>(@this.Name, sw.ElapsedMilliseconds, data));
+                                            else
+                                                Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
+                                                    (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
+
+                                            lock (ticksLock)
+                                            {
+                                                ticks += sw.ElapsedTicks;
+                                            }
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        if (transactional)
+                                        {
+                                            var sw = new Stopwatch();
+
+                                            sw.Restart();
+                                            var execResult = ((IRedisTransaction)rdb).Commit();
+                                            sw.Stop();
+
+                                            ticks += sw.ElapsedTicks;
+
+                                            if (execResult)
+                                            {
+                                                for (var j = 0; j < results.Count; j++)
+                                                {
+                                                    var tuple = results[i];
+                                                    var data = tuple.Item3;
+
+                                                    Console.WriteLine(tuple.Item1 + ": Processed, " + tuple.Item2.ToString("D3") + " msec, " +
+                                                        (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
+                                                }
+                                            }
+                                        }
+                                        autoReset.Set();
+                                    }
+                                }
+                            });
+
+                            th.Name = loopIndex++.ToString("D2") + "." + i.ToString("D2");
+                            th.IsBackground = true;
+                            thList.Add(th);
+                        }
+
+                        totalSw.Restart();
+
+                        var autoResets = new AutoResetEvent[thList.Count];
+                        try
+                        {
+                            for (var i = 0; i < thList.Count; i++)
+                            {
+                                var th = thList[i];
+
+                                var autoReset = new AutoResetEvent(false);
+                                autoResets[i] = autoReset;
+
+                                th.Start(new Tuple<Thread, AutoResetEvent>(th, autoReset));
+                            }
+                        }
+                        finally
+                        {
+                            WaitHandle.WaitAll(autoResets);
+                            totalSw.Stop();
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+
+                    Console.WriteLine("Sum of inner ticks: " + ticks);
+                    Console.WriteLine("Total ticks:        " + totalSw.ElapsedTicks);
+
+                    if (requireKeyPress)
+                        Console.WriteLine("Press any key to continue, ESC to escape ...");
+                    else
+                        Thread.Sleep(sleepSecs * 1000);
+                }
+                while (!requireKeyPress || Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
+
+        static void MultiThreadingBaseManager(int dbIndex, int maxCount, int threadCount, int loopCount,
+                                       string testKey, string testText, bool requireKeyPress,
+                                       int sleepSecs, Func<IRedisDb, int, RedisResult> proc, bool transactional = false)
+        {
+            using (var manager = new RedisManager("My redis pool",
+                     // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
+                     new RedisManagerSettings("127.0.0.1", 26379, masterName: "mymaster", maxConnectionCount: maxCount, useAsyncCompleter: false))) // LOCAL
+            {
+                Func<RedisNodeInfo, bool> selector = (info) => info.Role == RedisRole.Master;
+
+                using (var db = transactional ? manager.BeginTransaction(selector, dbIndex) : manager.GetDb(selector, dbIndex))
+                {
+                    var b = db.Strings.Set(testKey, testText);
+                    if (!transactional && !b)
+                        throw new Exception("can not set");
+
+                    var g = db.Strings.Get(testKey);
+                    if (!transactional && (g == (byte[])null || g.Value == null || g.Value.Length != (testText ?? "").Length))
+                        throw new Exception("can not get");
+
+                    if (transactional)
+                    {
+                        if (!((IRedisTransaction)db).Commit())
+                            throw new Exception("can not execute");
+
+                        if (!b)
+                            throw new Exception("can not set");
+
+                        if (g == (byte[])null || g.Value == null || g.Value.Length != (testText ?? "").Length)
+                            throw new Exception("can not get");
+                    }
+                }
+
+                var loopIndex = 0;
+                List<Thread> thList = null;
+
+                var totalSw = new Stopwatch();
+
+                do
+                {
+                    totalSw.Reset();
+
+                    var ticks = 0L;
+                    Console.Clear();
+
+                    var oldThList = thList;
+                    if (oldThList != null)
+                    {
+                        for (var i = 0; i < oldThList.Count; i++)
+                        {
+                            var th = oldThList[i];
+                            try
+                            {
+                                if (th.IsAlive)
+                                    th.Interrupt();
+                            }
+                            catch (Exception)
+                            { }
+                        }
+                    }
+
+                    thList = new List<Thread>(threadCount);
+                    try
+                    {
+                        loopIndex = 0;
+                        var ticksLock = new object();
+
+                        for (var i = 0; i < threadCount; i++)
+                        {
+                            var th = new Thread((obj) =>
+                            {
+                                var tupple = (Tuple<Thread, AutoResetEvent>)obj;
+
+                                var autoReset = tupple.Item2;
+                                using (var rdb = transactional ? manager.BeginTransaction(selector, dbIndex) : manager.GetDb(selector, dbIndex))
                                 {
                                     var results = new List<Tuple<string, long, RedisResult>>();
                                     try
