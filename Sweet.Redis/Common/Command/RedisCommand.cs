@@ -852,7 +852,14 @@ namespace Sweet.Redis
             if (socket == null)
                 throw new ArgumentNullException("socket");
 
-            WriteTo(socket.GetBufferedStream(), flush);
+            var stream = socket.GetBufferedStream();
+            if (!stream.CanWrite)
+                throw new ArgumentException("Can not write to closed stream", "stream");
+
+            using (var writer = new RedisStreamWriter(stream, flush))
+            {
+                WriteTo(writer);
+            }
         }
 
         public Task WriteToAsync(Stream stream, bool flush = true)
@@ -880,8 +887,10 @@ namespace Sweet.Redis
 
             Action<Stream> action = (stream) =>
             {
-                if (stream != null)
-                    WriteTo(stream, flush);
+                using (var writer = new RedisStreamWriter(stream, flush))
+                {
+                    WriteTo(writer);
+                }
             };
             return action.InvokeAsync(socket.GetBufferedStream());
         }
