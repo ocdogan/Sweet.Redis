@@ -23,12 +23,10 @@
 #endregion License
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -448,6 +446,8 @@ namespace Sweet.Redis
         {
             if (nodeSelector != null)
             {
+                InitializeNodes();
+
                 var msGroup = m_MSGroup;
                 if (msGroup.IsAlive())
                 {
@@ -465,10 +465,17 @@ namespace Sweet.Redis
         {
             if (nodesGroup.IsAlive())
             {
-                var nodes = nodesGroup.Nodes;
-                if (nodes != null)
+                RedisManagedNode[] nodesCopy = null;
+                lock (m_SyncRoot)
                 {
-                    foreach (var node in nodes)
+                    var nodes = nodesGroup.Nodes;
+                    if (nodes != null)
+                        nodesCopy = (RedisManagedNode[])nodes.Clone();
+                }
+
+                if (nodesCopy != null)
+                {
+                    foreach (var node in nodesCopy)
                     {
                         if (node.IsAlive())
                         {
