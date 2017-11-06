@@ -143,9 +143,8 @@ namespace Sweet.Redis
                             attached = TryToMonitorOneOf(nodes, monitoredSentinels, onComplete, true);
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Console.WriteLine(e);
                     Interlocked.Exchange(ref m_MonitoringStatus, RedisConstants.Zero);
                 }
                 finally

@@ -1603,7 +1603,7 @@ namespace Sweet.Redis
         {
             if (socket != null)
             {
-                RedisEventQueue.Default.Enqueu((state) =>
+                Action<object> action = (state) =>
                 {
                     var sck = state as Socket;
                     if (sck != null)
@@ -1622,7 +1622,18 @@ namespace Sweet.Redis
                         catch (Exception)
                         { }
                     }
-                }, socket);
+                };
+
+                try
+                {
+                    var eventQ = RedisEventQueue.Default;
+                    if (!eventQ.IsAlive())
+                        action(socket);
+                    else
+                        eventQ.Enqueu(action, socket);
+                }
+                catch (Exception)
+                { }
             }
         }
 
@@ -1630,7 +1641,7 @@ namespace Sweet.Redis
         {
             if (socket != null)
             {
-                RedisEventQueue.Default.Enqueu((state) =>
+                Action<object> action = (state) =>
                 {
                     var sck = state as RedisSocket;
                     if (sck != null)
@@ -1649,7 +1660,18 @@ namespace Sweet.Redis
                         catch (Exception)
                         { }
                     }
-                }, socket);
+                };
+
+                try
+                {
+                    var eventQ = RedisEventQueue.Default;
+                    if (!eventQ.IsAlive())
+                        action(socket);
+                    else
+                        eventQ.Enqueu(action, socket);
+                }
+                catch (Exception)
+                { }
             }
         }
 

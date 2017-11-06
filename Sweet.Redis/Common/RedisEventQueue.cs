@@ -243,10 +243,9 @@ namespace Sweet.Redis
 
                     task.Start();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Interlocked.Exchange(ref s_ProcessState, (long)RedisProcessState.Idle);
-                    Console.WriteLine(e);
                 }
             }
         }
