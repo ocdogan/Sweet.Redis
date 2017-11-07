@@ -651,8 +651,8 @@ namespace Sweet.Redis
 
         protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         {
-            var settings = (Settings as RedisPoolSettings) ?? RedisPoolSettings.Default;
-            if (settings.UseAsyncCompleter)
+            var settings = Settings;
+            if (!settings.UseAsyncCompleter)
             {
                 e.ThrowError = true;
                 e.ContinueToSpin = true;

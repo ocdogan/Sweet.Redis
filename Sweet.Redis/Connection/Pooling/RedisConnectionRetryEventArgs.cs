@@ -33,7 +33,7 @@ namespace Sweet.Redis
         public RedisConnectionRetryEventArgs(int retryCountLimit, int spinStepTimeoutMs, int connectionTimeout, int remainingTime)
         {
             StartTime = DateTime.UtcNow;
-            RetryCountLimit = Math.Min(RedisConstants.MaxConnectionRetryCountLimit, retryCountLimit);
+            RetryCountLimit = retryCountLimit;
             SpinStepTimeoutMs = spinStepTimeoutMs <= 0 ? RedisConstants.MaxConnectionTimeout : spinStepTimeoutMs;
             ConnectionTimeout = connectionTimeout <= 0 ? RedisConstants.MaxConnectionTimeout : connectionTimeout;
             RemainingTime = remainingTime;
