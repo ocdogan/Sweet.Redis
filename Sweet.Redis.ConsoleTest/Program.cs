@@ -38,6 +38,11 @@ namespace Sweet.Redis.ConsoleTest
             MultiThreading0c();
             // MultiThreading0d();
 
+            // MultiThreading10a();
+            // MultiThreading10b();
+            // MultiThreading10c();
+            // MultiThreading10d();
+
             // MultiThreading1();
             // MultiThreading2a();
             // MultiThreading2b();
@@ -1977,6 +1982,42 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Multi-Threading
 
+        static void MultiThreading10d()
+        {
+            var tinyText = new string('x', 10);
+
+            MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+                               false, true);
+        }
+
+        static void MultiThreading10c()
+        {
+            var tinyText = new string('x', 10);
+
+            MultiThreadingBasePool(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+                               false, true);
+        }
+
+        static void MultiThreading10b()
+        {
+            var tinyText = new string('x', 10);
+
+            MultiThreadingBasePool(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+                               false, false);
+        }
+
+        static void MultiThreading10a()
+        {
+            var tinyText = new string('x', 10);
+
+            MultiThreadingBasePool(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+                               false, false);
+        }
+
         static void MultiThreading8()
         {
             var mediumText = new string('x', 5000);
@@ -1987,55 +2028,64 @@ namespace Sweet.Redis.ConsoleTest
                 {
                     var result = rdb.Strings.Get("medium_text");
                     return new RedisBytes(mediumBytes);
-                }, true);
+                },
+                true, false);
         }
 
         static void MultiThreading7b()
         {
             MultiThreadingBasePool(12, 10, 10, 500, "medium_text", new string('x', 5000), true, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); },
+                               false, false);
         }
 
         static void MultiThreading7a()
         {
             MultiThreadingBasePool(12, 2, 1, 5000, "medium_text", new string('x', 5000), true, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("medium_text"); },
+                               false, false);
         }
 
         static void MultiThreading6()
         {
             MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", new string('x', 20), false, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("tiny_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("tiny_text"); },
+                               false, false);
         }
 
         static void MultiThreading5()
         {
             MultiThreadingBasePool(12, 1, 50, 100, "small_text", new string('x', 1000), false, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); },
+                               false, false);
         }
 
         static void MultiThreading4()
         {
             MultiThreadingBasePool(12, 1, 50, 100, "small_text", new string('x', 1000), true, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); },
+                               false, false);
         }
 
         static void MultiThreading3()
         {
             MultiThreadingBasePool(12, 10, 50, 100, "small_text", new string('x', 1000), true, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("small_text"); },
+                               false, false);
         }
 
         static void MultiThreading2a()
         {
             MultiThreadingBasePool(12, 10, 50, 100, "large_text", new string('x', 100000), false, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); },
+                               false, false);
         }
 
         static void MultiThreading2b()
         {
             MultiThreadingBasePool(12, 1, 50, 100, "large_text", new string('x', 100000), false, 5,
-                               (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); });
+                               (rdb, dbIndex) => { return rdb.Strings.Get("large_text"); },
+                               false, false);
         }
 
         static void MultiThreading1()
@@ -2043,7 +2093,8 @@ namespace Sweet.Redis.ConsoleTest
             var tinyText = new string('x', 10);
 
             MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); });
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+                               false, false);
         }
 
         static void MultiThreading0d()
@@ -2051,7 +2102,8 @@ namespace Sweet.Redis.ConsoleTest
             var tinyText = new string('x', 10);
 
             MultiThreadingBaseManager(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, false, true);
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+                               false, true);
         }
 
         static void MultiThreading0c()
@@ -2059,7 +2111,8 @@ namespace Sweet.Redis.ConsoleTest
             var tinyText = new string('x', 10);
 
             MultiThreadingBaseManager(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, false, true);
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+                               false, true);
         }
 
         static void MultiThreading0b()
@@ -2067,7 +2120,8 @@ namespace Sweet.Redis.ConsoleTest
             var tinyText = new string('x', 10);
 
             MultiThreadingBaseManager(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, false, false);
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+                               false, false);
         }
 
         static void MultiThreading0a()
@@ -2075,16 +2129,18 @@ namespace Sweet.Redis.ConsoleTest
             var tinyText = new string('x', 10);
 
             MultiThreadingBaseManager(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, false, false);
+                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+                               false, false);
         }
 
         static void MultiThreadingBasePool(int dbIndex, int maxCount, int threadCount, int loopCount,
                                        string testKey, string testText, bool requireKeyPress,
-                                       int sleepSecs, Func<IRedisDb, int, RedisResult> proc, bool transactional = false)
+                                       int sleepSecs, Func<IRedisDb, int, RedisResult> proc, bool transactional = false,
+                                       bool useAsyncCompleter = true)
         {
             using (var pool = new RedisConnectionPool("My redis pool",
                      // new RedisSettings(host: "172.28.10.233", port: 6381, maxCount: maxCount))) // DEV
-                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: maxCount, useAsyncCompleter: false))) // LOCAL
+                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: maxCount, useAsyncCompleter: useAsyncCompleter))) // LOCAL
             {
                 using (var db = transactional ? pool.BeginTransaction(dbIndex) : pool.GetDb(dbIndex))
                 {
