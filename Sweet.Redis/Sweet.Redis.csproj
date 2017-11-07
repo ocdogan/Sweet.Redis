@@ -253,7 +253,6 @@
     <Compile Include="Connection\Sentinel\RedisSentinelConnectionProvider.cs" />
     <Compile Include="Common\RedisIsMasterDownInfo.cs" />
     <Compile Include="Connection\Interfaces\IRedisEndPointStrategy.cs" />
-    <Compile Include="Connection\EndPointStrategy\RedisEndPointStrategy.cs" />
     <Compile Include="Connection\Manager\RedisManager.cs" />
     <Compile Include="Connection\Manager\RedisManagedNodesGroup.cs" />
     <Compile Include="Common\ServerInfo\RedisServerMasterInfo.cs" />
