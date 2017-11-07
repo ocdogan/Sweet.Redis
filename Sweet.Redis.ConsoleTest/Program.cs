@@ -33,7 +33,7 @@ namespace Sweet.Redis.ConsoleTest
             // PubSubTest11();
             // PubSubTest12();
 
-            // MultiThreading0();
+            MultiThreading0();
             // MultiThreading1();
             // MultiThreading2a();
             // MultiThreading2b();
@@ -91,7 +91,7 @@ namespace Sweet.Redis.ConsoleTest
             // ManagerTest10();
             // ManagerTest11();
             // ManagerTest12();
-            ManagerTest14();
+            // ManagerTest14();
         }
 
         #region Manager
