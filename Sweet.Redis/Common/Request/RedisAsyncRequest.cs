@@ -22,6 +22,8 @@
 //      THE SOFTWARE.
 #endregion License
 
+using System;
+
 namespace Sweet.Redis
 {
     internal abstract class RedisAsyncRequest : RedisRequest
@@ -37,9 +39,10 @@ namespace Sweet.Redis
 
         #region Methods
 
-        public abstract void Process(IRedisConnection connection, int timeoutMilliseconds = -1);
-
-        public abstract void Process(RedisSocketContext context, int timeoutMilliseconds = -1);
+        public override void Process(RedisSocketContext context, int timeoutMilliseconds = -1)
+        {
+            throw new NotImplementedException("Process is not supported by async request.");
+        }
 
         public abstract bool Expire(int timeoutMilliseconds = -1);
 

@@ -180,7 +180,7 @@ namespace Sweet.Redis
 
         #endregion RedisConnectionPoolMember
 
-        #region AsyncExecuteResult
+        #region AsyncExecuteResult<T>
 
         private struct AsyncExecuteResult<T> : IDisposable
         {
@@ -241,7 +241,7 @@ namespace Sweet.Redis
             #endregion Methods
         }
 
-        #endregion AsyncExecuteResult
+        #endregion AsyncExecuteResult<T>
 
         #region Static Members
 
@@ -277,7 +277,7 @@ namespace Sweet.Redis
         private RedisMonitorChannel m_MonitorChannel;
 
         private RedisAsyncRequestQ m_AsycRequestQ;
-        
+
         private bool m_UseAsyncCompleter;
         private bool m_AsyncCompleterEnforced;
 
@@ -1012,7 +1012,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisResponse>(command, RedisCommandExpect.Response, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1026,7 +1026,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisRaw>(command, RedisCommandExpect.Array, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1040,7 +1040,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisString>(command, RedisCommandExpect.BulkString, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1054,7 +1054,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1068,7 +1068,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisDouble>(command, RedisCommandExpect.Double, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1082,7 +1082,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.GreaterThanZero, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1096,7 +1096,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisInteger>(command, RedisCommandExpect.Integer, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1110,7 +1110,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisMultiBytes>(command, RedisCommandExpect.MultiDataBytes, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1124,7 +1124,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisMultiString>(command, RedisCommandExpect.MultiDataStrings, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1138,7 +1138,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisVoid>(command, RedisCommandExpect.Nothing, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1152,7 +1152,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisNullableDouble>(command, RedisCommandExpect.NullableDouble, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1166,7 +1166,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisNullableInteger>(command, RedisCommandExpect.NullableInteger, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1180,7 +1180,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.OK, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1194,7 +1194,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.One, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1208,7 +1208,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.OK, expectedResult))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1222,7 +1222,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisString>(command, RedisCommandExpect.SimpleString, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1236,7 +1236,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.SimpleStringBytes, expectedResult))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
@@ -1250,7 +1250,7 @@ namespace Sweet.Redis
         {
             using (var result = TryToExecuteAsync<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, (string)null))
             {
-                if (result.Handled) 
+                if (result.Handled)
                     return result.Result;
 
                 using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))

@@ -23,6 +23,7 @@
 #endregion License
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace Sweet.Redis
@@ -302,54 +303,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        public override void Process(IRedisConnection connection)
-        {
-            Process(connection, -1);
-        }
-
-        public override void Process(RedisSocketContext context)
-        {
-            Process(context, -1);
-        }
-
-        public override void Process(IRedisConnection connection, int timeoutMilliseconds)
-        {
-            ValidateNotDisposed();
-
-            var tcs = CompletionSource;
-            if (tcs != null)
-            {
-                try
-                {
-                    var task = tcs.Task;
-                    if (task != null &&
-                        !(task.IsCompleted || task.IsFaulted || task.IsCanceled))
-                    {
-                        if (timeoutMilliseconds > -1)
-                        {
-                            timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
-                            if ((DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
-                            {
-                                tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
-                                return;
-                            }
-                        }
-
-                        var command = Command;
-                        if (command == null || !connection.IsAlive())
-                            tcs.TrySetCanceled();
-                        else
-                            Process(new RedisSocketContext(connection.Connect(), connection.Settings), timeoutMilliseconds);
-                    }
-                }
-                catch (Exception e)
-                {
-                    tcs.TrySetException(e);
-                }
-            }
-        }
-
-        public override void Process(RedisSocketContext context, int timeoutMilliseconds)
+        public override void Process(RedisSocketContext context, int timeoutMilliseconds = -1)
         {
             ValidateNotDisposed();
 

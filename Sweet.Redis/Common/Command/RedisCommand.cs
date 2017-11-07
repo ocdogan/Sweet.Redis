@@ -524,10 +524,10 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisRawResponse Execute(RedisSocketContext context, bool throwException = true)
+        public RedisResponse Execute(RedisSocketContext context, bool throwException = true)
         {
             ValidateNotDisposed();
-            return ExecuteInternal(context, throwException);
+            return new RedisResponse(ExecuteInternal(context, throwException));
         }
 
         private RedisRawResponse ExecuteInternal(RedisSocketContext context, bool throwException = true, bool sendNotReceive = false)

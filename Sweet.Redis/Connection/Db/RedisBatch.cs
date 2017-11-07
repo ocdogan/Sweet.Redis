@@ -288,7 +288,7 @@ namespace Sweet.Redis
                     case RedisCommandExpect.BulkStringBytes:
                         {
                             data = ReferenceEquals(data, null) ? null :
-                                (data is string ? ((string)data).ToBytes() : data);
+                                (data is byte[] ? (byte[])data : data.ToBytes());
 
                             request.SetResult(data);
                         }
@@ -296,12 +296,12 @@ namespace Sweet.Redis
                     case RedisCommandExpect.SimpleString:
                         {
                             var str = ReferenceEquals(data, null) ? null :
-                                (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
+                                (data is string ? (string)data : data.ToString());
 
                             if (request.OKIf.IsEmpty())
                                 request.SetResult(str);
                             else
-                                request.SetResult(String.Equals(request.OKIf, str));
+                                request.SetResult(request.OKIf == str);
                         }
                         break;
                     case RedisCommandExpect.SimpleStringBytes:

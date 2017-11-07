@@ -40,7 +40,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected override void ProcessInternal(RedisSocketContext context)
+        protected override void ProcessInternal(RedisSocketContext context, int timeoutMilliseconds = -1)
         {
             try
             {

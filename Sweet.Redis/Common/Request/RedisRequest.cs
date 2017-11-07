@@ -154,9 +154,7 @@ namespace Sweet.Redis
 
         public abstract void Cancel();
 
-        public abstract void Process(IRedisConnection connection);
-
-        public abstract void Process(RedisSocketContext context);
+        public abstract void Process(RedisSocketContext context, int timeoutMilliseconds = -1);
 
         public abstract void SetException(Exception exception);
 

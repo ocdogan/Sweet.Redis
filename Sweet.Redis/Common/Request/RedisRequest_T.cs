@@ -248,32 +248,18 @@ namespace Sweet.Redis
             return Interlocked.Read(ref m_State) == (long)RequestState.Completed;
         }
 
-        public override void Process(IRedisConnection connection)
+        public override void Process(RedisSocketContext context, int timeoutMilliseconds = -1)
         {
             ValidateNotDisposed();
 
             if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) ==
                 (long)RequestState.Waiting)
             {
-                if (!connection.IsAlive())
-                    Interlocked.Exchange(ref m_State, (long)RequestState.Canceled);
-                else
-                    ProcessInternal(new RedisSocketContext(connection.Connect(), connection.Settings));
+                ProcessInternal(context, timeoutMilliseconds);
             }
         }
 
-        public override void Process(RedisSocketContext context)
-        {
-            ValidateNotDisposed();
-
-            if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) ==
-                (long)RequestState.Waiting)
-            {
-                ProcessInternal(context);
-            }
-        }
-
-        protected virtual void ProcessInternal(RedisSocketContext context)
+        protected virtual void ProcessInternal(RedisSocketContext context, int timeoutMilliseconds = -1)
         { }
 
         #endregion Methods

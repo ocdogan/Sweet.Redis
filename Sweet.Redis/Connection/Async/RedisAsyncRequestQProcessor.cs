@@ -64,7 +64,7 @@ namespace Sweet.Redis
 
         #region Constants
 
-        private const int IdleTimout = 60 * 1000;
+        private const int IdleTimeout = 60 * 1000;
 
         #endregion Constants
 
@@ -193,25 +193,36 @@ namespace Sweet.Redis
                     var idleSpinCount = 0;
                     var queueTimeoutMs = queue.TimeoutMilliseconds;
 
+                    var socket = (RedisSocket)null;
+                    var context = (RedisSocketContext)null;
+
+                    var commandDbIndex = -1;
+                    var dbIndex = connection.DbIndex;
+
                     while (processor.Processing && queue.IsAlive())
                     {
                         RedisAsyncRequest request = null;
                         try
                         {
-                            request = queue.Dequeue(connection.DbIndex);
-                            if (request == null && connection.DbIndex != -1)
+                            request = queue.Dequeue(dbIndex);
+                            if (request == null && dbIndex != -1)
                                 request = queue.Dequeue(-1);
 
                             if (request == null)
                             {
                                 if (idleStart == DateTime.MinValue)
                                     idleStart = DateTime.UtcNow;
-                                else if ((DateTime.UtcNow - idleStart).TotalMilliseconds >= IdleTimout)
+                                else if ((DateTime.UtcNow - idleStart).TotalMilliseconds >= IdleTimeout)
                                     break;
 
                                 idleSpinCount = Math.Max(100, ++idleSpinCount);
-
-                                Thread.Sleep(idleSpinCount < 100 ? 0 : 1);
+                                if (idleSpinCount < 100)
+                                    Thread.Sleep(0);
+                                else
+                                {
+                                    idleSpinCount = 0;
+                                    Thread.Sleep(1);
+                                }
                                 continue;
                             }
 
@@ -230,11 +241,20 @@ namespace Sweet.Redis
                                         request.Expire(queueTimeoutMs);
                                     else
                                     {
-                                        if (command.DbIndex > -1 &&
-                                            command.DbIndex != connection.DbIndex)
-                                            connection.Select(command.DbIndex);
+                                        if (context == null)
+                                        {
+                                            socket = connection.Connect();
+                                            context = new RedisSocketContext(socket, connection.Settings);
+                                        }
 
-                                        request.Process(connection);
+                                        commandDbIndex = command.DbIndex;
+                                        if (commandDbIndex > -1 && commandDbIndex != dbIndex)
+                                        {
+                                            connection.Select(commandDbIndex);
+                                            dbIndex = connection.DbIndex;
+                                        }
+
+                                        request.Process(context);
                                     }
                                 }
                             }
