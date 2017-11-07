@@ -136,6 +136,11 @@ namespace Sweet.Redis
 
         #region Methods
 
+        protected override bool SuppressFinalization()
+        {
+            return false;
+        }
+
         protected virtual bool BeginReading()
         {
             return Interlocked.CompareExchange(ref m_ReadState, RedisConstants.One, RedisConstants.Zero) == RedisConstants.Zero;
