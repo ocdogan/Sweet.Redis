@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -179,6 +180,69 @@ namespace Sweet.Redis
 
         #endregion RedisConnectionPoolMember
 
+        #region AsyncExecuteResult
+
+        private struct AsyncExecuteResult<T> : IDisposable
+        {
+            #region Field Members
+
+            private IRedisConnection m_Connection;
+            private bool m_Handled;
+            private T m_Result;
+
+            #endregion Field Members
+
+            #region .Ctors
+
+            public AsyncExecuteResult(IRedisConnection connection = null)
+                : this()
+            {
+                m_Connection = connection;
+            }
+
+            #endregion .Ctors
+
+            #region Properties
+
+            public IRedisConnection Connection
+            {
+                get { return m_Connection; }
+                internal set { m_Connection = value; }
+            }
+
+            public bool Handled
+            {
+                get { return m_Handled; }
+                internal set { m_Handled = value; }
+            }
+
+            public T Result
+            {
+                get { return m_Result; }
+                internal set { m_Result = value; }
+            }
+
+            #endregion Properties
+
+            #region Methods
+
+            public void Dispose()
+            {
+                var connection = Interlocked.Exchange(ref m_Connection, null);
+                if (connection != null)
+                    connection.Dispose();
+            }
+
+            public IRedisConnection UsingConnection()
+            {
+                return Interlocked.Exchange(ref m_Connection, null);
+            }
+
+            #endregion Methods
+        }
+
+        #endregion AsyncExecuteResult
+
         #region Static Members
 
         #region Static Readonly Members
@@ -213,7 +277,11 @@ namespace Sweet.Redis
         private RedisMonitorChannel m_MonitorChannel;
 
         private RedisAsyncRequestQ m_AsycRequestQ;
+        
         private bool m_UseAsyncCompleter;
+        private bool m_AsyncCompleterEnforced;
+
+        private int? m_MaxConnectionCount;
 
         #endregion Field Members
 
@@ -234,8 +302,6 @@ namespace Sweet.Redis
             Register(this);
 
             var thisSettings = Settings;
-
-            m_UseAsyncCompleter = thisSettings.UseAsyncCompleter;
 
             m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
             m_Processor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
@@ -381,6 +447,24 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region Initializer
+
+        protected override void InitExecuter()
+        {
+            base.InitExecuter();
+
+            m_UseAsyncCompleter = true;
+
+            var settings = Settings;
+            if (settings != null)
+            {
+                m_AsyncCompleterEnforced = settings.MaxConnectionCount <= 1;
+                m_UseAsyncCompleter = m_AsyncCompleterEnforced || settings.UseAsyncCompleter;
+            }
+        }
+
+        #endregion Initializer
+
         public override void ValidateNotDisposed()
         {
             if (Disposed)
@@ -404,10 +488,20 @@ namespace Sweet.Redis
 
         protected override int GetMaxConnectionCount()
         {
-            var settings = Settings as RedisPoolSettings;
-            if (settings != null)
-                return settings.MaxConnectionCount;
-            return RedisConstants.DefaultMaxConnectionCount;
+            if (!m_MaxConnectionCount.HasValue)
+            {
+                var result = RedisConstants.DefaultMaxConnectionCount;
+
+                var settings = Settings as RedisPoolSettings;
+                if (settings != null)
+                {
+                    result = settings.MaxConnectionCount;
+                    result = (result < 1) ? RedisConstants.DefaultMaxConnectionCount : result;
+                }
+
+                m_MaxConnectionCount = Math.Min(0, m_UseAsyncCompleter ? result - 1 : result);
+            }
+            return m_MaxConnectionCount.Value;
         }
 
         public IRedisTransaction BeginTransaction(int dbIndex = 0)
@@ -652,7 +746,7 @@ namespace Sweet.Redis
         protected override void OnConnectionRetry(RedisConnectionRetryEventArgs e)
         {
             var settings = Settings;
-            if (!settings.UseAsyncCompleter)
+            if (!m_UseAsyncCompleter)
             {
                 e.ThrowError = true;
                 e.ContinueToSpin = true;
@@ -870,471 +964,299 @@ namespace Sweet.Redis
 
         #region IRedisCommandExecuter Methods
 
-        protected internal override RedisResponse Execute(RedisCommand command, bool throwException = true)
+        private AsyncExecuteResult<T> TryToExecuteAsync<T>(RedisCommand command, RedisCommandExpect expect, byte[] okIf)
         {
             if (command == null)
-                throw new ArgumentNullException("command");
+                throw new RedisFatalException(new ArgumentNullException("command"));
 
             ValidateNotDisposed();
 
-            IRedisConnection connection = null;
+            string okIfStr = null;
+            if (!okIf.IsEmpty())
+                okIfStr = Encoding.UTF8.GetString(okIf);
+
+            return TryToExecuteAsyncInternal<T>(command, expect, okIfStr);
+        }
+
+        private AsyncExecuteResult<T> TryToExecuteAsync<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
+        {
+            if (command == null)
+                throw new RedisFatalException(new ArgumentNullException("command"));
+
+            ValidateNotDisposed();
+
+            return TryToExecuteAsyncInternal<T>(command, expect, okIf);
+        }
+
+        private AsyncExecuteResult<T> TryToExecuteAsyncInternal<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
+        {
+            var result = new AsyncExecuteResult<T>();
             if (m_UseAsyncCompleter)
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                var connection = !m_AsyncCompleterEnforced ? Connect(command.DbIndex, command.Role) : null;
+                if (connection != null)
+                    result.Connection = connection;
+                else
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisResponse>(command, RedisCommandExpect.Response, null);
+                    var asyncRequest = m_AsycRequestQ.Enqueue<T>(command, expect, okIf);
                     StartToProcessQ();
 
-                    return asyncRequest.Task.Result;
+                    result.Result = asyncRequest.Task.Result;
+                    result.Handled = true;
                 }
             }
+            return result;
+        }
 
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
+        protected internal override RedisResponse Execute(RedisCommand command, bool throwException = true)
+        {
+            using (var result = TryToExecuteAsync<RedisResponse>(command, RedisCommandExpect.Response, (string)null))
             {
-                return command.Execute(connection, throwException);
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
+                {
+                    return command.Execute(connection, throwException);
+                }
             }
         }
 
         protected internal override RedisRaw ExpectArray(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisRaw>(command, RedisCommandExpect.Array, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisRaw>(command, RedisCommandExpect.Array, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectArray(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectArray(connection, throwException);
             }
         }
 
         protected internal override RedisString ExpectBulkString(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisString>(command, RedisCommandExpect.BulkString, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisString>(command, RedisCommandExpect.BulkString, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectBulkString(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectBulkString(connection, throwException);
             }
         }
 
         protected internal override RedisBytes ExpectBulkStringBytes(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.BulkStringBytes, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectBulkStringBytes(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectBulkStringBytes(connection, throwException);
             }
         }
 
         protected internal override RedisDouble ExpectDouble(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisDouble>(command, RedisCommandExpect.Double, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisDouble>(command, RedisCommandExpect.Double, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectDouble(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectDouble(connection, throwException);
             }
         }
 
         protected internal override RedisBool ExpectGreaterThanZero(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.GreaterThanZero, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.GreaterThanZero, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectInteger(connection, throwException) > RedisConstants.Zero;
             }
         }
 
         protected internal override RedisInteger ExpectInteger(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisInteger>(command, RedisCommandExpect.Integer, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisInteger>(command, RedisCommandExpect.Integer, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectInteger(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectInteger(connection, throwException);
             }
         }
 
         protected internal override RedisMultiBytes ExpectMultiDataBytes(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisMultiBytes>(command, RedisCommandExpect.MultiDataBytes, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisMultiBytes>(command, RedisCommandExpect.MultiDataBytes, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectMultiDataBytes(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectMultiDataBytes(connection, throwException);
             }
         }
 
         protected internal override RedisMultiString ExpectMultiDataStrings(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisMultiString>(command, RedisCommandExpect.MultiDataStrings, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisMultiString>(command, RedisCommandExpect.MultiDataStrings, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectMultiDataStrings(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectMultiDataStrings(connection, throwException);
             }
         }
 
         protected internal override RedisVoid ExpectNothing(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisVoid>(command, RedisCommandExpect.Nothing, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisVoid>(command, RedisCommandExpect.NullableDouble, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectNothing(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectNothing(connection, throwException);
             }
         }
 
         protected internal override RedisNullableDouble ExpectNullableDouble(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisNullableDouble>(command, RedisCommandExpect.NullableDouble, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableDouble>(command, RedisCommandExpect.NullableDouble, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectNullableDouble(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectNullableDouble(connection, throwException);
             }
         }
 
         protected internal override RedisNullableInteger ExpectNullableInteger(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisNullableInteger>(command, RedisCommandExpect.NullableInteger, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisNullableInteger>(command, RedisCommandExpect.NullableInteger, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectNullableInteger(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectNullableInteger(connection, throwException);
             }
         }
 
         protected internal override RedisBool ExpectOK(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.OK, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, RedisConstants.OK);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectSimpleString(connection, RedisConstants.OK, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectSimpleString(connection, RedisConstants.OK, throwException);
             }
         }
 
         protected internal override RedisBool ExpectOne(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.One, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.One, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectOne(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectOne(connection, throwException);
             }
         }
 
         protected internal override RedisBool ExpectSimpleString(RedisCommand command, string expectedResult, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.OK, expectedResult))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBool>(command, RedisCommandExpect.OK, expectedResult);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectSimpleString(connection, expectedResult, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectSimpleString(connection, expectedResult, throwException);
             }
         }
 
         protected internal override RedisString ExpectSimpleString(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisString>(command, RedisCommandExpect.SimpleString, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisString>(command, RedisCommandExpect.SimpleString, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectSimpleString(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectSimpleString(connection, throwException);
             }
         }
 
         protected internal override RedisBool ExpectSimpleStringBytes(RedisCommand command, byte[] expectedResult, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBool>(command, RedisCommandExpect.SimpleStringBytes, expectedResult))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, null);
-                    StartToProcessQ();
-
-                    return (asyncRequest.Task.Result == expectedResult);
+                    return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectSimpleStringBytes(connection, expectedResult, throwException);
             }
         }
 
         protected internal override RedisBytes ExpectSimpleStringBytes(RedisCommand command, bool throwException = true)
         {
-            if (command == null)
-                throw new ArgumentNullException("command");
-
-            ValidateNotDisposed();
-
-            IRedisConnection connection = null;
-            if (m_UseAsyncCompleter)
+            using (var result = TryToExecuteAsync<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, (string)null))
             {
-                connection = Connect(command.DbIndex, command.Role);
-                if (connection == null)
+                if (result.Handled) 
+                    return result.Result;
+
+                using (var connection = (result.UsingConnection() ?? Connect(command.DbIndex, command.Role)))
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<RedisBytes>(command, RedisCommandExpect.SimpleStringBytes, null);
-                    StartToProcessQ();
-
-                    return asyncRequest.Task.Result;
+                    return command.ExpectSimpleStringBytes(connection, throwException);
                 }
-            }
-
-            using (connection = (connection ?? Connect(command.DbIndex, command.Role)))
-            {
-                return command.ExpectSimpleStringBytes(connection, throwException);
             }
         }
 

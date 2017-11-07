@@ -44,6 +44,9 @@ namespace Sweet.Redis
                 throw new RedisFatalException(new ArgumentNullException("settings"), RedisErrorCode.MissingParameter);
 
             m_Settings = settings;
+
+            Action initializer = () => { InitExecuter(); };
+            initializer();
         }
 
         #endregion .Ctors
@@ -77,6 +80,14 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region Initializer 
+
+        protected abstract void InitExecuter();
+
+        #endregion Initializer
+        
+        #region Connection
+
         IRedisConnection IRedisConnectionProvider.Connect(int dbIndex, RedisRole expectedRole)
         {
             return this.Connect(dbIndex, expectedRole);
@@ -84,7 +95,9 @@ namespace Sweet.Redis
 
         protected internal abstract IRedisConnection Connect(int dbIndex, RedisRole expectedRole);
 
-        #region IRedisCommandExecuter Methods
+        #endregion Connection
+
+        #region RedisCommandExecuter Virtual Methods
 
         protected internal virtual RedisResponse Execute(RedisCommand command, bool throwException = true)
         {
@@ -320,7 +333,7 @@ namespace Sweet.Redis
             }
         }
 
-        #endregion IRedisCommandExecuter Methods
+        #endregion RedisCommandExecuter Virtual Methods
 
         #region IRedisCommandExecuter Methods
 

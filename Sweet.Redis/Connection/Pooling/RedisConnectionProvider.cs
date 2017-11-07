@@ -117,6 +117,14 @@ namespace Sweet.Redis
 
         #region Methods
 
+        #region Initializer
+
+        protected override void InitExecuter()
+        {
+        }
+
+        #endregion Initializer
+
         #region Pulse
 
         protected internal virtual bool Ping(bool forceNewConnection = false)
@@ -144,7 +152,7 @@ namespace Sweet.Redis
 
         #endregion Pulse
 
-        #region IRedisConnectionProvider Methods
+        #region Connection
 
         protected virtual void ApplyRole(RedisRole role)
         {
@@ -261,6 +269,10 @@ namespace Sweet.Redis
             OnReleaseSocket(null, socket);
         }
 
+        #endregion Connection
+
+        #region Socket Release
+
         protected void Release()
         {
             var connectionLimiter = m_ConnectionLimiter;
@@ -284,7 +296,7 @@ namespace Sweet.Redis
         protected virtual void CompleteSocketRelease(IRedisConnection connection, RedisSocket socket)
         { }
 
-        #endregion IRedisConnectionProvider Methods
+        #endregion Socket Release
 
         #endregion Methods
     }
