@@ -35,13 +35,13 @@ namespace Sweet.Redis.ConsoleTest
 
             // MultiThreading0a();
             // MultiThreading0b();
-            MultiThreading0c();
+            // MultiThreading0c();
             // MultiThreading0d();
 
             // MultiThreading10a();
             // MultiThreading10b();
             // MultiThreading10c();
-            // MultiThreading10d();
+            MultiThreading10d();
 
             // MultiThreading1();
             // MultiThreading2a();
@@ -1984,37 +1984,41 @@ namespace Sweet.Redis.ConsoleTest
 
         static void MultiThreading10d()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+            MultiThreadingBasePool(12, 1, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); },
                                false, true);
         }
 
         static void MultiThreading10c()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBasePool(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+            MultiThreadingBasePool(12, 5, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); },
                                false, true);
         }
 
         static void MultiThreading10b()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBasePool(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+            MultiThreadingBasePool(12, 5, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); },
                                false, false);
         }
 
         static void MultiThreading10a()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBasePool(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); },
+            MultiThreadingBasePool(12, 5, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); },
                                false, false);
         }
 
@@ -2092,44 +2096,48 @@ namespace Sweet.Redis.ConsoleTest
         {
             var tinyText = new string('x', 10);
 
-            MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
+            MultiThreadingBasePool(12, 1, 50, 100, "tiny_text", tinyText, false, 5,
                                (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
                                false, false);
         }
 
         static void MultiThreading0d()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBaseManager(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+            MultiThreadingBaseManager(12, 1, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); }, 
                                false, true);
         }
 
         static void MultiThreading0c()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBaseManager(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+            MultiThreadingBaseManager(12, 5, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); }, 
                                false, true);
         }
 
         static void MultiThreading0b()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBaseManager(12, 5, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+            MultiThreadingBaseManager(12, 5, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); }, 
                                false, false);
         }
 
         static void MultiThreading0a()
         {
+            var testKey = "tiny_text";
             var tinyText = new string('x', 10);
 
-            MultiThreadingBaseManager(12, 1, 50, 100, "tiny_text", tinyText, true, 5,
-                               (rdb, dbIndex) => { return new RedisBytes(Encoding.UTF8.GetBytes(rdb.Connection.Ping(tinyText).Value)); }, 
+            MultiThreadingBaseManager(12, 1, 50, 100, testKey, tinyText, true, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); }, 
                                false, false);
         }
 
