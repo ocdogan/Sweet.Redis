@@ -40,8 +40,8 @@ namespace Sweet.Redis.ConsoleTest
 
             // MultiThreading10a();
             // MultiThreading10b();
-            // MultiThreading10c();
-            MultiThreading10d();
+            MultiThreading10c();
+            // MultiThreading10d();
 
             // MultiThreading1();
             // MultiThreading2a();
@@ -2232,8 +2232,11 @@ namespace Sweet.Redis.ConsoleTest
                                             if (transactional)
                                                 results.Add(new Tuple<string, long, RedisResult>(@this.Name, sw.ElapsedMilliseconds, data));
                                             else
+                                            {
+                                                var ok = (data != null && data.Length == (testText ?? "").Length);
                                                 Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                                    (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
+                                                                  (ok ? "OK" : "FAILED"));
+                                            }
 
                                             lock (ticksLock)
                                             {
@@ -2408,8 +2411,11 @@ namespace Sweet.Redis.ConsoleTest
                                             if (transactional)
                                                 results.Add(new Tuple<string, long, RedisResult>(@this.Name, sw.ElapsedMilliseconds, data));
                                             else
+                                            {
+                                                var ok = (data != null && data.Length == (testText ?? "").Length);
                                                 Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                                    (data != null && data.Length == (testText ?? "").Length ? "OK" : "FAILED"));
+                                                                  (ok ? "OK" : "FAILED"));
+                                            }
 
                                             lock (ticksLock)
                                             {
