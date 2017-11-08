@@ -141,7 +141,7 @@ namespace Sweet.Redis
                 else
                 {
                     sBuilder.Append('"');
-                    sBuilder.Append(Encoding.UTF8.GetString(bytes));
+                    sBuilder.Append(bytes.ToUTF8String());
                     sBuilder.Append('"');
                 }
 

@@ -262,8 +262,6 @@ namespace Sweet.Redis
         private bool m_ProbeAttached;
         private long m_PulseFailCount;
 
-        private RedisAsyncRequestQProcessor m_Processor;
-
         private RedisConnectionPoolMember m_MemberStoreTail;
         private readonly object m_MemberStoreLock = new object();
         private LinkedList<RedisConnectionPoolMember> m_MemberStore = new LinkedList<RedisConnectionPoolMember>();
@@ -277,6 +275,7 @@ namespace Sweet.Redis
         private RedisMonitorChannel m_MonitorChannel;
 
         private RedisAsyncRequestQ m_AsycRequestQ;
+        private RedisAsyncRequestQProcessor m_AsycRequestQProcessor;
 
         private bool m_UseAsyncCompleter;
         private bool m_AsyncCompleterEnforced;
@@ -304,7 +303,7 @@ namespace Sweet.Redis
             var thisSettings = Settings;
 
             m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
-            m_Processor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
+            m_AsycRequestQProcessor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
         }
 
         #endregion .Ctors
@@ -433,7 +432,7 @@ namespace Sweet.Redis
         {
             get
             {
-                var processor = m_Processor;
+                var processor = m_AsycRequestQProcessor;
                 return processor != null && processor.Processing;
             }
         }
@@ -695,7 +694,7 @@ namespace Sweet.Redis
 
         private void StartToProcessQ()
         {
-            var processor = m_Processor;
+            var processor = m_AsycRequestQProcessor;
             if (processor != null)
                 processor.Start();
         }
@@ -704,7 +703,7 @@ namespace Sweet.Redis
         {
             try
             {
-                var processor = Interlocked.Exchange(ref m_Processor, null);
+                var processor = Interlocked.Exchange(ref m_AsycRequestQProcessor, null);
                 if (processor != null)
                     processor.Stop();
             }
@@ -728,7 +727,7 @@ namespace Sweet.Redis
                          {
                              socket.DisposeSocket();
                          },
-                         RedisConstants.MinDbIndex, null, true);
+                         RedisConstants.UninitializedDbIndex, null, true);
         }
 
         protected override IRedisConnection NewConnection(RedisSocket socket, int dbIndex, RedisRole expectedRole, bool connectImmediately = true)
@@ -971,11 +970,7 @@ namespace Sweet.Redis
 
             ValidateNotDisposed();
 
-            string okIfStr = null;
-            if (!okIf.IsEmpty())
-                okIfStr = Encoding.UTF8.GetString(okIf);
-
-            return TryToExecuteAsyncInternal<T>(command, expect, okIfStr);
+            return TryToExecuteAsyncInternal<T>(command, expect, okIf.ToUTF8String());
         }
 
         private AsyncExecuteResult<T> TryToExecuteAsync<T>(RedisCommand command, RedisCommandExpect expect, string okIf)

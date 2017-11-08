@@ -98,6 +98,9 @@ namespace Sweet.Redis
 
         #region Methods
 
+        public void Flush()
+        { }
+
         public int Write(char val)
         {
             return Write(Encoding.UTF8.GetBytes(new char[] { val }));

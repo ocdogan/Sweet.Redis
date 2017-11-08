@@ -360,7 +360,7 @@ namespace Sweet.Redis
                 var data = m_Data;
                 var hasData = !data.IsEmpty();
 
-                throw new RedisException(hasData ? Encoding.UTF8.GetString(data) : "No data returned",
+                throw new RedisException(hasData ? data.ToUTF8String() : "No data returned",
                     hasData ? RedisErrorCode.ReturnedError : RedisErrorCode.CorruptResponse);
             }
 

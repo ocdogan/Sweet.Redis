@@ -257,7 +257,7 @@ namespace Sweet.Redis
                 if (!data.IsEmpty())
                 {
                     value = RedisConstants.MinusOne;
-                    if (long.TryParse(Encoding.UTF8.GetString(data), out value))
+                    if (long.TryParse(data.ToUTF8String(), out value))
                         return true;
                 }
             }
@@ -288,7 +288,7 @@ namespace Sweet.Redis
                                 else if (data.Length == 0)
                                     result.Add(String.Empty);
                                 else
-                                    result.Add(Encoding.UTF8.GetString(data));
+                                    result.Add(data.ToUTF8String());
                             }
                         }
 
@@ -338,7 +338,7 @@ namespace Sweet.Redis
                 if (data.Length == 0)
                     return String.Empty;
 
-                return Encoding.UTF8.GetString(data);
+                return data.ToUTF8String();
             }
             return null;
         }

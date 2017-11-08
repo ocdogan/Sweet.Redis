@@ -64,11 +64,15 @@ namespace Sweet.Redis
             var stream = Interlocked.Exchange(ref m_Stream, null);
             if (stream != null)
             {
+                var flushed = false;
                 var dispose = m_OwnsStream;
                 try
                 {
                     if (!(dispose && (stream is BufferedStream)))
+                    {
+                        flushed = true;
                         stream.Flush();
+                    }
                 }
                 catch (Exception e) 
                 { 
@@ -78,7 +82,10 @@ namespace Sweet.Redis
                 finally
                 {
                     m_UnderlyingDisposed = dispose;
-                    if (dispose) stream.Dispose();
+                    if (dispose)
+                        stream.Dispose();
+                    else if (!flushed) 
+                        stream.Flush();
                 }
             }
         }
@@ -100,6 +107,11 @@ namespace Sweet.Redis
         #endregion Properties
 
         #region Methods
+
+        public void Flush()
+        {
+            m_Stream.Flush();
+        }
 
         public int Write(char val)
         {

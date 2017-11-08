@@ -85,6 +85,11 @@ namespace Sweet.Redis
 
         #region Methods
 
+        public void Flush()
+        {
+            m_Socket.GetRealStream().Flush();
+        }
+
         public int Write(char val)
         {
             return Write(Encoding.UTF8.GetBytes(new char[] { val }));

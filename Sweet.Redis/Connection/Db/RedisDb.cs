@@ -51,7 +51,7 @@ namespace Sweet.Redis
         public RedisDb(RedisConnectionPool pool, int dbIndex, bool throwOnError = true)
             : base(pool, throwOnError)
         {
-            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
+            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
         }
 
         #endregion .Ctors

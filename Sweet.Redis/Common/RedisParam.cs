@@ -203,7 +203,7 @@ namespace Sweet.Redis
             if (value.Length == 0)
                 return "(empty)";
 
-            return "\"" + Encoding.UTF8.GetString(value) + "\"";
+            return "\"" + value.ToUTF8String() + "\"";
         }
 
         #endregion Methods
@@ -299,12 +299,12 @@ namespace Sweet.Redis
 
         public static implicit operator string(RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return param.Data != null ? Encoding.UTF8.GetString(param.Data) : null;
+            return param.Data.ToUTF8String();
         }
 
         public static implicit operator DateTime? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return !param.Data.IsEmpty() ? (DateTime?)(new DateTime(long.Parse(Encoding.UTF8.GetString(param.Data)))) : null;
+            return !param.Data.IsEmpty() ? (DateTime?)(new DateTime(long.Parse(param.Data.ToUTF8String()))) : null;
         }
 
         public static implicit operator byte? (RedisParam param) // implicit RedisParam to ? type conversion operator
@@ -314,32 +314,32 @@ namespace Sweet.Redis
 
         public static implicit operator short? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return !param.Data.IsEmpty() ? (short?)short.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (short?)short.Parse(param.Data.ToUTF8String()) : null;
         }
 
         public static implicit operator int? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return !param.Data.IsEmpty() ? (int?)int.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (int?)int.Parse(param.Data.ToUTF8String()) : null;
         }
 
         public static implicit operator long? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return !param.Data.IsEmpty() ? (long?)long.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (long?)long.Parse(param.Data.ToUTF8String()) : null;
         }
 
         public static implicit operator double? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return !param.Data.IsEmpty() ? (double?)double.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (double?)double.Parse(param.Data.ToUTF8String()) : null;
         }
 
         public static implicit operator bool? (RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return !param.Data.IsEmpty() ? (bool?)bool.Parse(Encoding.UTF8.GetString(param.Data)) : null;
+            return !param.Data.IsEmpty() ? (bool?)bool.Parse(param.Data.ToUTF8String()) : null;
         }
 
         public static implicit operator DateTime(RedisParam param) // implicit RedisParam to ? type conversion operator
         {
-            return new DateTime(long.Parse(Encoding.UTF8.GetString(param.Data)));
+            return new DateTime(long.Parse(param.Data.ToUTF8String()));
         }
 
         public static implicit operator byte(RedisParam param) // implicit RedisParam to  type conversion operator
@@ -349,27 +349,27 @@ namespace Sweet.Redis
 
         public static implicit operator short(RedisParam param) // implicit RedisParam to  type conversion operator
         {
-            return short.Parse(Encoding.UTF8.GetString(param.Data));
+            return short.Parse(param.Data.ToUTF8String());
         }
 
         public static implicit operator int(RedisParam param) // implicit RedisParam to  type conversion operator
         {
-            return int.Parse(Encoding.UTF8.GetString(param.Data));
+            return int.Parse(param.Data.ToUTF8String());
         }
 
         public static implicit operator long(RedisParam param) // implicit RedisParam to  type conversion operator
         {
-            return long.Parse(Encoding.UTF8.GetString(param.Data));
+            return long.Parse(param.Data.ToUTF8String());
         }
 
         public static implicit operator double(RedisParam param) // implicit RedisParam to  type conversion operator
         {
-            return double.Parse(Encoding.UTF8.GetString(param.Data));
+            return double.Parse(param.Data.ToUTF8String());
         }
 
         public static implicit operator bool(RedisParam param) // implicit RedisParam to  type conversion operator
         {
-            return bool.Parse(Encoding.UTF8.GetString(param.Data));
+            return bool.Parse(param.Data.ToUTF8String());
         }
 
         #endregion Conversion Methods

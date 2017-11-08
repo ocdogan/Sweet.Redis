@@ -81,7 +81,7 @@ namespace Sweet.Redis
                     var timeEndPos = data.IndexOf((byte)' ', 0, 100);
                     if (timeEndPos > 0)
                     {
-                        var timeStr = Encoding.UTF8.GetString(data, 0, timeEndPos);
+                        var timeStr = data.ToUTF8String(0, timeEndPos);
 
                         if (!timeStr.IsEmpty())
                         {
@@ -103,7 +103,7 @@ namespace Sweet.Redis
                                     }
 
                                     byte[] msgData = null;
-                                    var clientInfo = Encoding.UTF8.GetString(data, clientStartPos, clientEndPos - clientStartPos + 1);
+                                    var clientInfo = data.ToUTF8String(clientStartPos, clientEndPos - clientStartPos + 1);
 
                                     clientEndPos += 2;
                                     if (clientEndPos < data.Length)

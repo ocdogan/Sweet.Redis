@@ -781,7 +781,7 @@ namespace Sweet.Redis
                         {
                             var b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<byte[], double>(k, d);
@@ -860,13 +860,13 @@ namespace Sweet.Redis
 
                         var b = bytes[index];
                         if (!b.IsEmpty())
-                            k = Encoding.UTF8.GetString(b);
+                            k = b.ToUTF8String();
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<string, double>(k, d);
@@ -974,7 +974,7 @@ namespace Sweet.Redis
                         {
                             var b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<byte[], double>(k, d);
@@ -1042,13 +1042,13 @@ namespace Sweet.Redis
 
                         var b = bytes[index];
                         if (!b.IsEmpty())
-                            k = Encoding.UTF8.GetString(b);
+                            k = b.ToUTF8String();
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<string, double>(k, d);
@@ -1370,7 +1370,7 @@ namespace Sweet.Redis
                         {
                             var b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<byte[], double>(k, d);
@@ -1436,13 +1436,13 @@ namespace Sweet.Redis
 
                         var b = bytes[index];
                         if (!b.IsEmpty())
-                            k = Encoding.UTF8.GetString(b);
+                            k = b.ToUTF8String();
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<string, double>(k, d);
@@ -1534,7 +1534,7 @@ namespace Sweet.Redis
                         {
                             var b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<byte[], double>(k, d);
@@ -1593,13 +1593,13 @@ namespace Sweet.Redis
 
                         var b = bytes[index];
                         if (!b.IsEmpty())
-                            k = Encoding.UTF8.GetString(b);
+                            k = b.ToUTF8String();
 
                         if (index < bLength - 1)
                         {
                             b = bytes[index + 1];
                             if (!b.IsEmpty())
-                                double.TryParse(Encoding.UTF8.GetString(b), out d);
+                                double.TryParse(b.ToUTF8String(), out d);
                         }
 
                         result[i] = new RedisKeyValue<string, double>(k, d);

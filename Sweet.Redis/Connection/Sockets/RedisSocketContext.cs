@@ -59,6 +59,11 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public int DbIndex
+        {
+            get { return (m_Socket != null) ? m_Socket.DbIndex : -1; }
+        }
+
         public RedisSocket Socket 
         { 
             get { return m_Socket; } 

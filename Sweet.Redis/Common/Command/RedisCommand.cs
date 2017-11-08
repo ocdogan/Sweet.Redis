@@ -152,9 +152,9 @@ namespace Sweet.Redis
         private string ExpectSimpleStringInternal(IRedisConnection connection, bool throwException = true)
         {
             var bytes = ExpectSimpleStringBytes(connection, throwException);
-            if (bytes == (byte[])null)
+            if (ReferenceEquals(bytes, null))
                 return null;
-            return Encoding.UTF8.GetString(bytes);
+            return ((byte[])bytes.RawData).ToUTF8String();
         }
 
         public RedisBool ExpectSimpleStringBytes(IRedisConnection connection, byte[] expectedResult, bool throwException = true)
@@ -207,9 +207,9 @@ namespace Sweet.Redis
         public RedisString ExpectBulkString(IRedisConnection connection, bool throwException = true)
         {
             var bytes = ExpectBulkStringBytes(connection, throwException);
-            if (bytes == (byte[])null)
+            if (ReferenceEquals(bytes, null))
                 return null;
-            return Encoding.UTF8.GetString(bytes);
+            return ((byte[])bytes.RawData).ToUTF8String();
         }
 
         public RedisBytes ExpectBulkStringBytes(IRedisConnection connection, bool throwException = true)
@@ -370,9 +370,9 @@ namespace Sweet.Redis
         private string ExpectSimpleStringInternal(RedisSocketContext context, bool throwException = true)
         {
             var bytes = ExpectSimpleStringBytes(context, throwException);
-            if (bytes == (byte[])null)
+            if (ReferenceEquals(bytes, null))
                 return null;
-            return Encoding.UTF8.GetString(bytes);
+            return ((byte[])bytes.RawData).ToUTF8String();
         }
 
         public RedisBool ExpectSimpleStringBytes(RedisSocketContext context, byte[] expectedResult, bool throwException = true)
@@ -425,9 +425,9 @@ namespace Sweet.Redis
         public RedisString ExpectBulkString(RedisSocketContext context, bool throwException = true)
         {
             var bytes = ExpectBulkStringBytes(context, throwException);
-            if (bytes == (byte[])null)
+            if (ReferenceEquals(bytes, null))
                 return null;
-            return Encoding.UTF8.GetString(bytes);
+            return ((byte[])bytes.RawData).ToUTF8String();
         }
 
         public RedisBytes ExpectBulkStringBytes(RedisSocketContext context, bool throwException = true)
@@ -593,7 +593,7 @@ namespace Sweet.Redis
             }
 
             double result;
-            if (double.TryParse(Encoding.UTF8.GetString(data), out result))
+            if (double.TryParse(data.ToUTF8String(), out result))
                 return result;
 
             if (throwException)
@@ -630,7 +630,7 @@ namespace Sweet.Redis
                 return null;
 
             long result;
-            if (long.TryParse(Encoding.UTF8.GetString(data), out result))
+            if (long.TryParse(data.ToUTF8String(), out result))
                 return result;
 
             if (throwException)
@@ -672,7 +672,7 @@ namespace Sweet.Redis
                 return null;
 
             double result;
-            if (double.TryParse(Encoding.UTF8.GetString(data), out result))
+            if (double.TryParse(data.ToUTF8String(), out result))
                 return result;
 
             if (throwException)
@@ -696,12 +696,12 @@ namespace Sweet.Redis
                 case RedisRawObjectType.SimpleString:
                 case RedisRawObjectType.BulkString:
                 case RedisRawObjectType.Integer:
-                    return data != null ? new string[] { Encoding.UTF8.GetString(data) } : null;
+                    return data != null ? new string[] { data.ToUTF8String() } : null;
                 case RedisRawObjectType.Error:
                     {
                         if (!throwException)
-                            return data != null ? new string[] { Encoding.UTF8.GetString(data) } : null;
-                        throw new RedisException(!data.IsEmpty() ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
+                            return data != null ? new string[] { data.ToUTF8String() } : null;
+                        throw new RedisException(!data.IsEmpty() ? data.ToUTF8String() : "No data returned", RedisErrorCode.CorruptResponse);
                     }
                 case RedisRawObjectType.Undefined:
                     if (throwException)
@@ -743,7 +743,7 @@ namespace Sweet.Redis
                                     }
 
                                     data = item.Data;
-                                    list.Add(data != null ? Encoding.UTF8.GetString(data) : null);
+                                    list.Add(data != null ? data.ToUTF8String() : null);
                                 }
                             }
                             return list.ToArray();
@@ -777,7 +777,7 @@ namespace Sweet.Redis
                     {
                         if (!throwException)
                             return data != null ? new byte[][] { data } : null;
-                        throw new RedisException(!data.IsEmpty() ? Encoding.UTF8.GetString(data) : "No data returned", RedisErrorCode.CorruptResponse);
+                        throw new RedisException(!data.IsEmpty() ? data.ToUTF8String() : "No data returned", RedisErrorCode.CorruptResponse);
                     }
                 case RedisRawObjectType.Undefined:
                     if (throwException)
@@ -952,7 +952,7 @@ namespace Sweet.Redis
             sBuilder.Append("[DbIndex=");
             sBuilder.Append(DbIndex);
             sBuilder.Append(", Command=");
-            sBuilder.Append(Command != null ? Encoding.UTF8.GetString(Command) : "(nil)");
+            sBuilder.Append(Command != null ? Command.ToUTF8String() : "(nil)");
             sBuilder.Append(", Arguments=");
 
             var args = Arguments;
@@ -984,7 +984,7 @@ namespace Sweet.Redis
                         }
                         else
                         {
-                            var data = Encoding.UTF8.GetString(item);
+                            var data = item.ToUTF8String();
 
                             var len = 1000 - itemLen;
                             if (len >= data.Length)

@@ -75,14 +75,14 @@ namespace Sweet.Redis
                     {
                         case RedisRawObjectType.BulkString:
                             if (data is byte[])
-                                return Encoding.UTF8.GetString((byte[])data);
+                                return ((byte[])data).ToUTF8String();
                             return data as string;
                         case RedisRawObjectType.SimpleString:
                         case RedisRawObjectType.Error:
                             if (data is string)
                                 return (string)data;
                             if (data is byte[])
-                                return Encoding.UTF8.GetString((byte[])data);
+                                return ((byte[])data).ToUTF8String();
                             break;
                         case RedisRawObjectType.Integer:
                             if (data is long)
@@ -136,7 +136,7 @@ namespace Sweet.Redis
                 {
                     case RedisRawObjectType.SimpleString:
                     case RedisRawObjectType.Error:
-                        data = Encoding.UTF8.GetString(bytes);
+                        data = bytes.ToUTF8String();
                         break;
                     case RedisRawObjectType.BulkString:
                         data = bytes;
@@ -146,7 +146,7 @@ namespace Sweet.Redis
                             throw new RedisException("Invalid integer value", RedisErrorCode.CorruptResponse);
 
                         long l;
-                        if (!long.TryParse(Encoding.UTF8.GetString(bytes), out l))
+                        if (!long.TryParse(bytes.ToUTF8String(), out l))
                             throw new RedisException("Invalid integer value", RedisErrorCode.CorruptResponse);
 
                         data = l;
@@ -207,15 +207,15 @@ namespace Sweet.Redis
             {
                 case RedisRawObjectType.BulkString:
                     {
-                        var str = data as byte[];
-                        if (str == null)
+                        var bytes = data as byte[];
+                        if (bytes == null)
                             sBuilder.AppendLine("(nil)");
-                        else if (str.Length == 0)
+                        else if (bytes.Length == 0)
                             sBuilder.AppendLine("(empty)");
                         else
                         {
                             sBuilder.Append('"');
-                            sBuilder.Append(Encoding.UTF8.GetString(str));
+                            sBuilder.Append(bytes.ToUTF8String());
                             sBuilder.Append('"');
                             sBuilder.AppendLine();
                         }

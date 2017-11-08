@@ -94,7 +94,7 @@ namespace Sweet.Redis
                         var data = typeItem.Data;
                         if (data != null)
                         {
-                            var typeStr = Encoding.UTF8.GetString(data).ToLowerInvariant();
+                            var typeStr = data.ToUTF8String().ToLowerInvariant();
                             if (!typeStr.IsEmpty())
                             {
                                 var type = RedisPubSubResponseType.Undefined;
@@ -133,7 +133,7 @@ namespace Sweet.Redis
                                         data = channelItem.Data;
                                         if (data != null)
                                         {
-                                            var channel = Encoding.UTF8.GetString(data);
+                                            var channel = data.ToUTF8String();
                                             if (!channel.IsEmpty())
                                             {
                                                 var pattern = String.Empty;
@@ -146,7 +146,7 @@ namespace Sweet.Redis
                                                             {
                                                                 data = patternItem.Data;
                                                                 if (data != null)
-                                                                    pattern = Encoding.UTF8.GetString(data);
+                                                                    pattern = data.ToUTF8String();
                                                             }
 
                                                             var tmp = channel;
@@ -175,7 +175,7 @@ namespace Sweet.Redis
                                                             {
                                                                 var value = -1L;
                                                                 if (data != null)
-                                                                    long.TryParse(Encoding.UTF8.GetString(data), out value);
+                                                                    long.TryParse(data.ToUTF8String(), out value);
 
                                                                 return new RedisPubSubResponse(type, typeStr, channel, pattern, value);
                                                             }

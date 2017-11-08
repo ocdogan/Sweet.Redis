@@ -48,9 +48,15 @@ namespace Sweet.Redis
             int dbIndex, RedisSocket socket = null, bool connectImmediately = false)
             : base(name, expectedRole, settings, onCreateSocket, onReleaseSocket, socket, false)
         {
-            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
-            if (connectImmediately)
-                ConnectInternal();
+            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
+            try
+            {
+                if (connectImmediately)
+                    ConnectInternal();
+            }
+            catch (Exception)
+            { }
+            SetDb(m_DbIndex);
         }
 
         #endregion .Ctors
@@ -66,6 +72,16 @@ namespace Sweet.Redis
 
         #region Methods
 
+        internal void SetDb(int dbIndex)
+        {
+            m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
+
+            var socket = m_Socket;
+            if (m_DbIndex > RedisConstants.UninitializedDbIndex && 
+                socket.IsConnected() && socket.DbIndex != m_DbIndex)
+                socket.SelectDB(Settings, m_DbIndex);
+        }
+
         protected override int GetReceiveTimeout()
         {
             return DbReceiveTimeout;
@@ -74,38 +90,8 @@ namespace Sweet.Redis
         protected override void OnConnect(RedisSocket socket)
         {
             base.OnConnect(socket);
-            if (m_DbIndex > RedisConstants.MinDbIndex &&
-               socket.IsConnected() && SelectInternal(socket, m_DbIndex, true))
-                socket.SetDb(m_DbIndex);
-        }
-
-        public void Select(int dbIndex)
-        {
-            dbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.MinDbIndex), RedisConstants.MaxDbIndex);
-            if (dbIndex != m_DbIndex)
-            {
-                var socket = GetSocket();
-                if (socket != null)
-                {
-                    if (dbIndex != RedisConstants.MinDbIndex)
-                        SelectInternal(socket, m_DbIndex, true);
-                    socket.SetDb(m_DbIndex);
-                }
-                Interlocked.Exchange(ref m_DbIndex, dbIndex);
-            }
-        }
-
-        protected bool SelectInternal(RedisSocket socket, int dbIndex, bool throwException)
-        {
-            ValidateNotDisposed();
-            if (dbIndex > RedisConstants.MinDbIndex && dbIndex <= RedisConstants.MaxDbIndex)
-            {
-                using (var cmd = new RedisCommand(dbIndex, RedisCommandList.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
-                {
-                    return cmd.ExpectOK(new RedisSocketContext(socket, Settings), throwException);
-                }
-            }
-            return true;
+            if (SelectDB(socket, m_DbIndex))
+                m_DbIndex = socket.DbIndex;
         }
 
         #endregion Methods

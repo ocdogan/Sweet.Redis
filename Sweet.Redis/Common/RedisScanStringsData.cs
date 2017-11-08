@@ -47,12 +47,8 @@ namespace Sweet.Redis
             var length = value.Length;
             var data = new string[length];
 
-            byte[] val;
             for (var i = 0; i < length; i++)
-            {
-                val = value[i];
-                data[i] = (val != null ? (val.Length == 0 ? String.Empty : Encoding.UTF8.GetString(val)) : null);
-            }
+                data[i] = value[i].ToUTF8String();
 
             return new RedisScanStringsData(0, data);
         }

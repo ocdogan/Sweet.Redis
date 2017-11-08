@@ -343,7 +343,7 @@ namespace Sweet.Redis
                         if (msg.Data.IsEmpty())
                             return;
 
-                        var msgText = Encoding.UTF8.GetString(msg.Data);
+                        var msgText = msg.Data.ToUTF8String();
                         if (msgText.IsEmpty())
                             return;
 

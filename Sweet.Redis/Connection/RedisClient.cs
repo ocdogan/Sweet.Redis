@@ -169,8 +169,7 @@ namespace Sweet.Redis
         protected internal virtual RedisBool ExpectSimpleStringBytes(byte[] cmd, byte[] expectedResult, params byte[][] parameters)
         {
             ValidateNotDisposed();
-            return Expect<RedisBool>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.SimpleStringBytes,
-                expectedResult != null ? Encoding.UTF8.GetString(expectedResult) : null);
+            return Expect<RedisBool>(new RedisCommand(DbIndex, cmd, RedisCommandType.SendAndReceive, parameters), RedisCommandExpect.SimpleStringBytes, expectedResult.ToUTF8String());
         }
 
         protected internal virtual RedisBytes ExpectSimpleStringBytes(byte[] cmd, params byte[][] parameters)

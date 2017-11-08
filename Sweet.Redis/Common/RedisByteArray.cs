@@ -137,7 +137,7 @@ namespace Sweet.Redis
 
         public static implicit operator string(RedisByteArray value)  // implicit from RedisByteArray conversion operator
         {
-            return ReferenceEquals(value, null) || value.Bytes == null ? null : Encoding.UTF8.GetString(value.Bytes);
+            return ReferenceEquals(value, null) ? null : value.Bytes.ToUTF8String();
         }
 
         #endregion From RedisByteArray

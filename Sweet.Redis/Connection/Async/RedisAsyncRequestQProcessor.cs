@@ -62,8 +62,15 @@ namespace Sweet.Redis
 
         #endregion ProcessParameters
 
+        #region Static Members
+
+        private static readonly ManualResetEventSlim s_GateKeeper = new ManualResetEventSlim(false);
+
+        #endregion Static Members
+
         #region Constants
 
+        private const int MaxIdleSpinCount = 100;
         private const int IdleTimeout = 60 * 1000;
 
         #endregion Constants
@@ -116,27 +123,30 @@ namespace Sweet.Redis
         public void Start()
         {
             if (Interlocked.CompareExchange(ref m_State, (long)RedisProcessState.Initialized,
-                                            (long)RedisProcessState.Idle) == (long)RedisProcessState.Idle)
+                                            (long)RedisProcessState.Idle) != (long)RedisProcessState.Idle)
             {
-                try
+                s_GateKeeper.Set();
+                return;
+            }
+
+            try
+            {
+                StopCurrent();
+
+                var thread = new Thread((p) =>
                 {
-                    StopCurrent();
+                    ProcessQueue((ProcessParameters)p);
+                });
+                thread.IsBackground = true;
 
-                    var thread = new Thread((p) =>
-                    {
-                        ProcessQueue((ProcessParameters)p);
-                    });
-                    thread.IsBackground = true;
+                Interlocked.Exchange(ref m_Thread, thread);
+                Interlocked.Exchange(ref m_State, (long)RedisProcessState.Processing);
 
-                    Interlocked.Exchange(ref m_Thread, thread);
-                    thread.Start(new ProcessParameters(this, thread, Queue, Settings));
-
-                    Interlocked.Exchange(ref m_State, (long)RedisProcessState.Processing);
-                }
-                catch (Exception)
-                {
-                    Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
-                }
+                thread.Start(new ProcessParameters(this, thread, Queue, Settings));
+            }
+            catch (Exception)
+            {
+                Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
             }
         }
 
@@ -190,44 +200,28 @@ namespace Sweet.Redis
                 using (var connection = new RedisDbConnection(name, RedisRole.Master,
                            parameters.Settings, null, OnReleaseSocket, -1, null, false))
                 {
-                    var idleSpinCount = 0;
                     var queueTimeoutMs = queue.TimeoutMilliseconds;
 
-                    var socket = (RedisSocket)null;
                     var context = (RedisSocketContext)null;
 
                     var commandDbIndex = -1;
-                    var dbIndex = connection.DbIndex;
+                    var contextDbIndex = connection.DbIndex;
 
                     while (processor.Processing && queue.IsAlive())
                     {
                         RedisAsyncRequest request = null;
                         try
                         {
-                            request = queue.Dequeue(dbIndex);
-                            if (request == null && dbIndex != -1)
+                            request = queue.Dequeue(contextDbIndex);
+                            if (request == null && contextDbIndex != -1)
                                 request = queue.Dequeue(-1);
 
                             if (request == null)
                             {
-                                if (idleStart == DateTime.MinValue)
-                                    idleStart = DateTime.UtcNow;
-                                else if ((DateTime.UtcNow - idleStart).TotalMilliseconds >= IdleTimeout)
-                                    break;
-
-                                idleSpinCount = Math.Max(100, ++idleSpinCount);
-                                if (idleSpinCount < 100)
-                                    Thread.Sleep(0);
-                                else
-                                {
-                                    idleSpinCount = 0;
-                                    Thread.Sleep(1);
-                                }
+                                s_GateKeeper.Reset();
+                                s_GateKeeper.Wait(IdleTimeout);
                                 continue;
                             }
-
-                            idleSpinCount = 0;
-                            idleStart = DateTime.MinValue;
 
                             if (!request.IsCompleted)
                             {
@@ -241,17 +235,15 @@ namespace Sweet.Redis
                                         request.Expire(queueTimeoutMs);
                                     else
                                     {
-                                        if (context == null)
-                                        {
-                                            socket = connection.Connect();
-                                            context = new RedisSocketContext(socket, connection.Settings);
-                                        }
+                                        if (!context.IsAlive())
+                                            context = new RedisSocketContext(connection.Connect(), connection.Settings);
 
                                         commandDbIndex = command.DbIndex;
-                                        if (commandDbIndex > -1 && commandDbIndex != dbIndex)
+                                        if (commandDbIndex > -1 && commandDbIndex != contextDbIndex &&
+                                            context.Socket.SelectDB(connection.Settings, commandDbIndex))
                                         {
-                                            connection.Select(commandDbIndex);
-                                            dbIndex = connection.DbIndex;
+                                            contextDbIndex = context.DbIndex;
+                                            connection.SetDb(contextDbIndex);
                                         }
 
                                         request.Process(context);

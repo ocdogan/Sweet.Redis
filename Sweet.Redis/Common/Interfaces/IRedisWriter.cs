@@ -30,6 +30,8 @@ namespace Sweet.Redis
     {
         bool UnderlyingDisposed { get; }
 
+        void Flush();
+
         int Write(char val);
         int Write(short val);
         int Write(int val);

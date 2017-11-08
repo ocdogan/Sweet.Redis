@@ -43,7 +43,7 @@ namespace Sweet.Redis
                 try
                 {
                     var result = base.ReadResponse(socket);
-                    if (result != null && result.IsVoid)
+                    if (ReferenceEquals(result, null) && result.IsVoid)
                         return null;
                     return result;
                 }

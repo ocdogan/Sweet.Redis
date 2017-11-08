@@ -192,7 +192,7 @@ namespace Sweet.Redis
                          {
                              socket.DisposeSocket();
                          },
-                         RedisConstants.MinDbIndex, null, true);
+                         RedisConstants.UninitializedDbIndex, null, true);
         }
 
         protected Tuple<RedisRole, RedisEndPoint[], RedisSocket> DiscoverNode(RedisPoolSettings settings)

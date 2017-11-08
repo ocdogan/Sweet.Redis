@@ -205,8 +205,9 @@ namespace Sweet.Redis
 
         public const int ConnectionPurgePeriod = 1000; // milliseconds
 
-        public const int MinDbIndex = -1;
+        public const int MinDbIndex = 0;
         public const int MaxDbIndex = 16;
+        public const int UninitializedDbIndex = -1;
 
         public const int MaxConnectionRetryCountLimit = 10;
         public const int CardioProbeStatusChangeRetryCount = 3;

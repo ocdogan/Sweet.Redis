@@ -280,7 +280,7 @@ namespace Sweet.Redis
                     case RedisCommandExpect.BulkString:
                         {
                             var str = ReferenceEquals(data, null) ? null :
-                                (data is byte[] ? Encoding.UTF8.GetString((byte[])data) : data.ToString());
+                                (data is byte[] ? ((byte[])data).ToUTF8String() : data.ToString());
 
                             request.SetResult(str);
                         }

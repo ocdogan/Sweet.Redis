@@ -280,6 +280,61 @@ namespace Sweet.Redis
             return (obj != null) && !obj.Disposed;
         }
 
+        internal static byte[] Clone(this byte[] x, int offset = 0, int length = -1)
+        {
+            if (x != null)
+            {
+                var xLength = x.Length;
+                if (offset < xLength)
+                {
+                    if (xLength == 0)
+                        return new byte[0];
+
+                    if (offset < 0) offset = 0;
+
+                    if (length < 0) length = xLength;
+
+                    length = Math.Min(length, xLength - offset);
+                    if (length > -1)
+                    {
+                        var result = new byte[length];
+                        if (length == 0)
+                            return result;
+
+                        Array.Copy(x, offset, result, 0, length);
+                        return result;
+                    }
+                }
+            }
+            return null;
+        }
+
+        internal static string ToUTF8String(this byte[] x, int offset = 0, int length = -1)
+        {
+            if (x != null)
+            {
+                var xLength = x.Length;
+                if (offset < xLength)
+                {
+                    if (xLength == 0)
+                        return String.Empty;
+
+                    if (offset < 0) offset = 0;
+
+                    if (length < 0) length = xLength;
+
+                    length = Math.Min(length, xLength - offset);
+                    if (length > -1)
+                    {
+                        if (length == 0)
+                            return String.Empty;
+                        return Encoding.UTF8.GetString(x, offset, length);
+                    }
+                }
+            }
+            return null;
+        }
+
         internal static bool EqualTo(this byte[] x, byte[] y)
         {
             if (x == y)
