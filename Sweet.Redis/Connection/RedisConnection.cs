@@ -514,6 +514,28 @@ namespace Sweet.Redis
             throw new RedisFatalException("Can not connect to end-point address", RedisErrorCode.ConnectionError);
         }
 
+        protected bool SelectDB(RedisSocket socket, int dbIndex)
+        {
+            if (dbIndex >= RedisConstants.MinDbIndex && dbIndex <= RedisConstants.MaxDbIndex)
+            {
+                var result = false;
+                try
+                {
+                    if (socket.IsConnected())
+                        using (var cmd = new RedisCommand(dbIndex, RedisCommandList.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
+                        {
+                            result = cmd.ExpectOK(new RedisSocketContext(socket, Settings), false);
+                            if (result)
+                                socket.SetDb(dbIndex);
+                        }
+                }
+                catch (Exception)
+                { }
+                return result;
+            }
+            return true;
+        }
+
         private RedisSocket CreateSocket(RedisEndPoint endPoint, IPAddress ipAddress)
         {
             var socket = NewSocketInternal(ipAddress);
