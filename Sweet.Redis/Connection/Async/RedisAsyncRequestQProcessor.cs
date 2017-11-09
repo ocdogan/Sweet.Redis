@@ -67,6 +67,7 @@ namespace Sweet.Redis
 
         #region Constants
 
+        private const int SpinSleepTime = 20;
         private const int MaxIdleSpinCount = 100;
         private const int IdleTimeout = 60 * 1000;
 
@@ -190,6 +191,7 @@ namespace Sweet.Redis
                     var commandDbIndex = -1;
                     var contextDbIndex = connection.DbIndex;
 
+                    var idleTime = 0;
                     while (processor.Processing)
                     {
                         RedisAsyncRequest request = null;
@@ -198,28 +200,33 @@ namespace Sweet.Redis
                             request = queue.Dequeue(contextDbIndex);
                             if (request == null)
                             {
-                                if (contextDbIndex != -1)
+                                if (contextDbIndex != RedisConstants.UninitializedDbIndex)
                                     request = queue.Dequeue(RedisConstants.UninitializedDbIndex);
 
                                 if (request == null)
                                 {
-                                    s_GateKeeper.Reset();
-                                    s_GateKeeper.Wait(IdleTimeout);
+                                    if (!s_GateKeeper.Wait(SpinSleepTime))
+                                    {
+                                        s_GateKeeper.Reset();
+
+                                        idleTime += SpinSleepTime;
+                                        if (idleTime >= IdleTimeout)
+                                            break;
+                                    }
+                                    continue;
                                 }
-                                continue;
                             }
+
+                            idleTime = 0;
 
                             if (!request.IsCompleted)
                             {
-                                var command = request.Command;
-                                if (command == null)
-                                    request.Cancel();
-                                else
+                                using (request)
                                 {
-                                    if (queueTimeoutMs > -1 &&
-                                        (DateTime.UtcNow - request.CreationTime).TotalMilliseconds >= queueTimeoutMs)
-                                        request.Expire(queueTimeoutMs);
-                                    else
+                                    var command = request.Command;
+                                    if (command == null)
+                                        request.Cancel();
+                                    else if (!request.Expire(queueTimeoutMs))
                                     {
                                         if (!context.IsAlive())
                                             context = new RedisSocketContext(connection.Connect(), connection.Settings);
@@ -238,15 +245,7 @@ namespace Sweet.Redis
                             }
                         }
                         catch (Exception)
-                        {
-                            try
-                            {
-                                if (request != null)
-                                    request.Cancel();
-                            }
-                            catch (Exception)
-                            { }
-                        }
+                        { }
                     }
                 }
             }
