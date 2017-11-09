@@ -40,11 +40,22 @@ namespace Sweet.Redis
         #region .Ctors
 
         public RedisInternalDisposable()
-        { }
+        {
+            if (!UsesFinalization())
+            {
+                m_FinalizationSuppressed = true;
+                GC.SuppressFinalize(this);
+            }
+        }
 
         public RedisInternalDisposable(Action<RedisInternalDisposable> onDispose)
         {
             m_OnDispose = onDispose;
+            if (!UsesFinalization())
+            {
+                m_FinalizationSuppressed = true;
+                GC.SuppressFinalize(this);
+            }
         }
 
         #endregion .Ctors
@@ -59,6 +70,11 @@ namespace Sweet.Redis
         protected internal virtual void Dispose()
         {
             Dispose(true);
+        }
+
+        protected virtual bool UsesFinalization()
+        {
+            return true;
         }
 
         protected virtual bool SuppressFinalization()

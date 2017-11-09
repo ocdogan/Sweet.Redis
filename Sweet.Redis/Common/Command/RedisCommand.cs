@@ -66,7 +66,13 @@ namespace Sweet.Redis
 
         protected override void OnDispose(bool disposing)
         {
+            base.OnDispose(disposing);
             m_Arguments = null;
+        }
+
+        protected override bool UsesFinalization()
+        {
+            return false;
         }
 
         #endregion Destructors

@@ -14,6 +14,7 @@ namespace Sweet.Redis.ConsoleTest
         {
             // PerformanceTest1();
             // PerformanceTest2();
+            PerformanceTest3();
 
             // ScriptingNoArgsEvalTest();
             // ScriptingShaNoArgsEvalTest();
@@ -43,7 +44,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading10c();
             // MultiThreading10d();
             // MultiThreading10e();
-            MultiThreading10f();
+            // MultiThreading10f();
 
             // MultiThreading1();
             // MultiThreading2a();
@@ -3189,6 +3190,75 @@ namespace Sweet.Redis.ConsoleTest
         #endregion Scripting Tests
 
         #region Performance Tests
+
+        static void PerformanceTest3()
+        {
+            using (var pool = new RedisConnectionPool("My redis pool",
+                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: 1, useAsyncCompleter: true))) // LOCAL
+            {
+                const string testKey = "tiny_text";
+                string testText = new string('x', 20);
+                const int dbIndex = 12;
+
+                using (var db = pool.GetDb(dbIndex))
+                {
+                    var b = db.Strings.Set(testKey, testText);
+                    if (!b)
+                        throw new Exception("can not set");
+
+                    var g = db.Strings.Get(testKey);
+                    if ((g == (byte[])null || g.Value == null || g.Value.Length != (testText ?? "").Length))
+                        throw new Exception("can not get");
+                }
+
+                do
+                {
+                    Console.Clear();
+
+                    var ticks = 0L;
+                    var innerSw = new Stopwatch();
+                    var outterSw = new Stopwatch();
+                    try
+                    {
+                        using (var rdb = pool.GetDb(dbIndex))
+                        {
+                            var strings = rdb.Strings;
+
+                            for (var j = 0; j < 50000; j++)
+                            {
+                                outterSw.Start();
+                                innerSw.Restart();
+
+                                var result = strings.Get(testKey);
+
+                                innerSw.Stop();
+                                outterSw.Stop();
+
+                                ticks += innerSw.ElapsedTicks;
+
+                                byte[] data = result;
+
+                                var ok = (!ReferenceEquals(data, null) && data.Length == (testText ?? "").Length);
+                                Console.WriteLine("00:00" +
+                                    ", " + j.ToString("D3") +
+                                    ": Processed, " + innerSw.ElapsedMilliseconds.ToString("D3") + " msec, " +
+                                    (ok ? "OK" : "FAILED"));
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+
+                    Console.WriteLine();
+                    Console.WriteLine("Sum of inner ticks: " + ticks);
+                    Console.WriteLine("Sum of outter ticks: " + outterSw.ElapsedTicks);
+                    Console.WriteLine("Press any key to continue, ESC to escape ...");
+                }
+                while (Console.ReadKey(true).Key != ConsoleKey.Escape);
+            }
+        }
 
         static void PerformanceTest2()
         {

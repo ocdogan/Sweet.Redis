@@ -190,7 +190,7 @@ namespace Sweet.Redis
                     var commandDbIndex = -1;
                     var contextDbIndex = connection.DbIndex;
 
-                    while (processor.Processing) // && queue.IsAlive())
+                    while (processor.Processing)
                     {
                         RedisAsyncRequest request = null;
                         try

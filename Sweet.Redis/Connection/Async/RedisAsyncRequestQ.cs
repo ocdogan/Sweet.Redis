@@ -165,25 +165,23 @@ namespace Sweet.Redis
 
         public RedisAsyncRequest Dequeue(int dbIndex)
         {
-            ValidateNotDisposed();
-
+            var member = (RedisAsyncRequest)null;
             lock (m_AsyncMessageQLock)
             {
-                var member = m_QTail;
-                if (member != null)
+                member = m_QTail;
+                m_QTail = null;
+            }
+
+            if (member != null)
+            {
+                try
                 {
-                    try
-                    {
-                        var command = member.Command;
-                        if (dbIndex < 0 || command.DbIndex == dbIndex)
-                        {
-                            m_QTail = null;
-                            return member;
-                        }
-                    }
-                    catch (Exception)
-                    { }
+                    var command = member.Command;
+                    if (dbIndex < 0 || command.DbIndex == dbIndex)
+                        return member;
                 }
+                catch (Exception)
+                { }
             }
 
             if (m_AsyncRequestQ != null)
@@ -193,12 +191,9 @@ namespace Sweet.Redis
                     var store = m_AsyncRequestQ;
                     if (store != null)
                     {
-                        RedisAsyncRequest member;
-
                         var node = store.First;
                         while (node != null)
                         {
-                            var nextNode = node.Next;
                             try
                             {
                                 member = node.Value;
@@ -219,10 +214,8 @@ namespace Sweet.Redis
                             }
                             catch (Exception)
                             { }
-                            finally
-                            {
-                                node = nextNode;
-                            }
+
+                            node = node.Next;
                         }
                     }
                 }
