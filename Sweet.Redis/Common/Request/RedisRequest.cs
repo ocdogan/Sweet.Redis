@@ -62,19 +62,16 @@ namespace Sweet.Redis
 
         public void Dispose()
         {
-            try
+            if (Interlocked.CompareExchange(ref m_Disposed, RedisConstants.One, RedisConstants.Zero) ==
+                RedisConstants.Zero)
             {
-                if (Interlocked.Read(ref m_Disposed) != RedisConstants.Zero)
+                var cancellationRequired = !(IsCompleted || IsCanceled || IsFaulted);
+
+                Interlocked.Exchange(ref m_Command, null);
+                Interlocked.Exchange(ref m_StateObject, null);
+
+                if (cancellationRequired)
                     Cancel();
-            }
-            finally
-            {
-                if (Interlocked.CompareExchange(ref m_Disposed, RedisConstants.One, RedisConstants.Zero) ==
-                    RedisConstants.Zero)
-                {
-                    Interlocked.Exchange(ref m_Command, null);
-                    Interlocked.Exchange(ref m_StateObject, null);
-                }
             }
         }
 
