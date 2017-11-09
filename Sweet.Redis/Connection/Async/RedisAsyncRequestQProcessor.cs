@@ -229,7 +229,7 @@ namespace Sweet.Redis
                                             context.Socket.SelectDB(connection.Settings, commandDbIndex))
                                         {
                                             contextDbIndex = context.DbIndex;
-                                            connection.SetDb(contextDbIndex);
+                                            connection.SelectDB(contextDbIndex);
                                         }
 
                                         request.Process(context);

@@ -56,7 +56,7 @@ namespace Sweet.Redis
             }
             catch (Exception)
             { }
-            SetDb(m_DbIndex);
+            SelectDB(m_DbIndex);
         }
 
         #endregion .Ctors
@@ -72,7 +72,7 @@ namespace Sweet.Redis
 
         #region Methods
 
-        internal void SetDb(int dbIndex)
+        internal void SelectDB(int dbIndex)
         {
             m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
 
