@@ -41,8 +41,9 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading10a();
             // MultiThreading10b();
             // MultiThreading10c();
-            MultiThreading10d();
+            // MultiThreading10d();
             // MultiThreading10e();
+            MultiThreading10f();
 
             // MultiThreading1();
             // MultiThreading2a();
@@ -1983,6 +1984,16 @@ namespace Sweet.Redis.ConsoleTest
 
         #region Multi-Threading
 
+        static void MultiThreading10f()
+        {
+            var testKey = "tiny_text";
+            var tinyText = new string('x', 20);
+
+            MultiThreadingBasePool(12, 1, 1, 50000, testKey, tinyText, true, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); },
+                               false, true);
+        }
+
         static void MultiThreading10e()
         {
             var testKey = "tiny_text";
@@ -2245,8 +2256,10 @@ namespace Sweet.Redis.ConsoleTest
                                             else
                                             {
                                                 var ok = (data != null && data.Length == (testText ?? "").Length);
-                                                Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                                                  (ok ? "OK" : "FAILED"));
+                                                Console.WriteLine(@this.Name +
+                                                    ", " + j.ToString("D3") + 
+                                                    ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
+                                                    (ok ? "OK" : "FAILED"));
                                             }
 
                                             lock (ticksLock)
@@ -2424,8 +2437,10 @@ namespace Sweet.Redis.ConsoleTest
                                             else
                                             {
                                                 var ok = (data != null && data.Length == (testText ?? "").Length);
-                                                Console.WriteLine(@this.Name + ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                                                  (ok ? "OK" : "FAILED"));
+                                                Console.WriteLine(@this.Name +
+                                                    ", " + j.ToString("D3") + 
+                                                    ": Processed, " + sw.ElapsedMilliseconds.ToString("D3") + " msec, " +
+                                                    (ok ? "OK" : "FAILED"));
                                             }
 
                                             lock (ticksLock)

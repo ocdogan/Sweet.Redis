@@ -111,11 +111,6 @@ namespace Sweet.Redis
 
         #region Methods
 
-        protected override bool SuppressFinalization()
-        {
-            return false;
-        }
-
         #region Execution Methods
 
         #region IRedisConnection Execution Methods

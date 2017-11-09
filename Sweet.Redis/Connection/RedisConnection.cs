@@ -542,33 +542,25 @@ namespace Sweet.Redis
             try
             {
                 ConfigureInternal(socket);
+                socket.ConnectAsync(ipAddress, endPoint.Port).Wait();
 
-                socket.ConnectAsync(ipAddress, endPoint.Port)
-                    .ContinueWith(ca =>
-                    {
-                        if (ca.IsFaulted)
-                        {
-                            SetState((long)RedisConnectionState.Failed);
+                SetLastError(0L);
+                SetState((long)RedisConnectionState.Connected);
 
-                            var errorCode = ca.Exception.GetSocketErrorCode();
-                            if (errorCode != SocketError.Success)
-                                SetLastError((long)errorCode);
-                            else
-                                SetLastError(RedisErrorCode.GenericError);
-                        }
-                        else if (ca.IsCompleted)
-                        {
-                            SetLastError(0L);
-                            SetState((long)RedisConnectionState.Connected);
-
-                            var oldSocket = Interlocked.Exchange(ref m_Socket, socket);
-                            if (oldSocket != null && oldSocket != socket)
-                                oldSocket.DisposeSocket();
-                        }
-                    }).Wait();
+                var oldSocket = Interlocked.Exchange(ref m_Socket, socket);
+                if (oldSocket != null && oldSocket != socket)
+                    oldSocket.DisposeSocket();
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                SetState((long)RedisConnectionState.Failed);
+
+                var errorCode = e.GetSocketErrorCode();
+                if (errorCode != SocketError.Success)
+                    SetLastError((long)errorCode);
+                else
+                    SetLastError(RedisErrorCode.GenericError);
+
                 socket.DisposeSocket();
                 throw;
             }

@@ -36,10 +36,9 @@ namespace Sweet.Redis
             #region .Ctors
 
             public ProcessParameters(RedisAsyncRequestQProcessor processor,
-                                     Thread thread, RedisAsyncRequestQ queue,
+                                     RedisAsyncRequestQ queue,
                                      RedisPoolSettings settings)
             {
-                Me = thread;
                 Processor = processor;
                 Queue = queue;
                 Settings = settings;
@@ -48,8 +47,6 @@ namespace Sweet.Redis
             #endregion .Ctors
 
             #region Properties
-
-            public Thread Me { get; private set; }
 
             public RedisAsyncRequestQProcessor Processor { get; private set; }
 
@@ -78,7 +75,6 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_State;
-        private Thread m_Thread;
 
         #endregion Field Members
 
@@ -133,16 +129,10 @@ namespace Sweet.Redis
             {
                 StopCurrent();
 
-                var thread = new Thread((p) =>
-                {
-                    ProcessQueue((ProcessParameters)p);
-                });
-                thread.IsBackground = true;
+                ThreadPool.QueueUserWorkItem(ProcessQueueImpl,
+                    new ProcessParameters(this, Queue, Settings));
 
-                Interlocked.Exchange(ref m_Thread, thread);
                 Interlocked.Exchange(ref m_State, (long)RedisProcessState.Processing);
-
-                thread.Start(new ProcessParameters(this, thread, Queue, Settings));
             }
             catch (Exception)
             {
@@ -161,29 +151,22 @@ namespace Sweet.Redis
 
         private void StopCurrent()
         {
-            var thread = Interlocked.Exchange(ref m_Thread, null);
-            if (thread != null && thread.IsAlive)
-            {
-                try
-                {
-                    thread.Interrupt();
-                }
-                catch (Exception)
-                { }
-            }
+            ProcessCompleted();
         }
 
-        private void ProcessCompleted(Thread thread)
+        private void ProcessCompleted()
         {
-            if (thread == m_Thread)
-            {
-                Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
-            }
+            Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
         }
 
         private static void OnReleaseSocket(IRedisConnection conn, RedisSocket socket)
         {
             socket.DisposeSocket();
+        }
+
+        private static void ProcessQueueImpl(object state)
+        {
+            ProcessQueue((ProcessParameters)state);
         }
 
         private static void ProcessQueue(ProcessParameters parameters)
@@ -268,7 +251,7 @@ namespace Sweet.Redis
             { }
             finally
             {
-                processor.ProcessCompleted(parameters.Me);
+                processor.ProcessCompleted();
             }
         }
 
