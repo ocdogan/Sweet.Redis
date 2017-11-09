@@ -133,8 +133,6 @@ namespace Sweet.Redis
 
         public override void Cancel()
         {
-            ValidateNotDisposed();
-
             var tcs = CompletionSource;
             if (tcs != null)
             {
@@ -150,8 +148,6 @@ namespace Sweet.Redis
         {
             if (exception != null)
             {
-                ValidateNotDisposed();
-
                 var tcs = CompletionSource;
                 if (tcs != null)
                 {
@@ -167,137 +163,136 @@ namespace Sweet.Redis
         public override void SetResult(object value)
         {
             var tcs = CompletionSource;
-            if (tcs != null)
+            if (tcs != null && IsValidTask(tcs.Task))
             {
-                var task = tcs.Task;
-                if (!(task.IsCompleted || task.IsFaulted || task.IsCanceled))
+                switch (Expectation)
                 {
-                    switch (Expectation)
-                    {
-                        case RedisCommandExpect.Response:
-                            {
-                                var result = (RedisResponse)value;
-                                (tcs as TaskCompletionSource<RedisResponse>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.Array:
-                            {
-                                var result = (RedisRaw)value;
-                                (tcs as TaskCompletionSource<RedisRaw>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.BulkString:
-                            {
-                                var result = (RedisString)value;
-                                (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.BulkStringBytes:
-                            {
-                                var result = (RedisBytes)value;
-                                (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.Double:
-                            {
-                                var result = (RedisDouble)value;
-                                (tcs as TaskCompletionSource<RedisDouble>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.GreaterThanZero:
-                            {
-                                var result = (RedisBool)value;
-                                (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.Integer:
-                            {
-                                var result = (RedisInteger)value;
-                                (tcs as TaskCompletionSource<RedisInteger>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.MultiDataBytes:
-                            {
-                                var result = (RedisMultiBytes)value;
-                                (tcs as TaskCompletionSource<RedisMultiBytes>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.MultiDataStrings:
-                            {
-                                var result = (RedisMultiString)value;
-                                (tcs as TaskCompletionSource<RedisMultiString>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.Nothing:
-                            {
-                                var result = (RedisVoid)value;
-                                (tcs as TaskCompletionSource<RedisVoid>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.NullableDouble:
-                            {
-                                var result = (RedisNullableDouble)value;
-                                (tcs as TaskCompletionSource<RedisNullableDouble>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.NullableInteger:
-                            {
-                                var result = (RedisNullableInteger)value;
-                                (tcs as TaskCompletionSource<RedisNullableInteger>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.OK:
-                            {
-                                var result = (RedisBool)value;
-                                (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.One:
-                            {
-                                var result = (RedisBool)value;
-                                (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.SimpleString:
-                            {
-                                var result = (RedisString)value;
-                                (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
-                            }
-                            break;
-                        case RedisCommandExpect.SimpleStringBytes:
-                            {
-                                var result = (RedisBytes)value;
-                                (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+                    case RedisCommandExpect.Response:
+                        {
+                            var result = (RedisResponse)value;
+                            (tcs as TaskCompletionSource<RedisResponse>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.Array:
+                        {
+                            var result = (RedisRaw)value;
+                            (tcs as TaskCompletionSource<RedisRaw>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.BulkString:
+                        {
+                            var result = (RedisString)value;
+                            (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.BulkStringBytes:
+                        {
+                            var result = (RedisBytes)value;
+                            (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.Double:
+                        {
+                            var result = (RedisDouble)value;
+                            (tcs as TaskCompletionSource<RedisDouble>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.GreaterThanZero:
+                        {
+                            var result = (RedisBool)value;
+                            (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.Integer:
+                        {
+                            var result = (RedisInteger)value;
+                            (tcs as TaskCompletionSource<RedisInteger>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.MultiDataBytes:
+                        {
+                            var result = (RedisMultiBytes)value;
+                            (tcs as TaskCompletionSource<RedisMultiBytes>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.MultiDataStrings:
+                        {
+                            var result = (RedisMultiString)value;
+                            (tcs as TaskCompletionSource<RedisMultiString>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.Nothing:
+                        {
+                            var result = (RedisVoid)value;
+                            (tcs as TaskCompletionSource<RedisVoid>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.NullableDouble:
+                        {
+                            var result = (RedisNullableDouble)value;
+                            (tcs as TaskCompletionSource<RedisNullableDouble>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.NullableInteger:
+                        {
+                            var result = (RedisNullableInteger)value;
+                            (tcs as TaskCompletionSource<RedisNullableInteger>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.OK:
+                        {
+                            var result = (RedisBool)value;
+                            (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.One:
+                        {
+                            var result = (RedisBool)value;
+                            (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.SimpleString:
+                        {
+                            var result = (RedisString)value;
+                            (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
+                        }
+                        break;
+                    case RedisCommandExpect.SimpleStringBytes:
+                        {
+                            var result = (RedisBytes)value;
+                            (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
+                        }
+                        break;
+                    default:
+                        break;
                 }
             }
         }
 
-        public override bool Expire(int timeoutMilliseconds = -1)
+        private bool IsExpired(int timeoutMilliseconds)
         {
-            ValidateNotDisposed();
-
             if (timeoutMilliseconds > -1)
             {
-                var tcs = CompletionSource;
-                if (tcs != null)
-                {
-                    var task = tcs.Task;
-                    if (task != null)
-                    {
-                        timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
+                timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
+                return ((DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds);
+            }
+            return false;
+        }
 
-                        if (!task.IsCompleted &&
-                            (DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
-                        {
-                            tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
-                            return true;
-                        }
-                    }
+        private bool IsValidTask(Task<T> task)
+        {
+            return (task != null && !(task.IsCompleted || task.IsFaulted || task.IsCanceled));
+        }
+
+        public override bool Expire(int timeoutMilliseconds = -1)
+        {
+            if (IsExpired(timeoutMilliseconds))
+            {
+                var tcs = CompletionSource;
+                if (tcs != null && IsValidTask(tcs.Task))
+                {
+                    tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
+                    return true;
                 }
             }
             return false;
@@ -305,133 +300,122 @@ namespace Sweet.Redis
 
         public override void Process(RedisSocketContext context, int timeoutMilliseconds = -1)
         {
-            ValidateNotDisposed();
-
             var tcs = CompletionSource;
-            if (tcs != null)
+            if (tcs != null && IsValidTask(tcs.Task))
             {
                 try
                 {
-                    var task = tcs.Task;
-                    if (task != null &&
-                        !(task.IsCompleted || task.IsFaulted || task.IsCanceled))
+                    if (IsExpired(timeoutMilliseconds))
                     {
-                        if (timeoutMilliseconds > -1)
-                        {
-                            timeoutMilliseconds = Math.Min(timeoutMilliseconds, MaxTimeout);
-                            if ((DateTime.UtcNow - CreationTime).TotalMilliseconds >= timeoutMilliseconds)
-                            {
-                                tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
-                                return;
-                            }
-                        }
+                        tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
+                        return;
+                    }
 
-                        var command = Command;
-                        if (command == null || context == null || !context.Socket.IsConnected())
-                            tcs.TrySetCanceled();
-                        else
+                    var command = Command;
+                    if (command == null || context == null || !context.Socket.IsConnected())
+                        tcs.TrySetCanceled();
+                    else
+                    {
+                        switch (Expectation)
                         {
-                            switch (Expectation)
-                            {
-                                case RedisCommandExpect.Response:
-                                    {
-                                        var result = command.Execute(context);
-                                        (tcs as TaskCompletionSource<RedisResponse>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.Array:
-                                    {
-                                        var result = command.ExpectArray(context);
-                                        (tcs as TaskCompletionSource<RedisRaw>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.BulkString:
-                                    {
-                                        var result = command.ExpectBulkString(context);
-                                        (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.BulkStringBytes:
-                                    {
-                                        var result = command.ExpectBulkStringBytes(context);
-                                        (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.Double:
-                                    {
-                                        var result = command.ExpectDouble(context);
-                                        (tcs as TaskCompletionSource<RedisDouble>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.GreaterThanZero:
-                                    {
-                                        var result = command.ExpectInteger(context);
-                                        (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result > RedisConstants.Zero);
-                                    }
-                                    break;
-                                case RedisCommandExpect.Integer:
-                                    {
-                                        var result = command.ExpectInteger(context);
-                                        (tcs as TaskCompletionSource<RedisInteger>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.MultiDataBytes:
-                                    {
-                                        var result = command.ExpectMultiDataBytes(context);
-                                        (tcs as TaskCompletionSource<RedisMultiBytes>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.MultiDataStrings:
-                                    {
-                                        var result = command.ExpectMultiDataStrings(context);
-                                        (tcs as TaskCompletionSource<RedisMultiString>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.Nothing:
-                                    {
-                                        var result = command.ExpectNothing(context);
-                                        (tcs as TaskCompletionSource<RedisVoid>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.NullableDouble:
-                                    {
-                                        var result = command.ExpectNullableDouble(context);
-                                        (tcs as TaskCompletionSource<RedisNullableDouble>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.NullableInteger:
-                                    {
-                                        var result = command.ExpectNullableInteger(context);
-                                        (tcs as TaskCompletionSource<RedisNullableInteger>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.OK:
-                                    {
-                                        var result = command.ExpectOK(context);
-                                        (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.One:
-                                    {
-                                        var result = command.ExpectOne(context);
-                                        (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.SimpleString:
-                                    {
-                                        var result = command.ExpectSimpleString(context);
-                                        (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
-                                    }
-                                    break;
-                                case RedisCommandExpect.SimpleStringBytes:
-                                    {
-                                        var result = command.ExpectSimpleStringBytes(context);
-                                        (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
+                            case RedisCommandExpect.Response:
+                                {
+                                    var result = command.Execute(context);
+                                    (tcs as TaskCompletionSource<RedisResponse>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.Array:
+                                {
+                                    var result = command.ExpectArray(context);
+                                    (tcs as TaskCompletionSource<RedisRaw>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.BulkString:
+                                {
+                                    var result = command.ExpectBulkString(context);
+                                    (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.BulkStringBytes:
+                                {
+                                    var result = command.ExpectBulkStringBytes(context);
+                                    (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.Double:
+                                {
+                                    var result = command.ExpectDouble(context);
+                                    (tcs as TaskCompletionSource<RedisDouble>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.GreaterThanZero:
+                                {
+                                    var result = command.ExpectInteger(context);
+                                    (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result > RedisConstants.Zero);
+                                }
+                                break;
+                            case RedisCommandExpect.Integer:
+                                {
+                                    var result = command.ExpectInteger(context);
+                                    (tcs as TaskCompletionSource<RedisInteger>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.MultiDataBytes:
+                                {
+                                    var result = command.ExpectMultiDataBytes(context);
+                                    (tcs as TaskCompletionSource<RedisMultiBytes>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.MultiDataStrings:
+                                {
+                                    var result = command.ExpectMultiDataStrings(context);
+                                    (tcs as TaskCompletionSource<RedisMultiString>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.Nothing:
+                                {
+                                    var result = command.ExpectNothing(context);
+                                    (tcs as TaskCompletionSource<RedisVoid>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.NullableDouble:
+                                {
+                                    var result = command.ExpectNullableDouble(context);
+                                    (tcs as TaskCompletionSource<RedisNullableDouble>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.NullableInteger:
+                                {
+                                    var result = command.ExpectNullableInteger(context);
+                                    (tcs as TaskCompletionSource<RedisNullableInteger>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.OK:
+                                {
+                                    var result = command.ExpectOK(context);
+                                    (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.One:
+                                {
+                                    var result = command.ExpectOne(context);
+                                    (tcs as TaskCompletionSource<RedisBool>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.SimpleString:
+                                {
+                                    var result = command.ExpectSimpleString(context);
+                                    (tcs as TaskCompletionSource<RedisString>).TrySetResult(result);
+                                }
+                                break;
+                            case RedisCommandExpect.SimpleStringBytes:
+                                {
+                                    var result = command.ExpectSimpleStringBytes(context);
+                                    (tcs as TaskCompletionSource<RedisBytes>).TrySetResult(result);
+                                }
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }

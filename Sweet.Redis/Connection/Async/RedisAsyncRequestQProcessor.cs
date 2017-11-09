@@ -190,19 +190,22 @@ namespace Sweet.Redis
                     var commandDbIndex = -1;
                     var contextDbIndex = connection.DbIndex;
 
-                    while (processor.Processing && queue.IsAlive())
+                    while (processor.Processing) // && queue.IsAlive())
                     {
                         RedisAsyncRequest request = null;
                         try
                         {
                             request = queue.Dequeue(contextDbIndex);
-                            if (request == null && contextDbIndex != -1)
-                                request = queue.Dequeue(-1);
-
                             if (request == null)
                             {
-                                s_GateKeeper.Reset();
-                                s_GateKeeper.Wait(IdleTimeout);
+                                if (contextDbIndex != -1)
+                                    request = queue.Dequeue(RedisConstants.UninitializedDbIndex);
+
+                                if (request == null)
+                                {
+                                    s_GateKeeper.Reset();
+                                    s_GateKeeper.Wait(IdleTimeout);
+                                }
                                 continue;
                             }
 
