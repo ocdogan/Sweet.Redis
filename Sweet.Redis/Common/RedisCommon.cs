@@ -1638,9 +1638,13 @@ namespace Sweet.Redis
 
         internal static bool IsConnected(this Socket socket, int poll = -1)
         {
-            if (socket == null || !socket.Connected)
-                return false;
-            return !((poll > -1) && socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+            if (socket != null && socket.Connected)
+            {
+                if (poll > -1)
+                    return !(socket.Poll(poll, SelectMode.SelectRead) && (socket.Available == 0));
+                return true;
+            }
+            return false;
         }
 
         internal static bool IsConnected(this RedisSocket socket, int poll = -1)
