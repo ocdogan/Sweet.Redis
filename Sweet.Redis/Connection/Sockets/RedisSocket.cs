@@ -480,6 +480,28 @@ namespace Sweet.Redis
             m_Authenticated = value;
         }
 
+        internal bool SelectDB(RedisConnectionSettings settings, int dbIndex)
+        {
+            if (dbIndex >= RedisConstants.MinDbIndex && dbIndex <= RedisConstants.MaxDbIndex)
+            {
+                var result = false;
+                try
+                {
+                    if (this.IsConnected())
+                        using (var cmd = new RedisCommand(dbIndex, RedisCommandList.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
+                        {
+                            result = cmd.ExpectOK(new RedisSocketContext(this, settings), false);
+                            if (result)
+                                SetDb(dbIndex);
+                        }
+                }
+                catch (Exception)
+                { }
+                return result;
+            }
+            return true;
+        }
+
         internal void SetDb(int dbIndex)
         {
             m_DbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
@@ -1037,28 +1059,6 @@ namespace Sweet.Redis
         public bool ReceiveMessageFromAsync(SocketAsyncEventArgs e)
         {
             return m_Socket.ReceiveMessageFromAsync(e);
-        }
-
-        public bool SelectDB(RedisConnectionSettings settings, int dbIndex)
-        {
-            if (dbIndex >= RedisConstants.MinDbIndex && dbIndex <= RedisConstants.MaxDbIndex)
-            {
-                var result = false;
-                try
-                {
-                    if (this.IsConnected())
-                        using (var cmd = new RedisCommand(dbIndex, RedisCommandList.Select, RedisCommandType.SendAndReceive, dbIndex.ToBytes()))
-                        {
-                            result = cmd.ExpectOK(new RedisSocketContext(this, settings), false);
-                            if (result)
-                                SetDb(dbIndex);
-                        }
-                }
-                catch (Exception)
-                { }
-                return result;
-            }
-            return true;
         }
 
         public int Send(IList<ArraySegment<byte>> buffers, SocketFlags socketFlags)

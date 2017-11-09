@@ -74,13 +74,19 @@ namespace Sweet.Redis
 
         internal void SelectDB(int dbIndex)
         {
-            dbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
+            SelectDB(m_Socket, dbIndex);
+        }
 
-            var socket = m_Socket;
-            if (m_DbIndex > RedisConstants.UninitializedDbIndex &&
-                (socket != null) && socket.DbIndex != dbIndex &&
-                socket.SelectDB(Settings, dbIndex))
-                m_DbIndex = socket.DbIndex;
+        private void SelectDB(RedisSocket socket, int dbIndex)
+        {
+            if (socket != null)
+            {
+                dbIndex = Math.Min(Math.Max(dbIndex, RedisConstants.UninitializedDbIndex), RedisConstants.MaxDbIndex);
+
+                if (dbIndex > RedisConstants.UninitializedDbIndex &&
+                    socket.DbIndex != dbIndex && socket.SelectDB(Settings, dbIndex))
+                    m_DbIndex = socket.DbIndex;
+            }
         }
 
         protected override int GetReceiveTimeout()
