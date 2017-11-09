@@ -1665,6 +1665,7 @@ namespace Sweet.Redis
                     {
                         try
                         {
+                            sck.Shutdown(SocketShutdown.Both); 
                             if (sck.IsConnected(10))
                                 sck.Close();
                         }
@@ -1703,6 +1704,7 @@ namespace Sweet.Redis
                     {
                         try
                         {
+                            sck.Shutdown(SocketShutdown.Both); 
                             if (sck.IsConnected(10))
                                 sck.Close();
                         }
