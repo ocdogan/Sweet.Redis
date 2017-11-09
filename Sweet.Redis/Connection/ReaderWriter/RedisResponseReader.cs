@@ -119,7 +119,7 @@ namespace Sweet.Redis
 
         public int ReadPosition
         {
-            get { return Math.Max(Beginning, Math.Min(BufferSize, m_ReadPosition)); }
+            get { return Math.Max(Beginning, Math.Min(m_BufferSize, m_ReadPosition)); }
         }
 
         public RedisConnectionSettings Settings
@@ -129,7 +129,7 @@ namespace Sweet.Redis
 
         public int WritePosition
         {
-            get { return Math.Max(Beginning, Math.Min(BufferSize, m_WritePosition)); }
+            get { return Math.Max(Beginning, Math.Min(m_BufferSize, m_WritePosition)); }
         }
 
         #endregion Properties
@@ -334,12 +334,12 @@ namespace Sweet.Redis
             {
                 try
                 {
-                    var availableLength = BufferSize - m_WritePosition;
+                    var availableLength = m_BufferSize - m_WritePosition;
                     if (availableLength < 1)
                     {
                         Interlocked.Exchange(ref m_WritePosition, Beginning);
                         Interlocked.Exchange(ref m_ReadPosition, Beginning);
-                        availableLength = BufferSize;
+                        availableLength = m_BufferSize;
                     }
 
                     if (length > 0)
@@ -449,12 +449,12 @@ namespace Sweet.Redis
 
         protected void IncrementReadPosition(int inc = 1)
         {
-            Interlocked.Exchange(ref m_ReadPosition, Math.Min(BufferSize, Math.Max(Beginning, m_ReadPosition + inc)));
+            Interlocked.Exchange(ref m_ReadPosition, Math.Min(m_BufferSize, Math.Max(Beginning, m_ReadPosition + inc)));
         }
 
         protected void IncrementWritePosition(int inc = 1)
         {
-            Interlocked.Exchange(ref m_WritePosition, Math.Min(BufferSize, Math.Max(Beginning, m_WritePosition + inc)));
+            Interlocked.Exchange(ref m_WritePosition, Math.Min(m_BufferSize, Math.Max(Beginning, m_WritePosition + inc)));
         }
 
         protected byte[] ReadLine(RedisSocket socket)
