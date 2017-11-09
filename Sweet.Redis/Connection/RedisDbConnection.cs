@@ -79,7 +79,7 @@ namespace Sweet.Redis
             var socket = m_Socket;
             if (m_DbIndex > RedisConstants.UninitializedDbIndex &&
                 (socket != null) && socket.DbIndex != dbIndex &&
-                socket.SelectDB(Settings, m_DbIndex))
+                socket.SelectDB(Settings, dbIndex))
                 m_DbIndex = socket.DbIndex;
         }
 
