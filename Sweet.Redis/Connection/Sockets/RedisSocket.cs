@@ -910,7 +910,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             var rs = m_RealStream;
-            if (rs == null || (rs.CanRead && rs.CanWrite))
+            if (rs == null || !(rs.CanRead && rs.CanWrite))
             {
                 rs = new NetworkStream(m_Socket, false);
                 if (UseSsl)
@@ -938,7 +938,7 @@ namespace Sweet.Redis
             ValidateNotDisposed();
 
             var ws = m_BufferedStream;
-            if (ws == null || (ws.CanRead && ws.CanWrite))
+            if (ws == null || !(ws.CanRead && ws.CanWrite))
             {
                 ws = new BufferedStream(GetRealStream(), 1024);
                 Interlocked.Exchange(ref m_BufferedStream, ws);
