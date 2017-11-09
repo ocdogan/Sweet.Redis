@@ -224,15 +224,15 @@ namespace Sweet.Redis
                                 using (request)
                                 {
                                     var command = request.Command;
-                                    if (command == null)
-                                        request.Cancel();
-                                    else if (!request.Expire(queueTimeoutMs))
+                                    if (command != null)
                                     {
                                         if (!context.IsAlive())
                                             context = new RedisSocketContext(connection.Connect(), connection.Settings);
 
                                         commandDbIndex = command.DbIndex;
-                                        if (commandDbIndex > -1 && commandDbIndex != contextDbIndex &&
+
+                                        if (commandDbIndex != contextDbIndex &&
+                                            commandDbIndex > RedisConstants.UninitializedDbIndex &&
                                             context.Socket.SelectDB(connection.Settings, commandDbIndex))
                                         {
                                             contextDbIndex = context.DbIndex;
