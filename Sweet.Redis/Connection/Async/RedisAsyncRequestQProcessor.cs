@@ -68,9 +68,8 @@ namespace Sweet.Redis
 
         #region Constants
 
-        private const int SpinSleepTime = 20;
-        private const int MaxIdleSpinCount = 100;
-        private const int IdleTimeout = 60 * 1000;
+        private const int SpinSleepTime = 100;
+        private const int IdleTimeout = 10 * 1000;
 
         #endregion Constants
 
@@ -97,7 +96,7 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            var asycRequestQ  =Interlocked.Exchange(ref m_AsycRequestQ, null);
+            var asycRequestQ = Interlocked.Exchange(ref m_AsycRequestQ, null);
             if (asycRequestQ != null)
                 asycRequestQ.Dispose();
 
@@ -212,29 +211,23 @@ namespace Sweet.Redis
                     var contextDbIndex = connection.DbIndex;
 
                     var idleTime = 0;
+                    var request = (RedisAsyncRequest)null;
+
                     while (processor.Processing)
                     {
-                        RedisAsyncRequest request = null;
                         try
                         {
-                            request = queue.Dequeue(contextDbIndex);
-                            if (request == null)
+                            if (!queue.TryDequeueOneOf(contextDbIndex, RedisConstants.UninitializedDbIndex, out request))
                             {
-                                if (contextDbIndex != RedisConstants.UninitializedDbIndex)
-                                    request = queue.Dequeue(RedisConstants.UninitializedDbIndex);
-
-                                if (request == null)
+                                if (s_GateKeeper.Wait(SpinSleepTime))
+                                    s_GateKeeper.Reset();
+                                else
                                 {
-                                    if (!s_GateKeeper.Wait(SpinSleepTime))
-                                    {
-                                        s_GateKeeper.Reset();
-
-                                        idleTime += SpinSleepTime;
-                                        if (idleTime >= IdleTimeout)
-                                            break;
-                                    }
-                                    continue;
+                                    idleTime += SpinSleepTime;
+                                    if (idleTime >= IdleTimeout)
+                                        break;
                                 }
+                                continue;
                             }
 
                             idleTime = 0;

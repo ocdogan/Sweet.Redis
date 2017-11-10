@@ -51,6 +51,7 @@ namespace Sweet.Redis
 
         #region Field Members
 
+        private int m_Count;
         private int m_TimeoutMilliseconds;
 
         private RedisAsyncRequest m_QTail;
@@ -94,14 +95,8 @@ namespace Sweet.Redis
             {
                 lock (m_AsyncMessageQLock)
                 {
-                    if (m_QTail != null)
-                        return false;
-
-                    var store = m_AsyncRequestQ;
-                    if (store != null)
-                        return store.Count == 0;
+                    return m_Count > 0;
                 }
-                return true;
             }
         }
 
@@ -163,11 +158,16 @@ namespace Sweet.Redis
             }
         }
 
-        public RedisAsyncRequest Dequeue(int dbIndex)
+        public bool TryDequeue(int dbIndex, out RedisAsyncRequest result)
         {
+            result = null;
             var member = (RedisAsyncRequest)null;
+
             lock (m_AsyncMessageQLock)
             {
+                if (m_Count == 0)
+                    return false;
+
                 member = m_QTail;
                 m_QTail = null;
             }
@@ -178,7 +178,11 @@ namespace Sweet.Redis
                 {
                     var command = member.Command;
                     if (dbIndex < 0 || command.DbIndex == dbIndex)
-                        return member;
+                    {
+                        m_Count--;
+                        result = member;
+                        return true;
+                    }
                 }
                 catch (Exception)
                 { }
@@ -205,7 +209,10 @@ namespace Sweet.Redis
                                         if (dbIndex < 0 || command.DbIndex == dbIndex)
                                         {
                                             store.Remove(node);
-                                            return member;
+                                            m_Count--;
+
+                                            result = member;
+                                            return true;
                                         }
                                     }
                                     catch (Exception)
@@ -220,7 +227,81 @@ namespace Sweet.Redis
                     }
                 }
             }
-            return null;
+            return false;
+        }
+
+        public bool TryDequeueOneOf(int dbIndex1, int dbIndex2, out RedisAsyncRequest result)
+        {
+            result = null;
+            var member = (RedisAsyncRequest)null;
+
+            lock (m_AsyncMessageQLock)
+            {
+                if (m_Count == 0)
+                    return false;
+
+                member = m_QTail;
+                m_QTail = null;
+            }
+
+            if (member != null)
+            {
+                try
+                {
+                    var command = member.Command;
+                    if ((dbIndex1 < 0 || command.DbIndex == dbIndex1) ||
+                        (dbIndex2 < 0 || command.DbIndex == dbIndex2))
+                    {
+                        m_Count--;
+                        result = member;
+                        return true;
+                    }
+                }
+                catch (Exception)
+                { }
+            }
+
+            if (m_AsyncRequestQ != null)
+            {
+                lock (m_AsyncMessageQLock)
+                {
+                    var store = m_AsyncRequestQ;
+                    if (store != null)
+                    {
+                        var node = store.First;
+                        while (node != null)
+                        {
+                            try
+                            {
+                                member = node.Value;
+                                if (member != null)
+                                {
+                                    try
+                                    {
+                                        var command = member.Command;
+                                        if ((dbIndex1 < 0 || command.DbIndex == dbIndex1) ||
+                                            (dbIndex2 < 0 || command.DbIndex == dbIndex2))
+                                        {
+                                            store.Remove(node);
+                                            m_Count--;
+
+                                            result = member;
+                                            return true;
+                                        }
+                                    }
+                                    catch (Exception)
+                                    { }
+                                }
+                            }
+                            catch (Exception)
+                            { }
+
+                            node = node.Next;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         public RedisAsyncRequest<T> Enqueue<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
@@ -243,6 +324,7 @@ namespace Sweet.Redis
                             store.AddLast(prevTail);
                         }
                     }
+                    m_Count++;
                 }
                 return member;
             }

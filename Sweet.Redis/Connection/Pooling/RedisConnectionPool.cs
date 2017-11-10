@@ -973,13 +973,9 @@ namespace Sweet.Redis
                 else
                 {
                     var task = m_AsycRequestQProcessor.Enqueue<T>(command, expect, okIf);
-                    if (task == null)
-                        result.Handled = true;
-                    else
-                    {
+                    if (!ReferenceEquals(task, null))
                         result.Result = task.Result;
-                        result.Handled = true;
-                    }
+                    result.Handled = true;
                 }
             }
             return result;
