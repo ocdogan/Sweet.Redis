@@ -940,7 +940,7 @@ namespace Sweet.Redis
             var ws = m_BufferedStream;
             if (ws == null || !(ws.CanRead && ws.CanWrite))
             {
-                ws = new BufferedStream(GetRealStream(), 1024);
+                ws = new BufferedStream(GetRealStream(), 4 * 1024);
                 Interlocked.Exchange(ref m_BufferedStream, ws);
             }
             return ws;

@@ -46,7 +46,7 @@ namespace Sweet.Redis
         #region Constants
 
         public const int MaxBufferSize = 32 * 1024;
-        public const int DefaultBufferSize = 1024;
+        public const int DefaultBufferSize = 4 * 1024;
 
         protected const int Beginning = (int)RedisConstants.Zero;
 
