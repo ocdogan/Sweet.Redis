@@ -29,7 +29,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisAsyncRequestQProcessorAdvanced : RedisAsyncRequestQProcessorSimple
+    internal class RedisAsyncRequestQParallelProcessor : RedisAsyncRequestQProcessor
     {
         #region Field Members
 
@@ -42,7 +42,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisAsyncRequestQProcessorAdvanced(RedisPoolSettings settings)
+        public RedisAsyncRequestQParallelProcessor(RedisPoolSettings settings)
             : base(settings, null)
         { }
         
@@ -71,6 +71,7 @@ namespace Sweet.Redis
 
         protected override void StartInternal()
         {
+            base.StartInternal();
             ThreadPool.QueueUserWorkItem(ProcessReceiveQueueCallback, this);
         }
 
@@ -118,7 +119,7 @@ namespace Sweet.Redis
 
         private static void ProcessReceiveQueueCallback(object state)
         {
-            var processor = (RedisAsyncRequestQProcessorAdvanced)state;
+            var processor = (RedisAsyncRequestQParallelProcessor)state;
             if (processor.IsAlive())
                 processor.ProcessReceiveQueue();
         }
@@ -136,45 +137,74 @@ namespace Sweet.Redis
 
             var request = (RedisAsyncRequest)null;
 
-            while (Processing)
+            using (var reader = new RedisSingleResponseReader(Settings))
             {
-                try
+                while (Processing)
                 {
-                    if (!queue.TryDequeue(out request))
-                    {
-                        if (m_ReceiveGate.Wait(SpinSleepTime))
-                            m_ReceiveGate.Reset();
-                        else
-                        {
-                            idleTime += SpinSleepTime;
-                            if (idleTime >= IdleTimeout)
-                                break;
-                        }
-                        continue;
-                    }
-
-                    idleTime = 0;
                     try
                     {
-                        var context = m_CurrentContext;
-                        if (context == null)
+                        if (!queue.TryDequeue(out request))
                         {
-                            request.Cancel();
+                            if (m_ReceiveGate.Wait(SpinSleepTime))
+                                m_ReceiveGate.Reset();
+                            else
+                            {
+                                idleTime += SpinSleepTime;
+                                if (idleTime >= IdleTimeout)
+                                    break;
+                            }
                             continue;
                         }
 
-                        if (!request.IsCompleted)
-                            request.Receive(context);
+                        idleTime = 0;
+                        try
+                        {
+                            var context = m_CurrentContext;
+                            if (context == null)
+                            {
+                                request.Cancel();
+                                continue;
+                            }
+
+                            if (!request.IsCompleted)
+                            {
+                                var socket = context.Socket;
+                                if (!socket.IsConnected())
+                                    request.Cancel();
+                                else
+                                {
+                                    try
+                                    {
+                                        var execResult = reader.Execute(socket);
+                                        if (ReferenceEquals(execResult, null))
+                                            throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
+
+                                        execResult.HandleError();
+
+                                        var rawObj = RedisRawObject.ToObject(execResult);
+                                        if (ReferenceEquals(rawObj, null))
+                                            throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
+
+                                        if (!request.ProcessResult(rawObj))
+                                            request.Cancel();
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        request.SetException(e);
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            request.Cancel();
+                        }
                     }
                     catch (Exception)
                     {
-                        request.Cancel();
+                        if (request != null)
+                            request.Cancel();
                     }
-                }
-                catch (Exception)
-                {
-                    if (request != null)
-                        request.Cancel();
                 }
             }
         }

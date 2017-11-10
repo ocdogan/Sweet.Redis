@@ -429,6 +429,36 @@ namespace Sweet.Redis
             }
         }
 
+        public override bool Send(RedisSocketContext context, int timeoutMilliseconds = -1)
+        {
+            var tcs = CompletionSource;
+            if (tcs != null && IsValidTask(tcs.Task))
+            {
+                try
+                {
+                    if (IsExpired(timeoutMilliseconds))
+                    {
+                        tcs.TrySetException(new RedisException("Request Timeout", RedisErrorCode.SocketError));
+                        return false;
+                    }
+
+                    var command = Command;
+                    if (command == null || context == null || !context.Socket.IsConnected())
+                        tcs.TrySetCanceled();
+                    else
+                    {
+                        command.WriteTo(context.Socket);
+                        return true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    tcs.TrySetException(e);
+                }
+            }
+            return false;
+        }
+
         #endregion Methods
     }
 }

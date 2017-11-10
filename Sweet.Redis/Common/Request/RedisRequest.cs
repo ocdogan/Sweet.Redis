@@ -156,11 +156,192 @@ namespace Sweet.Redis
 
         public abstract void SetException(Exception exception);
 
-        public abstract void SetResult(object value);
-
         public abstract bool Send(RedisSocketContext context, int timeoutMilliseconds = -1);
 
         public abstract bool Receive(RedisSocketContext context, int timeoutMilliseconds = -1);
+
+        public abstract void SetResult(object value);
+
+        public virtual bool ProcessResult(RedisRawObject rawObj)
+        {
+            if (!ReferenceEquals(rawObj, null))
+            {
+                var data = rawObj.Data;
+                switch (Expectation)
+                {
+                    case RedisCommandExpect.BulkString:
+                        {
+                            var str = ReferenceEquals(data, null) ? null :
+                                (data is byte[] ? ((byte[])data).ToUTF8String() : data.ToString());
+
+                            RedisString result = str;
+                            SetResult(str);
+                        }
+                        return true;
+                    case RedisCommandExpect.BulkStringBytes:
+                        {
+                            var bytes = ReferenceEquals(data, null) ? null :
+                                (data is byte[] ? (byte[])data : data.ToBytes());
+
+                            RedisBytes result = bytes;
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.SimpleString:
+                        {
+                            var str = ReferenceEquals(data, null) ? null :
+                                (data is string ? (string)data : data.ToString());
+
+                            if (m_OKIf.IsEmpty())
+                            {
+                                RedisString result = str;
+                                SetResult(result);
+                            }
+                            else
+                            {
+                                RedisBool result = m_OKIf == str;
+                                SetResult(result);
+                            }
+                        }
+                        return true;
+                    case RedisCommandExpect.SimpleStringBytes:
+                        {
+                            var str = ReferenceEquals(data, null) ? null :
+                                (data is string ? (string)data : data.ToString());
+
+                            if (m_OKIf.IsEmpty())
+                            {
+                                RedisBytes result = str.ToBytes();
+                                SetResult(result);
+                            }
+                            else
+                            {
+                                RedisBool result = m_OKIf == str;
+                                SetResult(result);
+                            }
+                        }
+                        return true;
+                    case RedisCommandExpect.OK:
+                        {
+                            RedisBool result = RedisConstants.OK.Equals(data);
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.One:
+                        {
+                            RedisBool result = RedisConstants.One.Equals(data);
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.GreaterThanZero:
+                        {
+                            RedisBool result = RedisConstants.Zero.CompareTo(data) == -1;
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.Nothing:
+                        SetResult(RedisVoidVal.Value);
+                        return true;
+                    case RedisCommandExpect.Response:
+                    case RedisCommandExpect.Array:
+                        {
+                            var response = data as RedisRawObject;
+                            var result = new RedisRaw(response);
+
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.Double:
+                        {
+                            RedisDouble result = (double)data;
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.Integer:
+                        {
+                            if (data is long)
+                            {
+                                RedisInteger result = (long)data;
+                                SetResult(result);
+                            }
+                            else 
+                            {
+                                RedisInteger result = (int)data;
+                                SetResult(result);
+                            }
+                        }
+                        return true;
+                    case RedisCommandExpect.MultiDataBytes:
+                        {
+                            var bytes = data as byte[][];
+
+                            RedisMultiBytes result = bytes;
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.MultiDataStrings:
+                        {
+                            var strings = data as string[];
+
+                            RedisMultiString result = strings;
+                            SetResult(result);
+                        }
+                        return true;
+                    case RedisCommandExpect.NullableDouble:
+                        {
+                            if (data is double)
+                            {
+                                RedisNullableDouble result = (double)data;
+                                SetResult(result);
+                            }
+                            else if (data is double?)
+                            {
+                                RedisNullableDouble result = (double?)data;
+                                SetResult(result);
+                            }
+                            else
+                            {
+                                var result = new RedisNullableDouble(null);
+                                SetResult(result);
+                            }
+                        }
+                        return true;
+                    case RedisCommandExpect.NullableInteger:
+                        {
+                            if (data is long)
+                            {
+                                RedisNullableInteger result = (long)data;
+                                SetResult(result);
+                            }
+                            else if (data is long?)
+                            {
+                                RedisNullableInteger result = (long?)data;
+                                SetResult(result);
+                            }
+                            else if (data is int)
+                            {
+                                RedisNullableInteger result = (int)data;
+                                SetResult(result);
+                            }
+                            else if (data is int?)
+                            {
+                                RedisNullableInteger result = (int?)data;
+                                SetResult(result);
+                            }
+                            else
+                            {
+                                var result = new RedisNullableInteger(null);
+                                SetResult(result);
+                            }
+                        }
+                        return true;
+                    default:
+                        SetResult(data);
+                        return true;
+                }
+            }
+            return false;
+        }
 
         #endregion Methods
     }

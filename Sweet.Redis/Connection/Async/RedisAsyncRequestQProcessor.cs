@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisAsyncRequestQProcessorSimple : RedisDisposable
+    internal class RedisAsyncRequestQProcessor : RedisDisposable
     {
         #region Constants
 
@@ -50,7 +50,7 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        public RedisAsyncRequestQProcessorSimple(RedisPoolSettings settings,
+        public RedisAsyncRequestQProcessor(RedisPoolSettings settings,
             Action<RedisAsyncRequest, RedisSocketContext> onProcessRequest = null)
         {
             Settings = settings;
@@ -162,7 +162,7 @@ namespace Sweet.Redis
 
         private static void ProcessQueueCallback(object state)
         {
-            var processor = (RedisAsyncRequestQProcessorSimple)state;
+            var processor = (RedisAsyncRequestQProcessor)state;
             if (processor.IsAlive())
                 processor.ProcessQueue();
         }

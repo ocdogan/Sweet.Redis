@@ -140,7 +140,7 @@ namespace Sweet.Redis
                                     if (ReferenceEquals(rawObj, null))
                                         throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
 
-                                    ProcessRequest(request, rawObj);
+                                    request.ProcessResult(rawObj);
                                 }
                                 catch (Exception e)
                                 {

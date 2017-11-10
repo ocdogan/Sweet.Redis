@@ -274,7 +274,7 @@ namespace Sweet.Redis
         private readonly object m_MonitorChannelLock = new object();
         private RedisMonitorChannel m_MonitorChannel;
 
-        private RedisAsyncRequestQProcessorSimple m_AsycRequestQProcessor;
+        private RedisAsyncRequestQProcessor m_AsycRequestQProcessor;
 
         private bool m_UseAsyncCompleter;
         private bool m_AsyncCompleterEnforced;
@@ -298,7 +298,7 @@ namespace Sweet.Redis
             : base(name, settings)
         {
             Register(this);
-            m_AsycRequestQProcessor = new RedisAsyncRequestQProcessorSimple(Settings);
+            m_AsycRequestQProcessor = new RedisAsyncRequestQParallelProcessor(Settings);
         }
 
         #endregion .Ctors

@@ -228,7 +228,7 @@ namespace Sweet.Redis
                             itemCount = items.Count;
                         else
                         {
-                            ProcessRequest(requests[0], rawObject);
+                            requests[0].ProcessResult(rawObject);
                             Cancel(requests, 1);
 
                             return true;
@@ -250,7 +250,7 @@ namespace Sweet.Redis
                                 continue;
                             }
 
-                            ProcessRequest(request, child);
+                            request.ProcessResult(child);
                         }
                         catch (Exception e)
                         {
