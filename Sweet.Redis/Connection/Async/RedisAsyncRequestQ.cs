@@ -304,6 +304,18 @@ namespace Sweet.Redis
             return false;
         }
 
+        public bool Enqueue<T>(RedisAsyncRequest<T> request)
+        {
+            if (request != null)
+            {
+                ValidateNotDisposed();
+
+                EnqueueInternal(request);
+                return true;
+            }
+            return false;
+        }
+
         public RedisAsyncRequest<T> Enqueue<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
         {
             if (command != null)
@@ -313,22 +325,25 @@ namespace Sweet.Redis
                 var member = new RedisAsyncRequest<T>(command, expect, okIf,
                                   new TaskCompletionSource<T>(command));
 
-                lock (m_AsyncMessageQLock)
-                {
-                    var prevTail = Interlocked.Exchange(ref m_QTail, member);
-                    if (prevTail != null)
-                    {
-                        var store = m_AsyncRequestQ;
-                        if (store != null)
-                        {
-                            store.AddLast(prevTail);
-                        }
-                    }
-                    m_Count++;
-                }
+                EnqueueInternal(member);
                 return member;
             }
             return null;
+        }
+
+        private void EnqueueInternal<T>(RedisAsyncRequest<T> request)
+        {
+            lock (m_AsyncMessageQLock)
+            {
+                var prevTail = Interlocked.Exchange(ref m_QTail, request);
+                if (prevTail != null)
+                {
+                    var store = m_AsyncRequestQ;
+                    if (store != null)
+                        store.AddLast(prevTail);
+                }
+                m_Count++;
+            }
         }
 
         private static void RegisterForTimeout(RedisAsyncRequestQ queue)
