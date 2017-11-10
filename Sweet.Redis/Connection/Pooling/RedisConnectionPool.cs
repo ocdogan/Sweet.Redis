@@ -274,7 +274,6 @@ namespace Sweet.Redis
         private readonly object m_MonitorChannelLock = new object();
         private RedisMonitorChannel m_MonitorChannel;
 
-        private RedisAsyncRequestQ m_AsycRequestQ;
         private RedisAsyncRequestQProcessor m_AsycRequestQProcessor;
 
         private bool m_UseAsyncCompleter;
@@ -299,11 +298,7 @@ namespace Sweet.Redis
             : base(name, settings)
         {
             Register(this);
-
-            var thisSettings = Settings;
-
-            m_AsycRequestQ = new RedisAsyncRequestQ(thisSettings.SendTimeout);
-            m_AsycRequestQProcessor = new RedisAsyncRequestQProcessor(m_AsycRequestQ, thisSettings);
+            m_AsycRequestQProcessor = new RedisAsyncRequestQProcessor(Settings);
         }
 
         #endregion .Ctors
@@ -692,27 +687,11 @@ namespace Sweet.Redis
 
         #region Processor Methods
 
-        private void StartToProcessQ()
-        {
-            var processor = m_AsycRequestQProcessor;
-            if (processor != null)
-                processor.Start();
-        }
-
         private void StopToProcessQ()
         {
-            try
-            {
-                var processor = Interlocked.Exchange(ref m_AsycRequestQProcessor, null);
-                if (processor != null)
-                    processor.Stop();
-            }
-            finally
-            {
-                var queue = Interlocked.Exchange(ref m_AsycRequestQ, null);
-                if (queue != null)
-                    queue.Dispose();
-            }
+            var processor = Interlocked.Exchange(ref m_AsycRequestQProcessor, null);
+            if (processor != null)
+                processor.Stop();
         }
 
         #endregion Processor Methods
@@ -993,11 +972,14 @@ namespace Sweet.Redis
                     result.Connection = connection;
                 else
                 {
-                    var asyncRequest = m_AsycRequestQ.Enqueue<T>(command, expect, okIf);
-                    StartToProcessQ();
-
-                    result.Result = asyncRequest.Task.Result;
-                    result.Handled = true;
+                    var task = m_AsycRequestQProcessor.Enqueue<T>(command, expect, okIf);
+                    if (task == null)
+                        result.Handled = true;
+                    else
+                    {
+                        result.Result = task.Result;
+                        result.Handled = true;
+                    }
                 }
             }
             return result;

@@ -24,6 +24,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
@@ -76,15 +77,16 @@ namespace Sweet.Redis
         #region Field Members
 
         private long m_State;
+        private RedisAsyncRequestQ m_AsycRequestQ;
 
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisAsyncRequestQProcessor(RedisAsyncRequestQ queue, RedisPoolSettings settings)
+        public RedisAsyncRequestQProcessor(RedisPoolSettings settings)
         {
-            Queue = queue;
             Settings = settings;
+            m_AsycRequestQ = new RedisAsyncRequestQ(settings.SendTimeout);
         }
 
         #endregion .Ctors
@@ -95,7 +97,10 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
-            Queue = null;
+            var asycRequestQ  =Interlocked.Exchange(ref m_AsycRequestQ, null);
+            if (asycRequestQ != null)
+                asycRequestQ.Dispose();
+
             Settings = null;
             Stop();
         }
@@ -109,7 +114,10 @@ namespace Sweet.Redis
             get { return Interlocked.Read(ref m_State) != (long)RedisProcessState.Idle; }
         }
 
-        public RedisAsyncRequestQ Queue { get; private set; }
+        public RedisAsyncRequestQ Queue
+        {
+            get { return m_AsycRequestQ; }
+        }
 
         public RedisPoolSettings Settings { get; private set; }
 
@@ -148,6 +156,18 @@ namespace Sweet.Redis
             {
                 StopCurrent();
             }
+        }
+
+        public Task<T> Enqueue<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
+        {
+            var asycRequestQ = m_AsycRequestQ;
+            if (m_AsycRequestQ != null)
+            {
+                var asyncRequest = m_AsycRequestQ.Enqueue<T>(command, expect, okIf);
+                Start();
+                return asyncRequest.Task;
+            }
+            return null;
         }
 
         private void StopCurrent()
