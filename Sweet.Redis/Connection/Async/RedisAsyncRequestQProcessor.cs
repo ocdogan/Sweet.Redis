@@ -80,7 +80,8 @@ namespace Sweet.Redis
 
         public bool Processing
         {
-            get { return Interlocked.Read(ref m_State) != (long)RedisProcessState.Idle; }
+            get { return !Disposed &&
+                    Interlocked.Read(ref m_State) != (long)RedisProcessState.Idle; }
         }
 
         public RedisAsyncRequestQ Queue
