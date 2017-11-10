@@ -337,13 +337,13 @@ namespace Sweet.Redis
 
         internal static bool EqualTo(this byte[] x, byte[] y)
         {
-            if (x == y)
+            if (ReferenceEquals(x, y))
                 return true;
 
-            if (x == null)
-                return y == null;
+            if (ReferenceEquals(x, null))
+                return ReferenceEquals(y, null);
 
-            if (y == null)
+            if (ReferenceEquals(y, null))
                 return false;
 
             var l1 = x.Length;
