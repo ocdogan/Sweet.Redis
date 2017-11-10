@@ -304,7 +304,7 @@ namespace Sweet.Redis
             return false;
         }
 
-        public bool Enqueue<T>(RedisAsyncRequest<T> request)
+        public bool Enqueue(RedisAsyncRequest request)
         {
             if (request != null)
             {
@@ -331,7 +331,7 @@ namespace Sweet.Redis
             return null;
         }
 
-        private void EnqueueInternal<T>(RedisAsyncRequest<T> request)
+        private void EnqueueInternal(RedisAsyncRequest request)
         {
             lock (m_AsyncMessageQLock)
             {

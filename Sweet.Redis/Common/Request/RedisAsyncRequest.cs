@@ -41,10 +41,20 @@ namespace Sweet.Redis
 
         public override void Process(RedisSocketContext context, int timeoutMilliseconds = -1)
         {
-            throw new NotImplementedException("Process is not supported by async request.");
+            throw new NotImplementedException("Process is not supported by base async request.");
         }
 
         public abstract bool Expire(int timeoutMilliseconds = -1);
+
+        public override bool Send(RedisSocketContext context, int timeoutMilliseconds = -1)
+        {
+            throw new NotImplementedException("Send is not supported by base async request.");
+        }
+
+        public override bool Receive(RedisSocketContext context, int timeoutMilliseconds = -1)
+        {
+            throw new NotImplementedException("Receive is not supported by base async request.");
+        }
 
         #endregion Methods
     }

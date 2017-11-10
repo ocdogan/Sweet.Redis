@@ -49,14 +49,14 @@ namespace Sweet.Redis
 
         public TaskCompletionSource<T> CompletionSource
         {
-            get { return (TaskCompletionSource<T>)StateObject; }
+            get { return (TaskCompletionSource<T>)m_StateObject; }
         }
 
         public override bool IsCanceled
         {
             get
             {
-                var tcs = (TaskCompletionSource<T>)StateObject;
+                var tcs = (TaskCompletionSource<T>)m_StateObject;
                 if (tcs != null)
                 {
                     var task = tcs.Task;
@@ -70,11 +70,14 @@ namespace Sweet.Redis
         {
             get
             {
-                var tcs = (TaskCompletionSource<T>)StateObject;
-                if (tcs != null)
+                if (m_Command != null)
                 {
-                    var task = tcs.Task;
-                    return (task == null) || task.IsCompleted || task.IsCanceled || task.IsFaulted;
+                    var tcs = (TaskCompletionSource<T>)m_StateObject;
+                    if (tcs != null)
+                    {
+                        var task = tcs.Task;
+                        return (task == null) || task.IsCompleted || task.IsCanceled || task.IsFaulted;
+                    }
                 }
                 return true;
             }
@@ -84,7 +87,7 @@ namespace Sweet.Redis
         {
             get
             {
-                var tcs = (TaskCompletionSource<T>)StateObject;
+                var tcs = (TaskCompletionSource<T>)m_StateObject;
                 if (tcs != null)
                 {
                     var task = tcs.Task;
@@ -98,7 +101,7 @@ namespace Sweet.Redis
         {
             get
             {
-                var tcs = (TaskCompletionSource<T>)StateObject;
+                var tcs = (TaskCompletionSource<T>)m_StateObject;
                 if (tcs != null)
                 {
                     var task = tcs.Task;
@@ -120,7 +123,7 @@ namespace Sweet.Redis
         {
             get
             {
-                var tcs = (TaskCompletionSource<T>)StateObject;
+                var tcs = (TaskCompletionSource<T>)m_StateObject;
                 if (tcs != null)
                     return tcs.Task;
                 return null;

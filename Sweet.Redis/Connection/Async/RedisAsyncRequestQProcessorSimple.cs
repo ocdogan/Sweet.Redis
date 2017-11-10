@@ -28,18 +28,12 @@ using System.Threading.Tasks;
 
 namespace Sweet.Redis
 {
-    internal class RedisAsyncRequestQProcessor : RedisDisposable
+    internal class RedisAsyncRequestQProcessorSimple : RedisDisposable
     {
-        #region Static Members
-
-        private static readonly ManualResetEventSlim s_GateKeeper = new ManualResetEventSlim(false);
-
-        #endregion Static Members
-
         #region Constants
 
-        private const int SpinSleepTime = 1000;
-        private const int IdleTimeout = 10 * 1000;
+        protected const int SpinSleepTime = 1000;
+        protected const int IdleTimeout = 10 * 1000;
 
         #endregion Constants
 
@@ -48,14 +42,31 @@ namespace Sweet.Redis
         private long m_State;
         private RedisAsyncRequestQ m_AsycRequestQ;
 
+        private Action<RedisAsyncRequest, RedisSocketContext> m_OnProcessRequest;
+
+        private readonly ManualResetEventSlim m_EnqueueGate = new ManualResetEventSlim(false);
+
         #endregion Field Members
 
         #region .Ctors
 
-        public RedisAsyncRequestQProcessor(RedisPoolSettings settings)
+        public RedisAsyncRequestQProcessorSimple(RedisPoolSettings settings,
+            Action<RedisAsyncRequest, RedisSocketContext> onProcessRequest = null)
         {
             Settings = settings;
-            m_AsycRequestQ = new RedisAsyncRequestQ(settings.SendTimeout);
+            m_OnProcessRequest = onProcessRequest;
+
+            var queueTimeout = settings.SendTimeout;
+            if (queueTimeout < 0)
+                queueTimeout = settings.ReceiveTimeout;
+            else
+            {
+                var receiveTimeout = settings.ReceiveTimeout;
+                if (receiveTimeout > 0)
+                    queueTimeout += receiveTimeout;
+            }
+
+            m_AsycRequestQ = new RedisAsyncRequestQ(queueTimeout);
         }
 
         #endregion .Ctors
@@ -66,11 +77,12 @@ namespace Sweet.Redis
         {
             base.OnDispose(disposing);
 
+            Interlocked.Exchange(ref m_OnProcessRequest, null);
+
             var asycRequestQ = Interlocked.Exchange(ref m_AsycRequestQ, null);
             if (asycRequestQ != null)
                 asycRequestQ.Dispose();
 
-            Settings = null;
             Stop();
         }
 
@@ -100,14 +112,13 @@ namespace Sweet.Redis
             if (Interlocked.CompareExchange(ref m_State, (long)RedisProcessState.Initialized,
                                             (long)RedisProcessState.Idle) != (long)RedisProcessState.Idle)
             {
-                s_GateKeeper.Set();
+                m_EnqueueGate.Set();
                 return;
             }
 
             try
             {
-                ThreadPool.QueueUserWorkItem(ProcessQueueCallback, this);
-
+                StartInternal();
                 Interlocked.Exchange(ref m_State, (long)RedisProcessState.Processing);
             }
             catch (Exception)
@@ -116,9 +127,14 @@ namespace Sweet.Redis
             }
         }
 
+        protected virtual void StartInternal()
+        {
+            ThreadPool.QueueUserWorkItem(ProcessQueueCallback, this);
+        }
+
         public void Stop()
         {
-            ProcessCompleted();
+            DoProcessCompleted();
         }
 
         public Task<T> Enqueue<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
@@ -133,10 +149,10 @@ namespace Sweet.Redis
             return null;
         }
 
-        private void ProcessCompleted()
+        protected virtual void DoProcessCompleted()
         {
             Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
-            s_GateKeeper.Reset();
+            m_EnqueueGate.Reset();
         }
 
         private static void OnReleaseSocket(IRedisConnection conn, RedisSocket socket)
@@ -146,46 +162,53 @@ namespace Sweet.Redis
 
         private static void ProcessQueueCallback(object state)
         {
-            var processor = (RedisAsyncRequestQProcessor)state;
+            var processor = (RedisAsyncRequestQProcessorSimple)state;
             if (processor.IsAlive())
                 processor.ProcessQueue();
         }
 
+        protected virtual void DoProcessRequest(RedisAsyncRequest request, RedisSocketContext context)
+        {
+            request.Process(context);
+        }
+
         protected virtual void ProcessQueue()
         {
+            var queue = m_AsycRequestQ;
+            if (queue == null)
+                return;
+
+            var context = (RedisSocketContext)null;
             try
             {
-                var idleStart = DateTime.MinValue;
-
                 var name = String.Format("{0}, {1}", typeof(RedisDbConnection).Name,
                     Guid.NewGuid().ToString("N").ToUpper());
 
-                var queueTimeoutMs = Settings.SendTimeout;
-                s_GateKeeper.Reset();
+                m_EnqueueGate.Reset();
+
+                var idleTime = 0;
+                var idleStart = DateTime.MinValue;
+
+                var request = (RedisAsyncRequest)null;
+
+                var onProcessRequest = m_OnProcessRequest;
+                if (onProcessRequest == null)
+                    onProcessRequest = DoProcessRequest;
 
                 using (var connection = 
                     new RedisDbConnection(name, RedisRole.Master, Settings, null, OnReleaseSocket, -1, null, false))
                 {
-                    var context = (RedisSocketContext)null;
-
                     var commandDbIndex = -1;
                     var contextDbIndex = connection.DbIndex;
 
-                    var idleTime = 0;
-                    var request = (RedisAsyncRequest)null;
-
-                    while (Processing)
+                    while (Processing && !queue.Disposed)
                     {
                         try
                         {
-                            var queue = m_AsycRequestQ;
-                            if (!queue.IsAlive())
-                                return;
-
                             if (!queue.TryDequeueOneOf(contextDbIndex, RedisConstants.UninitializedDbIndex, out request))
                             {
-                                if (s_GateKeeper.Wait(SpinSleepTime))
-                                    s_GateKeeper.Reset();
+                                if (m_EnqueueGate.Wait(SpinSleepTime))
+                                    m_EnqueueGate.Reset();
                                 else
                                 {
                                     idleTime += SpinSleepTime;
@@ -196,40 +219,40 @@ namespace Sweet.Redis
                             }
 
                             idleTime = 0;
-
-                            if (!request.IsCompleted)
+                            try
                             {
-                                using (request)
+                                var command = request.Command;
+                                if (!request.IsCompleted)
                                 {
-                                    var command = request.Command;
-                                    if (command != null)
+                                    if (!context.IsAlive())
                                     {
-                                        if (!context.IsAlive())
+                                        try
                                         {
-                                            try
-                                            {
-                                                context = new RedisSocketContext(connection.Connect(), connection.Settings);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                if (e.IsSocketError())
-                                                    break;
-                                            }
+                                            context = new RedisSocketContext(connection.Connect(), connection.Settings);
                                         }
-
-                                        commandDbIndex = command.DbIndex;
-
-                                        if (commandDbIndex != contextDbIndex &&
-                                            commandDbIndex > RedisConstants.UninitializedDbIndex &&
-                                            context.Socket.SelectDB(connection.Settings, commandDbIndex))
+                                        catch (Exception e)
                                         {
-                                            contextDbIndex = context.DbIndex;
-                                            connection.SelectDB(contextDbIndex);
+                                            if (e.IsSocketError())
+                                                break;
                                         }
-
-                                        ProcessRequest(request, context);
                                     }
+
+                                    commandDbIndex = command.DbIndex;
+
+                                    if (commandDbIndex != contextDbIndex &&
+                                        commandDbIndex > RedisConstants.UninitializedDbIndex &&
+                                        context.Socket.SelectDB(connection.Settings, commandDbIndex))
+                                    {
+                                        contextDbIndex = context.DbIndex;
+                                        connection.SelectDB(contextDbIndex);
+                                    }
+
+                                    onProcessRequest(request, context);
                                 }
+                            }
+                            catch (Exception)
+                            {
+                                request.Cancel();
                             }
                         }
                         catch (Exception)
@@ -241,13 +264,10 @@ namespace Sweet.Redis
             { }
             finally
             {
-                ProcessCompleted();
+                if (context.IsAlive())
+                    context.Dispose();
+                DoProcessCompleted();
             }
-        }
-
-        protected virtual void ProcessRequest(RedisAsyncRequest request, RedisSocketContext context)
-        {
-            request.Process(context);
         }
 
         #endregion Methods

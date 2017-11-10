@@ -67,6 +67,7 @@
     <Compile Include="Common\SentinelInfo\RedisSentinelClusterNodeInfo.cs" />
     <Compile Include="Common\SentinelInfo\RedisSentinelNodeInfo.cs" />
     <Compile Include="Common\ServerInfo\RedisServerSlaveInfo.cs" />
+    <Compile Include="Connection\Async\RedisAsyncRequestQProcessorAdvanced.cs" />
     <Compile Include="Connection\Continuous\RedisContinuousChannel.cs" />
     <Compile Include="Connection\Interfaces\IRedisCommandExecuter.cs" />
     <Compile Include="Connection\Interfaces\IRedisConnectionProvider.cs" />
@@ -214,7 +215,7 @@
     <Compile Include="Connection\PubSub\RedisPubSubResponse.cs" />
     <Compile Include="Connection\PubSub\RedisPubSubResponseType.cs" />
     <Compile Include="Connection\Async\RedisAsyncRequestQ.cs" />
-    <Compile Include="Connection\Async\RedisAsyncRequestQProcessor.cs" />
+    <Compile Include="Connection\Async\RedisAsyncRequestQProcessorSimple.cs" />
     <Compile Include="Connection\Async\RedisAsyncStateWrapper.cs" />
     <Compile Include="Connection\PubSub\RedisActionBag.cs" />
     <Compile Include="Connection\PubSub\RedisCallbackHub.cs" />

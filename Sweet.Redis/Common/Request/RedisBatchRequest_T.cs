@@ -44,6 +44,16 @@ namespace Sweet.Redis
 
         #region Methods
 
+        public override bool Send(RedisSocketContext context, int timeoutMilliseconds = -1)
+        {
+            throw new NotImplementedException("Send is not supported by batch request.");
+        }
+
+        public override bool Receive(RedisSocketContext context, int timeoutMilliseconds = -1)
+        {
+            throw new NotImplementedException("Receive is not supported by batch request.");
+        }
+
         protected override void ProcessInternal(RedisSocketContext context, int timeoutMilliseconds = -1)
         {
             try

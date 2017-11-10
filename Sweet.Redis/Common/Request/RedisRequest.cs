@@ -37,9 +37,10 @@ namespace Sweet.Redis
         private long m_Id = RedisIDGenerator<RedisRequest>.NextId();
         private RedisRequestType m_RequestType;
         private string m_OKIf;
-        private RedisCommand m_Command;
         private RedisCommandExpect m_Expectation;
-        private object m_StateObject;
+
+        protected RedisCommand m_Command;
+        protected object m_StateObject;
 
         #endregion Field Members
 
@@ -156,6 +157,10 @@ namespace Sweet.Redis
         public abstract void SetException(Exception exception);
 
         public abstract void SetResult(object value);
+
+        public abstract bool Send(RedisSocketContext context, int timeoutMilliseconds = -1);
+
+        public abstract bool Receive(RedisSocketContext context, int timeoutMilliseconds = -1);
 
         #endregion Methods
     }
