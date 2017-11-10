@@ -133,6 +133,7 @@ namespace Sweet.Redis
             m_ReceiveGate.Reset();
 
             var idleTime = 0;
+            var spareSpinCount = 0;
             var idleStart = DateTime.MinValue;
 
             var request = (RedisAsyncRequest)null;
@@ -145,18 +146,32 @@ namespace Sweet.Redis
                     {
                         if (!queue.TryDequeue(out request))
                         {
-                            if (m_ReceiveGate.Wait(SpinSleepTime))
-                                m_ReceiveGate.Reset();
+                            if (spareSpinCount++ < 3)
+                            {
+                                Thread.Yield();
+                                if (m_ReceiveGate.IsSet)
+                                    m_ReceiveGate.Reset();
+                            }
                             else
                             {
-                                idleTime += SpinSleepTime;
-                                if (idleTime >= IdleTimeout)
-                                    break;
+                                if (m_ReceiveGate.Wait(SpinSleepTime))
+                                    m_ReceiveGate.Reset();
+                                else
+                                {
+                                    idleTime += SpinSleepTime;
+                                    if (idleTime >= IdleTimeout)
+                                        break;
+                                }
                             }
                             continue;
                         }
 
-                        idleTime = 0;
+                        if (idleTime > 0)
+                        {
+                            idleTime = 0;
+                            Thread.Yield();
+                        }
+
                         try
                         {
                             var context = m_CurrentContext;

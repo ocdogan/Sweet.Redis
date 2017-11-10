@@ -38,7 +38,7 @@ namespace Sweet.Redis
 
         public RedisRawResponse Execute(RedisSocket socket)
         {
-            if (socket.IsConnected() && base.BeginReading())
+            if (base.BeginReading())
             {
                 try
                 {

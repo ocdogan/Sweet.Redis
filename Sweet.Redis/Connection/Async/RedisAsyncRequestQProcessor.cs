@@ -199,6 +199,7 @@ namespace Sweet.Redis
                     new RedisDbConnection(name, RedisRole.Master, Settings, null, OnReleaseSocket, -1, null, false))
                 {
                     var commandDbIndex = -1;
+                    var spareSpinCount = 0;
                     var contextDbIndex = connection.DbIndex;
 
                     while (Processing && !queue.Disposed)
@@ -207,18 +208,33 @@ namespace Sweet.Redis
                         {
                             if (!queue.TryDequeueOneOf(contextDbIndex, RedisConstants.UninitializedDbIndex, out request))
                             {
-                                if (m_EnqueueGate.Wait(SpinSleepTime))
-                                    m_EnqueueGate.Reset();
+                                if (spareSpinCount++ < 3)
+                                {
+                                    Thread.Yield();
+                                    if (m_EnqueueGate.IsSet)
+                                        m_EnqueueGate.Reset();
+                                }
                                 else
                                 {
-                                    idleTime += SpinSleepTime;
-                                    if (idleTime >= IdleTimeout)
-                                        break;
+                                    if (m_EnqueueGate.Wait(SpinSleepTime))
+                                        m_EnqueueGate.Reset();
+                                    else
+                                    {
+                                        idleTime += SpinSleepTime;
+                                        if (idleTime >= IdleTimeout)
+                                            break;
+                                    }
                                 }
                                 continue;
                             }
 
-                            idleTime = 0;
+                            spareSpinCount = 0;
+                            if (idleTime > 0)
+                            {
+                                idleTime = 0;
+                                Thread.Yield();
+                            }
+
                             try
                             {
                                 var command = request.Command;
