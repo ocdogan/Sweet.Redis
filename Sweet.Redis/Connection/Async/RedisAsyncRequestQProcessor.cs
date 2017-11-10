@@ -68,7 +68,7 @@ namespace Sweet.Redis
 
         #region Constants
 
-        private const int SpinSleepTime = 100;
+        private const int SpinSleepTime = 1000;
         private const int IdleTimeout = 10 * 1000;
 
         #endregion Constants
@@ -135,8 +135,6 @@ namespace Sweet.Redis
 
             try
             {
-                StopCurrent();
-
                 ThreadPool.QueueUserWorkItem(ProcessQueueImpl,
                     new ProcessParameters(this, Queue, Settings));
 
@@ -150,33 +148,25 @@ namespace Sweet.Redis
 
         public void Stop()
         {
-            if (Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle) !=
-                (long)RedisProcessState.Idle)
-            {
-                StopCurrent();
-            }
+            ProcessCompleted();
         }
 
         public Task<T> Enqueue<T>(RedisCommand command, RedisCommandExpect expect, string okIf)
         {
             var asycRequestQ = m_AsycRequestQ;
-            if (m_AsycRequestQ != null)
+            if (asycRequestQ != null)
             {
-                var asyncRequest = m_AsycRequestQ.Enqueue<T>(command, expect, okIf);
+                var asyncRequest = asycRequestQ.Enqueue<T>(command, expect, okIf);
                 Start();
                 return asyncRequest.Task;
             }
             return null;
         }
 
-        private void StopCurrent()
-        {
-            ProcessCompleted();
-        }
-
         private void ProcessCompleted()
         {
             Interlocked.Exchange(ref m_State, (long)RedisProcessState.Idle);
+            s_GateKeeper.Reset();
         }
 
         private static void OnReleaseSocket(IRedisConnection conn, RedisSocket socket)
@@ -212,6 +202,8 @@ namespace Sweet.Redis
 
                     var idleTime = 0;
                     var request = (RedisAsyncRequest)null;
+
+                    s_GateKeeper.Reset();
 
                     while (processor.Processing)
                     {
