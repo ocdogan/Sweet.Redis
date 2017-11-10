@@ -3216,6 +3216,8 @@ namespace Sweet.Redis.ConsoleTest
                     Console.Clear();
 
                     var ticks = 0L;
+                    var failCount = 0;
+
                     var innerSw = new Stopwatch();
                     var outterSw = new Stopwatch();
                     try
@@ -3239,6 +3241,9 @@ namespace Sweet.Redis.ConsoleTest
                                 byte[] data = result;
 
                                 var ok = (!ReferenceEquals(data, null) && data.Length == (testText ?? "").Length);
+                                if (!ok) 
+                                    failCount++;
+
                                 Console.WriteLine("00:00" +
                                     ", " + j.ToString("D3") +
                                     ": Processed, " + innerSw.ElapsedMilliseconds.ToString("D3") + " msec, " +
@@ -3252,6 +3257,7 @@ namespace Sweet.Redis.ConsoleTest
                     }
 
                     Console.WriteLine();
+                    Console.WriteLine("Fail count: " + failCount);
                     Console.WriteLine("Sum of inner ticks: " + ticks);
                     Console.WriteLine("Sum of outter ticks: " + outterSw.ElapsedTicks);
                     Console.WriteLine("Press any key to continue, ESC to escape ...");
