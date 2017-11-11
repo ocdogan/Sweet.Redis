@@ -49,7 +49,7 @@ namespace Sweet.Redis
         #region .Ctors
 
         protected internal RedisCommand(int dbIndex, byte[] command, RedisCommandType commandType = RedisCommandType.SendAndReceive,
-                            params byte[][] args)
+                                        params byte[][] args)
         {
             if (command == null)
                 throw new ArgumentNullException("command");
@@ -86,6 +86,8 @@ namespace Sweet.Redis
         public RedisCommandType CommandType { get { return m_CommandType; } }
 
         public int DbIndex { get { return m_DbIndex; } }
+
+        internal bool IsHeartBeat { get; set; }
 
         public bool IsUpdater
         {

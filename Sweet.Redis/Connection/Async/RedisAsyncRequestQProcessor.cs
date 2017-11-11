@@ -232,21 +232,35 @@ namespace Sweet.Redis
                                         idleTime += SpinSleepTime;
                                         if (idleTime >= IdleTimeout)
                                             break;
+
+                                        if (idleTime % 2000 == 0)
+                                        {
+                                            var beatCommand = new RedisCommand(RedisConstants.UninitializedDbIndex,
+                                                                               RedisCommandList.Ping);
+                                            beatCommand.IsHeartBeat = true;
+
+                                            Enqueue<RedisBool>(beatCommand,
+                                                               RedisCommandExpect.OK, RedisConstants.PONG);
+                                        }
                                     }
                                 }
                                 continue;
                             }
 
                             spareSpinCount = 0;
-                            if (idleTime > 0)
-                            {
-                                idleTime = 0;
-                                Thread.Yield();
-                            }
 
                             try
                             {
                                 var command = request.Command;
+                                if (ReferenceEquals(command, null) || !command.IsHeartBeat)
+                                {
+                                    if (idleTime > 0)
+                                    {
+                                        idleTime = 0;
+                                        Thread.Yield();
+                                    }
+                                }
+
                                 if (!request.IsCompleted)
                                 {
                                     if (!context.IsAlive())

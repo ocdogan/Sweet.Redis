@@ -45,7 +45,7 @@ namespace Sweet.Redis
         public RedisAsyncRequestQParallelProcessor(RedisPoolSettings settings)
             : base(settings, null)
         { }
-        
+
         #endregion .Ctors
 
         #region Destructors
@@ -168,8 +168,12 @@ namespace Sweet.Redis
 
                         if (idleTime > 0)
                         {
-                            idleTime = 0;
-                            Thread.Yield();
+                            var command = request.Command;
+                            if (ReferenceEquals(command, null) || !command.IsHeartBeat)
+                            {
+                                idleTime = 0;
+                                Thread.Yield();
+                            }
                         }
 
                         try
