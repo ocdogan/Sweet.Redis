@@ -34,20 +34,8 @@ namespace Sweet.Redis
         #region Constants
 
         private const int MaxTimeout = 60 * 1000;
-        private const int TimeoutCheckPeriod = 5000;
 
         #endregion Constants
-
-        #region Static Members
-
-        private static Timer s_TimeoutTimer;
-        private static long s_TimeoutTickState;
-        private static long s_TimeoutTimerState;
-
-        private readonly static object s_QTimerLock = new object();
-        private readonly static List<RedisAsyncRequestQ> s_Queues = new List<RedisAsyncRequestQ>();
-
-        #endregion Static Members
 
         #region Field Members
 
@@ -65,7 +53,6 @@ namespace Sweet.Redis
         public RedisAsyncRequestQ(int timeoutMilliseconds = MaxTimeout)
         {
             m_TimeoutMilliseconds = Math.Min(Math.Max(timeoutMilliseconds, Timeout.Infinite), MaxTimeout);
-            RegisterForTimeout(this);
         }
 
         #endregion .Ctors
@@ -75,8 +62,6 @@ namespace Sweet.Redis
         protected override void OnDispose(bool disposing)
         {
             base.OnDispose(disposing);
-
-            UnregisterFromTimeout(this);
             CancelRequests();
         }
 
@@ -100,21 +85,11 @@ namespace Sweet.Redis
             }
         }
 
-        public int TimeoutMilliseconds
-        {
-            get { return m_TimeoutMilliseconds; }
-        }
-
-        public static bool TimeoutCheckEnabled
-        {
-            get { return Interlocked.Read(ref s_TimeoutTimerState) != RedisConstants.Zero; }
-        }
-
         #endregion Properties
 
         #region Methods
 
-        private void CancelRequests()
+        public void CancelRequests()
         {
             lock (m_AsyncMessageQLock)
             {
@@ -344,139 +319,6 @@ namespace Sweet.Redis
                 }
                 m_Count++;
             }
-        }
-
-        private static void RegisterForTimeout(RedisAsyncRequestQ queue)
-        {
-            if (queue.IsAlive())
-            {
-                lock (s_QTimerLock)
-                {
-                    if (!s_Queues.Contains(queue))
-                        s_Queues.Add(queue);
-                    StartTimeoutTicker();
-                }
-            }
-        }
-
-        private static void UnregisterFromTimeout(RedisAsyncRequestQ queue)
-        {
-            if (queue != null)
-            {
-                lock (s_QTimerLock)
-                {
-                    try
-                    {
-                        s_Queues.Remove(queue);
-
-                        if (s_Queues.Count == 0)
-                        {
-                            Interlocked.Exchange(ref s_TimeoutTimerState, RedisConstants.Zero);
-
-                            var timer = Interlocked.Exchange(ref s_TimeoutTimer, null);
-                            if (timer != null)
-                                timer.Dispose();
-                        }
-                    }
-                    catch (Exception)
-                    { }
-                }
-            }
-        }
-
-        private static void StartTimeoutTicker()
-        {
-            if (Interlocked.CompareExchange(ref s_TimeoutTimerState, RedisConstants.One, RedisConstants.Zero) ==
-                RedisConstants.Zero)
-            {
-                var timer = new Timer((state) =>
-                    {
-                        if (Interlocked.CompareExchange(ref s_TimeoutTickState, RedisConstants.One, RedisConstants.Zero) !=
-                            RedisConstants.Zero)
-                            return;
-
-                        try
-                        {
-                            if (!TimeoutCheckEnabled)
-                                return;
-
-                            RedisAsyncRequestQ[] queues = null;
-                            lock (s_QTimerLock)
-                            {
-                                if (s_Queues.Count > 0)
-                                    queues = s_Queues.ToArray();
-                            }
-
-                            if (!queues.IsEmpty() && TimeoutCheckEnabled)
-                            {
-                                foreach (var queue in queues)
-                                {
-                                    try
-                                    {
-                                        if (!TimeoutCheckEnabled)
-                                            break;
-
-                                        if (queue.IsAlive())
-                                        {
-                                            var queueTimeoutMs = queue.TimeoutMilliseconds;
-                                            if (queueTimeoutMs > -1)
-                                            {
-                                                lock (queue.SyncObj)
-                                                {
-                                                    if (CheckRequestTimeout(queue.m_QTail, queueTimeoutMs))
-                                                        queue.m_QTail = null;
-
-                                                    var store = queue.m_AsyncRequestQ;
-                                                    if (store != null)
-                                                    {
-                                                        var node = store.First;
-                                                        while (node != null && queue.IsAlive() && TimeoutCheckEnabled)
-                                                        {
-                                                            var nextNode = node.Next;
-                                                            if (CheckRequestTimeout(node.Value, queueTimeoutMs))
-                                                                store.Remove(node);
-                                                            node = nextNode;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    catch (Exception)
-                                    { }
-                                }
-                            }
-                        }
-                        catch (Exception)
-                        { }
-                        finally
-                        {
-                            Interlocked.Exchange(ref s_TimeoutTickState, RedisConstants.Zero);
-                        }
-                    },
-                    null, TimeoutCheckPeriod, TimeoutCheckPeriod);
-
-                try
-                {
-                    timer = Interlocked.Exchange(ref s_TimeoutTimer, timer);
-                    if (timer != null)
-                        timer.Dispose();
-                }
-                catch (Exception)
-                { }
-            }
-        }
-
-        private static bool CheckRequestTimeout(RedisAsyncRequest request, int timeoutMilliseconds)
-        {
-            try
-            {
-                if (timeoutMilliseconds > -1 && request.IsAlive())
-                    return request.Expire(timeoutMilliseconds);
-            }
-            catch (Exception)
-            { }
-            return false;
         }
 
         #endregion Methods
