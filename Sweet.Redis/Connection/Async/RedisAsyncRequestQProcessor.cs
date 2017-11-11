@@ -33,7 +33,6 @@ namespace Sweet.Redis
         #region Constants
 
         protected const int SpinSleepTime = 1000;
-        protected const int IdleTimeout = 10 * 1000;
 
         #endregion Constants
 
@@ -45,6 +44,7 @@ namespace Sweet.Redis
         private Action<RedisAsyncRequest, RedisSocketContext> m_OnProcessRequest;
 
         private readonly ManualResetEventSlim m_EnqueueGate = new ManualResetEventSlim(false);
+        private int m_IdleTimeout = 10 * 1000;
 
         #endregion Field Members
 
@@ -55,6 +55,7 @@ namespace Sweet.Redis
         {
             Settings = settings;
             m_OnProcessRequest = onProcessRequest;
+            m_IdleTimeout = settings.ConnectionIdleTimeout;
 
             var queueTimeout = settings.SendTimeout;
             if (queueTimeout < 0)
@@ -90,10 +91,18 @@ namespace Sweet.Redis
 
         #region Properties
 
+        public int IdleTimeout
+        {
+            get { return m_IdleTimeout; }
+        }
+
         public bool Processing
         {
-            get { return !Disposed &&
-                    Interlocked.Read(ref m_State) != (long)RedisProcessState.Idle; }
+            get
+            {
+                return !Disposed &&
+                  Interlocked.Read(ref m_State) != (long)RedisProcessState.Idle;
+            }
         }
 
         public RedisAsyncRequestQ Queue
@@ -195,7 +204,7 @@ namespace Sweet.Redis
                 if (onProcessRequest == null)
                     onProcessRequest = DoProcessRequest;
 
-                using (var connection = 
+                using (var connection =
                     new RedisDbConnection(name, RedisRole.Master, Settings, null, OnReleaseSocket, -1, null, false))
                 {
                     var commandDbIndex = -1;

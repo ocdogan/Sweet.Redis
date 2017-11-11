@@ -203,7 +203,7 @@ namespace Sweet.Redis
 
         public const int MaxValueLength = 1024 * 1024 * 1024; // 1 GB
 
-        public const int ConnectionPurgePeriod = 1000; // milliseconds
+        public const int ConnectionPurgePeriod = 2000; // milliseconds
 
         public const int MinDbIndex = 0;
         public const int MaxDbIndex = 16;
@@ -232,7 +232,7 @@ namespace Sweet.Redis
         public const int MinWaitRetryCount = 1;
         public const int MaxWaitRetryCount = 10;
 
-        public const int DefaultIdleTimeout = 300000;
+        public const int DefaultIdleTimeout = 60000;
         public const int MinIdleTimeout = 10000;
         public const int MaxIdleTimeout = 1200000;
 

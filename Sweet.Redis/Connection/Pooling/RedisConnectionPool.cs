@@ -297,8 +297,11 @@ namespace Sweet.Redis
         public RedisConnectionPool(string name, RedisPoolSettings settings)
             : base(name, settings)
         {
-            Register(this);
-            m_AsycRequestQProcessor = new RedisAsyncRequestQParallelProcessor(Settings);
+            m_AsycRequestQProcessor = RedisCommon.IsWindows ?
+                                                 new RedisAsyncRequestQParallelProcessor(Settings) :
+                                                 new RedisAsyncRequestQProcessor(Settings);
+            if (settings.MaxConnectionCount > 1 || !m_UseAsyncCompleter)
+                Register(this);
         }
 
         #endregion .Ctors
@@ -1250,8 +1253,8 @@ namespace Sweet.Redis
                         if (!pools.IsEmpty())
                             pools.AsParallel().ForAll(p => p.PurgeIdles());
                     }, null,
-                        RedisConstants.ConnectionPurgePeriod,
-                                             RedisConstants.ConnectionPurgePeriod);
+                    RedisConstants.ConnectionPurgePeriod,
+                    RedisConstants.ConnectionPurgePeriod);
                 }
             }
         }
