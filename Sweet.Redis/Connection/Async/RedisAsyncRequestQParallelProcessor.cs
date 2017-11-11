@@ -138,92 +138,103 @@ namespace Sweet.Redis
 
             var request = (RedisAsyncRequest)null;
 
-            using (var reader = new RedisSingleResponseReader(Settings))
+            try
             {
-                while (Processing)
+                using (var reader = new RedisSingleResponseReader(Settings))
                 {
-                    try
+                    while (Processing)
                     {
-                        if (!queue.TryDequeue(out request))
-                        {
-                            if (spareSpinCount++ < 3)
-                            {
-                                Thread.Yield();
-                                if (m_ReceiveGate.IsSet)
-                                    m_ReceiveGate.Reset();
-                            }
-                            else
-                            {
-                                if (m_ReceiveGate.Wait(SpinSleepTime))
-                                    m_ReceiveGate.Reset();
-                                else
-                                {
-                                    idleTime += SpinSleepTime;
-                                    if (idleTime >= IdleTimeout)
-                                        break;
-                                }
-                            }
-                            continue;
-                        }
-
-                        if (idleTime > 0)
-                        {
-                            var command = request.Command;
-                            if (ReferenceEquals(command, null) || !command.IsHeartBeat)
-                            {
-                                idleTime = 0;
-                                Thread.Yield();
-                            }
-                        }
-
                         try
                         {
-                            var context = m_CurrentContext;
-                            if (context == null)
+                            if (!queue.TryDequeue(out request))
                             {
-                                request.Cancel();
+                                if (spareSpinCount++ < 3)
+                                {
+                                    Thread.Yield();
+                                    if (m_ReceiveGate.IsSet)
+                                        m_ReceiveGate.Reset();
+                                }
+                                else
+                                {
+                                    if (m_ReceiveGate.Wait(SpinSleepTime))
+                                        m_ReceiveGate.Reset();
+                                    else
+                                    {
+                                        idleTime += SpinSleepTime;
+                                        if (idleTime >= IdleTimeout)
+                                            break;
+                                    }
+                                }
                                 continue;
                             }
 
-                            if (!request.IsCompleted)
+                            if (idleTime > 0)
                             {
-                                var socket = context.Socket;
-                                if (!socket.IsConnected())
-                                    request.Cancel();
-                                else
+                                var command = request.Command;
+                                if (ReferenceEquals(command, null) || !command.IsHeartBeat)
                                 {
-                                    try
+                                    idleTime = 0;
+                                    Thread.Yield();
+                                }
+                            }
+
+                            try
+                            {
+                                var context = m_CurrentContext;
+                                if (context == null)
+                                {
+                                    request.Cancel();
+                                    continue;
+                                }
+
+                                if (!request.IsCompleted)
+                                {
+                                    var socket = context.Socket;
+                                    if (!socket.IsConnected())
+                                        request.Cancel();
+                                    else
                                     {
-                                        var execResult = reader.Execute(socket);
-                                        if (ReferenceEquals(execResult, null))
-                                            throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
+                                        try
+                                        {
+                                            var execResult = reader.Execute(socket);
+                                            if (ReferenceEquals(execResult, null))
+                                                throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
 
-                                        execResult.HandleError();
+                                            execResult.HandleError();
 
-                                        var rawObj = RedisRawObject.ToObject(execResult);
-                                        if (ReferenceEquals(rawObj, null))
-                                            throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
+                                            var rawObj = RedisRawObject.ToObject(execResult);
+                                            if (ReferenceEquals(rawObj, null))
+                                                throw new RedisFatalException("Corrupted redis response data", RedisErrorCode.CorruptResponse);
 
-                                        if (!request.ProcessResult(rawObj))
-                                            request.Cancel();
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        request.SetException(e);
+                                            if (!request.ProcessResult(rawObj))
+                                                request.Cancel();
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            request.SetException(e);
+                                        }
                                     }
                                 }
+                            }
+                            catch (Exception)
+                            {
+                                request.Cancel();
                             }
                         }
                         catch (Exception)
                         {
-                            request.Cancel();
+                            if (request != null)
+                                request.Cancel();
                         }
                     }
-                    catch (Exception)
-                    {
-                        if (request != null)
-                            request.Cancel();
-                    }
+                }
+            }
+            finally
+            {
+                while (queue.TryDequeue(out request))
+                {
+                    try { request.Cancel(); }
+                    catch (Exception) { }
                 }
             }
         }
