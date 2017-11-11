@@ -303,8 +303,9 @@ namespace Sweet.Redis
             { }
             finally
             {
-                if (context.IsAlive())
-                    context.Dispose();
+                if (queue != null) queue.CancelRequests();
+                if (context.IsAlive()) context.Dispose();
+
                 DoProcessCompleted();
             }
         }
