@@ -47,7 +47,7 @@ namespace Sweet.Redis
 
         public RedisContinuousReaderCtx(RedisContinuousReader reader, RedisConnection connection,
                    RedisSocket socket, Action<IRedisRawResponse> onReceive)
-            : base(connection.Settings, 16 * 1024)
+            : base(connection.Settings)
         {
             Reader = reader;
             Connection = connection;

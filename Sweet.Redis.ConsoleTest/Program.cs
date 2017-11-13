@@ -15,7 +15,7 @@ namespace Sweet.Redis.ConsoleTest
             // PerformanceTest1();
             // PerformanceTest2();
             // PerformanceTest3();
-            PerformanceTest4();
+            // PerformanceTest4();
             // PerformanceTest5();
 
             // ScriptingNoArgsEvalTest();
@@ -47,6 +47,7 @@ namespace Sweet.Redis.ConsoleTest
             // MultiThreading10d();
             // MultiThreading10e();
             // MultiThreading10f();
+            MultiThreading10g();
 
             // MultiThreading1();
             // MultiThreading2a();
@@ -1986,6 +1987,16 @@ namespace Sweet.Redis.ConsoleTest
         #endregion Geo
 
         #region Multi-Threading
+
+        static void MultiThreading10g()
+        {
+            var testKey = "tiny_text";
+            var tinyText = new string('x', 20);
+
+            MultiThreadingBasePool(12, 2, 50, 100, testKey, tinyText, false, 5,
+                               (rdb, dbIndex) => { return rdb.Strings.Get(testKey); },
+                               false, true);
+        }
 
         static void MultiThreading10f()
         {

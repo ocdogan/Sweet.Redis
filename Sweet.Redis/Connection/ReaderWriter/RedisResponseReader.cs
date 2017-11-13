@@ -45,6 +45,7 @@ namespace Sweet.Redis
 
         #region Constants
 
+        public const int MinBufferSize = 512;
         public const int MaxBufferSize = 32 * 1024;
         public const int DefaultBufferSize = 4 * 1024;
 
@@ -70,10 +71,14 @@ namespace Sweet.Redis
 
         #region .Ctors
 
-        protected RedisResponseReader(RedisConnectionSettings settings, int bufferSize = -1)
+        protected RedisResponseReader(RedisConnectionSettings settings)
         {
             m_Settings = settings ?? RedisConnectionSettings.Default;
-            m_BufferSize = Math.Min(MaxBufferSize, Math.Max(DefaultBufferSize, Math.Max(0, bufferSize)));
+
+            var bufferSize = settings.ReadBufferSize;
+            bufferSize = (bufferSize <= 0) ? DefaultBufferSize : Math.Min(MaxBufferSize, Math.Max(MinBufferSize, bufferSize));
+
+            m_BufferSize = bufferSize;
             m_Buffer = new byte[m_BufferSize];
 
             CaclulateReceiveTimeout();

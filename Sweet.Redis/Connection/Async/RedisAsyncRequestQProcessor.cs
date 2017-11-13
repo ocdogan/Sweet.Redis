@@ -178,7 +178,12 @@ namespace Sweet.Redis
 
         protected virtual void DoProcessRequest(RedisAsyncRequest request, RedisSocketContext context)
         {
-            request.Process(context);
+             request.Process(context);
+        }
+
+        protected virtual bool DisposeRequestAfterProcess()
+        {
+            return true;
         }
 
         protected virtual void ProcessQueue()
@@ -203,6 +208,8 @@ namespace Sweet.Redis
                 var onProcessRequest = m_OnProcessRequest;
                 if (onProcessRequest == null)
                     onProcessRequest = DoProcessRequest;
+
+                var disposeRequest = DisposeRequestAfterProcess();
 
                 using (var connection =
                     new RedisDbConnection(name, RedisRole.Master, Settings, null, OnReleaseSocket, -1, null, false))
@@ -292,6 +299,11 @@ namespace Sweet.Redis
                             catch (Exception)
                             {
                                 request.Cancel();
+                            }
+                            finally
+                            {
+                                if (disposeRequest && !ReferenceEquals(request, null))
+                                    request.Dispose();
                             }
                         }
                         catch (Exception)

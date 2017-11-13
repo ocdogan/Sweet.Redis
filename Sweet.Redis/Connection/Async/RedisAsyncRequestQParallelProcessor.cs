@@ -77,37 +77,35 @@ namespace Sweet.Redis
 
         protected override void DoProcessRequest(RedisAsyncRequest request, RedisSocketContext context)
         {
-            if (Disposed)
-            {
-                request.Cancel();
-                return;
-            }
-
+            var cancelRequest = true;
             try
             {
+                if (Disposed)
+                    return;
+
                 if (request.Send(context))
                 {
                     if (Disposed)
-                    {
-                        request.Cancel();
                         return;
-                    }
 
                     Interlocked.Exchange(ref m_CurrentContext, context);
 
                     var receiveQ = m_ReceiveQ;
-                    if (receiveQ == null)
-                        request.Cancel();
-                    else
+                    if (receiveQ != null)
                     {
                         receiveQ.Enqueue(request);
+                        cancelRequest = false;
+
                         m_ReceiveGate.Set();
                     }
                 }
             }
             catch (Exception)
+            { }
+            finally
             {
-                request.Cancel();
+                if (cancelRequest)
+                    request.Cancel();
             }
         }
 
@@ -122,6 +120,11 @@ namespace Sweet.Redis
             var processor = (RedisAsyncRequestQParallelProcessor)state;
             if (processor.IsAlive())
                 processor.ProcessReceiveQueue();
+        }
+
+        protected override bool DisposeRequestAfterProcess()
+        {
+            return false;
         }
 
         private void ProcessReceiveQueue()
@@ -144,30 +147,30 @@ namespace Sweet.Redis
                 {
                     while (Processing)
                     {
-                        try
+                        if (!queue.TryDequeue(out request))
                         {
-                            if (!queue.TryDequeue(out request))
+                            if (spareSpinCount++ < 3)
                             {
-                                if (spareSpinCount++ < 3)
-                                {
-                                    Thread.Yield();
-                                    if (m_ReceiveGate.IsSet)
-                                        m_ReceiveGate.Reset();
-                                }
+                                Thread.Yield();
+                                if (m_ReceiveGate.IsSet)
+                                    m_ReceiveGate.Reset();
+                            }
+                            else
+                            {
+                                if (m_ReceiveGate.Wait(SpinSleepTime))
+                                    m_ReceiveGate.Reset();
                                 else
                                 {
-                                    if (m_ReceiveGate.Wait(SpinSleepTime))
-                                        m_ReceiveGate.Reset();
-                                    else
-                                    {
-                                        idleTime += SpinSleepTime;
-                                        if (idleTime >= IdleTimeout)
-                                            break;
-                                    }
+                                    idleTime += SpinSleepTime;
+                                    if (idleTime >= IdleTimeout)
+                                        break;
                                 }
-                                continue;
                             }
+                            continue;
+                        }
 
+                        using (request)
+                        {
                             if (idleTime > 0)
                             {
                                 var command = request.Command;
@@ -182,17 +185,12 @@ namespace Sweet.Redis
                             {
                                 var context = m_CurrentContext;
                                 if (context == null)
-                                {
-                                    request.Cancel();
                                     continue;
-                                }
 
                                 if (!request.IsCompleted)
                                 {
                                     var socket = context.Socket;
-                                    if (!socket.IsConnected())
-                                        request.Cancel();
-                                    else
+                                    if (socket.IsConnected())
                                     {
                                         try
                                         {
@@ -217,14 +215,7 @@ namespace Sweet.Redis
                                 }
                             }
                             catch (Exception)
-                            {
-                                request.Cancel();
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            if (request != null)
-                                request.Cancel();
+                            { }
                         }
                     }
                 }
