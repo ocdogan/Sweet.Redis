@@ -32,7 +32,7 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        protected const int SpinSleepTime = 1000;
+        protected const int SpinSleepTime = 5000;
 
         #endregion Constants
 
@@ -43,8 +43,8 @@ namespace Sweet.Redis
 
         private Action<RedisAsyncRequest, RedisSocketContext> m_OnProcessRequest;
 
-        private readonly ManualResetEventSlim m_EnqueueGate = new ManualResetEventSlim(false);
         private int m_IdleTimeout = 10 * 1000;
+        private readonly ManualResetEventSlim m_EnqueueGate = new ManualResetEventSlim(false);
 
         #endregion Field Members
 
@@ -185,7 +185,7 @@ namespace Sweet.Redis
         {
             return true;
         }
-
+       
         protected virtual void ProcessQueue()
         {
             var queue = m_AsycRequestQ;
