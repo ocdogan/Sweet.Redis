@@ -117,7 +117,7 @@ namespace Sweet.Redis
             if (replace)
                 parameters = parameters.Join(RedisCommandList.Replace);
 
-            if (key.IsNull)
+            if (keys.Length > 0)
                 parameters = parameters
                                  .Join(RedisCommandList.Keys)
                                  .Join(keys.ToBytesArray());
