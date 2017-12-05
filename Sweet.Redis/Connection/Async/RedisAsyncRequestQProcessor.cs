@@ -32,7 +32,8 @@ namespace Sweet.Redis
     {
         #region Constants
 
-        protected const int SpinSleepTime = 5000;
+        protected const int MreSpinCount = 3;
+        protected const int SpinSleepTime = 100;
 
         #endregion Constants
 
@@ -44,7 +45,7 @@ namespace Sweet.Redis
         private Action<RedisAsyncRequest, RedisSocketContext> m_OnProcessRequest;
 
         private int m_IdleTimeout = 10 * 1000;
-        private readonly ManualResetEventSlim m_EnqueueGate = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim m_EnqueueGate = new ManualResetEventSlim(false, MreSpinCount);
 
         #endregion Field Members
 
@@ -198,8 +199,6 @@ namespace Sweet.Redis
                 var name = String.Format("{0}, {1}", typeof(RedisDbConnection).Name,
                     Guid.NewGuid().ToString("N").ToUpper());
 
-                m_EnqueueGate.Reset();
-
                 var idleTime = 0;
                 var idleStart = DateTime.MinValue;
 
@@ -215,8 +214,10 @@ namespace Sweet.Redis
                     new RedisDbConnection(name, RedisRole.Master, Settings, null, OnReleaseSocket, -1, null, false))
                 {
                     var commandDbIndex = -1;
-                    var spareSpinCount = 0;
                     var contextDbIndex = connection.DbIndex;
+
+                    m_EnqueueGate.Reset();
+                    var idleTimeout = IdleTimeout;
 
                     while (Processing && !queue.Disposed)
                     {
@@ -224,49 +225,32 @@ namespace Sweet.Redis
                         {
                             if (!queue.TryDequeueOneOf(contextDbIndex, RedisConstants.UninitializedDbIndex, out request))
                             {
-                                if (spareSpinCount++ < 3)
-                                {
-                                    Thread.Yield();
-                                    if (m_EnqueueGate.IsSet)
-                                        m_EnqueueGate.Reset();
-                                }
+                                if (m_EnqueueGate.Wait(SpinSleepTime))
+                                    m_EnqueueGate.Reset();
                                 else
                                 {
-                                    if (m_EnqueueGate.Wait(SpinSleepTime))
-                                        m_EnqueueGate.Reset();
-                                    else
+                                    idleTime += SpinSleepTime;
+                                    if (idleTime >= idleTimeout)
+                                        break;
+
+                                    if (idleTime > 0 && idleTime % 2000 == 0)
                                     {
-                                        idleTime += SpinSleepTime;
-                                        if (idleTime >= IdleTimeout)
-                                            break;
+                                        var beatCommand = new RedisCommand(RedisConstants.UninitializedDbIndex,
+                                                                            RedisCommandList.Ping);
+                                        beatCommand.IsHeartBeat = true;
 
-                                        if (idleTime % 2000 == 0)
-                                        {
-                                            var beatCommand = new RedisCommand(RedisConstants.UninitializedDbIndex,
-                                                                               RedisCommandList.Ping);
-                                            beatCommand.IsHeartBeat = true;
-
-                                            Enqueue<RedisBool>(beatCommand,
-                                                               RedisCommandExpect.OK, RedisConstants.PONG);
-                                        }
+                                        Enqueue<RedisBool>(beatCommand,
+                                                            RedisCommandExpect.OK, RedisConstants.PONG);
                                     }
                                 }
                                 continue;
                             }
 
-                            spareSpinCount = 0;
-
                             try
                             {
                                 var command = request.Command;
                                 if (ReferenceEquals(command, null) || !command.IsHeartBeat)
-                                {
-                                    if (idleTime > 0)
-                                    {
-                                        idleTime = 0;
-                                        Thread.Yield();
-                                    }
-                                }
+                                    idleTime = 0;
 
                                 if (!request.IsCompleted)
                                 {

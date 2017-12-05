@@ -36,7 +36,7 @@ namespace Sweet.Redis
         private RedisSocketContext m_CurrentContext;
         private ConcurrentQueue<RedisAsyncRequest> m_ReceiveQ = new ConcurrentQueue<RedisAsyncRequest>();
 
-        private readonly ManualResetEventSlim m_ReceiveGate = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim m_ReceiveGate = new ManualResetEventSlim(false, MreSpinCount);
 
         #endregion Field Members
 
@@ -136,7 +136,6 @@ namespace Sweet.Redis
             m_ReceiveGate.Reset();
 
             var idleTime = 0;
-            var spareSpinCount = 0;
             var idleStart = DateTime.MinValue;
 
             var request = (RedisAsyncRequest)null;
@@ -145,26 +144,19 @@ namespace Sweet.Redis
             {
                 using (var reader = new RedisSingleResponseReader(Settings))
                 {
+                    var idleTimeout = IdleTimeout;
+
                     while (Processing)
                     {
                         if (!queue.TryDequeue(out request))
                         {
-                            if (spareSpinCount++ < 3)
-                            {
-                                Thread.Yield();
-                                if (m_ReceiveGate.IsSet)
-                                    m_ReceiveGate.Reset();
-                            }
+                            if (m_ReceiveGate.Wait(SpinSleepTime))
+                                m_ReceiveGate.Reset();
                             else
                             {
-                                if (m_ReceiveGate.Wait(SpinSleepTime))
-                                    m_ReceiveGate.Reset();
-                                else
-                                {
-                                    idleTime += SpinSleepTime;
-                                    if (idleTime >= IdleTimeout)
-                                        break;
-                                }
+                                idleTime += SpinSleepTime;
+                                if (idleTime >= idleTimeout)
+                                    break;
                             }
                             continue;
                         }
@@ -175,10 +167,7 @@ namespace Sweet.Redis
                             {
                                 var command = request.Command;
                                 if (ReferenceEquals(command, null) || !command.IsHeartBeat)
-                                {
                                     idleTime = 0;
-                                    Thread.Yield();
-                                }
                             }
 
                             try
