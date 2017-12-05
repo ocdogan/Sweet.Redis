@@ -3211,7 +3211,7 @@ namespace Sweet.Redis.ConsoleTest
                      new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: 1, useAsyncCompleter: true))) // LOCAL
             {
                 const string testKey = "tiny_text";
-                string testText = new string('x', 20);
+                string testText = new string('x', 4);
                 const int dbIndex = 12;
 
                 using (var db = pool.GetDb(dbIndex))
@@ -3240,7 +3240,7 @@ namespace Sweet.Redis.ConsoleTest
                         {
                             var strings = rdb.Strings;
 
-                            for (var j = 0; j < 5000; j++)
+                            for (var j = 0; j < 50000; j++)
                             {
                                 outterSw.Start();
                                 innerSw.Restart();
@@ -3273,7 +3273,9 @@ namespace Sweet.Redis.ConsoleTest
                     Console.WriteLine();
                     Console.WriteLine("Fail count: " + failCount);
                     Console.WriteLine("Sum of inner ticks: " + ticks);
+                    Console.WriteLine("Sum of inner msecs: " + TimeSpan.FromTicks(ticks).TotalMilliseconds);
                     Console.WriteLine("Sum of outter ticks: " + outterSw.ElapsedTicks);
+                    Console.WriteLine("Sum of outter msecs: " + outterSw.ElapsedMilliseconds);
                     Console.WriteLine("Press any key to continue, ESC to escape ...");
                 }
                 while (Console.ReadKey(true).Key != ConsoleKey.Escape);
