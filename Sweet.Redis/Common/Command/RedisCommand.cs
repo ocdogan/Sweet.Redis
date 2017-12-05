@@ -975,7 +975,7 @@ namespace Sweet.Redis
                         if (i > 0)
                             sBuilder.Append(", ");
 
-                        if (args == null)
+                        if (item == null)
                         {
                             itemLen += 5;
                             sBuilder.Append("(nil)");
