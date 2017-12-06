@@ -246,7 +246,7 @@ namespace Sweet.Redis
 
             var requests = m_RequestQ;
             if (requests == null)
-                requests = m_RequestQ = new List<RedisRequest>();
+                requests = (m_RequestQ = new List<RedisRequest>());
 
             var request = CreateRequest<T>(command, expectation, okIf);
             requests.Add(request);

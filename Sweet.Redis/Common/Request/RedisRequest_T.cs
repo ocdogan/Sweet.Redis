@@ -121,7 +121,7 @@ namespace Sweet.Redis
                                                       BindingFlags.Instance, null, Type.EmptyTypes, null);
                 }
 
-                result = m_Result = (T)ctor.Invoke(null);
+                result = (m_Result = (T)ctor.Invoke(null));
             }
             return result;
         }
