@@ -116,9 +116,9 @@ namespace Sweet.Redis
                 var ctor = s_Ctor;
                 if (ctor == null)
                 {
-                    ctor = s_Ctor = typeof(T).GetConstructor(BindingFlags.Public |
+                    ctor = (s_Ctor = typeof(T).GetConstructor(BindingFlags.Public |
                                                       BindingFlags.NonPublic |
-                                                      BindingFlags.Instance, null, Type.EmptyTypes, null);
+                                                      BindingFlags.Instance, null, Type.EmptyTypes, null));
                 }
 
                 result = (m_Result = (T)ctor.Invoke(null));
@@ -164,18 +164,18 @@ namespace Sweet.Redis
                     switch (Expectation)
                     {
                         case RedisCommandExpect.Response:
-                            result.TrySetResult(value);
-                            break;
                         case RedisCommandExpect.Array:
-                            result.TrySetResult(value);
-                            break;
                         case RedisCommandExpect.BulkString:
-                            result.TrySetResult(value);
-                            break;
                         case RedisCommandExpect.BulkStringBytes:
-                            result.TrySetResult(value);
-                            break;
                         case RedisCommandExpect.Double:
+                        case RedisCommandExpect.Integer:
+                        case RedisCommandExpect.MultiDataBytes:
+                        case RedisCommandExpect.MultiDataStrings:
+                        case RedisCommandExpect.Nothing:
+                        case RedisCommandExpect.NullableDouble:
+                        case RedisCommandExpect.NullableInteger:
+                        case RedisCommandExpect.SimpleString:
+                        case RedisCommandExpect.SimpleStringBytes:
                             result.TrySetResult(value);
                             break;
                         case RedisCommandExpect.GreaterThanZero:
@@ -187,24 +187,6 @@ namespace Sweet.Redis
                                 result.TrySetResult(RedisConstants.Zero < (int)value);
                             else
                                 result.TrySetResult(RedisConstants.Zero.CompareTo(value) == -1);
-                            break;
-                        case RedisCommandExpect.Integer:
-                            result.TrySetResult(value);
-                            break;
-                        case RedisCommandExpect.MultiDataBytes:
-                            result.TrySetResult(value);
-                            break;
-                        case RedisCommandExpect.MultiDataStrings:
-                            result.TrySetResult(value);
-                            break;
-                        case RedisCommandExpect.Nothing:
-                            result.TrySetResult(value);
-                            break;
-                        case RedisCommandExpect.NullableDouble:
-                            result.TrySetResult(value);
-                            break;
-                        case RedisCommandExpect.NullableInteger:
-                            result.TrySetResult(value);
                             break;
                         case RedisCommandExpect.OK:
                             if (value is bool)
@@ -223,12 +205,6 @@ namespace Sweet.Redis
                                 result.TrySetResult(RedisConstants.One == (int)value);
                             else
                                 result.TrySetResult(Object.Equals(RedisConstants.One, value));
-                            break;
-                        case RedisCommandExpect.SimpleString:
-                            result.TrySetResult(value);
-                            break;
-                        case RedisCommandExpect.SimpleStringBytes:
-                            result.TrySetResult(value);
                             break;
                         default:
                             break;
@@ -252,11 +228,8 @@ namespace Sweet.Redis
         {
             ValidateNotDisposed();
 
-            if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) ==
-                (long)RequestState.Waiting)
-            {
+            if (Interlocked.CompareExchange(ref m_State, (long)RequestState.Initiated, (long)RequestState.Waiting) == (long)RequestState.Waiting)
                 ProcessInternal(context, timeoutMilliseconds);
-            }
         }
 
         protected virtual void ProcessInternal(RedisSocketContext context, int timeoutMilliseconds = -1)
