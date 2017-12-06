@@ -3208,7 +3208,7 @@ namespace Sweet.Redis.ConsoleTest
         static void PerformanceTest6()
         {
             using (var pool = new RedisConnectionPool("My redis pool",
-                     new RedisPoolSettings("127.0.0.1", 6379, maxConnectionCount: 1, useAsyncCompleter: true))) // LOCAL
+                     new RedisPoolSettings("127.0.0.1", 6380, maxConnectionCount: 1, useAsyncCompleter: true))) // LOCAL
             {
                 const string testKey = "tiny_text";
                 string testText = new string('x', 4);
@@ -3231,6 +3231,7 @@ namespace Sweet.Redis.ConsoleTest
 
                     var ticks = 0L;
                     var failCount = 0;
+                    var loopCount = 50000;
 
                     var innerSw = new Stopwatch();
                     var outterSw = new Stopwatch();
@@ -3240,7 +3241,7 @@ namespace Sweet.Redis.ConsoleTest
                         {
                             var strings = rdb.Strings;
 
-                            for (var j = 0; j < 50000; j++)
+                            for (var j = 0; j < loopCount; j++)
                             {
                                 outterSw.Start();
                                 innerSw.Restart();
@@ -3258,10 +3259,10 @@ namespace Sweet.Redis.ConsoleTest
                                 if (!ok)
                                     failCount++;
 
-                                Console.WriteLine("00:00" +
+                                /* Console.WriteLine("00:00" +
                                     ", " + j.ToString("D3") +
                                     ": Processed, " + innerSw.ElapsedMilliseconds.ToString("D3") + " msec, " +
-                                    (ok ? "OK" : "FAILED"));
+                                    (ok ? "OK" : "FAILED")); */
                             }
                         }
                     }
@@ -3270,12 +3271,15 @@ namespace Sweet.Redis.ConsoleTest
                         Console.WriteLine(e);
                     }
 
+                    var elapsedMSecs = outterSw.ElapsedMilliseconds;
+
                     Console.WriteLine();
                     Console.WriteLine("Fail count: " + failCount);
                     Console.WriteLine("Sum of inner ticks: " + ticks);
                     Console.WriteLine("Sum of inner msecs: " + TimeSpan.FromTicks(ticks).TotalMilliseconds);
                     Console.WriteLine("Sum of outter ticks: " + outterSw.ElapsedTicks);
-                    Console.WriteLine("Sum of outter msecs: " + outterSw.ElapsedMilliseconds);
+                    Console.WriteLine("Sum of outter msecs: " + elapsedMSecs);
+                    Console.WriteLine("Average concurrency (message/sec): " + Math.Ceiling(1000 * ((double)loopCount / elapsedMSecs)));
                     Console.WriteLine("Press any key to continue, ESC to escape ...");
                 }
                 while (Console.ReadKey(true).Key != ConsoleKey.Escape);
